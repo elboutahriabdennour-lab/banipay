@@ -117,4 +117,3 @@ function goScreen(name) {
   };
   if (actions[name]) actions[name]();
 }
-
