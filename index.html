@@ -212,6 +212,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="topbar">
     <div class="topbar-brand">Bani<span>Pay</span></div>
     <div class="topbar-right">
+      <span class="t-icon" onclick="goScreen('notifications',null)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#EF4444;border-radius:50%;font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center">0</span></span>
       <span class="t-icon" onclick="goScreen('recherche',null)">🔍</span>
       <div class="t-avatar" id="user-avatar" onclick="goScreen('profil',null)">AB</div>
     </div>
@@ -226,13 +227,20 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div class="hero-box"><div class="hero-box-val r" id="stat-retard">0</div><div class="hero-box-lbl">En retard</div></div>
     </div>
   </div>
+  <div style="background:#1E3A8A;padding:0 20px 16px">
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">Objectif mensuel</div>
+    <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;overflow:hidden;margin-bottom:4px">
+      <div id="objectif-bar" style="height:100%;background:#34D399;border-radius:3px;width:0%;transition:width 0.8s"></div>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.5)" id="objectif-txt">Non d&#233;fini</div>
+  </div>
   <div id="alerte-bar" class="alerte-bar hidden" onclick="setFilter('retard',null)">
     <span>⚠️</span><div class="alerte-text" id="alerte-text">Factures en retard</div><div class="alerte-action">Voir →</div>
   </div>
   <div class="sec-label">Actions rapides</div>
   <div class="quick-actions">
     <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#EFF6FF">➕</div><div class="qa-lbl">Facture</div></div>
-    <div class="qa-item" onclick="goScreen('devis',null)"><div class="qa-ico" style="background:#FFFBEB">📝</div><div class="qa-lbl">Devis</div></div>
+    <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#FFFBEB">📝</div><div class="qa-lbl">Devis</div></div>
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#ECFDF5">↩️</div><div class="qa-lbl">Avoir</div></div>
     <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#F1F5F9">📤</div><div class="qa-lbl">Export</div></div>
   </div>
@@ -256,7 +264,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="pb"></div>
   <div class="bottom-nav">
     <div class="nav-item active"><div class="nav-ico">🏠</div><div class="nav-lbl" style="color:#2563EB">Accueil</div></div>
-    <div class="nav-item" onclick="goScreen('devis',null)"><div class="nav-ico">📝</div><div class="nav-lbl">Devis</div></div>
+    <div class="nav-item" onclick="goScreen('devis-list',null)"><div class="nav-ico">📝</div><div class="nav-lbl">Devis</div></div>
     <div class="nav-fab"><button class="fab" onclick="goScreen('nouvelle',null)">＋</button></div>
     <div class="nav-item" onclick="goScreen('clients',null)"><div class="nav-ico">👥</div><div class="nav-lbl">Clients</div></div>
     <div class="nav-item" onclick="goScreen('profil',null)"><div class="nav-ico">👤</div><div class="nav-lbl">Profil</div></div>
@@ -282,6 +290,12 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     </div>
   </div>
   <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="f-chantier" class="f-inp" placeholder="Ex: Rénovation bureau"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Ech&#233;ance</label><input id="f-echeance" class="f-inp" type="date"></div>
+      <div><label class="f-lbl">Note</label><input id="f-note" class="f-inp" placeholder="Note..."></div>
+    </div>
+  </div>
   <div class="form-section">
     <label class="f-lbl">Prestations</label>
     <div id="lignes-container"></div>
@@ -331,7 +345,17 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div class="d-card-title">Prestations</div>
       <div id="detail-lignes"></div>
     </div>
+    <div id="detail-chantier" style="display:none;padding:8px 16px;font-size:12px;color:#64748B;background:#F8FAFC;border-radius:8px;margin-bottom:8px"></div>
+    <div id="detail-paiement-prog" style="display:none;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;border:1px solid #F1F5F9">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px">
+        <span>Progression paiement</span><span id="detail-prog-pct">0%</span>
+      </div>
+      <div style="height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden">
+        <div id="detail-prog-bar" style="height:100%;background:#059669;border-radius:4px;width:0%"></div>
+      </div>
+    </div>
     <div class="d-card" id="detail-totals"></div>
+    <div id="detail-note" style="display:none;margin-bottom:8px"></div>
     <div id="detail-actions"></div>
   </div>
   <div class="pb"></div>
@@ -367,7 +391,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 <!-- NOUVEAU DEVIS -->
 <div class="screen" id="screen-nouveau-devis">
   <div class="form-header">
-    <button class="back-btn" onclick="goScreen('devis',null)">←</button>
+    <button class="back-btn" onclick="goScreen('devis-list',null)">←</button>
     <div class="form-title">Nouveau devis</div>
   </div>
   <div style="height:14px"></div>
@@ -408,7 +432,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 <!-- DETAIL DEVIS -->
 <div class="screen" id="screen-detail-devis">
   <div class="detail-top">
-    <div class="d-back" onclick="goScreen('devis',null)">← Retour</div>
+    <div class="d-back" onclick="goScreen('devis-list',null)">← Retour</div>
     <div class="d-client" id="dv-client"></div>
     <div class="d-amount" id="dv-amount"></div>
     <div class="d-meta" id="dv-ref"></div>
@@ -501,6 +525,26 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <option value="autre">Autre</option>
     </select>
   </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">R&#233;f&#233;rence</label><input id="p-ref" class="f-inp" placeholder="REF-001"></div>
+      <div><label class="f-lbl">Stock</label><input id="p-stock" class="f-inp" type="number" placeholder="0"></div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">TVA (%)</label>
+        <select id="p-tva" class="f-inp" onchange="calcPrixTTC()">
+          <option value="0">0%</option><option value="7">7%</option>
+          <option value="10">10%</option><option value="14">14%</option>
+          <option value="20" selected>20%</option>
+        </select>
+      </div>
+      <div><label class="f-lbl">Co&#251;t achat</label><input id="p-cout" class="f-inp" type="number" oninput="calcPrixTTC()" placeholder="0.00"></div>
+    </div>
+    <div style="font-size:12px;color:#059669;margin-top:4px;font-weight:600" id="p-marge"></div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Prix TTC</label><input id="p-prix-ttc" class="f-inp" readonly style="background:#F1F5F9"></div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderProduit()">💾 Sauvegarder</button>
     <button class="s-btn gray" onclick="goScreen('produits',null)">✕ Annuler</button>
@@ -532,6 +576,8 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <div class="p-card" id="pv-infos-card">
       <div class="p-card-title">Informations entreprise</div>
     </div>
+    <div id="pv-objectif" style="display:none;background:#EFF6FF;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#1D4ED8"></div>
+    <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#9333EA">🔐 Lien accès comptable</button>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
@@ -590,7 +636,11 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   </div>
   <div class="sec-label">Statistiques</div>
   <div style="padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" id="stats-grid"></div>
+  <div style="padding:0 20px;margin-bottom:16px" id="sa-monthly"></div>
   <div style="padding:0 20px" id="chart-bars"></div>
+  <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
+  <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
+  <div style="padding:0 20px;margin-top:16px;padding-bottom:20px" id="sa-top-produits"></div>
   <div class="pb"></div>
 </div>
 
@@ -626,6 +676,19 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
         <input id="signup-password2" class="a-inp" type="password" placeholder="Retapez" oninput="checkPwdMatch()">
         <div id="pwd-match" style="font-size:11px;margin-top:4px;min-height:16px"></div>
         <div id="signup-err" class="a-err"></div>
+        <input type="hidden" id="signup-role" value="entreprise">
+        <div id="signup-comptable-fields" style="display:none">
+          <label class="a-lbl">Cabinet comptable</label>
+          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet" style="margin-bottom:10px">
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #2563EB;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#EFF6FF">
+            <div>🏢</div><div style="font-size:12px;color:#2563EB;font-weight:600">Entreprise</div>
+          </div>
+          <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#F8FAFC">
+            <div>📊</div><div style="font-size:12px;color:#64748B;font-weight:600">Comptable</div>
+          </div>
+        </div>
         <button class="a-btn a-btn-blue" onclick="doSignup()">Créer mon compte</button>
         <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
       </div>
@@ -704,6 +767,28 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <option value="kg">kg</option>
     </select>
     <button class="m-btn" onclick="confirmerLigne()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="modal-ligne-d">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une ligne</div>
+    <input class="m-inp" id="mld-desc" placeholder="Description de la prestation">
+    <input class="m-inp" id="mld-qte" type="number" placeholder="Quantit&#233;" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mld-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <select class="m-inp" id="mld-unite">
+      <option value="u">Unit&#233; (u)</option>
+      <option value="h">Heure (h)</option>
+      <option value="j">Jour (j)</option>
+      <option value="Fft">Forfait (Fft)</option>
+      <option value="m2">m&#178;</option>
+      <option value="ml">ml</option>
+      <option value="kg">kg</option>
+    </select>
+    <button class="m-btn" onclick="confirmerLigneDevis()">Ajouter</button>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
 </div>
@@ -1034,6 +1119,8 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   </div>
 </div>
 
+<input type="hidden" id="search-produit-inp">
+<input type="hidden" id="filtre-categorie">
 <div class="toast" id="toast"></div>
 <!-- CLIENTS -->
   <div class="screen" id="screen-clients">
@@ -1052,7 +1139,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <div style="height:110px"></div>
     <div class="bottom-nav">
       <div class="nav-item" onclick="goScreen('dashboard',null)"><div class="nav-icon">🏠</div><div class="nav-label">Accueil</div></div>
-      <div class="nav-item" onclick="goScreen('devis',null)"><div class="nav-icon">📝</div><div class="nav-label">Devis</div></div>
+      <div class="nav-item" onclick="goScreen('devis-list',null)"><div class="nav-icon">📝</div><div class="nav-label">Devis</div></div>
       <div class="nav-fab"><div class="fab" onclick="goScreen('nouveau-client',null)">＋</div></div>
       <div class="nav-item active"><div class="nav-icon">👥</div><div class="nav-label" style="color:var(--orange)">Clients</div></div>
       <div class="nav-item" onclick="goScreen('profil',null)"><div class="nav-icon">👤</div><div class="nav-label">Profil</div></div>
@@ -1072,7 +1159,14 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <div class="form-section"><div class="form-label">Adresse</div><input class="form-input" id="cl-adresse" placeholder="Ex: 12 Rue Hassan II, Casablanca"></div>
     <div class="form-section"><div class="form-label">ICE</div><input class="form-input" id="cl-ice" placeholder="Ex: 001234567000012"></div>
     <div class="form-section"><div class="form-label">Notes</div><input class="form-input" id="cl-notes" placeholder="Informations complémentaires..."></div>
-    <div class="send-options">
+      <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">IF</label><input id="cl-if" class="f-inp"></div>
+      <div><label class="f-lbl">Limite cr&#233;dit</label><input id="cl-limite" class="f-inp" type="number"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Conditions paiement</label><input id="cl-conditions" class="f-inp" placeholder="Ex: 30 jours"></div>
+<div class="send-options">
       <button class="send-btn primary" onclick="sauvegarderClient()"><div class="send-icon">💾</div>Sauvegarder</button>
       <button class="send-btn secondary" onclick="goScreen('clients',null)"><div class="send-icon">✕</div>Annuler</button>
     </div>
@@ -1144,6 +1238,11 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="form-section">
     <div class="f-row">
       <div><label class="f-lbl">N&#176; BC</label><input id="bc-ref" class="f-inp" readonly style="background:#F1F5F9"></div>
+      <div><label class="f-lbl">Date BC</label><input id="bc-date" class="f-inp" type="date"></div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
       <div><label class="f-lbl">Livraison pr&#233;vue</label><input id="bc-livraison" class="f-inp" type="date"></div>
     </div>
   </div>
@@ -1379,7 +1478,10 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 </div>
 
 
+<script><script>
 <script>
+<script>
+
 
 
 
@@ -5124,6 +5226,9 @@ function goScreen(name) {
   };
   if (actions[name]) actions[name]();
 }
+
+
+
 
 
 
