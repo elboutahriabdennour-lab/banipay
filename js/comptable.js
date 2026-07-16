@@ -424,4 +424,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // goScreen — routing complet
-
