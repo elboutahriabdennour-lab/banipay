@@ -410,4 +410,3 @@ function previewAvoirPDF() {
     lignes:[], ht, tva:ht*0.2, ttc:ht*1.2, devise:'MAD',
   });
 }
-
