@@ -169,3 +169,28 @@ async function doLogin() {
 // ============================================================
 // LOAD COMPTABLE APP
 // ============================================================
+
+
+function checkPwdStrength() {
+  const pwd = el('signup-password')?.value || '';
+  const bar = el('pwd-bar');
+  const hint = el('pwd-hint');
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  const colors = ['#EF4444','#F97316','#EAB308','#22C55E'];
+  const labels = ['Trop court','Faible','Moyen','Fort'];
+  if (bar) { bar.style.width = (score * 25) + '%'; bar.style.background = colors[score-1] || '#E2E8F0'; }
+  if (hint) { hint.textContent = pwd.length ? labels[score-1] || '' : ''; hint.style.color = colors[score-1] || '#94A3B8'; }
+}
+
+function checkPwdMatch() {
+  const p1 = el('signup-password')?.value;
+  const p2 = el('signup-password2')?.value;
+  const m = el('pwd-match');
+  if (!m || !p2) return;
+  m.textContent = p1 === p2 ? '✅ Identiques' : '❌ Différents';
+  m.style.color = p1 === p2 ? '#22C55E' : '#EF4444';
+}
