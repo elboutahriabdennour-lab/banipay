@@ -655,9 +655,16 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div id="aw-normal">
         <div class="auth-title">Connexion</div>
         <label class="a-lbl">Email</label>
-        <input id="login-email" class="a-inp" type="email" placeholder="votre@email.com">
+        <input id="login-email" class="a-inp" type="email" placeholder="votre@email.com" autocomplete="email">
         <label class="a-lbl">Mot de passe</label>
-        <input id="login-password" class="a-inp" type="password" placeholder="••••••••">
+        <div style="position:relative">
+          <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
+          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-login">👁️</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+          <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer" onchange="toggleRememberMe()">
+          <label for="remember-me" style="font-size:13px;color:#64748B;cursor:pointer">Se souvenir de moi</label>
+        </div>
         <div id="login-err" class="a-err"></div>
         <button class="a-btn a-btn-blue" onclick="doLogin()">Se connecter</button>
         <div class="a-link" style="margin-top:10px"><a onclick="doForgotPassword()">Mot de passe oublié ?</a></div>
@@ -669,7 +676,10 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
         <label class="a-lbl">Nom complet</label><input id="signup-nom" class="a-inp" type="text" placeholder="Ahmed Benali">
         <label class="a-lbl">Email</label><input id="signup-email" class="a-inp" type="email" placeholder="votre@email.com">
         <label class="a-lbl">Mot de passe</label>
-        <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()">
+        <div style="position:relative">
+          <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password" style="padding-right:44px">
+          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-signup">👁️</button>
+        </div>
         <div class="pwd-bar"><div id="pwd-bar" class="pwd-fill"></div></div>
         <div id="pwd-hint" class="pwd-hint"></div>
         <label class="a-lbl">Confirmer</label>
@@ -1481,6 +1491,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 <script><script>
 <script>
 <script>
+<script>
 
 
 
@@ -1596,6 +1607,10 @@ const sb = {
         if (!user || !user.id || !user.email) { sb.logout(); return false; }
         sb.token = t;
         sb.user = user;
+        // Auto refresh token si remember me activé
+        if (localStorage.getItem('bp_remember') === '1') {
+          sb.refreshSession().catch(() => {});
+        }
         return true;
       } catch(e) { sb.logout(); return false; }
     }
@@ -4192,10 +4207,43 @@ async function doSignup() {
 // ============================================================
 // LOGIN — REDIRECTION SELON ROLE
 // ============================================================
+function togglePwd(inputId, btnId) {
+  const inp = el(inputId);
+  const btn = el(btnId);
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    if (btn) btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    if (btn) btn.textContent = '👁️';
+  }
+}
+
+function toggleRememberMe() {
+  const checked = el('remember-me')?.checked;
+  if (checked) {
+    const email = el('login-email')?.value;
+    if (email) localStorage.setItem('bp_saved_email', email);
+  } else {
+    localStorage.removeItem('bp_saved_email');
+    localStorage.removeItem('bp_saved_pwd');
+  }
+}
+
+function loadSavedCredentials() {
+  const savedEmail = localStorage.getItem('bp_saved_email');
+  if (savedEmail) {
+    if (el('login-email')) el('login-email').value = savedEmail;
+    if (el('remember-me')) el('remember-me').checked = true;
+  }
+}
+
 async function doLogin() {
   const email = el('login-email')?.value.trim();
   const pwd = el('login-password')?.value;
   const errEl = el('login-err');
+  const remember = el('remember-me')?.checked;
   if (errEl) errEl.textContent = '';
   if (!email || !pwd) { if(errEl) errEl.textContent = 'Remplissez tous les champs'; return; }
   if (errEl) errEl.textContent = '⏳ Connexion...';
@@ -4211,6 +4259,14 @@ async function doLogin() {
       if (errEl) errEl.textContent = '';
       showToast('Confirmez votre email avant de continuer', 'error');
       return;
+    }
+    // Se souvenir de l'email
+    if (remember) {
+      localStorage.setItem('bp_saved_email', email);
+      localStorage.setItem('bp_remember', '1');
+    } else {
+      localStorage.removeItem('bp_saved_email');
+      localStorage.removeItem('bp_remember');
     }
     const role = sb.user?.user_metadata?.role || 'entreprise';
     CPT.role = role;
@@ -5131,6 +5187,7 @@ function refuseClientQuote(id) { changerStatutDevis(id, 'refuse'); }
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
   applyDarkMode();
+  loadSavedCredentials();
   const params = new URLSearchParams(window.location.search);
   const inviteToken = params.get('invite');
   const comptableEmail = params.get('comptable');
@@ -5226,6 +5283,7 @@ function goScreen(name) {
   };
   if (actions[name]) actions[name]();
 }
+
 
 
 
