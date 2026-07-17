@@ -130,6 +130,7 @@ async function doSignup() {
 // ============================================================
 
 async function doLogin() {
+  alert('doLogin appelé!');
   const email = el('login-email')?.value.trim();
   const pwd = el('login-password')?.value;
   const errEl = el('login-err');
