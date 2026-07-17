@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BaniPay Test Auth</title>
+<style>
+body { font-family: Arial, sans-serif; background: #0F172A; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+.card { background: #fff; border-radius: 16px; padding: 28px; width: 320px; }
+h2 { margin: 0 0 16px; color: #0F172A; }
+input { width: 100%; padding: 12px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-size: 14px; margin-bottom: 12px; box-sizing: border-box; }
+button { width: 100%; padding: 14px; background: #2563EB; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+#msg { margin-top: 12px; font-size: 13px; color: #64748B; min-height: 20px; }
+#err { color: #EF4444; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>🔐 BaniPay Test</h2>
+  <input id="email" type="email" placeholder="Email" value="">
+  <input id="pwd" type="password" placeholder="Mot de passe">
+  <button onclick="testerConnexion()">Tester la connexion</button>
+  <div id="msg"></div>
+  <div id="err"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://samojsvlfcrhdpspngsp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhbW9qc3ZsZmNyaGRwc3BuZ3NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyODEwNTgsImV4cCI6MjA5Nzg1NzA1OH0.ulmUmEysD4BYZDFAtWADteuw6UUKwFCkD9ebLxoZS9w';
+
+async function testerConnexion() {
+  const email = document.getElementById('email').value.trim();
+  const pwd = document.getElementById('pwd').value;
+  const msg = document.getElementById('msg');
+  const err = document.getElementById('err');
+  
+  msg.textContent = '⏳ Connexion en cours...';
+  err.textContent = '';
+  
+  try {
+    const r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password: pwd })
+    });
+    
+    const data = await r.json();
+    
+    if (data.access_token) {
+      msg.textContent = '✅ Connexion réussie ! Token reçu.';
+      msg.style.color = '#059669';
+    } else {
+      err.textContent = '❌ Erreur: ' + (data.error_description || data.msg || JSON.stringify(data));
+      msg.textContent = '';
+    }
+  } catch(e) {
+    err.textContent = '❌ Erreur réseau: ' + e.message;
+    msg.textContent = '';
+  }
+}
+</script>
+</body>
+</html>
