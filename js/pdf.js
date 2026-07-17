@@ -341,37 +341,7 @@ ${signature?`<div class="sig-box">
     <button class="m-btn-sec" onclick="refuserInvitation()">❌ Refuser</button>
   </div>
 </div>
-<\/body>
-<!--
-SQL Supabase à ajouter:
-
--- Table accès comptable v2
-create table if not exists acces_comptable_v2 (
-  id bigint generated always as identity primary key,
-  entreprise_id uuid references auth.users on delete cascade not null,
-  comptable_id uuid references auth.users on delete cascade not null,
-  statut text default 'actif',
-  date_acces timestamp with time zone default now(),
-  unique(entreprise_id, comptable_id)
-);
-alter table acces_comptable_v2 enable row level security;
-create policy "Comptable sees own access" on acces_comptable_v2 for all
-  using (auth.uid() = comptable_id OR auth.uid() = entreprise_id);
-
--- Table profils comptable
-create table if not exists profils_comptable (
-  user_id uuid references auth.users primary key,
-  nom text, cabinet text, token_invitation text unique,
-  created_at timestamp with time zone default now()
-);
-alter table profils_comptable enable row level security;
-create policy "Public can find by token" on profils_comptable for select using (true);
-create policy "Comptable manages own profil" on profils_comptable for all using (auth.uid() = user_id);
-
--- Add token to profils_entreprise
-alter table profils_entreprise add column if not exists token_invitation text;
--->
-<\/html>`;
+<\/body><\/html>`;
 
   // Afficher le PDF dans un viewer intégré (100% compatible iOS)
   ouvrirPDFViewer(html, ref);
