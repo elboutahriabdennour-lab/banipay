@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>BaniPay Test</title></head>
+<body>
+<div id="log" style="font-family:monospace;font-size:12px;padding:10px"></div>
+<script>
+function log(msg, color) {
+  var d = document.createElement('div');
+  d.style.color = color || 'black';
+  d.style.marginBottom = '4px';
+  d.textContent = msg;
+  document.getElementById('log').appendChild(d);
+}
+
+log('Chargement des scripts...');
+
+var scripts = [
+  'js/config.js',
+  'js/utils.js', 
+  'js/auth.js',
+  'js/nav.js',
+  'js/factures.js',
+  'js/devis.js',
+  'js/clients.js',
+  'js/produits.js',
+  'js/pdf.js',
+  'js/stats.js',
+  'js/profil.js',
+  'js/comptable.js',
+  'js/app.js'
+];
+
+var index = 0;
+function loadNext() {
+  if (index >= scripts.length) {
+    log('Tous les scripts chargés!', 'green');
+    // Test des fonctions clés
+    log('sb: ' + (typeof sb !== 'undefined' ? 'OK' : 'MANQUANT'), typeof sb !== 'undefined' ? 'green' : 'red');
+    log('doLogin: ' + (typeof doLogin !== 'undefined' ? 'OK' : 'MANQUANT'), typeof doLogin !== 'undefined' ? 'green' : 'red');
+    log('goScreen: ' + (typeof goScreen !== 'undefined' ? 'OK' : 'MANQUANT'), typeof goScreen !== 'undefined' ? 'green' : 'red');
+    log('STATE: ' + (typeof STATE !== 'undefined' ? 'OK' : 'MANQUANT'), typeof STATE !== 'undefined' ? 'green' : 'red');
+    return;
+  }
+  var s = document.createElement('script');
+  s.src = scripts[index];
+  s.onload = function() {
+    log('✅ ' + scripts[index], 'green');
+    index++;
+    loadNext();
+  };
+  s.onerror = function() {
+    log('❌ ERREUR: ' + scripts[index], 'red');
+    index++;
+    loadNext();
+  };
+  document.head.appendChild(s);
+}
+loadNext();
+</script>
+</body>
+</html>
