@@ -107,7 +107,7 @@ tbody td{border-bottom:1px solid #F1F5F9}
 .footer-brand{font-size:13px;font-weight:700;color:#fff}
 .footer-brand span{color:#60A5FA}
 .footer-info{display:flex;flex-wrap:wrap;gap:2px 14px;justify-content:center;margin-top:6px}
-.footer-info-item{font-size:9px;color:rgba(255,255,255,0.5)}
+
 .footer-legal{margin-top:4px;text-align:center;font-size:8px;color:#334155}
 
 <\/style><\/head><body>
@@ -183,37 +183,13 @@ ${signature?`<div class="sig-box">
   <div class="sig-item"><div class="sig-lbl">Signature émetteur</div></div>
   <div class="sig-item"><div class="sig-lbl">Signature & Cachet destinataire</div></div>
 </div>`:''}
-<div class="footer">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:8px;border-bottom:1px solid #1E293B;margin-bottom:7px">
-    <div><div class="footer-brand">Bani<span>Pay</span></div><div style="font-size:9px;color:#334155;margin-top:1px">Gestion Factures & Devis</div></div>
-    <div style="font-size:10px;color:#334155">Page 1/1</div>
-  </div>
-  <div class="footer-info">
-    ${p.raison?`<div class="footer-info-item">🏢 ${p.raison}</div>`:''}
-    ${p.adresse?`<div class="footer-info-item">📍 ${p.adresse}${p.ville?', '+p.ville:''}</div>`:''}
-    ${p.tel?`<div class="footer-info-item">📞 ${p.tel}</div>`:''}
-    ${p.email?`<div class="footer-info-item">✉️ ${p.email}</div>`:''}
-  </div>
-  <div class="footer-legal">${legalParts}</div>
+<div class="footer" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;margin-top:20px;border-top:1px solid #E2E8F0">
+  <div style="font-size:10px;font-weight:700;color:#1E3A8A">Bani<span style="color:#2563EB">Pay</span></div>
+  <div style="font-size:9px;color:#94A3B8">Page 1/1</div>
 </div>
 </div>
 
 
-<div style="margin-top:30px"></div>
-<div style="background:#0F172A;padding:16px 28px">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <div>
-      <div style="font-size:12px;font-weight:700;color:#fff">${escapeHTML(p.raison||'')}</div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.8">
-        ${[p.tel?'📞 '+p.tel:'',p.email?'✉️ '+p.email:'',p.adresse?'📍 '+escapeHTML(p.adresse||''):'',p.rc?'RC: '+p.rc+(p.identifiant_fiscal?' · IF: '+p.identifiant_fiscal:''):'',p.ice?'ICE: '+p.ice:''].filter(Boolean).join(' &nbsp;·&nbsp; ')}
-      </div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:9px;color:rgba(255,255,255,0.4)">${ref}<br>${date||''}<br>Page 1/1</div>
-      <div style="margin-top:4px;font-size:9px;color:#60A5FA;font-weight:700">BaniPay ©</div>
-    </div>
-  </div>
-</div>
 <\/body><\/html>`;
 
   // Afficher le PDF
