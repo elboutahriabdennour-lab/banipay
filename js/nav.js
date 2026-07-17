@@ -66,15 +66,6 @@ function renderNotifScreen() {
 // ============================================================
 
 // STATE comptable
-const CPT = {
-  role: null,          // 'entreprise' | 'comptable'
-  entreprises: [],     // liste des entreprises accessibles
-  currentEntId: null,  // entreprise en cours de visualisation
-  currentFactures: [],
-  currentProfil: {},
-  filterF: 'toutes',
-};
-
 // ============================================================
 // ROLE SELECTION (inscription)
 // ============================================================
