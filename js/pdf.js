@@ -300,35 +300,16 @@ ${signature?`<div class="sig-box">
   <div class="pb"></div>
 </div>
 
-<!-- ===== MODAL INVITATION ===== -->
-<div class="modal-overlay" id="modal-invitation">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">📋 Mon lien d'invitation</div>
-    <div style="background:#F3E8FF;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:#9333EA">
-      Partagez ce lien avec vos clients entreprises. Ils pourront vous donner accès à leurs données.
-    </div>
-    <div style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:12px;font-size:11px;color:#64748B;word-break:break-all;margin-bottom:12px;font-family:monospace" id="invitation-link-display">—</div>
-    <button class="m-btn" onclick="copierLienInvitation()">📋 Copier le lien</button>
-    <button class="m-btn" style="background:#25D366;margin-top:8px" onclick="partagerInvitationWhatsApp()">📱 Partager via WhatsApp</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Fermer</button>
-  </div>
-</div>
-
-
-
 <div style="margin-top:30px"></div>
 <div style="background:#0F172A;padding:16px 28px">
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <div>
       <div style="font-size:11px;font-weight:700;color:#fff">${escapeHTML(p.raison||'')}</div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:3px;line-height:1.7">
-        ${p.tel ? '📞 ' + p.tel : ''}${p.email ? ' · ✉️ ' + p.email : ''}${p.adresse ? '<br>📍 ' + escapeHTML(p.adresse||'') : ''}${p.rc ? '<br>RC: ' + p.rc : ''}${p.identifiant_fiscal ? ' · IF: ' + p.identifiant_fiscal : ''}${p.ice ? '<br>ICE: ' + p.ice : ''}
-      </div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:3px;line-height:1.8">${[p.tel?'📞 '+p.tel:'',p.email?'✉️ '+p.email:'',p.adresse?'📍 '+escapeHTML(p.adresse||''):'',p.rc?'RC: '+p.rc+(p.identifiant_fiscal?' · IF: '+p.identifiant_fiscal:''):'',p.ice?'ICE: '+p.ice:''].filter(Boolean).join(' · ')}</div>
     </div>
     <div style="text-align:right">
-      <div style="font-size:9px;color:rgba(255,255,255,0.4)">Réf: ${ref}<br>Émis le ${date||''}<br>Page 1/1</div>
-      <div style="margin-top:6px;font-size:8px;color:#60A5FA;font-weight:700">BaniPay ©</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.4)">${ref}<br>${date||''}<br>Page 1/1</div>
+      <div style="margin-top:4px;font-size:8px;color:#60A5FA;font-weight:700">BaniPay ©</div>
     </div>
   </div>
 </div><\/body><\/html>`;
@@ -338,63 +319,51 @@ ${signature?`<div class="sig-box">
 }
 
 function ouvrirPDFViewer(htmlContent, ref) {
-  const ancien = document.getElementById('pdf-viewer-overlay');
+  const ancien = document.getElementById('pdf-fullscreen');
   if (ancien) ancien.remove();
 
-  const overlay = document.createElement('div');
-  overlay.id = 'pdf-viewer-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#1E3A8A;display:flex;flex-direction:column';
+  const screen = document.createElement('div');
+  screen.id = 'pdf-fullscreen';
+  screen.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column';
 
-  const toolbar = document.createElement('div');
-  toolbar.style.cssText = 'background:#1E3A8A;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'background:#1E3A8A;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0';
 
-  const btnRetour = document.createElement('button');
-  btnRetour.textContent = '← Retour';
-  btnRetour.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  btnRetour.onclick = function() { overlay.remove(); };
+  const btnBack = document.createElement('button');
+  btnBack.textContent = '← Retour';
+  btnBack.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer';
+  btnBack.onclick = function() { screen.remove(); };
 
   const title = document.createElement('span');
   title.textContent = ref;
   title.style.cssText = 'color:#fff;font-size:13px;font-weight:600;flex:1;text-align:center';
 
   const btnPrint = document.createElement('button');
-  btnPrint.textContent = '🖨️ Imprimer';
-  btnPrint.style.cssText = 'background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+  btnPrint.textContent = '🖨️';
+  btnPrint.style.cssText = 'background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer';
   btnPrint.onclick = function() {
-    const iframe = document.getElementById('pdf-iframe');
-    if (iframe && iframe.contentWindow) iframe.contentWindow.print();
+    const f = document.getElementById('pdf-frame');
+    if (f && f.contentWindow) f.contentWindow.print();
   };
 
-  toolbar.appendChild(btnRetour);
-  toolbar.appendChild(title);
-  toolbar.appendChild(btnPrint);
+  bar.appendChild(btnBack);
+  bar.appendChild(title);
+  bar.appendChild(btnPrint);
 
-  // Wrapper blanc pour l'iframe
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'flex:1;overflow:auto;background:#e0e0e0;padding:12px';
+  const frame = document.createElement('iframe');
+  frame.id = 'pdf-frame';
+  frame.style.cssText = 'flex:1;width:100%;border:none;background:#fff';
+  frame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-modals');
 
-  const iframe = document.createElement('iframe');
-  iframe.id = 'pdf-iframe';
-  iframe.style.cssText = 'width:100%;min-height:100%;border:none;display:block;background:#fff;border-radius:4px';
-  iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-modals');
+  screen.appendChild(bar);
+  screen.appendChild(frame);
+  document.body.appendChild(screen);
 
-  // Wrap htmlContent in complete isolated document
-  const isolatedHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;background:#fff}</style></head><body>' + htmlContent + '</body></html>';
-
-  wrapper.appendChild(iframe);
-  overlay.appendChild(toolbar);
-  overlay.appendChild(wrapper);
-  document.body.appendChild(overlay);
-
-  // Write content to iframe after it's mounted
+  // Write isolated PDF content
   setTimeout(function() {
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    const doc = frame.contentDocument || frame.contentWindow.document;
     doc.open();
     doc.write(htmlContent);
     doc.close();
-    // Adjust height
-    setTimeout(function() {
-      iframe.style.height = (doc.body.scrollHeight + 40) + 'px';
-    }, 300);
   }, 50);
 }
