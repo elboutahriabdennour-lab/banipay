@@ -226,25 +226,28 @@ function ouvrirPDFViewer(htmlContent, ref) {
 
   const screen = document.createElement('div');
   screen.id = 'pdf-fullscreen';
-  screen.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column';
+  screen.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column;font-family:Arial,sans-serif';
 
   const bar = document.createElement('div');
-  bar.style.cssText = 'background:#1E3A8A;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0';
+  bar.style.cssText = 'background:#1E3A8A;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0';
 
   const btnBack = document.createElement('button');
   btnBack.textContent = '← Retour';
-  btnBack.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer';
-  btnBack.onclick = function() { screen.remove(); };
+  btnBack.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+  btnBack.onclick = function() {
+    const f = document.getElementById('pdf-frame');
+    if (f && f.src && f.src.startsWith('blob:')) URL.revokeObjectURL(f.src);
+    screen.remove();
+  };
 
   const title = document.createElement('span');
   title.textContent = ref;
   title.style.cssText = 'color:#fff;font-size:13px;font-weight:600;flex:1;text-align:center';
 
-  const btnPrint = document.createElement('button');
-  btnPrint.textContent = '🖨️ Imprimer';
-  btnPrint.style.cssText = 'background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer';
-  btnPrint.onclick = function() {
-    // Télécharger comme HTML imprimable
+  const btnDl = document.createElement('button');
+  btnDl.textContent = '💾 Télécharger';
+  btnDl.style.cssText = 'background:#059669;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
+  btnDl.onclick = function() {
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -254,53 +257,42 @@ function ouvrirPDFViewer(htmlContent, ref) {
     a.click();
     document.body.removeChild(a);
     setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
-    showToast('📥 Fichier téléchargé — ouvrez-le pour imprimer', 'success');
   };
 
   const btnShare = document.createElement('button');
   btnShare.textContent = '📤';
-  btnShare.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:16px;cursor:pointer';
+  btnShare.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer;font-family:inherit';
   btnShare.onclick = async function() {
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
     const file = new File([blob], ref + '.html', { type: 'text/html' });
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ title: ref, files: [file] }); return; } catch(e) {}
+    if (navigator.share) {
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title: ref, files: [file] });
+        } else {
+          await navigator.share({ title: ref, text: ref });
+        }
+        return;
+      } catch(e) { if (e.name === 'AbortError') return; }
     }
-    // Fallback: copy link
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = ref + '.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+    btnDl.click();
   };
 
   bar.appendChild(btnBack);
   bar.appendChild(title);
   bar.appendChild(btnShare);
-  bar.appendChild(btnPrint);
+  bar.appendChild(btnDl);
+
+  // Use Blob URL for complete isolation
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const blobUrl = URL.createObjectURL(blob);
 
   const frame = document.createElement('iframe');
   frame.id = 'pdf-frame';
+  frame.src = blobUrl;
   frame.style.cssText = 'flex:1;width:100%;border:none;background:#fff';
-  frame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-modals');
 
   screen.appendChild(bar);
   screen.appendChild(frame);
   document.body.appendChild(screen);
-
-  // Write content after iframe is ready
-  frame.onload = function() {};
-  setTimeout(function() {
-    try {
-      const doc = frame.contentDocument || frame.contentWindow.document;
-      doc.open();
-      doc.write(htmlContent);
-      doc.close();
-    } catch(e) {
-      console.error('PDF write error:', e);
-    }
-  }, 100);
 }
