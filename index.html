@@ -462,10 +462,7 @@
         <label class="a-lbl">Email</label>
         <input id="login-email" class="a-inp" type="email" placeholder="votre@email.com" autocomplete="email">
         <label class="a-lbl">Mot de passe</label>
-        <div style="position:relative">
-          <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-login">👁️</button>
-        </div>
+        <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password">
         <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
           <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer" onchange="toggleRememberMe()">
           <label for="remember-me" style="font-size:13px;color:#64748B;cursor:pointer">Se souvenir de moi</label>
@@ -481,10 +478,7 @@
         <label class="a-lbl">Nom complet</label><input id="signup-nom" class="a-inp" type="text" placeholder="Ahmed Benali">
         <label class="a-lbl">Email</label><input id="signup-email" class="a-inp" type="email" placeholder="votre@email.com">
         <label class="a-lbl">Mot de passe</label>
-        <div style="position:relative">
-          <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-signup">👁️</button>
-        </div>
+        <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password">
         <div class="pwd-bar"><div id="pwd-bar" class="pwd-fill"></div></div>
         <div id="pwd-hint" class="pwd-hint"></div>
         <label class="a-lbl">Confirmer</label>
