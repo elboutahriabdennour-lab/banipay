@@ -339,15 +339,45 @@ function ouvrirPDFViewer(htmlContent, ref) {
   title.style.cssText = 'color:#fff;font-size:13px;font-weight:600;flex:1;text-align:center';
 
   const btnPrint = document.createElement('button');
-  btnPrint.textContent = '🖨️';
-  btnPrint.style.cssText = 'background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:16px;cursor:pointer';
+  btnPrint.textContent = '🖨️ Imprimer';
+  btnPrint.style.cssText = 'background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer';
   btnPrint.onclick = function() {
-    const f = document.getElementById('pdf-frame');
-    if (f && f.contentWindow) f.contentWindow.print();
+    // Télécharger comme HTML imprimable
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = ref + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+    showToast('📥 Fichier téléchargé — ouvrez-le pour imprimer', 'success');
+  };
+
+  const btnShare = document.createElement('button');
+  btnShare.textContent = '📤';
+  btnShare.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:16px;cursor:pointer';
+  btnShare.onclick = async function() {
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const file = new File([blob], ref + '.html', { type: 'text/html' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ title: ref, files: [file] }); return; } catch(e) {}
+    }
+    // Fallback: copy link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = ref + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
   };
 
   bar.appendChild(btnBack);
   bar.appendChild(title);
+  bar.appendChild(btnShare);
   bar.appendChild(btnPrint);
 
   const frame = document.createElement('iframe');
@@ -359,11 +389,16 @@ function ouvrirPDFViewer(htmlContent, ref) {
   screen.appendChild(frame);
   document.body.appendChild(screen);
 
-  // Write isolated PDF content
+  // Write content after iframe is ready
+  frame.onload = function() {};
   setTimeout(function() {
-    const doc = frame.contentDocument || frame.contentWindow.document;
-    doc.open();
-    doc.write(htmlContent);
-    doc.close();
-  }, 50);
+    try {
+      const doc = frame.contentDocument || frame.contentWindow.document;
+      doc.open();
+      doc.write(htmlContent);
+      doc.close();
+    } catch(e) {
+      console.error('PDF write error:', e);
+    }
+  }, 100);
 }
