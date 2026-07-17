@@ -316,105 +316,85 @@ ${signature?`<div class="sig-box">
 </div>
 
 
-<!-- MODAL ACCEPTER INVITATION COMPTABLE -->
-<div class="modal-overlay" id="modal-accept-invite">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:40px;margin-bottom:8px">📊</div>
-      <div class="modal-title" style="margin-bottom:4px">Invitation comptable</div>
-      <div style="font-size:13px;color:#64748B">Un comptable souhaite accéder à vos données</div>
-    </div>
-    <div style="background:#F3E8FF;border-radius:12px;padding:14px;margin-bottom:16px">
-      <div style="display:flex;gap:12px;align-items:center">
-        <div style="width:42px;height:42px;border-radius:10px;background:#9333EA;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0">📊</div>
-        <div>
-          <div style="font-size:14px;font-weight:600;color:#0F172A" id="invite-comptable-nom">—</div>
-          <div style="font-size:12px;color:#64748B" id="invite-comptable-cabinet">—</div>
-        </div>
+
+<div style="margin-top:30px"></div>
+<div style="background:#0F172A;padding:16px 28px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div style="font-size:11px;font-weight:700;color:#fff">${escapeHTML(p.raison||'')}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:3px;line-height:1.7">
+        ${p.tel ? '📞 ' + p.tel : ''}${p.email ? ' · ✉️ ' + p.email : ''}${p.adresse ? '<br>📍 ' + escapeHTML(p.adresse||'') : ''}${p.rc ? '<br>RC: ' + p.rc : ''}${p.identifiant_fiscal ? ' · IF: ' + p.identifiant_fiscal : ''}${p.ice ? '<br>ICE: ' + p.ice : ''}
       </div>
     </div>
-    <div style="background:#FFFBEB;border-left:3px solid #D97706;border-radius:8px;padding:10px;font-size:12px;color:#92400E;margin-bottom:16px">
-      ⚠️ Ce comptable aura accès en <strong>lecture seule</strong> à vos factures, devis et informations légales. Il ne pourra pas modifier vos données.
+    <div style="text-align:right">
+      <div style="font-size:9px;color:rgba(255,255,255,0.4)">Réf: ${ref}<br>Émis le ${date||''}<br>Page 1/1</div>
+      <div style="margin-top:6px;font-size:8px;color:#60A5FA;font-weight:700">BaniPay ©</div>
     </div>
-    <button class="m-btn green" onclick="accepterInvitation()">✅ Accepter l'accès</button>
-    <button class="m-btn-sec" onclick="refuserInvitation()">❌ Refuser</button>
   </div>
-</div>
-<\/body><\/html>`;
+</div><\/body><\/html>`;
 
   // Afficher le PDF dans un viewer intégré (100% compatible iOS)
   ouvrirPDFViewer(html, ref);
 }
 
-function ouvrirPDFViewer(html, ref) {
-  // Supprimer ancien viewer si existe
+function ouvrirPDFViewer(htmlContent, ref) {
   const ancien = document.getElementById('pdf-viewer-overlay');
   if (ancien) ancien.remove();
 
-  // Créer overlay plein écran
   const overlay = document.createElement('div');
   overlay.id = 'pdf-viewer-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#fff;display:flex;flex-direction:column';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#1E3A8A;display:flex;flex-direction:column';
 
-  // Barre d'outils
   const toolbar = document.createElement('div');
-  toolbar.style.cssText = 'background:#1E3A8A;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0';
-  toolbar.innerHTML = `
-    <button onclick="document.getElementById('pdf-viewer-overlay').remove()" 
-      style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
-      ← Retour
-    </button>
-    <span style="color:#fff;font-size:13px;font-weight:600">${ref}</span>
-    <button onclick="document.getElementById('pdf-iframe').contentWindow.print()"
-      style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">
-      🖨️ Imprimer
-    </button>
-  `;
+  toolbar.style.cssText = 'background:#1E3A8A;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;gap:8px';
 
-  // iframe avec le contenu PDF
+  const btnRetour = document.createElement('button');
+  btnRetour.textContent = '← Retour';
+  btnRetour.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+  btnRetour.onclick = function() { overlay.remove(); };
+
+  const title = document.createElement('span');
+  title.textContent = ref;
+  title.style.cssText = 'color:#fff;font-size:13px;font-weight:600;flex:1;text-align:center';
+
+  const btnPrint = document.createElement('button');
+  btnPrint.textContent = '🖨️ Imprimer';
+  btnPrint.style.cssText = 'background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+  btnPrint.onclick = function() {
+    const iframe = document.getElementById('pdf-iframe');
+    if (iframe && iframe.contentWindow) iframe.contentWindow.print();
+  };
+
+  toolbar.appendChild(btnRetour);
+  toolbar.appendChild(title);
+  toolbar.appendChild(btnPrint);
+
+  // Wrapper blanc pour l'iframe
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'flex:1;overflow:auto;background:#e0e0e0;padding:12px';
+
   const iframe = document.createElement('iframe');
   iframe.id = 'pdf-iframe';
-  iframe.style.cssText = 'flex:1;width:100%;border:none';
-  iframe.srcdoc = html;
+  iframe.style.cssText = 'width:100%;min-height:100%;border:none;display:block;background:#fff;border-radius:4px';
+  iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-modals');
 
+  // Wrap htmlContent in complete isolated document
+  const isolatedHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;background:#fff}</style></head><body>' + htmlContent + '</body></html>';
+
+  wrapper.appendChild(iframe);
   overlay.appendChild(toolbar);
-  overlay.appendChild(iframe);
+  overlay.appendChild(wrapper);
   document.body.appendChild(overlay);
-  showToast('✅ Aperçu PDF prêt', 'success');
+
+  // Write content to iframe after it's mounted
+  setTimeout(function() {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+    // Adjust height
+    setTimeout(function() {
+      iframe.style.height = (doc.body.scrollHeight + 40) + 'px';
+    }, 300);
+  }, 50);
 }
-
-
-// ===== APP.JS =====
-// ============================================================
-// BANIPAY — Navigation & App Init
-// ============================================================
-
-const SCREENS = {
-  'dashboard': renderDashboard,
-  'nouvelle': initNouvelle,
-  'detail': null,
-  'devis-list': renderDevisList,
-  'nouveau-devis': initNouveauDevis,
-  'detail-devis': null,
-  'avoir': initAvoir,
-  'bon-commande': initBonCommande,
-  'bon-livraison': initBonLivraison,
-  'clients': renderClients,
-  'nouveau-client': initNouveauClient,
-  'detail-client': null,
-  'produits': renderProduits,
-  'nouveau-produit': initNouveauProduit,
-  'stats': renderStats,
-  'tva': renderTVA,
-  'recherche': initRecherche,
-  'notifications': renderNotifScreen,
-  'profil': renderProfil,
-  'auth': null,
-  'dashboard-comptable': null,
-};
-
-
-// ============================================================
-// AUTH
-// ============================================================
