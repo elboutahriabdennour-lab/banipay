@@ -1,18 +1,32 @@
 // BANIPAY — pdf.js
 
 function exportPDF(id) {
-  const f = STATE.factures.find(x=>x.id===id); if(!f) return;
+  const f = STATE.factures.find(x=>x.id===id);
+  if (!f) { showToast('Facture introuvable', 'error'); return; }
+  const profil = STATE.profil || {};
+  // Parse lignes si stocké comme string JSON
+  let lignes = f.lignes || [];
+  if (typeof lignes === 'string') {
+    try { lignes = JSON.parse(lignes); } catch(e) { lignes = []; }
+  }
   genDocPDF({
-    type:'FACTURE', ref:f.ref, color:'#2563EB',
-    emetteur:STATE.profil,
-    destinataire:{nom:f.client,chantier:f.chantier},
-    date:f.date_emission, echeance:f.echeance,
-    paiement:f.paiement, statut:f.statut,
-    lignes:f.lignes, note:f.note,
-    ht:f.ht, tva:f.tva, ttc:f.ttc,
-    devise:f.devise||'MAD',
-    montant_recu:f.montant_recu,
-    showStamp: f.statut==='payee',
+    type: 'FACTURE',
+    ref: f.ref || 'FAC-0001',
+    color: '#2563EB',
+    emetteur: profil,
+    destinataire: { nom: f.client || '', chantier: f.chantier || '' },
+    date: f.date_emission || '',
+    echeance: f.echeance || '',
+    paiement: f.paiement || '',
+    statut: f.statut || '',
+    lignes: lignes,
+    note: f.note || '',
+    ht: Number(f.ht) || 0,
+    tva: Number(f.tva) || 0,
+    ttc: Number(f.ttc) || 0,
+    devise: f.devise || 'MAD',
+    montant_recu: Number(f.montant_recu) || 0,
+    showStamp: f.statut === 'payee',
   });
 }
 
@@ -184,137 +198,25 @@ ${signature?`<div class="sig-box">
 </div>
 </div>
 
-<!-- ===== DASHBOARD COMPTABLE FULL ===== -->
-<div class="screen" id="screen-comptable">
-  <div class="topbar">
-    <div class="topbar-brand">📊 Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <span class="t-icon" title="Comptable">📊</span>
-      <div class="t-avatar" id="comptable-avatar" onclick="goScreen('comptable-profil')">C</div>
-    </div>
-  </div>
-  <div class="hero">
-    <div class="hero-lbl">Espace Comptable</div>
-    <div class="hero-amount" id="cpt-nb-entreprises">0 entreprise(s)</div>
-    <div class="hero-sub-txt" id="cpt-sub">Gérez vos clients</div>
-    <div class="hero-grid">
-      <div class="hero-box"><div class="hero-box-val g" id="cpt-total-ca">0</div><div class="hero-box-lbl">CA total</div></div>
-      <div class="hero-box"><div class="hero-box-val o" id="cpt-total-att">0</div><div class="hero-box-lbl">En attente</div></div>
-      <div class="hero-box"><div class="hero-box-val r" id="cpt-total-ret">0</div><div class="hero-box-lbl">En retard</div></div>
-    </div>
-  </div>
-  <div class="sec-header">
-    <div class="sec-title">Mes entreprises clientes</div>
-  </div>
-  <div class="card-list" id="cpt-entreprises-list"></div>
-  <div class="pb"></div>
-  <div class="bottom-nav">
-    <div class="nav-item active"><div class="nav-ico">🏢</div><div class="nav-lbl" style="color:#2563EB">Entreprises</div></div>
-    <div class="nav-item" onclick="cptEntTab('tva',this)"><div class="nav-ico">🧾</div><div class="nav-lbl">TVA</div></div>
-    <div class="nav-fab"><button class="fab" style="background:#9333EA" onclick="ouvrirInvitation()">📋</button></div>
-    <div class="nav-item" onclick="goScreen('stats')"><div class="nav-ico">📊</div><div class="nav-lbl">Rapports</div></div>
-    <div class="nav-item" onclick="goScreen('comptable-profil')"><div class="nav-ico">👤</div><div class="nav-lbl">Profil</div></div>
-  </div>
-</div>
-
-<!-- ===== VUE ENTREPRISE (vue comptable) ===== -->
-<div class="screen" id="screen-cpt-entreprise">
-  <div class="topbar">
-    <div class="topbar-brand" id="cpt-ent-nom" style="font-size:16px">Entreprise</div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('comptable')" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    </div>
-  </div>
-  <div class="hero">
-    <div class="hero-lbl">Situation financière</div>
-    <div class="hero-amount" id="cpt-ent-ca">0 MAD</div>
-    <div class="hero-sub-txt" id="cpt-ent-sub">chargement...</div>
-    <div class="hero-grid">
-      <div class="hero-box"><div class="hero-box-val g" id="cpt-ent-payee">0</div><div class="hero-box-lbl">Payées</div></div>
-      <div class="hero-box"><div class="hero-box-val o" id="cpt-ent-att">0</div><div class="hero-box-lbl">En attente</div></div>
-      <div class="hero-box"><div class="hero-box-val r" id="cpt-ent-ret">0</div><div class="hero-box-lbl">En retard</div></div>
-    </div>
-  </div>
-  <!-- Tabs -->
-  <div class="filter-tabs" style="padding-top:12px">
-    <button class="ftab active" onclick="cptEntTab('factures',this)">Factures</button>
-    <button class="ftab" onclick="cptEntTab('tva',this)">TVA</button>
-    <button class="ftab" onclick="cptEntTab('infos',this)">Infos légales</button>
-  </div>
-  <!-- Factures tab -->
-  <div id="cpt-tab-factures">
-    <div class="filter-tabs">
-      <button class="ftab active" onclick="cptFilterF('toutes',this)">Toutes</button>
-      <button class="ftab" onclick="cptFilterF('payee',this)">Payées</button>
-      <button class="ftab" onclick="cptFilterF('attente',this)">En attente</button>
-      <button class="ftab" onclick="cptFilterF('retard',this)">En retard</button>
-    </div>
-    <div class="card-list" id="cpt-factures-list"></div>
-  </div>
-  <!-- TVA tab -->
-  <div id="cpt-tab-tva" style="display:none;padding:0 20px;overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin-top:10px">
-      <thead><tr style="background:#0F172A">
-        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th>
-        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th>
-        <th style="padding:10px 12px;font-size:11px;color:#34D399;text-align:right">TVA</th>
-        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th>
-      </tr></thead>
-      <tbody id="cpt-tva-body"></tbody>
-    </table>
-    <button onclick="exportCptTVA()" style="width:100%;margin-top:12px;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export CSV TVA</button>
-  </div>
-  <!-- Infos tab -->
-  <div id="cpt-tab-infos" style="display:none;padding:16px">
-    <div class="p-card" id="cpt-infos-legales"></div>
-    <div class="p-card" style="margin-top:12px" id="cpt-infos-banque"></div>
-  </div>
-  <div class="pb"></div>
-</div>
-
-<!-- ===== PROFIL COMPTABLE ===== -->
-<div class="screen" id="screen-comptable-profil">
-  <div class="topbar">
-    <div class="topbar-brand">Mon profil</div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('comptable')" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    </div>
-  </div>
-  <div class="profil-hero">
-    <div class="profil-av" id="cpt-profil-av">C</div>
-    <div>
-      <div class="p-nom-big" id="cpt-profil-nom">Mon compte</div>
-      <div class="p-id">Compte Comptable</div>
-      <div class="p-badge" style="background:rgba(147,51,234,0.2);color:#C084FC">📊 Comptable</div>
-    </div>
-  </div>
-  <div style="padding:16px">
-    <div class="p-card">
-      <div class="p-card-title">Informations</div>
-      <div class="p-row"><span class="p-lbl">Email</span><span class="p-val" id="cpt-email">—</span></div>
-      <div class="p-row"><span class="p-lbl">Cabinet</span><span class="p-val" id="cpt-cabinet">—</span></div>
-      <div class="p-row"><span class="p-lbl">Entreprises</span><span class="p-val" id="cpt-nb-ent">0</span></div>
-    </div>
-    <button class="p-btn danger" onclick="doLogout()" style="margin-top:12px">⏏️ Se déconnecter</button>
-  </div>
-  <div class="pb"></div>
-</div>
 
 <div style="margin-top:30px"></div>
 <div style="background:#0F172A;padding:16px 28px">
   <div style="display:flex;justify-content:space-between;align-items:flex-start">
     <div>
-      <div style="font-size:11px;font-weight:700;color:#fff">${escapeHTML(p.raison||'')}</div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:3px;line-height:1.8">${[p.tel?'📞 '+p.tel:'',p.email?'✉️ '+p.email:'',p.adresse?'📍 '+escapeHTML(p.adresse||''):'',p.rc?'RC: '+p.rc+(p.identifiant_fiscal?' · IF: '+p.identifiant_fiscal:''):'',p.ice?'ICE: '+p.ice:''].filter(Boolean).join(' · ')}</div>
+      <div style="font-size:12px;font-weight:700;color:#fff">${escapeHTML(p.raison||'')}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.8">
+        ${[p.tel?'📞 '+p.tel:'',p.email?'✉️ '+p.email:'',p.adresse?'📍 '+escapeHTML(p.adresse||''):'',p.rc?'RC: '+p.rc+(p.identifiant_fiscal?' · IF: '+p.identifiant_fiscal:''):'',p.ice?'ICE: '+p.ice:''].filter(Boolean).join(' &nbsp;·&nbsp; ')}
+      </div>
     </div>
     <div style="text-align:right">
       <div style="font-size:9px;color:rgba(255,255,255,0.4)">${ref}<br>${date||''}<br>Page 1/1</div>
-      <div style="margin-top:4px;font-size:8px;color:#60A5FA;font-weight:700">BaniPay ©</div>
+      <div style="margin-top:4px;font-size:9px;color:#60A5FA;font-weight:700">BaniPay ©</div>
     </div>
   </div>
-</div><\/body><\/html>`;
+</div>
+<\/body><\/html>`;
 
-  // Afficher le PDF dans un viewer intégré (100% compatible iOS)
+  // Afficher le PDF
   ouvrirPDFViewer(html, ref);
 }
 
