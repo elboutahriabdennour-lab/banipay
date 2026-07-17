@@ -20,7 +20,6 @@ function getRef(prefix, list) {
   return `${prefix}-${year}-${n}`;
 }
 
-let _toastTimer;
 
 function showToast(msg, type = 'default') {
   const t = document.getElementById('toast');
