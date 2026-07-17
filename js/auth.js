@@ -130,7 +130,6 @@ async function doSignup() {
 // ============================================================
 
 async function doLogin() {
-  alert('doLogin appelé!');
   const email = el('login-email')?.value.trim();
   const pwd = el('login-password')?.value;
   const errEl = el('login-err');
@@ -139,7 +138,9 @@ async function doLogin() {
   if (!email || !pwd) { if(errEl) errEl.textContent = 'Remplissez tous les champs'; return; }
   if (errEl) errEl.textContent = '⏳ Connexion...';
   try {
+    if (errEl) errEl.textContent = '⏳ Appel Supabase...';
     await sb.login(email, pwd);
+    if (errEl) errEl.textContent = '⏳ Login OK, vérification...';
     const confirmed = sb.user?.email_confirmed_at || sb.user?.confirmed_at;
     if (!confirmed) {
       sb.logout();
