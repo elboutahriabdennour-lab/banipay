@@ -1,110 +1,33 @@
 // BANIPAY — clients.js
 
 function ouvrirScannerQR() {
-  // On iOS/Android, we can use the camera via input[capture]
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'Collez le lien profil BaniPay du client...';
-
-  // Create a modal to paste link or scan
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:20px';
 
-  const modal = document.createElement('div');
-  modal.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px';
-  modal.innerHTML = `
-    <div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>
-    <div style="font-size:17px;font-weight:600;margin-bottom:6px">&#128247; Ajouter un client via QR</div>
-    <div style="font-size:13px;color:#64748B;margin-bottom:16px">Scannez le QR code du profil BaniPay de votre client, ou collez son lien.</div>
-    <input id="qr-link-input" class="f-inp" placeholder="https://banipay-three.vercel.app/?profil=BP-..." style="margin-bottom:12px">
-    <button onclick="chargerClientDepuisLien()" class="m-btn">&#128279; Charger le profil</button>
-    <button onclick="this.closest('[style*=fixed]').remove()" class="m-btn-sec" style="margin-top:8px">Annuler</button>
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px';
+  box.innerHTML = `
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">📷 Ajouter un client</div>
+    <div style="font-size:12px;color:#64748B;margin-bottom:16px">Scannez le QR code du client ou collez son lien BaniPay</div>
+    <input id="qr-link-input" class="a-inp" placeholder="Collez le lien profil ou doc BaniPay..." style="margin-bottom:12px">
+    <button onclick="chargerClientDepuisLien(document.getElementById('qr-link-input').value)" class="a-btn a-btn-blue" style="margin-bottom:8px">🔗 Importer depuis le lien</button>
+    <div style="text-align:center;margin:8px 0;font-size:11px;color:#94A3B8">— ou —</div>
+    <label style="display:block;background:#F1F5F9;border-radius:10px;padding:12px;text-align:center;cursor:pointer;font-size:13px;color:#2563EB;font-weight:600">
+      📷 Scanner QR code
+      <input type="file" accept="image/*" capture="environment" style="display:none" onchange="scannerQRDepuisImage(event)">
+    </label>
+    <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;margin-top:10px;padding:10px;background:#F1F5F9;border:none;border-radius:10px;font-size:13px;cursor:pointer">Annuler</button>
   `;
-  overlay.appendChild(modal);
+
+  overlay.appendChild(box);
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
-  setTimeout(() => document.getElementById('qr-link-input')?.focus(), 100);
 }
 
-async function chargerClientDepuisLien() {
-  const lien = document.getElementById('qr-link-input')?.value.trim();
-  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
-
-  // Extract profil ID from URL
-  let profilId = null;
-  try {
-    const url = new URL(lien);
-    profilId = url.searchParams.get('profil');
-  } catch(e) {
-    // Try direct ID
-    const match = lien.match(/BP-[A-Z0-9]+/);
-    if (match) profilId = match[0];
-  }
-
-  if (!profilId) { showToast('Lien invalide — format attendu: ?profil=BP-XXXXXX', 'error'); return; }
-
-  showToast('⏳ Chargement du profil...');
-  try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const d = await r.json();
-    const p = d && d[0];
-    if (!p) { showToast('Profil introuvable', 'error'); return; }
-
-    // Remove the scanner modal
-    document.querySelector('[style*="position:fixed"][style*="9999"]')?.remove();
-
-    // Show confirm modal to add this client
-    const overlay2 = document.createElement('div');
-    overlay2.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
-    overlay2.innerHTML = `
-      <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px">
-        <div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>
-        <div style="font-size:17px;font-weight:600;margin-bottom:4px">&#10003; Profil trouvé</div>
-        <div style="background:#ECFDF5;border-radius:12px;padding:14px;margin:14px 0">
-          <div style="font-size:16px;font-weight:700">${escapeHTML(p.raison||'—')}</div>
-          <div style="font-size:12px;color:#64748B;margin-top:4px">${[p.tel,p.email,p.adresse].filter(Boolean).join(' · ')}</div>
-          ${p.ice?'<div style="font-size:11px;color:#059669;margin-top:4px">ICE: '+p.ice+'</div>':''}
-          ${p.rc?'<div style="font-size:11px;color:#64748B">RC: '+p.rc+'</div>':''}
-        </div>
-        <button onclick="ajouterClientDepuisProfil(${JSON.stringify(p).replace(/"/g,'&quot;')})" class="m-btn green">&#10133; Ajouter comme client</button>
-        <button onclick="this.closest('[style*=fixed]').remove()" class="m-btn-sec" style="margin-top:8px">Annuler</button>
-      </div>`;
-    document.body.appendChild(overlay2);
-    overlay2.addEventListener('click', e => { if(e.target===overlay2) overlay2.remove(); });
-  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+async function scannerQRDepuisImage(event) {
+  showToast('Fonctionnalité QR scan — collez le lien directement', 'success');
+  event.target.value = '';
 }
 
-async function ajouterClientDepuisProfil(profil) {
-  // Remove modal
-  document.querySelector('[style*="position:fixed"][style*="9999"]')?.remove();
-  const p = typeof profil === 'string' ? JSON.parse(profil) : profil;
-  // Check if already exists
-  const exists = STATE.clients.find(c => c.nom?.toLowerCase() === (p.raison||'').toLowerCase());
-  if (exists) { showToast('Ce client existe déjà', 'error'); return; }
-  showToast('⏳ Ajout en cours...');
-  try {
-    const body = {
-      user_id: sb.user.id,
-      nom: p.raison||'—',
-      tel: p.tel||'',
-      email: p.email||'',
-      adresse: (p.adresse||'') + (p.ville?', '+p.ville:''),
-      ice: p.ice||'',
-      identifiant_fiscal: p.identifiant_fiscal||'',
-      notes: 'Ajouté via profil BaniPay #' + (p.id_unique||''),
-    };
-    const r = await sb.post('clients', body);
-    if (r && r.length > 0) {
-      STATE.clients.push(r[0]);
-      STATE.clients.sort((a,b) => a.nom.localeCompare(b.nom));
-      updateClientDatalist();
-      renderClients();
-      showToast('✅ ' + escapeHTML(p.raison) + ' ajouté !', 'success');
-    }
-  } catch(e) { showToast('❌ ' + e.message, 'error'); }
-}
 
 function rechercherClientOuLien() {
   const val = el('search-client-inp')?.value || '';
