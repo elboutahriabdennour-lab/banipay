@@ -90,6 +90,86 @@ async function loadPublicProfil(profilId) {
 // ============================================================
 
 
+
+async function afficherDocumentPublic(docId) {
+  // Essayer de charger depuis Supabase sans auth
+  try {
+    // Try factures first
+    const r = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + docId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    const f = data && data[0];
+
+    if (f) {
+      // Load profil
+      const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + f.user_id + '&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const profils = await rp.json();
+      const profil = (profils && profils[0]) || {};
+
+      const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : (f.lignes||[]);
+
+      genDocPDF({
+        type: 'FACTURE', ref: f.ref, color: '#2563EB',
+        emetteur: profil,
+        destinataire: { nom: f.client, chantier: f.chantier },
+        date: f.date_emission, echeance: f.echeance,
+        paiement: f.paiement, statut: f.statut,
+        lignes: lignes, note: f.note||'',
+        ht: f.ht, tva: f.tva, ttc: f.ttc,
+        devise: f.devise||'MAD',
+        montant_recu: f.montant_recu||0,
+        showStamp: f.statut === 'payee',
+        devis_ref: f.devis_ref||'',
+        bl_ref: f.bl_ref||'',
+        doc_id: docId,
+        doc_url: window.location.href,
+      });
+      return;
+    }
+
+    // Try devis
+    const r2 = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + docId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data2 = await r2.json();
+    const d = data2 && data2[0];
+
+    if (d) {
+      const rp2 = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + d.user_id + '&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const profils2 = await rp2.json();
+      const profil2 = (profils2 && profils2[0]) || {};
+      const lignes2 = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
+
+      genDocPDF({
+        type: 'DEVIS', ref: d.ref, color: '#D97706',
+        emetteur: profil2,
+        destinataire: { nom: d.client, chantier: d.chantier },
+        date: d.date_emission, validite: d.validite,
+        lignes: lignes2, note: d.note||'',
+        ht: d.ht, tva: d.tva, ttc: d.ttc,
+        devise: d.devise||'MAD',
+        doc_id: docId,
+        doc_url: window.location.href,
+      });
+      return;
+    }
+
+    // Not found
+    showToast('Document introuvable', 'error');
+    goScreen('auth');
+
+  } catch(e) {
+    console.error('afficherDocumentPublic:', e);
+    showToast('Erreur de chargement', 'error');
+    goScreen('auth');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   applyDarkMode();
   loadSavedCredentials();
@@ -102,9 +182,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (portailId) { await loadPublicProfil(portailId); return; }
   if (profilId) { await loadPublicProfil(profilId); return; }
 
-  // Lien direct vers une facture (QR code)
+  // Lien direct vers une facture via QR code
   const docId = params.get('doc');
-  if (docId) { window._pendingDocId = docId; }
+  if (docId) {
+    await afficherDocumentPublic(docId);
+    return;
+  }
 
   // Handle invitation link
   if (inviteToken) {
@@ -116,14 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (window._pendingDocId) {
           const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
           window._pendingDocId = null;
-          if (window._pendingDocId) {
-          const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
-          window._pendingDocId = null;
-          goScreen('dashboard');
-          if (_pf) setTimeout(() => openDetail(_pf.id), 400);
-        } else {
-          goScreen('dashboard');
-        }
+  goScreen('dashboard');
           if (_pf) setTimeout(() => openDetail(_pf.id), 400);
         } else {
           goScreen('dashboard');
