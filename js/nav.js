@@ -7,6 +7,10 @@ function genNotifications() {
   STATE.factures.filter(f => f.statut === 'retard').forEach(f => {
     STATE.notifications.push({ type: 'danger', icon: '⚠️', title: `Facture ${f.ref} en retard`, body: `Client: ${f.client} · ${fmt(f.ttc)} MAD`, factureId: f.id });
   });
+  // Devis acceptés (non lus)
+  STATE.devis.filter(d => d.statut === 'accepte' && !d.notif_lue).forEach(d => {
+    STATE.notifications.push({ type: 'success', icon: '✅', title: `Devis ${d.ref} accepté !`, body: `Client: ${d.client} · ${fmt(d.ttc)} MAD · Convertir en facture ?`, devisId: d.id });
+  });
   // Devis expirés
   STATE.devis.filter(d => {
     if (d.statut !== 'envoye') return false;
@@ -82,6 +86,7 @@ function goScreen(name) {
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
 
   const actions = {
+    'archive': renderArchive,
     'dashboard': renderDashboard,
     'nouvelle': initNouvelle,
     'devis-list': renderDevisList,
