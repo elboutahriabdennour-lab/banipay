@@ -64,7 +64,7 @@ function genDocPDF(opts) {
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
     return `<tr style="background:${i%2===0?'#F8FAFC':'#fff'}">
-      <td style="padding:5px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
+      <td style="padding:7px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
       <td style="padding:5px 8px;text-align:center;font-size:10px">${l.qte||1} ${l.unite||''}</td>
       ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
     </tr>`;
@@ -75,7 +75,7 @@ function genDocPDF(opts) {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',Arial,sans-serif;color:#0F172A;font-size:11px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm}
+body{font-family:'Inter',Arial,sans-serif;color:#0F172A;font-size:11px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm;display:flex;flex-direction:column}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact;width:210mm;margin:0}
   .no-print{display:none}
@@ -105,7 +105,7 @@ thead th:nth-child(3),thead th:nth-child(4){text-align:right}
 tbody td{border-bottom:1px solid #F1F5F9}
 .totaux{padding:6px 24px;display:flex;justify-content:flex-end}
 .totaux-box{width:250px;border:1px solid #E2E8F0;border-radius:6px;overflow:hidden}
-.tot-row{display:flex;justify-content:space-between;padding:4px 8px;font-size:10px;border-bottom:1px solid #F1F5F9;color:#64748B}
+.tot-row{display:flex;justify-content:space-between;padding:6px 8px;font-size:10px;border-bottom:1px solid #F1F5F9;color:#64748B}
 .tot-main{display:flex;justify-content:space-between;padding:7px 8px;background:#0F172A}
 .tot-main-lbl{font-size:11px;font-weight:700;color:#fff}
 .tot-main-val{font-size:12px;font-weight:700;color:${colorHeader}}
@@ -113,7 +113,7 @@ tbody td{border-bottom:1px solid #F1F5F9}
 .bank-box{margin:5px 24px;background:#ECFDF5;border-radius:6px;padding:7px 10px;font-size:9px;color:#059669;border:1px solid #A7F3D0}
 .refs-box{margin:4px 24px;background:#EFF6FF;border-radius:6px;padding:5px 10px;font-size:9px;color:#1D4ED8;display:flex;gap:16px}
 .sig-zone{display:flex;gap:8px;padding:5px 24px;margin-bottom:5px}
-.sig-item{flex:1;border:1px dashed #CBD5E1;border-radius:6px;padding:6px;min-height:45px}
+.sig-item{flex:1;border:1px dashed #CBD5E1;border-radius:6px;padding:10px;min-height:60px}
 .sig-lbl{font-size:8px;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-bottom:2px}
 .footer{display:flex;justify-content:space-between;align-items:center;padding:6px 24px;margin-top:auto;border-top:1px solid #E2E8F0}
 .footer-brand{font-size:9px;font-weight:700;color:#1E3A8A}
@@ -122,7 +122,7 @@ tbody td{border-bottom:1px solid #F1F5F9}
 .footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .footer-page{font-size:8px;color:#94A3B8}
 <\/style><\/head><body>
-<div style="display:flex;flex-direction:column;min-height:297mm">
+<div style="display:flex;flex-direction:column;flex:1">
 
 <div class="header">
   <div>
@@ -141,6 +141,7 @@ tbody td{border-bottom:1px solid #F1F5F9}
   </div>
 </div>
 <div class="stripe"></div>
+<div style="height:12px"></div>
 
 ${(devis_ref||bl_ref)?`<div class="refs-box">
   ${devis_ref?`<span>📝 Devis réf. : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
@@ -168,7 +169,7 @@ ${(devis_ref||bl_ref)?`<div class="refs-box">
     </div>
   </div>
 </div>
-
+<div style="height:12px"></div>
 <div class="table-section">
 <table>
 <thead><tr>
@@ -188,6 +189,7 @@ ${showPrices?`
   <div class="tot-main"><span class="tot-main-lbl">TOTAL TTC</span><span class="tot-main-val">${fmt(ttc)} ${devise}</span></div>
   ${paye>0&&restant>0?`<div class="tot-row" style="background:#FEF2F2"><span style="font-weight:700;color:#EF4444">Reste à payer</span><span style="font-weight:700;color:#EF4444">${fmt(restant)} ${devise}</span></div>`:''}
 </div></div>
+<div style="height:6px"></div>
 <div class="arrete">Arrêté à la somme de <strong>${ttcEnLettres(ttc)}</strong>. Juridiction : Maroc.</div>
 `:''}
 
@@ -199,6 +201,7 @@ ${(p.banque||p.rib)?`<div class="bank-box">
   ${p.conditions?'<br>⏱️ Conditions : '+p.conditions:''}
 </div>`:`${p.conditions?`<div class="bank-box" style="background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8">⏱️ Conditions de paiement : ${p.conditions}</div>`:''}`}
 
+<div style="flex:1;min-height:20px"></div>
 <div class="sig-zone">
   <div class="sig-item"><div class="sig-lbl">Cachet & Signature émetteur</div></div>
   <div class="sig-item"><div class="sig-lbl">Bon pour accord — Client</div></div>
