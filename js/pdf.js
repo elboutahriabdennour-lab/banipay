@@ -36,14 +36,19 @@ function previewPDF() {
 
 
 function genDocPDF(opts) {
-  const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif=''} = opts;
+  const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id=''} = opts;
   const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
-
+  const colorHeader = isAvoir?'#DC2626':isDevis?'#D97706':isBC?'#7C3AED':isBL?'#059669':(color||'#2563EB');
   const paye = Number(montant_recu)||0;
   const restant = Math.max(0, ttc - paye);
-  const colorHeader = isAvoir ? '#DC2626' : isDevis ? '#D97706' : isBC ? '#7C3AED' : isBL ? '#059669' : (color||'#2563EB');
 
-  const lignesHtml = lignes.map((l,i) => {
+  // Lien public de la facture
+  const docUrl = doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '';
+
+  // QR Code (encodé en SVG via une API simple)
+  const qrUrl = docUrl ? 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(docUrl) : '';
+
+  const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
     return `<tr style="background:${i%2===0?'#F8FAFC':'#fff'}">
       <td style="padding:8px 12px;font-size:12px">${escapeHTML(l.desc||l.designation||'')}</td>
@@ -55,48 +60,59 @@ function genDocPDF(opts) {
   const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
 <title>${type} ${ref}<\/title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,Helvetica,sans-serif;color:#0F172A;font-size:12px;background:#fff}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none}@page{margin:8mm;size:A4}}
-.header{background:#0F172A;padding:22px 32px;display:flex;justify-content:space-between;align-items:flex-start}
-.h-logo{max-width:90px;max-height:45px;object-fit:contain;margin-bottom:6px;display:block}
-.h-company{font-size:18px;font-weight:700;color:#fff}
-.h-doc-label{font-size:15px;font-weight:700;color:#fff;letter-spacing:2px;background:${colorHeader};padding:5px 14px;border-radius:4px;display:inline-block;margin-bottom:7px}
-.h-ref{font-size:12px;font-weight:700;color:#fff}
-.h-meta{font-size:10px;color:rgba(255,255,255,0.5);margin-top:3px;line-height:1.6}
+body{font-family:'Inter',Arial,sans-serif;color:#0F172A;font-size:12px;background:#fff;width:210mm;min-height:297mm;margin:0 auto}
+@media print{
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;width:210mm;margin:0}
+  .no-print{display:none}
+  @page{margin:0;size:A4}
+}
+@media screen{body{box-shadow:0 0 20px rgba(0,0,0,0.1);margin:20px auto}}
+.header{background:#0F172A;padding:20px 28px;display:flex;justify-content:space-between;align-items:flex-start}
+.h-logo{max-width:80px;max-height:40px;object-fit:contain;margin-bottom:5px;display:block}
+.h-company{font-size:17px;font-weight:700;color:#fff}
 .h-right{text-align:right}
+.h-doc-label{font-size:14px;font-weight:700;color:#fff;letter-spacing:2px;background:${colorHeader};padding:4px 12px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.h-ref{font-size:12px;font-weight:700;color:#fff}
+.h-meta{font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;line-height:1.7}
 .stripe{background:${colorHeader};height:3px}
-.legal{background:#F8FAFC;padding:7px 32px;text-align:center;font-size:9px;color:#64748B;border-bottom:1px solid #E2E8F0}
-.blocs{display:flex;gap:12px;padding:14px 32px}
-.bloc{flex:1;border-radius:8px;overflow:hidden;border:1px solid #E2E8F0}
-.bloc-hd{padding:7px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:${colorHeader};color:#fff}
-.bloc-bd{padding:10px 12px;background:#fff}
-.bloc-bd .main{font-size:13px;font-weight:700;margin-bottom:3px}
+.blocs{display:flex;gap:10px;padding:12px 28px}
+.bloc{flex:1;border-radius:6px;overflow:hidden;border:1px solid #E2E8F0}
+.bloc-hd{padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:${colorHeader};color:#fff}
+.bloc-bd{padding:9px 10px;background:#fff}
+.bloc-bd .main{font-size:12px;font-weight:700;margin-bottom:2px}
 .bloc-bd .line{font-size:10px;color:#64748B;margin-top:2px}
-.table-section{padding:0 32px}
+.table-section{padding:0 28px}
 table{width:100%;border-collapse:collapse}
 thead tr{background:#0F172A}
-thead th{padding:8px 12px;font-size:10px;font-weight:700;color:#fff;text-align:left}
+thead th{padding:7px 10px;font-size:10px;font-weight:700;color:#fff;text-align:left}
 thead th:nth-child(2){text-align:center}
 thead th:nth-child(3),thead th:nth-child(4){text-align:right}
 tbody td{border-bottom:1px solid #F1F5F9}
-.totaux{padding:12px 32px;display:flex;justify-content:flex-end}
-.totaux-box{width:270px;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden}
-.tot-row{display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #F1F5F9;color:#64748B}
-.tot-main{display:flex;justify-content:space-between;padding:10px 12px;background:#0F172A}
+.totaux{padding:10px 28px;display:flex;justify-content:flex-end}
+.totaux-box{width:250px;border:1px solid #E2E8F0;border-radius:6px;overflow:hidden}
+.tot-row{display:flex;justify-content:space-between;padding:6px 10px;font-size:11px;border-bottom:1px solid #F1F5F9;color:#64748B}
+.tot-main{display:flex;justify-content:space-between;padding:9px 10px;background:#0F172A}
 .tot-main-lbl{font-size:12px;font-weight:700;color:#fff}
-.tot-main-val{font-size:14px;font-weight:700;color:${colorHeader}}
-.arrete{padding:3px 32px 10px;font-size:10px;color:#64748B;font-style:italic}
-.footer{display:flex;justify-content:space-between;align-items:center;padding:10px 32px;margin-top:20px;border-top:1px solid #E2E8F0}
-.footer-brand{font-size:11px;font-weight:700;color:#1E3A8A}
+.tot-main-val{font-size:13px;font-weight:700;color:${colorHeader}}
+.arrete{padding:3px 28px 8px;font-size:10px;color:#64748B;font-style:italic}
+.bank-box{margin:8px 28px;background:#ECFDF5;border-radius:6px;padding:10px 12px;font-size:10px;color:#059669;border:1px solid #A7F3D0}
+.refs-box{margin:8px 28px;background:#EFF6FF;border-radius:6px;padding:8px 12px;font-size:10px;color:#1D4ED8;display:flex;gap:16px}
+.sig-zone{display:flex;gap:12px;padding:8px 28px;margin-bottom:8px}
+.sig-item{flex:1;border:1px dashed #CBD5E1;border-radius:6px;padding:10px;min-height:60px}
+.sig-lbl{font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-bottom:4px}
+.footer{display:flex;justify-content:space-between;align-items:center;padding:8px 28px;margin-top:auto;border-top:1px solid #E2E8F0}
+.footer-brand{font-size:10px;font-weight:700;color:#1E3A8A}
 .footer-brand span{color:#2563EB}
-.footer-center{font-size:8px;color:#94A3B8;text-align:center;flex:1;padding:0 12px}
+.footer-center{font-size:8px;color:#94A3B8;text-align:center;flex:1;padding:0 10px;line-height:1.6}
+.footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .footer-page{font-size:9px;color:#94A3B8}
-</style><\/head><body>
-<div style="position:relative">
+<\/style><\/head><body>
+<div style="display:flex;flex-direction:column;min-height:297mm">
 
 <div class="header">
-  <div class="h-left">
+  <div>
     ${p.logo?`<img src="${p.logo}" class="h-logo" alt="logo">`:''}
     <div class="h-company">${escapeHTML(p.raison||'Mon Entreprise')}</div>
   </div>
@@ -104,24 +120,28 @@ tbody td{border-bottom:1px solid #F1F5F9}
     <div class="h-doc-label">${type}</div>
     <div class="h-ref">${ref}</div>
     <div class="h-meta">
-      Date: ${date||''}<br>
-      ${echeance?'Échéance: '+echeance+'<br>':''}
-      ${validite?'Validité: '+validite+' jours<br>':''}
-      ${paiement?'Paiement: '+paiement:''}
+      Date : ${date||'—'}<br>
+      ${echeance?'Échéance : '+echeance+'<br>':''}
+      ${validite?'Validité : '+validite+' jours<br>':''}
+      Paiement : ${paiement||'—'}
     </div>
   </div>
 </div>
 <div class="stripe"></div>
 
+${(devis_ref||bl_ref)?`<div class="refs-box">
+  ${devis_ref?`<span>📝 Devis réf. : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
+  ${bl_ref?`<span>📦 BL réf. : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
+</div>`:''}
 
 <div class="blocs">
   <div class="bloc">
     <div class="bloc-hd">${isAvoir?'Avoir pour':isDevis?'Destinataire':'Facturé à'}</div>
     <div class="bloc-bd">
       <div class="main">${escapeHTML(destinataire.nom||'—')}</div>
-      ${destinataire.chantier?`<div class="line">Projet: ${escapeHTML(destinataire.chantier)}</div>`:''}
-      ${destinataire.adresse?`<div class="line">${escapeHTML(destinataire.adresse||'')}</div>`:''}
-      ${destinataire.ice?`<div class="line">ICE: ${destinataire.ice}</div>`:''}
+      ${destinataire.chantier?`<div class="line">📋 Projet : ${escapeHTML(destinataire.chantier)}</div>`:''}
+      ${destinataire.adresse?`<div class="line">📍 ${escapeHTML(destinataire.adresse||'')}</div>`:''}
+      ${destinataire.ice?`<div class="line">ICE : ${destinataire.ice}</div>`:''}
       ${destinataire.tel?`<div class="line">📞 ${destinataire.tel}</div>`:''}
     </div>
   </div>
@@ -155,16 +175,34 @@ ${showPrices?`
   <div class="tot-main"><span class="tot-main-lbl">TOTAL TTC</span><span class="tot-main-val">${fmt(ttc)} ${devise}</span></div>
   ${paye>0&&restant>0?`<div class="tot-row" style="background:#FEF2F2"><span style="font-weight:700;color:#EF4444">Reste à payer</span><span style="font-weight:700;color:#EF4444">${fmt(restant)} ${devise}</span></div>`:''}
 </div></div>
-<div class="arrete">Arrêté à la somme de <strong>${ttcEnLettres(ttc)} TTC</strong>. Juridiction: Maroc.</div>
+<div class="arrete">Arrêté à la somme de <strong>${ttcEnLettres(ttc)}</strong>. Juridiction : Maroc.</div>
 `:''}
 
-${note?`<div style="margin:0 32px 12px;background:#FFFBEB;border-left:3px solid #D97706;border-radius:0 8px 8px 0;padding:10px 12px;font-size:11px;color:#92400E"><strong>Note:</strong> ${escapeHTML(note)}</div>`:''}
-${motif?`<div style="margin:0 32px 12px;background:#FEF2F2;border-left:3px solid #EF4444;border-radius:0 8px 8px 0;padding:10px 12px;font-size:11px;color:#991B1B"><strong>Motif:</strong> ${escapeHTML(motif)}</div>`:''}
+${note?`<div style="margin:6px 28px;background:#FFFBEB;border-left:3px solid #D97706;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#92400E"><strong>Note :</strong> ${escapeHTML(note)}</div>`:''}
+${motif?`<div style="margin:6px 28px;background:#FEF2F2;border-left:3px solid #EF4444;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#991B1B"><strong>Motif :</strong> ${escapeHTML(motif)}</div>`:''}
+
+${(p.banque||p.rib)?`<div class="bank-box">
+  🏦 Coordonnées bancaires — ${p.banque||''}${p.rib?' · RIB/IBAN : <strong>'+p.rib+'</strong>':''}
+  ${p.conditions?'<br>⏱️ Conditions : '+p.conditions:''}
+</div>`:`${p.conditions?`<div class="bank-box" style="background:#EFF6FF;border-color:#BFDBFE;color:#1D4ED8">⏱️ Conditions de paiement : ${p.conditions}</div>`:''}`}
+
+<div class="sig-zone">
+  <div class="sig-item"><div class="sig-lbl">Cachet & Signature émetteur</div></div>
+  <div class="sig-item"><div class="sig-lbl">Bon pour accord — Client</div></div>
+</div>
+
+<div style="flex:1"></div>
 
 <div class="footer">
   <div class="footer-brand">Bani<span>Pay</span></div>
-  <div class="footer-center">${[p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Patente: '+p.patente:'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}</div>
-  <div class="footer-page">Page 1/1</div>
+  <div class="footer-center">
+    ${[p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Pat: '+p.patente:'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}
+    ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+p.ville:''):''}
+  </div>
+  <div class="footer-right">
+    ${qrUrl?`<img src="${qrUrl}" style="width:50px;height:50px;display:block">`:''}
+    <div class="footer-page">Page 1/1</div>
+  </div>
 </div>
 
 </div>
