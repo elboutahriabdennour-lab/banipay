@@ -6,8 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1E3A8A">
-<meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
-<title>BaniPay — Gestion Factures &amp; Devis</title>
+<meta name="description" content="BaniPay — ">
+<title>BaniPay</title>
 <link rel="stylesheet" href="css/style.css">
 <style>
 
@@ -384,6 +384,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="topbar">
     <div class="topbar-brand">Bani<span>Pay</span></div>
     <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
       <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-devis',null)">+ Nouveau</span>
     </div>
   </div>
@@ -685,7 +686,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="auth-wrap">
     <div class="auth-logo">
       <h1>Bani<span>Pay</span></h1>
-      <p>Gestion Factures & Devis</p>
+      <p></p>
     </div>
     <div class="auth-card">
       <div id="aw-normal">
@@ -759,7 +760,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
         <button class="a-btn a-btn-green" onclick="accederComptable()">Accéder →</button>
       </div>
     </div>
-    <div class="a-footer">Données sécurisées · BaniPay v2.0</div>
+    <div class="a-footer">BaniPay · v2.0</div>
   </div>
 </div>
 
@@ -1242,10 +1243,13 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 <div class="toast" id="toast"></div>
 <!-- CLIENTS -->
   <div class="screen" id="screen-clients">
-    <div class="app-header" style="padding-top:16px">
-      <div class="brand">Bani<span>Pay</span></div>
-      <div class="avatar" id="av-clients" onclick="goScreen('profil',null)">AB</div>
+  <div class="topbar">
+    <div class="topbar-brand">Bani<span>Pay</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
+      <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-client',null)">+ Ajouter</span>
     </div>
+  </div>
     <div style="padding:0 20px 12px">
       <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client..." oninput="renderClients()" style="margin-top:12px">
     </div>
