@@ -102,9 +102,13 @@ function renderLignesF() {
 function supprimerLigneF(i) { STATE.lignesF.splice(i, 1); renderLignesF(); }
 
 function updateTotauxF() {
-  const tvaRate = 0.20;
-  const ht = STATE.lignesF.reduce((s, l) => s + l.qte * l.pu, 0);
-  const tva = ht * tvaRate;
+  // TVA calculée ligne par ligne selon taux de chaque produit
+  const ht = STATE.lignesF.reduce((s, l) => s + (Number(l.qte)||0) * (Number(l.pu)||0), 0);
+  const tva = STATE.lignesF.reduce((s, l) => {
+    const lineHt = (Number(l.qte)||0) * (Number(l.pu)||0);
+    const taux = Number(l.tva) >= 0 ? Number(l.tva) : 20; // défaut 20% si non défini
+    return s + lineHt * taux / 100;
+  }, 0);
   const ttc = ht + tva;
   setEl('total-ht', fmt(ht) + ' ' + STATE.deviseF);
   setEl('total-tva', fmt(tva) + ' ' + STATE.deviseF);
@@ -435,7 +439,8 @@ function relancerWhatsApp(id) {
     '\u2022 Date : ' + (f.date_emission||'') + '\n' +
     (f.echeance ? '\u2022 \u00c9ch\u00e9ance : ' + f.echeance + '\n' : '') +
     (f.chantier ? '\u2022 Projet : ' + f.chantier + '\n' : '') +
-    '\n\u{1F517} *Notre profil :*\n' + lienProfil + '\n\n' +
+    '\n\u{1F4CE} *Voir la facture :*\n' + (window.location.origin + window.location.pathname + '?doc=' + id) + '\n\n' +
+    '\u{1F517} *Notre profil :*\n' + lienProfil + '\n\n' +
     'Merci de r\u00e9gulariser dans les meilleurs d\u00e9lais.\n\n' +
     'Cordialement,\n' + (p.raison||'') + '\n\u{1F4DE} ' + (p.tel||'') + (p.email ? '\n\u2709\ufe0f ' + p.email : '')
   );
@@ -452,7 +457,8 @@ async function partagerDoc(type, id) {
   if (type === 'facture') {
     doc = STATE.factures.find(f => f.id === id);
     titre = `Facture ${doc?.ref}`;
-    texte = `*Facture ${doc?.ref}*\nClient: ${doc?.client}\nMontant: ${fmt(doc?.ttc)} ${doc?.devise||'MAD'} TTC\nDate: ${doc?.date_emission||''}\n\n${p.raison||''}\n${p.tel||''} · ${p.email||''}`;
+    const facUrl = window.location.origin + window.location.pathname + '?doc=' + id;
+    texte = `*Facture ${doc?.ref}*\nClient: ${doc?.client}\nMontant: ${fmt(doc?.ttc)} ${doc?.devise||'MAD'} TTC\nDate: ${doc?.date_emission||''}\n\n📎 Voir: ${facUrl}\n\n${p.raison||''}\n${p.tel||''} · ${p.email||''}`;
   } else {
     doc = STATE.devis.find(d => d.id === id);
     titre = `Devis ${doc?.ref}`;
