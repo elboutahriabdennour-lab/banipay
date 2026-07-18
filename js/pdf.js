@@ -62,11 +62,11 @@ function genDocPDF(opts) {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',Arial,sans-serif;color:#0F172A;font-size:12px;background:#fff;width:210mm;min-height:297mm;margin:0 auto}
+body{font-family:'Inter',Arial,sans-serif;color:#0F172A;font-size:12px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact;width:210mm;margin:0}
   .no-print{display:none}
-  @page{margin:0;size:A4}
+  @page{margin:0;size:A4 portrait}
 }
 @media screen{body{box-shadow:0 0 20px rgba(0,0,0,0.1);margin:20px auto}}
 .header{background:#0F172A;padding:20px 28px;display:flex;justify-content:space-between;align-items:flex-start}
