@@ -236,17 +236,20 @@ async function sauvegarderAvoir() {
       facture_origine_ref:STATE.factures.find(f=>String(f.id)===el('av-facture-origine')?.value)?.ref||''
     });
     STATE.avoirs.unshift(r[0]);
-    // Mise à jour de la facture d'origine si annulation
+    // L'avoir est un document distinct - ne pas modifier la facture d'origine
+    // Lier l'avoir à la facture d'origine pour référence uniquement
     const factureId = el('av-facture-origine')?.value;
-    if (factureId && el('av-motif')?.value === 'annulation') {
+    if (factureId) {
       const f = STATE.factures.find(x => String(x.id) === factureId);
-      if (f) {
-        await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + sb.user.id, { statut: 'payee' });
-        f.statut = 'payee';
+      if (f && el('av-motif')?.value === 'annulation') {
+        // Annulation totale : marquer la facture comme annulée (pas payée)
+        await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + sb.user.id, { statut: 'annulee' });
+        f.statut = 'annulee';
       }
     }
-    showToast('✅ Avoir émis !','success');
-    setTimeout(()=>goScreen('dashboard'),800);
+    showToast('✅ Avoir émis !', 'success');
+    // Aller vers la liste des avoirs
+    setTimeout(() => goScreen('avoir-list'), 800);
   } catch(e){showToast('❌ '+e.message,'error');}
 }
 
@@ -399,14 +402,82 @@ function previewAvoirPDF() {
   const client = el('av-client')?.value.trim();
   if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
   const ht = parseFloat(el('av-montant')?.value) || 0;
+  // Trouver la facture d'origine
+  const factureId = el('av-facture-origine')?.value;
+  const factureOrig = factureId ? STATE.factures.find(x => String(x.id) === factureId) : null;
+  const motifLabels = {
+    'annulation': 'Annulation totale de facture',
+    'remboursement': 'Remboursement partiel',
+    'correction': "Correction d'erreur",
+    'retour': 'Retour marchandise'
+  };
+  const motif = el('av-motif')?.value || 'annulation';
   genDocPDF({
-    type: 'AVOIR', ref: el('av-ref')?.value, color: '#DC2626',
+    type: 'AVOIR',
+    ref: el('av-ref')?.value,
+    color: '#DC2626',
     emetteur: STATE.profil || {},
     destinataire: { nom: client },
     date: el('av-date')?.value,
-    motif: el('av-motif')?.value || '',
-    lignes: [{ desc: 'Avoir', qte: 1, pu: ht, unite: 'Fft' }],
+    motif: motifLabels[motif] || motif,
+    devis_ref: factureOrig ? 'Facture annulée: ' + factureOrig.ref : '',
+    lignes: [{ desc: motifLabels[motif] || 'Avoir', qte: 1, pu: ht, unite: 'Fft', tva: 20 }],
     ht, tva: ht*0.2, ttc: ht*1.2,
     devise: STATE.deviseF || 'MAD',
+    showStamp: false,
+  });
+}
+
+// ============================================================
+// LISTE DES AVOIRS
+// ============================================================
+
+function renderAvoirList() {
+  const list = el('avoir-list-items');
+  if (!list) return;
+  const avoirs = STATE.avoirs || [];
+  if (!avoirs.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">↩️</div><div class="empty-title">Aucun avoir</div><div>Créez un avoir depuis le formulaire</div></div>';
+    return;
+  }
+  list.innerHTML = avoirs.map(a => `
+    <div class="card" style="margin:0 20px 10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#DC2626">↩️ ${escapeHTML(a.ref||'')}</div>
+          <div style="font-size:12px;color:#0F172A;margin-top:2px">${escapeHTML(a.client||'')}</div>
+          <div style="font-size:11px;color:#64748B;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
+          ${a.facture_origine_ref?`<div style="font-size:10px;color:#94A3B8">Facture: ${a.facture_origine_ref}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:700;color:#DC2626">-${fmt(a.ttc||0)} MAD</div>
+          <button onclick="exportAvoirPDF('${a.id}')" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;margin-top:4px">📄 PDF</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function exportAvoirPDF(id) {
+  const a = STATE.avoirs.find(x => x.id === id);
+  if (!a) return;
+  const motifLabels = {
+    'annulation': 'Annulation totale de facture',
+    'remboursement': 'Remboursement partiel',
+    'correction': "Correction d'erreur",
+    'retour': 'Retour marchandise'
+  };
+  genDocPDF({
+    type: 'AVOIR',
+    ref: a.ref,
+    color: '#DC2626',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: a.client || '' },
+    date: a.date_emission,
+    motif: motifLabels[a.motif] || a.motif || '',
+    devis_ref: a.facture_origine_ref ? 'Facture: ' + a.facture_origine_ref : '',
+    lignes: [{ desc: motifLabels[a.motif] || 'Avoir', qte: 1, pu: a.ht || 0, unite: 'Fft', tva: 20 }],
+    ht: a.ht, tva: a.tva, ttc: a.ttc,
+    devise: 'MAD',
   });
 }
