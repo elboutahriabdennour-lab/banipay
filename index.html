@@ -313,13 +313,27 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="total-ttc">0 MAD</span></div>
   </div>
   <div class="form-section">
-    <label class="f-lbl">Mode de paiement</label>
-    <select id="f-paiement" class="f-inp">
+    <div class="f-row">
+      <div>
+        <label class="f-lbl">Devise</label>
+        <select id="f-devise" class="f-inp" onchange="STATE.deviseF=this.value;updateTotauxF()">
+          <option value="MAD" selected>MAD 🇲🇦</option>
+          <option value="EUR">EUR 🇪🇺</option>
+          <option value="USD">USD 🇺🇸</option>
+          <option value="GBP">GBP 🇬🇧</option>
+          <option value="AED">AED 🇦🇪</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-lbl">Mode paiement</label>
+        <select id="f-paiement" class="f-inp">
       <option value="virement">Virement bancaire</option>
       <option value="cheque">Chèque</option>
       <option value="especes">Espèces</option>
-      <option value="carte">Carte bancaire</option>
-    </select>
+          <option value="carte">Carte bancaire</option>
+        </select>
+      </div>
+    </div>
   </div>
   <div class="form-section">
     <label class="f-lbl">Statut</label>
@@ -658,6 +672,11 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
   <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
   <div style="padding:0 20px;margin-top:16px;padding-bottom:20px" id="sa-top-produits"></div>
+  <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-bottom:4px">Export données</div>
+    <button onclick="exporterCSV()" style="background:#059669;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export Factures CSV</button>
+    <button onclick="exporterCSVDevis()" style="background:#D97706;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export Devis CSV</button>
+  </div>
   <div class="pb"></div>
 </div>
 
