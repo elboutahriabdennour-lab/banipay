@@ -292,24 +292,23 @@ function confirmerLigneBC() {
 }
 
 function genBonCommandePDF() {
-  const fournisseur=el('bc-fournisseur')?.value.trim();
-  if(!fournisseur||!STATE.lignesBC.length){showToast('Remplissez le formulaire','error');return;}
+  const fournisseur = el('bc-fournisseur')?.value.trim();
+  if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
+  const ht = STATE.lignesBC.reduce((s,l) => s + (l.qte||1)*(l.pu||0), 0);
   genDocPDF({
-    type:'BON DE COMMANDE',ref:el('bc-ref')?.value,
-    color:'#2563EB',
-    emetteur:STATE.profil,
-    destinataire:{nom:fournisseur},
-    date:el('bc-date')?.value,
-    extra:`Livraison prévue : ${el('bc-livraison')?.value||'—'}`,
-    lignes:STATE.lignesBC, note:el('bc-note')?.value,
-    devise:'MAD', signature:true
+    type: 'BON DE COMMANDE', ref: el('bc-ref')?.value, color: '#7C3AED',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: fournisseur },
+    date: el('bc-date')?.value,
+    paiement: '',
+    lignes: STATE.lignesBC,
+    note: el('bc-note')?.value || '',
+    ht, tva: ht*0.2, ttc: ht*1.2,
+    devise: 'MAD',
+    bl_ref: el('bc-livraison')?.value ? 'Livraison prévue: ' + el('bc-livraison').value : '',
+    showPrices: true,
   });
 }
-
-// ============================================================
-// BON DE LIVRAISON
-// ============================================================
-
 function initBonLivraison() {
   STATE.lignesBL=[];
   el('bl-client')&&(el('bl-client').value='');
@@ -344,67 +343,70 @@ function confirmerLigneBL() {
 }
 
 function genBonLivraisonPDF() {
-  const client=el('bl-client')?.value.trim();
-  if(!client||!STATE.lignesBL.length){showToast('Remplissez le formulaire','error');return;}
+  const client = el('bl-client')?.value.trim();
+  if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
   genDocPDF({
-    type:'BON DE LIVRAISON',ref:el('bl-ref')?.value,
-    color:'#059669',
-    emetteur:STATE.profil,
-    destinataire:{nom:client},
-    date:el('bl-date')?.value,
-    extra:el('bl-facture-ref')?.value?`Facture réf: ${el('bl-facture-ref').value}`:'',
-    lignes:STATE.lignesBL.map(l=>({...l,pu:0})),
-    devise:'MAD', showPrices:false, signature:true
+    type: 'BON DE LIVRAISON', ref: el('bl-ref')?.value, color: '#059669',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: client },
+    date: el('bl-date')?.value,
+    paiement: '',
+    lignes: STATE.lignesBL.map(l => ({ desc: l.desc||l.designation||'', qte: l.qte||1, pu: 0, unite: l.unite||'u' })),
+    note: '',
+    ht: 0, tva: 0, ttc: 0,
+    devise: 'MAD',
+    showPrices: false,
+    devis_ref: el('bl-facture-ref')?.value ? 'Facture réf: ' + el('bl-facture-ref').value : '',
   });
 }
-
-
-// ===== CLIENTS.JS =====
-// ============================================================
-// BANIPAY — Clients
-// ============================================================
-// ============================================================
-// QR SCANNER & LIEN CLIENT
-// ============================================================
-
 function exportDevisPDF(id) {
   const d = STATE.devis.find(x=>x.id===id); if(!d) return;
+  const lignes = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
   genDocPDF({
-    type:'DEVIS', ref:d.ref, color:'#059669',
-    emetteur:STATE.profil,
-    destinataire:{nom:d.client,chantier:d.chantier},
-    date:d.date_emission, validite:d.validite,
-    lignes:d.lignes, note:d.note,
-    ht:d.ht, tva:d.tva, ttc:d.ttc,
-    devise:d.devise||'MAD',
+    type: 'DEVIS', ref: d.ref, color: '#D97706',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: d.client, chantier: d.chantier },
+    date: d.date_emission, validite: d.validite,
+    paiement: '',
+    lignes: lignes, note: d.note||'',
+    ht: d.ht, tva: d.tva, ttc: d.ttc,
+    devise: d.devise || 'MAD',
+    doc_id: id,
+    doc_url: window.location.origin + window.location.pathname + '?doc=' + id,
   });
 }
 
 function previewDevisPDF() {
-  const client=el('d-client')?.value.trim();
-  if(!client){showToast('Remplissez le formulaire','error');return;}
-  const ht=STATE.lignesD.reduce((s,l)=>s+l.qte*l.pu,0);
+  const client = el('d-client')?.value.trim();
+  if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
+  const ht = STATE.lignesD.reduce((s,l) => s + l.qte*l.pu, 0);
   genDocPDF({
-    type:'DEVIS', ref:el('d-ref')?.value, color:'#059669',
-    emetteur:STATE.profil,
-    destinataire:{nom:client,chantier:el('d-chantier')?.value},
-    date:el('d-date')?.value, validite:el('d-validite')?.value,
-    lignes:STATE.lignesD,
-    ht, tva:ht*0.2, ttc:ht*1.2,
-    devise:STATE.deviseD,
+    type: 'DEVIS', ref: el('d-ref')?.value, color: '#D97706',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: client, chantier: el('d-chantier')?.value },
+    date: el('d-date')?.value,
+    validite: el('d-validite')?.value,
+    paiement: '',
+    lignes: STATE.lignesD,
+    note: el('d-note')?.value || '',
+    ht, tva: ht*0.2, ttc: ht*1.2,
+    devise: STATE.deviseF || 'MAD',
+    doc_id: STATE.currentDevis?.id || '',
+    doc_url: STATE.currentDevis?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentDevis.id) : '',
   });
 }
-
 function previewAvoirPDF() {
-  const client=el('av-client')?.value.trim();
-  const ht=parseFloat(el('av-montant')?.value)||0;
-  if(!client){showToast('Remplissez le formulaire','error');return;}
+  const client = el('av-client')?.value.trim();
+  if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
+  const ht = parseFloat(el('av-montant')?.value) || 0;
   genDocPDF({
-    type:'AVOIR', ref:el('av-ref')?.value, color:'#EF4444',
-    emetteur:STATE.profil,
-    destinataire:{nom:client},
-    date:el('av-date')?.value,
-    motif:el('av-motif')?.value,
-    lignes:[], ht, tva:ht*0.2, ttc:ht*1.2, devise:'MAD',
+    type: 'AVOIR', ref: el('av-ref')?.value, color: '#DC2626',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: client },
+    date: el('av-date')?.value,
+    motif: el('av-motif')?.value || '',
+    lignes: [{ desc: 'Avoir', qte: 1, pu: ht, unite: 'Fft' }],
+    ht, tva: ht*0.2, ttc: ht*1.2,
+    devise: STATE.deviseF || 'MAD',
   });
 }
