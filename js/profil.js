@@ -342,3 +342,112 @@ async function deleteAccount() {
 // ============================================================
 // PORTAIL CLIENT (base)
 // ============================================================
+
+
+// ============================================================
+// ARCHIVE DOCUMENTS
+// ============================================================
+
+let _archiveType = '';
+
+function renderArchive() {
+  const list = el('archive-list');
+  const count = el('archive-count');
+  const docs = STATE.archive || [];
+  if (count) count.textContent = docs.length + ' document(s)';
+  if (!list) return;
+  if (!docs.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">📁</div><div class="empty-title">Aucun document</div><div>Ajoutez vos documents officiels</div></div>';
+    return;
+  }
+  list.innerHTML = docs.map(d => `
+    <div class="card" style="margin:0 20px 10px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:20px">${d.icon||'📄'}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">${escapeHTML(d.nom)}</div>
+          <div style="font-size:11px;color:#94A3B8">${d.type} · ${d.date||''}</div>
+        </div>
+        <button onclick="supprimerDocArchive('${d.id}')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function ajouterDocumentArchive(type) {
+  _archiveType = type;
+  const icons = { statuts:'📋', rib:'🏦', cnss:'🛡️', patente:'📄', ice:'🔢', autre:'📁' };
+  const labels = { statuts:'Statuts de société', rib:'RIB bancaire', cnss:'Attestation CNSS', patente:'Patente', ice:'Certificat ICE', autre:'Autre document' };
+  showToast('Sélectionnez un fichier pour: ' + (labels[type]||type));
+  const inp = el('archive-file-input');
+  if (inp) {
+    inp.setAttribute('data-type', type);
+    inp.click();
+  }
+}
+
+async function uploadDocumentArchive(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const type = event.target.getAttribute('data-type') || 'autre';
+  const icons = { statuts:'📋', rib:'🏦', cnss:'🛡️', patente:'📄', ice:'🔢', autre:'📁' };
+  const labels = { statuts:'Statuts', rib:'RIB', cnss:'CNSS', patente:'Patente', ice:'ICE', autre:file.name };
+
+  showToast('⏳ Upload en cours...');
+
+  try {
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const base64 = e.target.result;
+      const uid = sb.user?.id;
+      if (!uid) return;
+
+      const doc = {
+        id: Date.now().toString(),
+        type: labels[type] || type,
+        nom: file.name,
+        icon: icons[type] || '📄',
+        date: new Date().toLocaleDateString('fr-FR'),
+        data: base64,
+        size: (file.size / 1024).toFixed(0) + ' KB',
+        user_id: uid,
+      };
+
+      // Save to Supabase
+      await sb.post('archive_documents', doc);
+      if (!STATE.archive) STATE.archive = [];
+      STATE.archive.unshift(doc);
+      renderArchive();
+      showToast('✅ Document ajouté !', 'success');
+    };
+    reader.readAsDataURL(file);
+  } catch(e) {
+    showToast('Erreur upload: ' + e.message, 'error');
+  }
+  event.target.value = '';
+}
+
+async function supprimerDocArchive(id) {
+  if (!confirm('Supprimer ce document ?')) return;
+  try {
+    await sb.delete('archive_documents', `id=eq.${id}`);
+    STATE.archive = (STATE.archive||[]).filter(d => d.id !== id);
+    renderArchive();
+    showToast('Document supprimé', 'success');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+async function loadArchive() {
+  try {
+    const uid = sb.user?.id;
+    if (!uid) return;
+    const docs = await sb.get('archive_documents', `user_id=eq.${uid}&order=created_at.desc`);
+    STATE.archive = docs || [];
+    renderArchive();
+  } catch(e) {
+    STATE.archive = [];
+  }
+}
