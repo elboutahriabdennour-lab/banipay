@@ -51,9 +51,9 @@ function genDocPDF(opts) {
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
     return `<tr style="background:${i%2===0?'#F8FAFC':'#fff'}">
-      <td style="padding:8px 12px;font-size:12px">${escapeHTML(l.desc||l.designation||'')}</td>
-      <td style="padding:8px 12px;text-align:center;font-size:12px">${l.qte||1} ${l.unite||''}</td>
-      ${showPrices?`<td style="padding:8px 12px;text-align:right;font-size:12px">${fmt(Number(l.pu)||0)}</td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">${fmt(total)}</td>`:''}
+      <td style="padding:5px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
+      <td style="padding:5px 8px;text-align:center;font-size:10px">${l.qte||1} ${l.unite||''}</td>
+      ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
     </tr>`;
   }).join('');
 
@@ -62,52 +62,52 @@ function genDocPDF(opts) {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',Arial,sans-serif;color:#0F172A;font-size:12px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm}
+body{font-family:'Inter',Arial,sans-serif;color:#0F172A;font-size:11px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact;width:210mm;margin:0}
   .no-print{display:none}
   @page{margin:0;size:A4 portrait}
 }
 @media screen{body{box-shadow:0 0 20px rgba(0,0,0,0.1);margin:20px auto}}
-.header{background:#0F172A;padding:20px 28px;display:flex;justify-content:space-between;align-items:flex-start}
+.header{background:#0F172A;padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start}
 .h-logo{max-width:80px;max-height:40px;object-fit:contain;margin-bottom:5px;display:block}
-.h-company{font-size:17px;font-weight:700;color:#fff}
+.h-company{font-size:15px;font-weight:700;color:#fff}
 .h-right{text-align:right}
-.h-doc-label{font-size:14px;font-weight:700;color:#fff;letter-spacing:2px;background:${colorHeader};padding:4px 12px;border-radius:4px;display:inline-block;margin-bottom:6px}
-.h-ref{font-size:12px;font-weight:700;color:#fff}
+.h-doc-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;background:${colorHeader};padding:3px 10px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.h-ref{font-size:11px;font-weight:700;color:#fff}
 .h-meta{font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;line-height:1.7}
 .stripe{background:${colorHeader};height:3px}
-.blocs{display:flex;gap:10px;padding:12px 28px}
+.blocs{display:flex;gap:8px;padding:8px 24px}
 .bloc{flex:1;border-radius:6px;overflow:hidden;border:1px solid #E2E8F0}
-.bloc-hd{padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:${colorHeader};color:#fff}
-.bloc-bd{padding:9px 10px;background:#fff}
-.bloc-bd .main{font-size:12px;font-weight:700;margin-bottom:2px}
-.bloc-bd .line{font-size:10px;color:#64748B;margin-top:2px}
-.table-section{padding:0 28px}
+.bloc-hd{padding:5px 8px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:${colorHeader};color:#fff}
+.bloc-bd{padding:7px 8px;background:#fff}
+.bloc-bd .main{font-size:11px;font-weight:700;margin-bottom:1px}
+.bloc-bd .line{font-size:9px;color:#64748B;margin-top:1px}
+.table-section{padding:0 24px}
 table{width:100%;border-collapse:collapse}
 thead tr{background:#0F172A}
-thead th{padding:7px 10px;font-size:10px;font-weight:700;color:#fff;text-align:left}
+thead th{padding:5px 8px;font-size:9px;font-weight:700;color:#fff;text-align:left}
 thead th:nth-child(2){text-align:center}
 thead th:nth-child(3),thead th:nth-child(4){text-align:right}
 tbody td{border-bottom:1px solid #F1F5F9}
-.totaux{padding:10px 28px;display:flex;justify-content:flex-end}
+.totaux{padding:6px 24px;display:flex;justify-content:flex-end}
 .totaux-box{width:250px;border:1px solid #E2E8F0;border-radius:6px;overflow:hidden}
-.tot-row{display:flex;justify-content:space-between;padding:6px 10px;font-size:11px;border-bottom:1px solid #F1F5F9;color:#64748B}
-.tot-main{display:flex;justify-content:space-between;padding:9px 10px;background:#0F172A}
-.tot-main-lbl{font-size:12px;font-weight:700;color:#fff}
-.tot-main-val{font-size:13px;font-weight:700;color:${colorHeader}}
-.arrete{padding:3px 28px 8px;font-size:10px;color:#64748B;font-style:italic}
-.bank-box{margin:8px 28px;background:#ECFDF5;border-radius:6px;padding:10px 12px;font-size:10px;color:#059669;border:1px solid #A7F3D0}
-.refs-box{margin:8px 28px;background:#EFF6FF;border-radius:6px;padding:8px 12px;font-size:10px;color:#1D4ED8;display:flex;gap:16px}
-.sig-zone{display:flex;gap:12px;padding:8px 28px;margin-bottom:8px}
-.sig-item{flex:1;border:1px dashed #CBD5E1;border-radius:6px;padding:10px;min-height:60px}
-.sig-lbl{font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-bottom:4px}
-.footer{display:flex;justify-content:space-between;align-items:center;padding:8px 28px;margin-top:auto;border-top:1px solid #E2E8F0}
-.footer-brand{font-size:10px;font-weight:700;color:#1E3A8A}
+.tot-row{display:flex;justify-content:space-between;padding:4px 8px;font-size:10px;border-bottom:1px solid #F1F5F9;color:#64748B}
+.tot-main{display:flex;justify-content:space-between;padding:7px 8px;background:#0F172A}
+.tot-main-lbl{font-size:11px;font-weight:700;color:#fff}
+.tot-main-val{font-size:12px;font-weight:700;color:${colorHeader}}
+.arrete{padding:2px 24px 6px;font-size:10px;color:#64748B;font-style:italic}
+.bank-box{margin:5px 24px;background:#ECFDF5;border-radius:6px;padding:7px 10px;font-size:9px;color:#059669;border:1px solid #A7F3D0}
+.refs-box{margin:4px 24px;background:#EFF6FF;border-radius:6px;padding:5px 10px;font-size:9px;color:#1D4ED8;display:flex;gap:16px}
+.sig-zone{display:flex;gap:8px;padding:5px 24px;margin-bottom:5px}
+.sig-item{flex:1;border:1px dashed #CBD5E1;border-radius:6px;padding:6px;min-height:45px}
+.sig-lbl{font-size:8px;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-bottom:2px}
+.footer{display:flex;justify-content:space-between;align-items:center;padding:6px 24px;margin-top:auto;border-top:1px solid #E2E8F0}
+.footer-brand{font-size:9px;font-weight:700;color:#1E3A8A}
 .footer-brand span{color:#2563EB}
-.footer-center{font-size:8px;color:#94A3B8;text-align:center;flex:1;padding:0 10px;line-height:1.6}
+.footer-center{font-size:7px;color:#94A3B8;text-align:center;flex:1;padding:0 8px;line-height:1.5}
 .footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.footer-page{font-size:9px;color:#94A3B8}
+.footer-page{font-size:8px;color:#94A3B8}
 <\/style><\/head><body>
 <div style="display:flex;flex-direction:column;min-height:297mm">
 
@@ -178,7 +178,7 @@ ${showPrices?`
 <div class="arrete">Arrêté à la somme de <strong>${ttcEnLettres(ttc)}</strong>. Juridiction : Maroc.</div>
 `:''}
 
-${note?`<div style="margin:6px 28px;background:#FFFBEB;border-left:3px solid #D97706;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#92400E"><strong>Note :</strong> ${escapeHTML(note)}</div>`:''}
+${note?`<div style="margin:4px 24px;background:#FFFBEB;border-left:3px solid #D97706;border-radius:0 6px 6px 0;padding:5px 8px;font-size:9px;color:#92400E"><strong>Note :</strong> ${escapeHTML(note)}</div>`:''}
 ${motif?`<div style="margin:6px 28px;background:#FEF2F2;border-left:3px solid #EF4444;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#991B1B"><strong>Motif :</strong> ${escapeHTML(motif)}</div>`:''}
 
 ${(p.banque||p.rib)?`<div class="bank-box">
@@ -200,7 +200,7 @@ ${(p.banque||p.rib)?`<div class="bank-box">
     ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+p.ville:''):''}
   </div>
   <div class="footer-right">
-    ${qrUrl?`<img src="${qrUrl}" style="width:50px;height:50px;display:block">`:''}
+    ${qrUrl?`<img src="${qrUrl}" style="width:40px;height:40px;display:block">`:''}
     <div class="footer-page">Page 1/1</div>
   </div>
 </div>
