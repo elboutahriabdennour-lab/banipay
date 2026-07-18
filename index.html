@@ -245,7 +245,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="quick-actions">
     <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#EFF6FF">➕</div><div class="qa-lbl">Facture</div></div>
     <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#FFFBEB">📝</div><div class="qa-lbl">Devis</div></div>
-    <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#ECFDF5">↩️</div><div class="qa-lbl">Avoir</div></div>
+    <div class="qa-item" onclick="renderAvoirList();goScreen('avoir-list',null)"><div class="qa-ico" style="background:#ECFDF5">↩️</div><div class="qa-lbl">Avoirs</div></div>
     <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#F1F5F9">📤</div><div class="qa-lbl">Export</div></div>
   </div>
   <div style="height:8px"></div>
@@ -589,6 +589,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <div id="pv-objectif" style="display:none;background:#EFF6FF;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#1D4ED8"></div>
     <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
     <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#2563EB">📁 Archive documents</button>
+    <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#059669">🏢 Annuaire BaniPay</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#9333EA">🔐 Lien accès comptable</button>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
@@ -1164,6 +1165,51 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   </div>
   <div class="sec-label">Documents uploadés</div>
   <div class="card-list" id="archive-list"></div>
+  <div class="pb"></div>
+</div>
+
+
+<!-- ===== ANNUAIRE BANIPAY ===== -->
+<div class="screen" id="screen-annuaire">
+  <div class="topbar">
+    <div class="topbar-brand">Bani<span>Pay</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
+    </div>
+  </div>
+  <div class="hero" style="padding-bottom:16px">
+    <div class="hero-lbl">Annuaire BaniPay</div>
+    <div class="hero-sub-txt">Entreprises utilisant BaniPay</div>
+  </div>
+  <div style="padding:12px 20px">
+    <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher une entreprise..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
+    <div style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
+      <button class="ftab active" onclick="filtrerAnnuaireSecteur('',this)">Tous</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('BTP & Construction',this)">BTP</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Commerce & Négoce',this)">Commerce</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Transport & Logistique',this)">Transport</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Conseil & Expertise',this)">Conseil</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Informatique & Tech',this)">Tech</button>
+    </div>
+  </div>
+  <div class="card-list" id="annuaire-list"></div>
+  <div class="pb"></div>
+</div>
+
+
+<!-- ===== LISTE AVOIRS ===== -->
+<div class="screen" id="screen-avoir-list">
+  <div class="topbar">
+    <div class="topbar-brand">Bani<span>Pay</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
+    </div>
+  </div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px">
+    <div class="sec-title">Avoirs émis</div>
+    <button onclick="goScreen('avoir',null)" style="background:#DC2626;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button>
+  </div>
+  <div id="avoir-list-items"></div>
   <div class="pb"></div>
 </div>
 
