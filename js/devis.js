@@ -504,9 +504,8 @@ function partagerDevisWhatsApp(id) {
   const d = STATE.devis.find(x => x.id === id);
   if (!d) return;
   const p = STATE.profil || {};
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
-  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter';
-  const refusUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=refuser';
+  // Lien vers le DEVIS (pas la facture) avec paramètre type=devis
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&type=devis';
   const validiteDate = d.date_emission ? (() => {
     const dt = new Date(d.date_emission);
     dt.setDate(dt.getDate() + (d.validite || 30));
@@ -515,21 +514,13 @@ function partagerDevisWhatsApp(id) {
 
   const msg = encodeURIComponent(
     'Bonjour ' + (d.client||'') + ',\n\n' +
-    '📝 Veuillez trouver ci-dessous notre devis *' + d.ref + '*.\n\n' +
-    '📋 *Détails :*\n' +
-    '• Projet : ' + (d.chantier||'—') + '\n' +
-    '• Montant HT : ' + fmt(d.ht) + ' MAD\n' +
-    '• TVA (20%) : ' + fmt(d.tva) + ' MAD\n' +
-    '• *Total TTC : ' + fmt(d.ttc) + ' MAD*\n' +
-    (validiteDate ? '\u2022 Valide jusqu\'au : ' + validiteDate + '\n' : '') +
-    '\n📎 *Voir le devis :*\n' + docUrl + '\n\n' +
-    '✅ *Accepter :* ' + acceptUrl + '\n' +
-    '❌ *Refuser :* ' + refusUrl + '\n\n' +
-    (d.note ? '📌 Note : ' + d.note + '\n\n' : '') +
+    'Veuillez trouver notre devis *' + d.ref + '*' + (d.chantier ? ' pour ' + d.chantier : '') + '.\n\n' +
+    '• Montant TTC : *' + fmt(d.ttc) + ' MAD*\n' +
+    (validiteDate ? '• Valide jusqu\'au : ' + validiteDate + '\n' : '') +
+    '\n📎 Consulter et répondre :\n' + docUrl + '\n\n' +
     'Cordialement,\n' +
-    (p.raison||'') + '\n' +
-    (p.tel ? '📞 ' + p.tel : '') +
-    (p.email ? '\n✉️ ' + p.email : '')
+    (p.raison||'') +
+    (p.tel ? '\n📞 ' + p.tel : '')
   );
   window.open('https://wa.me/?text=' + msg, '_blank');
 }
