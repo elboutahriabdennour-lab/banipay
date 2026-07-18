@@ -16,6 +16,7 @@ function renderDevisList() {
       <div class="card-body">
         <div class="card-name">${escapeHTML(d.client)}</div>
         <div class="card-ref">${d.ref} · ${d.date_emission||''} · ${d.validite||30}j</div>
+        ${d.statut==='accepte'?'<div style="display:inline-block;background:#ECFDF5;color:#059669;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">✅ Accepté</div>':d.statut==='refuse'?'<div style="display:inline-block;background:#FEF2F2;color:#DC2626;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">❌ Refusé</div>':''}
       </div>
       <div class="card-end">
         <div class="card-amt">${fmt(d.ttc)} ${d.devise||'MAD'}</div>
@@ -141,14 +142,25 @@ function renderDetailDevis() {
   const actEl = el('dv-actions');
   if (!actEl) return;
   const actions = [];
+
+  // Badge statut
+  const statutColors = { envoye:'#D97706', accepte:'#059669', refuse:'#DC2626', expire:'#94A3B8' };
+  const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré' };
+  actions.push(`<div style="background:${statutColors[d.statut]||'#64748B'}20;border-left:3px solid ${statutColors[d.statut]||'#64748B'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#64748B'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
+
+  // Actions selon statut
   if (d.statut === 'envoye') {
     actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#ECFDF5">✅</div>Marquer accepté</button>`);
     actions.push(`<button class="action-item danger" onclick="changerStatutDevis(${d.id},'refuse')"><div class="action-ico" style="background:#FEF2F2">❌</div>Marquer refusé</button>`);
   }
-  if (d.statut === 'accepte')
+  if (d.statut === 'accepte') {
     actions.push(`<button class="action-item" style="color:#2563EB;border-left-color:#2563EB" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#EFF6FF">🧾</div>Convertir en facture</button>`);
-  actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#EFF6FF">📄</div>Exporter PDF</button>`);
-  actions.push(`<button class="action-item" onclick="partagerDoc('devis',${d.id})"><div class="action-ico" style="background:#ECFDF5">📤</div>Partager</button>`);
+  }
+
+  // Partage
+  actions.push(`<button class="action-item" onclick="partagerDevisWhatsApp(${d.id})"><div class="action-ico" style="background:#ECFDF5">📱</div>Partager WhatsApp</button>`);
+  actions.push(`<button class="action-item" onclick="partagerDevisNatif(${d.id})"><div class="action-ico" style="background:#EFF6FF">📤</div>Partager / Copier lien</button>`);
+  actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#FFFBEB">📄</div>Voir PDF</button>`);
   actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#F3E8FF">📋</div>Dupliquer</button>`);
   actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#FEF2F2">🗑️</div>Supprimer</button>`);
   actEl.innerHTML = actions.join('');
@@ -480,4 +492,118 @@ function exportAvoirPDF(id) {
     ht: a.ht, tva: a.tva, ttc: a.ttc,
     devise: 'MAD',
   });
+}
+
+
+
+// ============================================================
+// PARTAGE DEVIS WHATSAPP
+// ============================================================
+
+function partagerDevisWhatsApp(id) {
+  const d = STATE.devis.find(x => x.id === id);
+  if (!d) return;
+  const p = STATE.profil || {};
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
+  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter';
+  const refusUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=refuser';
+  const validiteDate = d.date_emission ? (() => {
+    const dt = new Date(d.date_emission);
+    dt.setDate(dt.getDate() + (d.validite || 30));
+    return dt.toLocaleDateString('fr-FR');
+  })() : '';
+
+  const msg = encodeURIComponent(
+    'Bonjour ' + (d.client||'') + ',\n\n' +
+    '📝 Veuillez trouver ci-dessous notre devis *' + d.ref + '*.\n\n' +
+    '📋 *Détails :*\n' +
+    '• Projet : ' + (d.chantier||'—') + '\n' +
+    '• Montant HT : ' + fmt(d.ht) + ' MAD\n' +
+    '• TVA (20%) : ' + fmt(d.tva) + ' MAD\n' +
+    '• *Total TTC : ' + fmt(d.ttc) + ' MAD*\n' +
+    (validiteDate ? '\u2022 Valide jusqu\'au : ' + validiteDate + '\n' : '') +
+    '\n📎 *Voir le devis :*\n' + docUrl + '\n\n' +
+    '✅ *Accepter :* ' + acceptUrl + '\n' +
+    '❌ *Refuser :* ' + refusUrl + '\n\n' +
+    (d.note ? '📌 Note : ' + d.note + '\n\n' : '') +
+    'Cordialement,\n' +
+    (p.raison||'') + '\n' +
+    (p.tel ? '📞 ' + p.tel : '') +
+    (p.email ? '\n✉️ ' + p.email : '')
+  );
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+
+async function partagerDevisNatif(id) {
+  const d = STATE.devis.find(x => x.id === id);
+  if (!d) return;
+  const p = STATE.profil || {};
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
+  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter';
+
+  const texte = 'Devis ' + d.ref + ' - ' + (d.client||'') + '\n' +
+    'Montant: ' + fmt(d.ttc) + ' MAD TTC\n\n' +
+    'Voir: ' + docUrl + '\n' +
+    'Accepter: ' + acceptUrl;
+
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Devis ' + d.ref, text: texte }); return; }
+    catch(e) { if (e.name === 'AbortError') return; }
+  }
+  navigator.clipboard?.writeText(texte).then(() => showToast('✅ Lien copié !', 'success'));
+}
+
+// ============================================================
+// ACCEPTER / REFUSER DEVIS (côté client via lien)
+// ============================================================
+
+async function traiterActionDevis(devisId, action) {
+  // Afficher une page de confirmation propre
+  document.body.innerHTML = `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
+      <h2 style="color:#0F172A;margin-bottom:8px">${action === 'accepter' ? 'Acceptation du devis' : 'Refus du devis'}</h2>
+      <p style="color:#64748B;margin-bottom:24px">Chargement...</p>
+    </div>
+  `;
+
+  try {
+    // Load devis
+    const r = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + devisId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    const d = data && data[0];
+    if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">Devis introuvable</div>'; return; }
+
+    // Update status
+    const nouveauStatut = action === 'accepter' ? 'accepte' : 'refuse';
+    await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + devisId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ statut: nouveauStatut, notif_lue: false })
+    });
+
+    // Show confirmation page
+    document.body.innerHTML = `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
+        <h2 style="color:#0F172A;margin-bottom:8px">Devis ${action === 'accepter' ? 'accepté' : 'refusé'} !</h2>
+        <div style="background:${action === 'accepter' ? '#ECFDF5' : '#FEF2F2'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+          <div style="font-size:13px;color:#64748B">Référence : <strong>${d.ref}</strong></div>
+          <div style="font-size:13px;color:#64748B;margin-top:4px">Client : <strong>${d.client}</strong></div>
+          <div style="font-size:13px;color:#64748B;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
+        </div>
+        <p style="color:#64748B;font-size:13px">${action === 'accepter' ? 'L\'entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.' : 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\'entreprise.'}</p>
+        <div style="margin-top:24px;font-size:11px;color:#94A3B8">Propulsé par <strong style="color:#2563EB">BaniPay</strong></div>
+      </div>
+    `;
+  } catch(e) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#EF4444">Erreur: ' + e.message + '</div>';
+  }
 }
