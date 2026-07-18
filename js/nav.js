@@ -91,6 +91,7 @@ function goScreen(name) {
 
   const actions = {
     'archive': renderArchive,
+    'stats': () => { renderStats(); renderStatsDashboard(); verifierRappels(); },
     'annuaire': filtrerAnnuaire,
     'avoir-list': renderAvoirList,
     'dashboard': renderDashboard,
