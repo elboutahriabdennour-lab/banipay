@@ -574,12 +574,17 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   </div>
   <!-- QR -->
   <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #F1F5F9;text-align:center">
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:12px">QR Code & Lien public</div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:12px">🔗 Mon lien public & QR Code</div>
     <canvas id="qr-canvas" width="120" height="120" style="border-radius:8px;display:block;margin:0 auto 10px;background:#F8FAFC"></canvas>
-    <div style="font-size:11px;color:#94A3B8;margin-bottom:10px;word-break:break-all" id="pf-lien-comptable" style="display:none">—</div>
+    <div style="font-size:10px;color:#64748B;margin-bottom:10px;word-break:break-all;padding:0 8px" id="pv-lien">—</div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <div id="comptable-link-display" style="font-size:11px;color:#94A3B8;margin-bottom:8px;word-break:break-all"></div>
-      <button onclick="copierLienComptable()" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="copierLienProfil()" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier lien</button>
+      <button onclick="partagerProfil()" style="background:#ECFDF5;color:#059669;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+    </div>
+    <div style="margin-top:12px;border-top:1px solid #F1F5F9;padding-top:12px">
+      <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">🔐 Lien accès comptable</div>
+      <div style="font-size:9px;color:#64748B;word-break:break-all;margin-bottom:8px" id="comptable-link-display"></div>
+      <button onclick="updateComptableLinkDisplay();copierLienComptable()" style="background:#F3E8FF;color:#9333EA;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier lien comptable</button>
     </div>
   </div>
   <div style="padding:0 16px" id="profil-view">
