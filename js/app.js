@@ -93,32 +93,34 @@ async function loadPublicProfil(profilId) {
 
 async function afficherDocumentPublic(docId) {
   const urlParams = new URLSearchParams(window.location.search);
-  const docType = urlParams.get('type'); // 'devis' ou null (facture par défaut)
+  const docType = urlParams.get('type'); // 'devis' ou null
 
   try {
-    // Charger depuis Supabase selon le type
-    const table = docType === 'devis' ? 'devis' : 'factures';
-    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const data = await r.json();
-    const doc = data && data[0];
+    let doc = null;
+    let profil = {};
+    let isDevis = false;
 
-    if (!doc) {
-      // Essayer l'autre table
-      const r2 = await fetch(SUPABASE_URL + '/rest/v1/' + (table === 'factures' ? 'devis' : 'factures') + '?id=eq.' + docId + '&select=*', {
+    if (docType === 'devis') {
+      // Chercher dans devis UNIQUEMENT
+      const r = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + docId + '&select=*', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
-      const data2 = await r2.json();
-      if (!data2 || !data2[0]) {
-        document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">Document introuvable</div>';
-        return;
-      }
-      // Récursion avec l'autre type
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set('type', table === 'factures' ? 'devis' : 'facture');
-      window.history.replaceState({}, '', newUrl);
-      return afficherDocumentPublic(docId);
+      const data = await r.json();
+      doc = data && data[0];
+      isDevis = true;
+    } else {
+      // Chercher dans factures UNIQUEMENT
+      const r = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + docId + '&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const data = await r.json();
+      doc = data && data[0];
+      isDevis = false;
+    }
+
+    if (!doc) {
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#64748B"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Document introuvable</h2></div>';
+      return;
     }
 
     // Charger le profil émetteur
@@ -126,10 +128,9 @@ async function afficherDocumentPublic(docId) {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const profils = await rp.json();
-    const profil = (profils && profils[0]) || {};
-    const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes||'[]') : (doc.lignes||[]);
+    profil = (profils && profils[0]) || {};
 
-    const isDevis = docType === 'devis' || doc.ref?.startsWith('DEV');
+    const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes || '[]') : (doc.lignes || []);
 
     // Générer le PDF
     genDocPDF({
@@ -153,25 +154,39 @@ async function afficherDocumentPublic(docId) {
       bl_ref: doc.bl_ref || '',
       doc_id: docId,
       doc_url: window.location.href,
-      // Pour les devis : ajouter boutons accepter/refuser
-      isPublicDevis: isDevis && doc.statut === 'envoye',
-      devisId: isDevis ? docId : '',
     });
 
-    // Si c'est un devis en attente, ajouter boutons sous le viewer
-    if (isDevis && (doc.statut === 'envoye' || !doc.statut)) {
+    // Si c'est un devis en attente → ajouter boutons Accepter/Refuser
+    if (isDevis && doc.statut !== 'accepte' && doc.statut !== 'refuse') {
       setTimeout(function() {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
-        const bar = screen.querySelector('div');
         const btnBar = document.createElement('div');
-        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:1px solid #E2E8F0;flex-shrink:0';
-        btnBar.innerHTML = `
-          <button onclick="traiterActionDevis('${docId}','accepter')" style="flex:1;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">✅ Accepter le devis</button>
-          <button onclick="traiterActionDevis('${docId}','refuser')" style="flex:1;padding:12px;background:#DC2626;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">❌ Refuser</button>
-        `;
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #E2E8F0;flex-shrink:0';
+        const bAcc = document.createElement('button');
+        bAcc.textContent = '✅ Accepter le devis';
+        bAcc.style.cssText = 'flex:1;padding:14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+        bAcc.onclick = function() { traiterActionDevis(docId, 'accepter'); };
+        const bRef = document.createElement('button');
+        bRef.textContent = '❌ Refuser';
+        bRef.style.cssText = 'flex:1;padding:14px;background:#DC2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+        bRef.onclick = function() { traiterActionDevis(docId, 'refuser'); };
+        btnBar.appendChild(bAcc);
+        btnBar.appendChild(bRef);
         screen.appendChild(btnBar);
-      }, 300);
+      }, 500);
+    }
+
+    // Si devis déjà traité
+    if (isDevis && (doc.statut === 'accepte' || doc.statut === 'refuse')) {
+      setTimeout(function() {
+        const screen = document.getElementById('pdf-fullscreen');
+        if (!screen) return;
+        const info = document.createElement('div');
+        info.style.cssText = 'background:' + (doc.statut === 'accepte' ? '#ECFDF5' : '#FEF2F2') + ';padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:' + (doc.statut === 'accepte' ? '#059669' : '#DC2626') + ';border-top:1px solid #E2E8F0;flex-shrink:0';
+        info.textContent = doc.statut === 'accepte' ? '✅ Ce devis a été accepté' : '❌ Ce devis a été refusé';
+        screen.appendChild(info);
+      }, 500);
     }
 
   } catch(e) {
