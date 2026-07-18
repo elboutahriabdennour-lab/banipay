@@ -92,83 +92,94 @@ async function loadPublicProfil(profilId) {
 
 
 async function afficherDocumentPublic(docId) {
-  // Essayer de charger depuis Supabase sans auth
+  const urlParams = new URLSearchParams(window.location.search);
+  const docType = urlParams.get('type'); // 'devis' ou null (facture par défaut)
+
   try {
-    // Try factures first
-    const r = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + docId + '&select=*', {
+    // Charger depuis Supabase selon le type
+    const table = docType === 'devis' ? 'devis' : 'factures';
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const data = await r.json();
-    const f = data && data[0];
+    const doc = data && data[0];
 
-    if (f) {
-      // Load profil
-      const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + f.user_id + '&select=*', {
+    if (!doc) {
+      // Essayer l'autre table
+      const r2 = await fetch(SUPABASE_URL + '/rest/v1/' + (table === 'factures' ? 'devis' : 'factures') + '?id=eq.' + docId + '&select=*', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
-      const profils = await rp.json();
-      const profil = (profils && profils[0]) || {};
-
-      const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : (f.lignes||[]);
-
-      genDocPDF({
-        type: 'FACTURE', ref: f.ref, color: '#2563EB',
-        emetteur: profil,
-        destinataire: { nom: f.client, chantier: f.chantier },
-        date: f.date_emission, echeance: f.echeance,
-        paiement: f.paiement, statut: f.statut,
-        lignes: lignes, note: f.note||'',
-        ht: f.ht, tva: f.tva, ttc: f.ttc,
-        devise: f.devise||'MAD',
-        montant_recu: f.montant_recu||0,
-        showStamp: f.statut === 'payee',
-        devis_ref: f.devis_ref||'',
-        bl_ref: f.bl_ref||'',
-        doc_id: docId,
-        doc_url: window.location.href,
-      });
-      return;
+      const data2 = await r2.json();
+      if (!data2 || !data2[0]) {
+        document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">Document introuvable</div>';
+        return;
+      }
+      // Récursion avec l'autre type
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('type', table === 'factures' ? 'devis' : 'facture');
+      window.history.replaceState({}, '', newUrl);
+      return afficherDocumentPublic(docId);
     }
 
-    // Try devis
-    const r2 = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + docId + '&select=*', {
+    // Charger le profil émetteur
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + doc.user_id + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
-    const data2 = await r2.json();
-    const d = data2 && data2[0];
+    const profils = await rp.json();
+    const profil = (profils && profils[0]) || {};
+    const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes||'[]') : (doc.lignes||[]);
 
-    if (d) {
-      const rp2 = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + d.user_id + '&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const profils2 = await rp2.json();
-      const profil2 = (profils2 && profils2[0]) || {};
-      const lignes2 = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
+    const isDevis = docType === 'devis' || doc.ref?.startsWith('DEV');
 
-      genDocPDF({
-        type: 'DEVIS', ref: d.ref, color: '#D97706',
-        emetteur: profil2,
-        destinataire: { nom: d.client, chantier: d.chantier },
-        date: d.date_emission, validite: d.validite,
-        lignes: lignes2, note: d.note||'',
-        ht: d.ht, tva: d.tva, ttc: d.ttc,
-        devise: d.devise||'MAD',
-        doc_id: docId,
-        doc_url: window.location.href,
-      });
-      return;
+    // Générer le PDF
+    genDocPDF({
+      type: isDevis ? 'DEVIS' : 'FACTURE',
+      ref: doc.ref,
+      color: isDevis ? '#D97706' : '#2563EB',
+      emetteur: profil,
+      destinataire: { nom: doc.client, chantier: doc.chantier },
+      date: doc.date_emission,
+      echeance: doc.echeance,
+      validite: doc.validite,
+      paiement: doc.paiement || '',
+      statut: doc.statut,
+      lignes: lignes,
+      note: doc.note || '',
+      ht: doc.ht, tva: doc.tva, ttc: doc.ttc,
+      devise: doc.devise || 'MAD',
+      montant_recu: doc.montant_recu || 0,
+      showStamp: doc.statut === 'payee',
+      devis_ref: doc.devis_ref || '',
+      bl_ref: doc.bl_ref || '',
+      doc_id: docId,
+      doc_url: window.location.href,
+      // Pour les devis : ajouter boutons accepter/refuser
+      isPublicDevis: isDevis && doc.statut === 'envoye',
+      devisId: isDevis ? docId : '',
+    });
+
+    // Si c'est un devis en attente, ajouter boutons sous le viewer
+    if (isDevis && (doc.statut === 'envoye' || !doc.statut)) {
+      setTimeout(function() {
+        const screen = document.getElementById('pdf-fullscreen');
+        if (!screen) return;
+        const bar = screen.querySelector('div');
+        const btnBar = document.createElement('div');
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:1px solid #E2E8F0;flex-shrink:0';
+        btnBar.innerHTML = `
+          <button onclick="traiterActionDevis('${docId}','accepter')" style="flex:1;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">✅ Accepter le devis</button>
+          <button onclick="traiterActionDevis('${docId}','refuser')" style="flex:1;padding:12px;background:#DC2626;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">❌ Refuser</button>
+        `;
+        screen.appendChild(btnBar);
+      }, 300);
     }
-
-    // Not found
-    showToast('Document introuvable', 'error');
-    goScreen('auth');
 
   } catch(e) {
     console.error('afficherDocumentPublic:', e);
-    showToast('Erreur de chargement', 'error');
-    goScreen('auth');
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#EF4444">Erreur: ' + e.message + '</div>';
   }
 }
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   applyDarkMode();
