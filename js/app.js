@@ -230,6 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sb.restoreSession()) {
       await loadAll();
       verifierChangementsDevis();
+      verifierRappels();
       await traiterInvitation(inviteToken);
       if (window._pendingDocId) {
           const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
