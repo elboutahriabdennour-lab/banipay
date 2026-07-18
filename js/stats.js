@@ -215,3 +215,72 @@ function renderSearchResults(q) {
 // ============================================================
 // BANIPAY — Factures
 // ============================================================
+
+
+// ============================================================
+// ANNUAIRE BANIPAY
+// ============================================================
+
+let _annuaireData = [];
+let _annuaireSecteur = '';
+
+async function loadAnnuaire() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=raison,secteur,ville,tel,email,id_unique&raison=not.is.null&order=raison.asc&limit=100', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    _annuaireData = await r.json() || [];
+    filtrerAnnuaire();
+  } catch(e) {
+    showToast('Erreur chargement annuaire', 'error');
+    _annuaireData = [];
+  }
+}
+
+function filtrerAnnuaireSecteur(secteur, btn) {
+  _annuaireSecteur = secteur;
+  document.querySelectorAll('#screen-annuaire .ftab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  filtrerAnnuaire();
+}
+
+function filtrerAnnuaire() {
+  const q = (el('annuaire-search')?.value || '').toLowerCase();
+  const list = el('annuaire-list');
+  if (!list) return;
+
+  let data = _annuaireData;
+  if (_annuaireSecteur) data = data.filter(e => e.secteur === _annuaireSecteur);
+  if (q) data = data.filter(e => (e.raison||'').toLowerCase().includes(q) || (e.ville||'').toLowerCase().includes(q) || (e.secteur||'').toLowerCase().includes(q));
+
+  // Hide current user's company
+  const myRaison = STATE.profil?.raison;
+  if (myRaison) data = data.filter(e => e.raison !== myRaison);
+
+  if (!data.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">🏢</div><div class="empty-title">Aucune entreprise trouvée</div></div>';
+    return;
+  }
+
+  const secteurEmoji = { 'BTP & Construction':'🏗️', 'Commerce & Négoce':'🛒', 'Transport & Logistique':'🚛', 'Conseil & Expertise':'💼', 'Informatique & Tech':'💻', 'Santé & Médical':'🏥', 'Immobilier':'🏠', 'Artisanat':'🪡' };
+
+  list.innerHTML = data.map(e => `
+    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="voirProfilEntreprise('${e.id_unique||''}')">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">${escapeHTML(e.raison||'')}</div>
+          <div style="font-size:11px;color:#64748B;margin-top:2px">${e.secteur||''} ${e.ville?'· 📍'+e.ville:''}</div>
+          ${e.tel?`<div style="font-size:11px;color:#94A3B8">📞 ${e.tel}</div>`:''}
+        </div>
+        <div style="font-size:18px;color:#94A3B8">›</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function voirProfilEntreprise(idUnique) {
+  if (!idUnique) return;
+  const url = window.location.origin + window.location.pathname + '?profil=' + idUnique;
+  window.open(url, '_blank');
+}
