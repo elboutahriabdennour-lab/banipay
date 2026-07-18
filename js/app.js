@@ -102,6 +102,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (portailId) { await loadPublicProfil(portailId); return; }
   if (profilId) { await loadPublicProfil(profilId); return; }
 
+  // Lien direct vers une facture (QR code)
+  const docId = params.get('doc');
+  if (docId) { window._pendingDocId = docId; }
+
   // Handle invitation link
   if (inviteToken) {
     window._inviteToken = inviteToken;
@@ -109,7 +113,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (sb.restoreSession()) {
       await loadAll();
       await traiterInvitation(inviteToken);
-      goScreen('dashboard');
+      if (window._pendingDocId) {
+          const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
+          window._pendingDocId = null;
+          if (window._pendingDocId) {
+          const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
+          window._pendingDocId = null;
+          goScreen('dashboard');
+          if (_pf) setTimeout(() => openDetail(_pf.id), 400);
+        } else {
+          goScreen('dashboard');
+        }
+          if (_pf) setTimeout(() => openDetail(_pf.id), 400);
+        } else {
+          goScreen('dashboard');
+        }
     } else {
       goScreen('auth');
       showToast('Connectez-vous pour accepter l\'invitation');
