@@ -2,30 +2,113 @@
 
 function ouvrirScannerQR() {
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.id = 'scanner-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.8);display:flex;align-items:flex-end;padding:0';
 
   const box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px';
+  box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:80vh;overflow-y:auto';
   box.innerHTML = `
-    <div style="font-size:16px;font-weight:700;margin-bottom:6px">📷 Ajouter un client</div>
-    <div style="font-size:12px;color:#64748B;margin-bottom:16px">Scannez le QR code du client ou collez son lien BaniPay</div>
-    <input id="qr-link-input" class="a-inp" placeholder="Collez le lien profil ou doc BaniPay..." style="margin-bottom:12px">
-    <button onclick="chargerClientDepuisLien(document.getElementById('qr-link-input').value)" class="a-btn a-btn-blue" style="margin-bottom:8px">🔗 Importer depuis le lien</button>
-    <div style="text-align:center;margin:8px 0;font-size:11px;color:#94A3B8">— ou —</div>
-    <label style="display:block;background:#F1F5F9;border-radius:10px;padding:12px;text-align:center;cursor:pointer;font-size:13px;color:#2563EB;font-weight:600">
-      📷 Scanner QR code
-      <input type="file" accept="image/*" capture="environment" style="display:none" onchange="scannerQRDepuisImage(event)">
-    </label>
-    <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;margin-top:10px;padding:10px;background:#F1F5F9;border:none;border-radius:10px;font-size:13px;cursor:pointer">Annuler</button>
+    <div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>
+    <div style="font-size:16px;font-weight:700;color:#0F172A;margin-bottom:6px">➕ Ajouter un client</div>
+    <div style="font-size:12px;color:#64748B;margin-bottom:20px">Importez un client via son lien BaniPay, un QR code ou manuellement</div>
+
+    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">🔗 Via lien BaniPay</div>
+      <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil BaniPay...">
+      <button onclick="importerClientDepuisLien()" style="width:100%;margin-top:10px;padding:12px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Importer</button>
+    </div>
+
+    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">📷 Scanner un QR code</div>
+      <label style="display:block;text-align:center;padding:20px;border:2px dashed #E2E8F0;border-radius:10px;cursor:pointer;color:#2563EB;font-size:13px;font-weight:600">
+        📷 Ouvrir la caméra
+        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="importerClientDepuisQRImage(event)">
+      </label>
+      <div style="font-size:10px;color:#94A3B8;text-align:center;margin-top:6px">Prend une photo du QR code profil BaniPay</div>
+    </div>
+
+    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">✏️ Saisie manuelle</div>
+      <button onclick="document.getElementById('scanner-overlay').remove();goScreen('nouveau-client',null)" style="width:100%;padding:12px;background:#F1F5F9;color:#0F172A;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">➕ Nouveau client manuellement</button>
+    </div>
+
+    <button onclick="document.getElementById('scanner-overlay').remove()" style="width:100%;padding:12px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>
   `;
 
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
 
-async function scannerQRDepuisImage(event) {
-  showToast('Fonctionnalité QR scan — collez le lien directement', 'success');
+async function importerClientDepuisLien() {
+  const input = el('qr-link-input');
+  const lien = input?.value.trim();
+  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+
+  // Extract profil ID from URL
+  let profilId = null;
+  try {
+    const url = new URL(lien);
+    profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
+  } catch(e) {
+    // Try as raw ID
+    profilId = lien.trim();
+  }
+
+  if (!profilId) { showToast('Lien invalide', 'error'); return; }
+
+  showToast('⏳ Chargement du profil...');
+
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    const p = data && data[0];
+
+    if (!p) { showToast('Profil introuvable', 'error'); return; }
+
+    // Check if client already exists
+    const exists = STATE.clients.find(c =>
+      c.nom === p.raison || (p.ice && c.ice === p.ice)
+    );
+    if (exists) { showToast('Ce client existe déjà : ' + p.raison, 'error'); return; }
+
+    // Create client from profil
+    const newClient = {
+      user_id: sb.user.id,
+      nom: p.raison || '',
+      tel: p.tel || '',
+      email: p.email || '',
+      adresse: p.adresse ? (p.adresse + (p.ville ? ', ' + p.ville : '')) : '',
+      ice: p.ice || '',
+      notes: 'Importé via profil BaniPay',
+      created_at: new Date().toISOString(),
+    };
+
+    const result = await sb.post('clients', newClient);
+    if (result) {
+      STATE.clients.unshift(result[0] || newClient);
+      renderClients();
+      document.getElementById('scanner-overlay')?.remove();
+      showToast('✅ Client ' + p.raison + ' ajouté !', 'success');
+    }
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+async function importerClientDepuisQRImage(event) {
+  // On iOS, the camera captures a photo but we can't decode QR natively
+  // Best approach: show the image and ask user to copy the URL manually
+  showToast('📷 Prenez une photo du QR, puis copiez le lien affiché', 'success');
   event.target.value = '';
+}
+
+async function chargerClientDepuisLien(lien) {
+  if (!lien) return;
+  el('qr-link-input') && (el('qr-link-input').value = lien);
+  await importerClientDepuisLien();
 }
 
 
