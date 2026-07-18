@@ -87,6 +87,7 @@ function goScreen(name) {
 
   const actions = {
     'archive': renderArchive,
+    'annuaire': filtrerAnnuaire,
     'dashboard': renderDashboard,
     'nouvelle': initNouvelle,
     'devis-list': renderDevisList,
