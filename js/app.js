@@ -182,7 +182,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (portailId) { await loadPublicProfil(portailId); return; }
   if (profilId) { await loadPublicProfil(profilId); return; }
 
-  // Lien direct vers une facture via QR code
+  // Action sur un devis (accepter/refuser via lien)
+  const devisId = params.get('devis');
+  const devisAction = params.get('action');
+  if (devisId && (devisAction === 'accepter' || devisAction === 'refuser')) {
+    await traiterActionDevis(devisId, devisAction);
+    return;
+  }
+
+  // Lien direct vers une facture/devis via QR code
   const docId = params.get('doc');
   if (docId) {
     await afficherDocumentPublic(docId);
