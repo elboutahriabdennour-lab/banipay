@@ -38,7 +38,7 @@ function previewPDF() {
 function genDocPDF(opts) {
   const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif=''} = opts;
   const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
-  const legalParts = [p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Patente: '+p.patente:''].filter(Boolean).join(' · ');
+
   const paye = Number(montant_recu)||0;
   const restant = Math.max(0, ttc - paye);
   const colorHeader = isAvoir ? '#DC2626' : isDevis ? '#D97706' : isBC ? '#7C3AED' : isBL ? '#059669' : (color||'#2563EB');
@@ -59,7 +59,7 @@ function genDocPDF(opts) {
 body{font-family:Arial,Helvetica,sans-serif;color:#0F172A;font-size:12px;background:#fff}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none}@page{margin:8mm;size:A4}}
 .header{background:#0F172A;padding:22px 32px;display:flex;justify-content:space-between;align-items:flex-start}
-.h-logo{max-width:90px;max-height:45px;object-fit:contain;margin-bottom:6px;display:block;filter:brightness(0) invert(1)}
+.h-logo{max-width:90px;max-height:45px;object-fit:contain;margin-bottom:6px;display:block}
 .h-company{font-size:18px;font-weight:700;color:#fff}
 .h-doc-label{font-size:15px;font-weight:700;color:#fff;letter-spacing:2px;background:${colorHeader};padding:5px 14px;border-radius:4px;display:inline-block;margin-bottom:7px}
 .h-ref{font-size:12px;font-weight:700;color:#fff}
@@ -112,7 +112,7 @@ tbody td{border-bottom:1px solid #F1F5F9}
   </div>
 </div>
 <div class="stripe"></div>
-${legalParts?`<div class="legal">${legalParts}</div>`:''}
+
 
 <div class="blocs">
   <div class="bloc">
