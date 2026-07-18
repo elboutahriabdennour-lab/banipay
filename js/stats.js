@@ -36,107 +36,184 @@ function renderDashboard() {
 }
 
 function renderStats() {
-  const f = STATE.factures;
-  const total = f.reduce((s,x) => s + Number(x.ttc), 0);
-  const payees = f.filter(x => x.statut==='payee');
-  const retards = f.filter(x => x.statut==='retard');
-  const attente = f.filter(x => ['attente','envoyee'].includes(x.statut));
+  const f = STATE.factures || [];
+  const d = STATE.devis || [];
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
 
-  const grid = el('stats-grid');
-  if (grid) grid.innerHTML = [
-    {val: f.length, lbl: 'Factures totales', c: '#2563EB'},
-    {val: fmt(total)+' MAD', lbl: 'Volume total', c: '#0F172A'},
-    {val: payees.length, lbl: 'Payées', c: '#059669'},
-    {val: retards.length, lbl: 'En retard', c: '#EF4444'},
-    {val: STATE.devis.length, lbl: 'Devis émis', c: '#D97706'},
-    {val: STATE.clients.length, lbl: 'Clients', c: '#9333EA'},
-    {val: fmt(payees.reduce((s,x)=>s+Number(x.tva),0))+' MAD', lbl: 'TVA collectée', c: '#059669'},
-    {val: STATE.produits.length, lbl: 'Articles catalogue', c: '#2563EB'},
-  ].map(s => `<div class="stat-box"><div class="stat-val" style="color:${s.c}">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+  // ── KPIs globaux ──────────────────────────────────────────
+  const caTotal = f.reduce((s,x) => s + (Number(x.ttc)||0), 0);
+  const caEncaisse = f.filter(x=>x.statut==='payee').reduce((s,x) => s + (Number(x.ttc)||0), 0);
+  const caEnAttente = f.filter(x=>['attente','envoyee'].includes(x.statut)).reduce((s,x) => s + (Number(x.ttc)||0), 0);
+  const caEnRetard = f.filter(x=>x.statut==='retard').reduce((s,x) => s + (Number(x.ttc)||0), 0);
+  const txRecouvrement = caTotal > 0 ? Math.round(caEncaisse/caTotal*100) : 0;
 
-  // Monthly chart
-  const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const year = new Date().getFullYear();
-  const monthly = Array(12).fill(0);
-  f.forEach(x => {
-    const d = new Date(x.date_emission || x.created_at);
-    if (d.getFullYear() === year) monthly[d.getMonth()] += Number(x.ttc);
+  // ── Mois en cours ──────────────────────────────────────────
+  const fMois = f.filter(x => {
+    const dt = new Date(x.date_emission||'');
+    return dt.getMonth()===thisMonth && dt.getFullYear()===thisYear;
   });
-  const maxVal = Math.max(...monthly, 1);
-  const barsEl = el('sa-monthly');
-  if (barsEl) {
-    // SVG Curve chart
-    const W = 340, H = 120, PAD = 20;
-    const pts = monthly.map((v,i) => ({
-      x: PAD + i * (W - PAD*2) / 11,
-      y: H - PAD - (maxVal > 0 ? (v / maxVal) * (H - PAD*2) : 0)
+  const caMois = fMois.reduce((s,x) => s + (Number(x.ttc)||0), 0);
+
+  // ── 12 mois ──────────────────────────────────────────────
+  const months = [];
+  for (let i = 11; i >= 0; i--) {
+    const dt = new Date(thisYear, thisMonth - i, 1);
+    months.push({
+      label: dt.toLocaleDateString('fr-FR', {month:'short'}),
+      month: dt.getMonth(), year: dt.getFullYear(),
+      ca: 0, paye: 0
+    });
+  }
+  f.forEach(fac => {
+    const dt = new Date(fac.date_emission||'');
+    const m = months.find(x => x.month===dt.getMonth() && x.year===dt.getFullYear());
+    if (m) { m.ca += Number(fac.ttc)||0; if(fac.statut==='payee') m.paye += Number(fac.ttc)||0; }
+  });
+  const maxCA = Math.max(...months.map(m=>m.ca), 1);
+
+  // ── Top clients ───────────────────────────────────────────
+  const clientMap = {};
+  f.forEach(fac => {
+    if (!fac.client) return;
+    if (!clientMap[fac.client]) clientMap[fac.client] = {nom:fac.client, ca:0, count:0};
+    clientMap[fac.client].ca += Number(fac.ttc)||0;
+    clientMap[fac.client].count++;
+  });
+  const topClients = Object.values(clientMap).sort((a,b)=>b.ca-a.ca).slice(0,5);
+  const maxClient = topClients[0]?.ca || 1;
+
+  // ── Render ────────────────────────────────────────────────
+  const grid = el('stats-grid');
+  if (grid) grid.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;grid-column:span 2">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="text-align:center">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">CA Total</div>
+          <div style="font-size:18px;font-weight:800;color:#0F172A">${fmt(caTotal)}</div>
+          <div style="font-size:9px;color:#64748B">MAD</div>
+        </div>
+        <div style="text-align:center;border-left:1px solid #F1F5F9;padding-left:8px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">Encaissé</div>
+          <div style="font-size:18px;font-weight:800;color:#059669">${fmt(caEncaisse)}</div>
+          <div style="font-size:9px;color:#059669">${txRecouvrement}%</div>
+        </div>
+        <div style="text-align:center;border-left:1px solid #F1F5F9;padding-left:8px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">En attente</div>
+          <div style="font-size:18px;font-weight:800;color:#D97706">${fmt(caEnAttente)}</div>
+          <div style="font-size:9px;color:#64748B">MAD</div>
+        </div>
+        <div style="text-align:center;border-left:1px solid #F1F5F9;padding-left:8px">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">En retard</div>
+          <div style="font-size:18px;font-weight:800;color:#EF4444">${fmt(caEnRetard)}</div>
+          <div style="font-size:9px;color:#64748B">MAD</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;height:6px;background:#F1F5F9;border-radius:3px;overflow:hidden">
+        <div style="height:100%;background:linear-gradient(90deg,#059669 ${txRecouvrement}%,#D97706 ${txRecouvrement}%,#D97706 ${txRecouvrement+Math.round(caEnAttente/caTotal*100)}%,#EF4444 0%);border-radius:3px"></div>
+      </div>
+      <div style="font-size:10px;color:#94A3B8;margin-top:4px;text-align:right">Taux recouvrement: ${txRecouvrement}%</div>
+    </div>
+  `;
+
+  // Courbe mensuelle
+  const monthly = el('sa-monthly');
+  if (monthly) {
+    const W=300, H=100, PX=24, PY=16;
+    const pts = months.map((m,i) => ({
+      x: PX + i*(W-PX*2)/(months.length-1),
+      y: PY + (1 - m.ca/maxCA)*(H-PY*2),
+      yp: PY + (1 - m.paye/maxCA)*(H-PY*2),
+      m
     }));
-    // Smooth path
-    let path = 'M ' + pts[0].x + ' ' + pts[0].y;
-    for (let i = 1; i < pts.length; i++) {
-      const cp1x = pts[i-1].x + (pts[i].x - pts[i-1].x) / 3;
-      const cp2x = pts[i].x - (pts[i].x - pts[i-1].x) / 3;
-      path += ' C ' + cp1x + ' ' + pts[i-1].y + ' ' + cp2x + ' ' + pts[i].y + ' ' + pts[i].x + ' ' + pts[i].y;
-    }
-    // Fill path
-    let fillPath = path + ' L ' + pts[pts.length-1].x + ' ' + (H-PAD) + ' L ' + pts[0].x + ' ' + (H-PAD) + ' Z';
-    const curMonth = new Date().getMonth();
-    const dots = pts.map((p,i) => monthly[i] > 0 ?
-      '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (i===curMonth?5:3) + '" fill="' + (i===curMonth?'#2563EB':'#93C5FD') + '" stroke="#fff" stroke-width="2"/>' +
-      (monthly[i] > 0 ? '<text x="' + p.x + '" y="' + (p.y-8) + '" text-anchor="middle" font-size="8" fill="#64748B">' + Math.round(monthly[i]/1000) + 'k</text>' : '')
-      : ''
-    ).join('');
-    const labels = months.map((m,i) =>
-      '<text x="' + (PAD + i*(W-PAD*2)/11) + '" y="' + (H-4) + '" text-anchor="middle" font-size="8" fill="' + (i===curMonth?'#2563EB':'#94A3B8') + '">' + m + '</text>'
-    ).join('');
-    barsEl.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:' + H + 'px;overflow:visible">' +
-      '<defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563EB" stop-opacity="0.15"/><stop offset="100%" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>' +
-      '<path d="' + fillPath + '" fill="url(#grad)"/>' +
-      '<path d="' + path + '" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
-      dots + labels + '</svg>';
+    const path = pts.map((p,i) => (i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
+    const pathP = pts.map((p,i) => (i===0?'M':'L')+p.x.toFixed(1)+','+p.yp.toFixed(1)).join(' ');
+    const area = path+' L'+pts[pts.length-1].x.toFixed(1)+','+(H-PY)+' L'+PX+','+(H-PY)+' Z';
+
+    monthly.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:13px;font-weight:700;color:#0F172A">📈 CA mensuel</div>
+          <div style="font-size:11px;color:#64748B">Ce mois: <strong style="color:#2563EB">${fmt(caMois)} MAD</strong></div>
+        </div>
+        <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2563EB" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#2563EB" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="${area}" fill="url(#g1)"/>
+          <path d="${path}" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="${pathP}" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,3" stroke-linecap="round"/>
+          ${pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#2563EB" stroke="#fff" stroke-width="1.5"/>`).join('')}
+          ${pts.filter((_,i)=>i%2===0||i===pts.length-1).map(p=>`<text x="${p.x.toFixed(1)}" y="${H}" text-anchor="middle" font-size="8" fill="#94A3B8">${p.m.label}</text>`).join('')}
+        </svg>
+        <div style="display:flex;gap:16px;margin-top:6px;font-size:10px">
+          <span style="color:#2563EB">— CA facturé</span>
+          <span style="color:#059669">- - Encaissé</span>
+        </div>
+      </div>`;
   }
 
   // Top clients
-  const clientCA = {};
-  payees.forEach(x => { clientCA[x.client] = (clientCA[x.client]||0) + Number(x.ttc); });
-  const top5 = Object.entries(clientCA).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const topEl = el('sa-top-clients');
-  if (topEl) topEl.innerHTML = top5.length ? top5.map(([nom,ca]) => `
-    <div class="card">
-      <div class="card-ico" style="background:#EFF6FF;font-weight:700;color:#2563EB;font-size:18px">${nom.charAt(0).toUpperCase()}</div>
-      <div class="card-body"><div class="card-name">${nom}</div><div class="card-ref">CA payé</div></div>
-      <div style="font-size:14px;font-weight:700;color:#059669">${fmtInt(ca)} MAD</div>
-    </div>`).join('') : '<div class="empty"><div>Aucune donnée</div></div>';
-
-  // Top produits
-  const prodCA = {};
-  f.forEach(x => (x.lignes||[]).forEach(l => { prodCA[l.desc] = (prodCA[l.desc]||0) + Number(l.qte*l.pu); }));
-  const top5p = Object.entries(prodCA).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const topPEl = el('sa-top-produits');
-  if (topPEl) topPEl.innerHTML = top5p.map(([nom,ca]) => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F1F5F9;font-size:13px">
-      <span style="color:#0F172A;font-weight:500">${nom}</span>
-      <span style="font-weight:600;color:#2563EB">${fmtInt(ca)} MAD</span>
-    </div>`).join('');
+  if (topEl && topClients.length) {
+    topEl.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;margin-top:12px">
+        <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">🏆 Top clients</div>
+        ${topClients.map((c,i)=>`
+          <div style="margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:22px;height:22px;border-radius:50%;background:${['#2563EB','#059669','#D97706','#9333EA','#EF4444'][i]};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${i+1}</div>
+                <span style="font-size:12px;font-weight:600">${escapeHTML(c.nom)}</span>
+              </div>
+              <span style="font-size:12px;font-weight:700;color:#0F172A">${fmt(c.ca)} MAD</span>
+            </div>
+            <div style="height:5px;background:#F1F5F9;border-radius:3px">
+              <div style="height:100%;background:${['#2563EB','#059669','#D97706','#9333EA','#EF4444'][i]};border-radius:3px;width:${Math.round(c.ca/maxClient*100)}%;transition:width 0.6s"></div>
+            </div>
+            <div style="font-size:10px;color:#94A3B8;margin-top:2px">${c.count} facture(s)</div>
+          </div>
+        `).join('')}
+      </div>`;
+  }
 
   // Répartition
-  const tT = total || 1;
   const repEl = el('sa-repartition');
-  if (repEl) repEl.innerHTML = [
-    {lbl:'Payées', val:payees.reduce((s,x)=>s+Number(x.ttc),0), color:'#059669'},
-    {lbl:'En attente', val:attente.reduce((s,x)=>s+Number(x.ttc),0), color:'#D97706'},
-    {lbl:'En retard', val:retards.reduce((s,x)=>s+Number(x.ttc),0), color:'#EF4444'},
-  ].map(b => `
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <div style="font-size:11px;color:#64748B;width:70px;flex-shrink:0">${b.lbl}</div>
-      <div style="flex:1;height:8px;background:#F1F5F9;border-radius:4px;overflow:hidden"><div style="height:100%;border-radius:4px;background:${b.color};width:${Math.round(b.val/tT*100)}%"></div></div>
-      <div style="font-size:11px;font-weight:600;color:#0F172A;width:80px;text-align:right">${fmtInt(b.val)} MAD</div>
-    </div>`).join('');
+  if (repEl) {
+    const payees = f.filter(x=>x.statut==='payee').length;
+    const attente = f.filter(x=>['attente','envoyee'].includes(x.statut)).length;
+    const retard = f.filter(x=>x.statut==='retard').length;
+    const total2 = Math.max(f.length, 1);
+    repEl.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;margin-top:12px">
+        <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">📊 Répartition</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+          <div style="text-align:center;background:#ECFDF5;border-radius:10px;padding:10px">
+            <div style="font-size:20px;font-weight:800;color:#059669">${payees}</div>
+            <div style="font-size:10px;color:#059669;margin-top:2px">Payées</div>
+          </div>
+          <div style="text-align:center;background:#FFFBEB;border-radius:10px;padding:10px">
+            <div style="font-size:20px;font-weight:800;color:#D97706">${attente}</div>
+            <div style="font-size:10px;color:#D97706;margin-top:2px">En attente</div>
+          </div>
+          <div style="text-align:center;background:#FEF2F2;border-radius:10px;padding:10px">
+            <div style="font-size:20px;font-weight:800;color:#EF4444">${retard}</div>
+            <div style="font-size:10px;color:#EF4444;margin-top:2px">En retard</div>
+          </div>
+        </div>
+        <div style="height:8px;background:#F1F5F9;border-radius:4px;overflow:hidden;display:flex">
+          <div style="background:#059669;width:${Math.round(payees/total2*100)}%;transition:width 0.6s"></div>
+          <div style="background:#D97706;width:${Math.round(attente/total2*100)}%;transition:width 0.6s"></div>
+          <div style="background:#EF4444;width:${Math.round(retard/total2*100)}%;transition:width 0.6s"></div>
+        </div>
+      </div>`;
+  }
 }
 
-// ============================================================
-// TVA
-// ============================================================
 
 function renderTVA() {
   const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
