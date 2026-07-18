@@ -229,6 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Need to login first, then process invitation
     if (sb.restoreSession()) {
       await loadAll();
+      verifierChangementsDevis();
       await traiterInvitation(inviteToken);
       if (window._pendingDocId) {
           const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
@@ -266,6 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         goScreen('comptable');
       } else {
         await loadAll();
+        verifierChangementsDevis();
         if (window._inviteToken) await traiterInvitation(window._inviteToken);
         goScreen('dashboard');
       }
@@ -282,27 +284,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (sb.user?.id) ecouterChangementsDevis(sb.user.id);
 });
 
+function verifierChangementsDevis() {
+  // Vérifier les devis acceptés/refusés non notifiés
+  const devisNotifies = STATE.devis.filter(d =>
+    (d.statut === 'accepte' || d.statut === 'refuse') && !d.notif_lue
+  );
+  devisNotifies.forEach(d => {
+    if (d.statut === 'accepte') {
+      showToast('✅ ' + d.client + ' a accepté le devis ' + d.ref + ' !', 'success');
+    } else if (d.statut === 'refuse') {
+      showToast('❌ ' + d.client + ' a refusé le devis ' + d.ref, 'error');
+    }
+  });
+  if (devisNotifies.length > 0) {
+    genNotifications();
+    badgeF();
+  }
+}
+
 function ecouterChangementsDevis(userId) {
   setInterval(async function() {
     try {
-      const devis = await sb.get('devis', 'user_id=eq.' + userId + '&order=created_at.desc');
-      if (!devis) return;
-      let notif = false;
+      const devis = await sb.get('devis', 'user_id=eq.' + userId + '&statut=in.(accepte,refuse)&notif_lue=eq.false');
+      if (!devis || !devis.length) return;
       devis.forEach(d => {
         const ancien = STATE.devis.find(x => x.id === d.id);
-        if (ancien && ancien.statut !== d.statut) {
-          if (d.statut === 'accepte') {
-            showToast('✅ ' + d.client + ' a accepté le devis ' + d.ref + ' !', 'success');
-            notif = true;
-          } else if (d.statut === 'refuse') {
-            showToast('❌ ' + d.client + ' a refusé le devis ' + d.ref, 'error');
-            notif = true;
-          }
-          ancien.statut = d.statut;
-          ancien.notif_lue = false;
+        if (!ancien) return;
+        if (d.statut === 'accepte' && ancien.statut !== 'accepte') {
+          showToast('✅ ' + d.client + ' a accepté le devis ' + d.ref + ' !', 'success');
+        } else if (d.statut === 'refuse' && ancien.statut !== 'refuse') {
+          showToast('❌ ' + d.client + ' a refusé le devis ' + d.ref, 'error');
         }
+        ancien.statut = d.statut;
+        ancien.notif_lue = false;
       });
-      if (notif) { genNotifications(); badgeF(); }
+      genNotifications();
+      badgeF();
     } catch(e) {}
   }, 30000);
 }
