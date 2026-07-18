@@ -73,7 +73,6 @@ body{font-family:Arial,Helvetica,sans-serif;color:#0F172A;font-size:12px;backgro
 .bloc-bd{padding:10px 12px;background:#fff}
 .bloc-bd .main{font-size:13px;font-weight:700;margin-bottom:3px}
 .bloc-bd .line{font-size:10px;color:#64748B;margin-top:2px}
-.bloc-logo{max-width:60px;max-height:30px;object-fit:contain;margin-bottom:6px;display:block}
 .table-section{padding:0 32px}
 table{width:100%;border-collapse:collapse}
 thead tr{background:#0F172A}
@@ -129,7 +128,6 @@ ${legalParts?`<div class="legal">${legalParts}</div>`:''}
   <div class="bloc">
     <div class="bloc-hd">Émetteur</div>
     <div class="bloc-bd">
-      ${p.logo?`<img src="${p.logo}" class="bloc-logo" alt="logo">`:''}
       <div class="main">${escapeHTML(p.raison||'—')}</div>
       ${p.adresse?`<div class="line">📍 ${escapeHTML(p.adresse||'')}${p.ville?', '+p.ville:''}</div>`:''}
       ${p.email?`<div class="line">✉️ ${p.email}</div>`:''}
