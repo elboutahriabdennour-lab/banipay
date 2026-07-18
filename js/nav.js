@@ -8,8 +8,12 @@ function genNotifications() {
     STATE.notifications.push({ type: 'danger', icon: '⚠️', title: `Facture ${f.ref} en retard`, body: `Client: ${f.client} · ${fmt(f.ttc)} MAD`, factureId: f.id });
   });
   // Devis acceptés (non lus)
-  STATE.devis.filter(d => d.statut === 'accepte' && !d.notif_lue).forEach(d => {
-    STATE.notifications.push({ type: 'success', icon: '✅', title: `Devis ${d.ref} accepté !`, body: `Client: ${d.client} · ${fmt(d.ttc)} MAD · Convertir en facture ?`, devisId: d.id });
+  STATE.devis.filter(d => d.statut === 'accepte' && d.notif_lue === false).forEach(d => {
+    STATE.notifications.push({ type: 'success', icon: '✅', title: 'Devis ' + d.ref + ' accepté !', body: 'Client: ' + d.client + ' · ' + fmt(d.ttc) + ' MAD · Convertir en facture ?', devisId: d.id, action: 'openDetailDevis(' + d.id + ')' });
+  });
+  // Devis refusés (non lus)
+  STATE.devis.filter(d => d.statut === 'refuse' && d.notif_lue === false).forEach(d => {
+    STATE.notifications.push({ type: 'error', icon: '❌', title: 'Devis ' + d.ref + ' refusé', body: 'Client: ' + d.client, devisId: d.id });
   });
   // Devis expirés
   STATE.devis.filter(d => {
