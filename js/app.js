@@ -277,6 +277,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) closeAllModals(); });
   });
+
+  // Polling 30s pour détecter acceptation/refus des devis
+  if (sb.user?.id) ecouterChangementsDevis(sb.user.id);
 });
+
+function ecouterChangementsDevis(userId) {
+  setInterval(async function() {
+    try {
+      const devis = await sb.get('devis', 'user_id=eq.' + userId + '&order=created_at.desc');
+      if (!devis) return;
+      let notif = false;
+      devis.forEach(d => {
+        const ancien = STATE.devis.find(x => x.id === d.id);
+        if (ancien && ancien.statut !== d.statut) {
+          if (d.statut === 'accepte') {
+            showToast('✅ ' + d.client + ' a accepté le devis ' + d.ref + ' !', 'success');
+            notif = true;
+          } else if (d.statut === 'refuse') {
+            showToast('❌ ' + d.client + ' a refusé le devis ' + d.ref, 'error');
+            notif = true;
+          }
+          ancien.statut = d.statut;
+          ancien.notif_lue = false;
+        }
+      });
+      if (notif) { genNotifications(); badgeF(); }
+    } catch(e) {}
+  }, 30000);
+}
 
 // goScreen — routing complet
