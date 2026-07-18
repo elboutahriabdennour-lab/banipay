@@ -3,17 +3,25 @@
 
 function exportPDF(id) {
   const f = STATE.factures.find(x=>x.id===id); if(!f) return;
+  const profil = STATE.profil || {};
+  const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : (f.lignes||[]);
+  // Lien public de la facture
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
   genDocPDF({
     type:'FACTURE', ref:f.ref, color:'#2563EB',
-    emetteur: STATE.profil || {},
-    destinataire:{nom:f.client,chantier:f.chantier},
+    emetteur: profil,
+    destinataire:{nom:f.client,chantier:f.chantier,ice:f.client_ice,tel:f.client_tel,adresse:f.client_adresse},
     date:f.date_emission, echeance:f.echeance,
     paiement:f.paiement, statut:f.statut,
-    lignes: (typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : f.lignes||[]), note:f.note,
+    lignes: lignes, note:f.note,
     ht:f.ht, tva:f.tva, ttc:f.ttc,
     devise:f.devise||'MAD',
     montant_recu:f.montant_recu,
     showStamp: f.statut==='payee',
+    devis_ref: f.devis_ref||'',
+    bl_ref: f.bl_ref||'',
+    doc_id: id,
+    doc_url: docUrl,
   });
 }
 
@@ -23,13 +31,18 @@ function previewPDF() {
   const ht=STATE.lignesF.reduce((s,l)=>s+l.qte*l.pu,0);
   genDocPDF({
     type:'FACTURE', ref:el('f-ref')?.value, color:'#2563EB',
-    emetteur:STATE.profil,
+    emetteur: STATE.profil||{},
     destinataire:{nom:client,chantier:el('f-chantier')?.value},
     date:el('f-date')?.value,
+    echeance:el('f-echeance')?.value,
     paiement:el('f-paiement')?.value,
     lignes:STATE.lignesF,
     ht, tva:ht*0.2, ttc:ht*1.2,
-    devise:STATE.deviseF,
+    devise:STATE.deviseF||'MAD',
+    note:el('f-note')?.value||'',
+    devis_ref: STATE.currentFacture?.devis_ref||'',
+    bl_ref: STATE.currentFacture?.bl_ref||'',
+    doc_id: STATE.currentFacture?.id||'',
   });
 }
 
@@ -43,10 +56,10 @@ function genDocPDF(opts) {
   const restant = Math.max(0, ttc - paye);
 
   // Lien public de la facture
-  const docUrl = doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '';
+  const docUrl = opts.doc_url || (doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '');
 
   // QR Code (encodé en SVG via une API simple)
-  const qrUrl = docUrl ? 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(docUrl) : '';
+  const qrUrl = docUrl ? 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&color=1E3A8A&bgcolor=ffffff&data=' + encodeURIComponent(docUrl) : '';
 
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
@@ -199,8 +212,9 @@ ${(p.banque||p.rib)?`<div class="bank-box">
     ${[p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Pat: '+p.patente:'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}
     ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+p.ville:''):''}
   </div>
-  <div class="footer-right">
-    ${qrUrl?`<img src="${qrUrl}" style="width:40px;height:40px;display:block">`:''}
+  <div class="footer-right" style="text-align:right">
+    ${qrUrl?`<img src="${qrUrl}" style="width:40px;height:40px;display:block;margin-bottom:2px">`:''}
+    ${docUrl?`<div style="font-size:7px;color:#94A3B8;max-width:80px;word-break:break-all">${docUrl.replace('https://','')}</div>`:''}
     <div class="footer-page">Page 1/1</div>
   </div>
 </div>
