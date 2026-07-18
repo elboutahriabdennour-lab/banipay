@@ -163,7 +163,7 @@ ${motif?`<div style="margin:0 32px 12px;background:#FEF2F2;border-left:3px solid
 
 <div class="footer">
   <div class="footer-brand">Bani<span>Pay</span></div>
-  <div class="footer-center">${[p.adresse?escapeHTML(p.adresse||''):'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}</div>
+  <div class="footer-center">${[p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Patente: '+p.patente:'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}</div>
   <div class="footer-page">Page 1/1</div>
 </div>
 
