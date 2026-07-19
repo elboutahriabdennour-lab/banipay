@@ -599,7 +599,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <div style="margin-top:12px;border-top:1px solid #F1F5F9;padding-top:12px">
       <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">🔐 Lien accès comptable</div>
       <div style="font-size:9px;color:#64748B;word-break:break-all;margin-bottom:8px" id="comptable-link-display"></div>
-      <button onclick="updateComptableLinkDisplay();copierLienComptable()" style="background:#F3E8FF;color:#9333EA;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier lien comptable</button>
+      <button onclick="renderAccesComptable()" style="width:100%;margin-top:10px;padding:12px;background:#F3E8FF;color:#9333EA;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔐 Gérer l'accès comptable</button>
     </div>
   </div>
   <div style="padding:0 16px" id="profil-view">
@@ -645,8 +645,13 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <label class="f-lbl">RIB / IBAN</label><input id="pe-rib" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">Conditions de paiement</label><input id="pe-conditions" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">🔐 Code comptable (6 chiffres)</label>
-    <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px">
-    <div style="font-size:11px;color:#94A3B8;margin-bottom:16px">Partagez ce code avec votre comptable</div>
+    <div style="position:relative">
+      <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px;padding-right:44px">
+      <button type="button" onclick="togglePwd('pf-code-comptable','eye-code')" style="position:absolute;right:12px;top:14px;background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8" id="eye-code">👁️</button>
+    </div>
+    <div style="background:#EFF6FF;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:#1D4ED8">
+      💡 <strong>Comment ça marche :</strong> Partagez le lien comptable à votre comptable. Il saisira ce code pour accéder à vos données en lecture seule.
+    </div>
     <div style="margin-bottom:12px">
       <div class="f-lbl">Logo entreprise</div>
       <div id="logo-preview-container" style="margin-bottom:8px"></div>
