@@ -160,16 +160,34 @@ async function doLogin() {
       localStorage.removeItem('bp_saved_email');
       localStorage.removeItem('bp_remember');
     }
-    const role = sb.user?.user_metadata?.role || 'entreprise';
+    // Détecter le rôle - metadata OU invitations acceptées
+    let role = sb.user?.user_metadata?.role || 'entreprise';
+
+    // Si rôle pas défini, vérifier si ce compte a des invitations comptable acceptées
+    if (role === 'entreprise') {
+      try {
+        const invCheck = await fetch(
+          SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.acceptee&limit=1',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+        );
+        const invData = await invCheck.json();
+        if (invData && invData.length > 0) {
+          role = 'comptable';
+        }
+      } catch(e2) {}
+    }
+
     CPT.role = role;
+
     if (role === 'comptable') {
       await loadComptableApp();
       goScreen('comptable');
+      showToast('✅ Bienvenue dans votre espace comptable !', 'success');
     } else {
       await loadAll();
       goScreen('dashboard');
+      showToast('✅ Bienvenue !', 'success');
     }
-    showToast('✅ Bienvenue !', 'success');
   } catch(e) {
     if (errEl) errEl.textContent = '❌ ' + (e.message || 'Email ou mot de passe incorrect');
   }
