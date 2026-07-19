@@ -344,6 +344,7 @@ async function deleteAccount() {
 // ============================================================
 
 
+
 // ============================================================
 // ARCHIVE DOCUMENTS
 // ============================================================
@@ -357,97 +358,183 @@ function renderArchive() {
   if (count) count.textContent = docs.length + ' document(s)';
   if (!list) return;
   if (!docs.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">📁</div><div class="empty-title">Aucun document</div><div>Ajoutez vos documents officiels</div></div>';
+    list.innerHTML = '<div class="empty"><div class="empty-ico">\u{1F4C1}</div><div class="empty-title">Aucun document</div><div>Ajoutez vos documents officiels</div></div>';
     return;
   }
-  list.innerHTML = docs.map(d => `
-    <div class="card" style="margin:0 20px 10px">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:40px;height:40px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:20px">${d.icon||'📄'}</div>
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:600">${escapeHTML(d.nom)}</div>
-          <div style="font-size:11px;color:#94A3B8">${d.type} · ${d.date||''}</div>
-        </div>
-        <button onclick="supprimerDocArchive('${d.id}')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">🗑️</button>
-      </div>
-    </div>
-  `).join('');
+  list.innerHTML = docs.map(function(d) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.margin = '0 20px 10px';
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:12px">' +
+      '<div style="width:40px;height:40px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:20px">' + (d.icon||'\u{1F4C4}') + '</div>' +
+      '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + escapeHTML(d.nom) + '</div>' +
+      '<div style="font-size:11px;color:#94A3B8">' + d.type + ' · ' + (d.date||'') + '</div></div>' +
+      '<button data-id="' + d.id + '" class="del-archive-btn" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">\u{1F5D1}\uFE0F</button>' +
+    '</div>';
+    card.querySelector('.del-archive-btn').onclick = function() { supprimerDocArchive(this.dataset.id); };
+    return card.outerHTML;
+  }).join('');
 }
 
 function ajouterDocumentArchive(type) {
   _archiveType = type;
-  const icons = { statuts:'📋', rib:'🏦', cnss:'🛡️', patente:'📄', ice:'🔢', autre:'📁' };
-  const labels = { statuts:'Statuts de société', rib:'RIB bancaire', cnss:'Attestation CNSS', patente:'Patente', ice:'Certificat ICE', autre:'Autre document' };
-  showToast('Sélectionnez un fichier pour: ' + (labels[type]||type));
+  const labels = {statuts:'Statuts', rib:'RIB bancaire', cnss:'Attestation CNSS', patente:'Patente', ice:'Certificat ICE', autre:'Autre'};
+  showToast('Selectionnez un fichier: ' + (labels[type]||type));
   const inp = el('archive-file-input');
-  if (inp) {
-    inp.setAttribute('data-type', type);
-    inp.click();
-  }
+  if (inp) { inp.setAttribute('data-type', type); inp.click(); }
 }
 
 async function uploadDocumentArchive(event) {
   const file = event.target.files[0];
   if (!file) return;
   const type = event.target.getAttribute('data-type') || 'autre';
-  const icons = { statuts:'📋', rib:'🏦', cnss:'🛡️', patente:'📄', ice:'🔢', autre:'📁' };
-  const labels = { statuts:'Statuts', rib:'RIB', cnss:'CNSS', patente:'Patente', ice:'ICE', autre:file.name };
-
-  showToast('⏳ Upload en cours...');
-
+  const icons = {statuts:'\u{1F4CB}', rib:'\u{1F3E6}', cnss:'\u{1F6E1}\uFE0F', patente:'\u{1F4C4}', ice:'\u{1F522}', autre:'\u{1F4C1}'};
+  const labels = {statuts:'Statuts', rib:'RIB', cnss:'CNSS', patente:'Patente', ice:'ICE', autre:file.name};
+  showToast('\u23F3 Upload...');
   try {
-    // Convert to base64
     const reader = new FileReader();
     reader.onload = async function(e) {
-      const base64 = e.target.result;
       const uid = sb.user?.id;
       if (!uid) return;
-
-      const doc = {
-        id: Date.now().toString(),
-        type: labels[type] || type,
-        nom: file.name,
-        icon: icons[type] || '📄',
-        date: new Date().toLocaleDateString('fr-FR'),
-        data: base64,
-        size: (file.size / 1024).toFixed(0) + ' KB',
-        user_id: uid,
-      };
-
-      // Save to Supabase
+      const doc = { id: Date.now().toString(), type: labels[type]||type, nom: file.name, icon: icons[type]||'\u{1F4C4}', date: new Date().toLocaleDateString('fr-FR'), data: e.target.result, size: (file.size/1024).toFixed(0)+' KB', user_id: uid };
       await sb.post('archive_documents', doc);
       if (!STATE.archive) STATE.archive = [];
       STATE.archive.unshift(doc);
       renderArchive();
-      showToast('✅ Document ajouté !', 'success');
+      showToast('\u2705 Document ajouté !', 'success');
     };
     reader.readAsDataURL(file);
-  } catch(e) {
-    showToast('Erreur upload: ' + e.message, 'error');
-  }
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
   event.target.value = '';
 }
 
 async function supprimerDocArchive(id) {
   if (!confirm('Supprimer ce document ?')) return;
   try {
-    await sb.delete('archive_documents', `id=eq.${id}`);
-    STATE.archive = (STATE.archive||[]).filter(d => d.id !== id);
+    await sb.delete('archive_documents', 'id=eq.' + id);
+    STATE.archive = (STATE.archive||[]).filter(function(d) { return d.id !== id; });
     renderArchive();
     showToast('Document supprimé', 'success');
-  } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
-  }
+  } catch(e) { showToast('Erreur', 'error'); }
 }
 
 async function loadArchive() {
   try {
     const uid = sb.user?.id;
     if (!uid) return;
-    const docs = await sb.get('archive_documents', `user_id=eq.${uid}&order=created_at.desc`);
+    const docs = await sb.get('archive_documents', 'user_id=eq.' + uid + '&order=created_at.desc');
     STATE.archive = docs || [];
     renderArchive();
+  } catch(e) { STATE.archive = []; }
+}
+
+// ============================================================
+// GESTION ACCÈS COMPTABLE PAR EMAIL
+// ============================================================
+
+async function renderAccesComptable() {
+  const uid = sb.user?.id;
+  if (!uid) return;
+
+  let invitations = [];
+  try {
+    invitations = await sb.get('invitations_comptable', 'entreprise_id=eq.' + uid + '&order=created_at.desc') || [];
+  } catch(e) {}
+
+  const old = document.getElementById('acces-comptable-overlay');
+  if (old) old.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'acces-comptable-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:flex-end';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:85vh;overflow-y:auto';
+
+  const statutColors = {en_attente:'#D97706', acceptee:'#059669', refusee:'#EF4444', revoquee:'#94A3B8'};
+  const statutLabels = {en_attente:'⏳ En attente', acceptee:'✅ Acceptée', refusee:'❌ Refusée', revoquee:'🚫 Révoquée'};
+
+  let listHtml = invitations.length ? invitations.map(function(inv) {
+    return '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #F1F5F9;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">' +
+      '<div>' +
+        '<div style="font-size:13px;font-weight:600">' + escapeHTML(inv.comptable_email) + '</div>' +
+        '<div style="font-size:11px;margin-top:2px;color:' + (statutColors[inv.statut]||'#64748B') + '">' + (statutLabels[inv.statut]||inv.statut) + '</div>' +
+      '</div>' +
+      (inv.statut !== 'revoquee' ? '<button onclick="revoquerAccesComptable(\'' + inv.id + '\')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">Révoquer</button>' : '') +
+    '</div>';
+  }).join('') : '<div style="text-align:center;padding:20px;color:#94A3B8;font-size:13px">Aucune invitation envoyée</div>';
+
+  box.innerHTML =
+    '<div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>' +
+    '<div style="font-size:17px;font-weight:700;color:#0F172A;margin-bottom:4px">🔐 Accès comptable</div>' +
+    '<div style="font-size:12px;color:#64748B;margin-bottom:20px">Invitez votre comptable par email. Il aura accès en lecture seule.</div>' +
+    '<div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:16px">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">Inviter un comptable</div>' +
+      '<input id="comptable-invite-email" class="f-inp" type="email" placeholder="email@comptable.ma" style="margin-bottom:10px">' +
+      '<button onclick="envoyerInvitationComptable()" style="width:100%;padding:12px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📧 Envoyer l\'invitation</button>' +
+    '</div>' +
+    (invitations.length ? '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">Invitations</div>' + listHtml : listHtml) +
+    '<button onclick="document.getElementById(\'acces-comptable-overlay\').remove()" style="width:100%;margin-top:12px;padding:12px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>';
+
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+async function envoyerInvitationComptable() {
+  const email = (el('comptable-invite-email')?.value||'').trim().toLowerCase();
+  if (!email || !email.includes('@')) { showToast('Email invalide', 'error'); return; }
+
+  const uid = sb.user?.id;
+  if (!uid) return;
+
+  showToast('\u23f3 Envoi en cours...');
+
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=representation'
+      },
+      body: JSON.stringify({ entreprise_id: uid, comptable_email: email, statut: 'en_attente' })
+    });
+
+    if (r.ok) {
+      const p = STATE.profil || {};
+      const inviteUrl = window.location.origin + window.location.pathname + '?invite_email=' + encodeURIComponent(email) + '&entreprise=' + uid;
+      const msg = 'Invitation BaniPay - ' + (p.raison||'') + '\nAcces comptable: ' + inviteUrl;
+
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Invitation BaniPay', text: msg }); }
+        catch(e2) { navigator.clipboard?.writeText(inviteUrl); showToast('\u2705 Lien copie !', 'success'); }
+      } else {
+        navigator.clipboard?.writeText(inviteUrl);
+        showToast('\u2705 Lien invite copie !', 'success');
+      }
+
+      document.getElementById('acces-comptable-overlay')?.remove();
+      await renderAccesComptable();
+    } else {
+      showToast('Erreur envoi', 'error');
+    }
   } catch(e) {
-    STATE.archive = [];
+    showToast('Erreur: ' + e.message, 'error');
   }
+}
+
+async function revoquerAccesComptable(invId) {
+  if (!confirm('Revoquer cet acces ?')) return;
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'revoquee' })
+    });
+    showToast('Acces revoque', 'success');
+    document.getElementById('acces-comptable-overlay')?.remove();
+    await renderAccesComptable();
+  } catch(e) { showToast('Erreur', 'error'); }
 }
