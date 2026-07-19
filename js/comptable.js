@@ -806,7 +806,7 @@ async function mettreAJourInvitation(invId, statut) {
 
 function switchCptNav(tab) {
   // Update nav buttons
-  ['dashboard','entreprises','traiter','historique'].forEach(function(t) {
+  ['dashboard','entreprises','traiter','historique','activite'].forEach(function(t) {
     const btn = document.getElementById('cpt-nav-' + t);
     if (!btn) return;
     if (t === tab) {
@@ -845,9 +845,12 @@ function switchCptNav(tab) {
         '</div>' +
       '</div>' +
       '<div id="cpt-entreprises-list" style="padding:0 16px"></div>' +
-      '<div style="padding:12px 16px 20px;display:flex;gap:8px">' +
-        '<button onclick="ouvrirGestionEntreprises()" style="flex:1;padding:11px;background:#EEF2FF;color:#4338CA;border:1.5px solid #C7D2FE;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Gérer entreprises</button>' +
-        '<button onclick="renderComptableProfil();goScreen(\'comptable-profil\',null)" style="flex:1;padding:11px;background:#fff;color:#64748B;border:1.5px solid #E2E8F0;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">👤 Mon profil</button>' +
+      '<div style="padding:12px 16px 20px;display:flex;flex-direction:column;gap:8px">' +
+        '<button onclick="basculerModeEntreprise()" style="width:100%;padding:13px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏢 Mes factures & devis</button>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button onclick="ouvrirGestionEntreprises()" style="flex:1;padding:11px;background:#EEF2FF;color:#4338CA;border:1.5px solid #C7D2FE;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Gérer</button>' +
+          '<button onclick="renderComptableProfil();goScreen(\'comptable-profil\',null)" style="flex:1;padding:11px;background:#fff;color:#64748B;border:1.5px solid #E2E8F0;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">👤 Profil</button>' +
+        '</div>' +
       '</div>';
 
     renderListeEntreprises();
@@ -882,6 +885,13 @@ function switchCptNav(tab) {
     content.innerHTML = '';
     content.appendChild(tmp);
     renderHistorique();
+
+  } else if (tab === 'activite') {
+    const tmp = document.createElement('div');
+    tmp.id = 'cpt-ent-content';
+    content.innerHTML = '';
+    content.appendChild(tmp);
+    renderActiviteClients();
   }
 }
 
@@ -910,4 +920,126 @@ function renderComptableDashboard() {
   });
 
   switchCptNav('dashboard');
+}
+
+// ============================================================
+// MODE ENTREPRISE POUR LE COMPTABLE
+// ============================================================
+
+async function basculerModeEntreprise() {
+  // Le comptable bascule vers l'interface entreprise
+  // ses propres données (factures, devis, clients...)
+  CPT.modeEntreprise = true;
+
+  // Charger ses données personnelles si pas encore fait
+  if (!STATE.factures || !STATE.factures.length) {
+    showToast('\u23f3 Chargement...', 'success');
+    await loadAll();
+  }
+
+  // Afficher un bandeau indiquant qu'on est en mode entreprise
+  const banner = document.createElement('div');
+  banner.id = 'mode-entreprise-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#2563EB;color:#fff;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600';
+  banner.innerHTML = '🏢 Mode Entreprise — Vos propres factures' +
+    '<button onclick="revenirEspaceComptable()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">← Retour comptable</button>';
+  document.body.appendChild(banner);
+
+  // Pousser le contenu vers le bas
+  document.body.style.paddingTop = '36px';
+
+  goScreen('dashboard');
+}
+
+function revenirEspaceComptable() {
+  CPT.modeEntreprise = false;
+  // Supprimer le bandeau
+  document.getElementById('mode-entreprise-banner')?.remove();
+  document.body.style.paddingTop = '';
+  goScreen('comptable');
+}
+
+
+// ============================================================
+// ACTIVITÉ EN TEMPS RÉEL DES CLIENTS
+// ============================================================
+
+async function renderActiviteClients() {
+  const list = el('cpt-ent-content');
+  if (!list) return;
+
+  list.innerHTML = '<div style="padding:16px"><div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:14px">🔴 Activité récente</div><div style="text-align:center;padding:20px;color:#94A3B8">⏳ Chargement...</div></div>';
+
+  try {
+    const ids = (CPT.entreprises || []).map(function(e) { return e.entreprise_id; });
+    if (!ids.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-ico">📡</div><div class="empty-title">Aucune entreprise</div></div>';
+      return;
+    }
+
+    // Charger toutes les factures et devis récents (7 derniers jours)
+    const dateLimit = new Date();
+    dateLimit.setDate(dateLimit.getDate() - 7);
+    const dateLimitStr = dateLimit.toISOString().split('T')[0];
+
+    const [recentFac, recentDev] = await Promise.all([
+      fetch(SUPABASE_URL + '/rest/v1/factures?user_id=in.(' + ids.join(',') + ')&created_at=gte.' + dateLimitStr + '&order=created_at.desc&limit=50&select=*',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
+      fetch(SUPABASE_URL + '/rest/v1/devis?user_id=in.(' + ids.join(',') + ')&created_at=gte.' + dateLimitStr + '&order=created_at.desc&limit=30&select=*',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
+    ]);
+
+    // Fusionner et trier par date
+    const events = [];
+
+    (recentFac || []).forEach(function(f) {
+      const inv = (CPT.entreprises || []).find(function(e) { return e.entreprise_id === f.user_id; });
+      const entreprise = inv?.profil?.raison || 'Entreprise';
+      events.push({ date: f.created_at, type: 'facture', icon: '🧾', label: 'Nouvelle facture ' + (f.ref || ''), sous: f.client || '', montant: fmt(f.ttc || 0) + ' MAD', entreprise: entreprise, statut: f.statut, eid: f.user_id });
+    });
+
+    (recentDev || []).forEach(function(d) {
+      const inv = (CPT.entreprises || []).find(function(e) { return e.entreprise_id === d.user_id; });
+      const entreprise = inv?.profil?.raison || 'Entreprise';
+      events.push({ date: d.created_at, type: 'devis', icon: '📝', label: 'Nouveau devis ' + (d.ref || ''), sous: d.client || '', montant: fmt(d.ttc || 0) + ' MAD', entreprise: entreprise, statut: d.statut, eid: d.user_id });
+    });
+
+    // Trier par date décroissante
+    events.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+    if (!events.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-ico">📡</div><div class="empty-title">Aucune activité récente</div><div>Rien de nouveau ces 7 derniers jours</div></div>';
+      return;
+    }
+
+    const statutColor = { payee: '#059669', attente: '#D97706', retard: '#EF4444', brouillon: '#94A3B8', envoyee: '#2563EB', accepte: '#059669', refuse: '#EF4444' };
+    const statutLabel = { payee: 'Payée', attente: 'En attente', retard: 'En retard', brouillon: 'Brouillon', envoyee: 'Envoyée', accepte: 'Accepté', refuse: 'Refusé' };
+
+    list.innerHTML = '<div style="padding:16px">' +
+      '<div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:4px">📡 Activité récente</div>' +
+      '<div style="font-size:11px;color:#94A3B8;margin-bottom:14px">7 derniers jours · ' + events.length + ' événement(s)</div>' +
+      events.map(function(ev) {
+        const dateStr = new Date(ev.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F8FAFC;align-items:flex-start">' +
+          '<div style="width:36px;height:36px;border-radius:10px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">' + ev.icon + '</div>' +
+          '<div style="flex:1">' +
+            '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+              '<div>' +
+                '<div style="font-size:12px;font-weight:700;color:#0F172A">' + escapeHTML(ev.label) + '</div>' +
+                '<div style="font-size:11px;color:#64748B;margin-top:1px">' + escapeHTML(ev.entreprise) + ' · ' + escapeHTML(ev.sous) + '</div>' +
+              '</div>' +
+              '<div style="text-align:right;flex-shrink:0">' +
+                '<div style="font-size:12px;font-weight:700;color:#0F172A">' + ev.montant + '</div>' +
+                '<div style="font-size:9px;color:' + (statutColor[ev.statut] || '#94A3B8') + ';font-weight:600">' + (statutLabel[ev.statut] || ev.statut || '') + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="font-size:10px;color:#94A3B8;margin-top:3px">' + dateStr + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#EF4444">Erreur: ' + e.message + '</div>';
+  }
 }
