@@ -712,6 +712,31 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div id="aw-signup" style="display:none">
         <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#94A3B8;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
         <div class="auth-title">Créer un compte</div>
+
+        <!-- Choix du type de compte - EN PREMIER -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:10px;text-align:center">Je suis...</div>
+          <div style="display:flex;gap:8px">
+            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #2563EB;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#EFF6FF;transition:all 0.2s">
+              <div style="font-size:28px;margin-bottom:6px">🏢</div>
+              <div style="font-size:13px;color:#2563EB;font-weight:700">Entreprise</div>
+              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes factures</div>
+            </div>
+            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F8FAFC;transition:all 0.2s">
+              <div style="font-size:28px;margin-bottom:6px">📊</div>
+              <div style="font-size:13px;color:#64748B;font-weight:700">Comptable</div>
+              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes clients</div>
+            </div>
+          </div>
+          <input type="hidden" id="signup-role" value="entreprise">
+        </div>
+
+        <!-- Champs spécifiques comptable -->
+        <div id="signup-comptable-fields" style="display:none;background:#F3E8FF;border-radius:12px;padding:12px;margin-bottom:12px">
+          <label class="a-lbl" style="color:#9333EA">Cabinet comptable</label>
+          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet" style="border-color:#C7D2FE">
+        </div>
+
         <label class="a-lbl">Nom complet</label><input id="signup-nom" class="a-inp" type="text" placeholder="Ahmed Benali">
         <label class="a-lbl">Email</label><input id="signup-email" class="a-inp" type="email" placeholder="votre@email.com">
         <label class="a-lbl">Mot de passe</label>
@@ -722,19 +747,6 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
         <input id="signup-password2" class="a-inp" type="password" placeholder="Retapez" oninput="checkPwdMatch()">
         <div id="pwd-match" style="font-size:11px;margin-top:4px;min-height:16px"></div>
         <div id="signup-err" class="a-err"></div>
-        <input type="hidden" id="signup-role" value="entreprise">
-        <div id="signup-comptable-fields" style="display:none">
-          <label class="a-lbl">Cabinet comptable</label>
-          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet" style="margin-bottom:10px">
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #2563EB;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#EFF6FF">
-            <div>🏢</div><div style="font-size:12px;color:#2563EB;font-weight:600">Entreprise</div>
-          </div>
-          <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#F8FAFC">
-            <div>📊</div><div style="font-size:12px;color:#64748B;font-weight:600">Comptable</div>
-          </div>
-        </div>
         <button class="a-btn a-btn-blue" onclick="doSignup()">Créer mon compte</button>
         <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
       </div>
@@ -1468,6 +1480,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <button id="cpt-nav-entreprises" onclick="switchCptNav('entreprises')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🏢 Entreprises</button>
       <button id="cpt-nav-traiter" onclick="switchCptNav('traiter')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📥 À traiter</button>
       <button id="cpt-nav-historique" onclick="switchCptNav('historique')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📋 Historique</button>
+      <button id="cpt-nav-activite" onclick="switchCptNav('activite')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📡 Activité</button>
     </div>
   </div>
 
@@ -1615,3 +1628,4 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 </body>
 </html<!-- ===== ESPACE COMPTABLE ===== -->
 >
+        
