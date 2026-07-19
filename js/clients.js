@@ -292,3 +292,101 @@ function modifierClient(id) { ouvrirModifClient(id); }
 // ============================================================
 // MODIFIER PRODUIT
 // ============================================================
+
+
+
+// ============================================================
+// IMPORT CLIENT DEPUIS LIEN / QR DANS LE FORMULAIRE
+// ============================================================
+
+async function importerDepuisLienForm() {
+  const lien = (el('import-client-lien')?.value || '').trim();
+  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+
+  // Extraire l'ID profil depuis l'URL
+  let profilId = null;
+  try {
+    const url = new URL(lien);
+    profilId = url.searchParams.get('profil') || url.searchParams.get('portail') || url.searchParams.get('doc');
+    if (!profilId) {
+      // Try to extract from path or last segment
+      profilId = lien.split('profil=')[1]?.split('&')[0] || lien.split('portail=')[1]?.split('&')[0];
+    }
+  } catch(e) {
+    // If not a valid URL, try as raw ID
+    profilId = lien.includes('=') ? lien.split('=').pop() : lien;
+  }
+
+  if (!profilId) { showToast('Lien invalide — copie le lien complet', 'error'); return; }
+
+  showToast('⏳ Chargement du profil...');
+
+  try {
+    // Fetch from profils_entreprise by id_unique
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + encodeURIComponent(profilId) + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    let p = data && data[0];
+
+    // If not found by id_unique, try by id
+    if (!p) {
+      const r2 = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + profilId + '&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const data2 = await r2.json();
+      p = data2 && data2[0];
+    }
+
+    if (!p) { showToast('Profil introuvable', 'error'); return; }
+
+    // Remplir le formulaire automatiquement
+    remplirFormulaireClient(p);
+    showToast('✅ Profil importé : ' + (p.raison || ''), 'success');
+
+    // Vider le champ lien
+    if (el('import-client-lien')) el('import-client-lien').value = '';
+
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+function remplirFormulaireClient(p) {
+  // Remplir tous les champs disponibles
+  const fields = {
+    'cl-nom': p.raison || '',
+    'cl-tel': p.tel || '',
+    'cl-email': p.email || '',
+    'cl-adresse': (p.adresse || '') + (p.ville ? ', ' + p.ville : ''),
+    'cl-ice': p.ice || '',
+    'cl-rc': p.rc || '',
+    'cl-if': p.identifiant_fiscal || '',
+    'cl-notes': p.secteur ? 'Secteur: ' + p.secteur : '',
+  };
+
+  Object.keys(fields).forEach(function(id) {
+    const inp = el(id);
+    if (inp && fields[id]) {
+      inp.value = fields[id];
+      // Highlight filled fields
+      inp.style.background = '#ECFDF5';
+      inp.style.borderColor = '#059669';
+      setTimeout(function() {
+        inp.style.background = '';
+        inp.style.borderColor = '';
+      }, 2000);
+    }
+  });
+
+  // Scroll to first filled field
+  const firstField = el('cl-nom');
+  if (firstField) firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function importerDepuisQRCodeForm(event) {
+  // On iOS, camera captures image - we can't decode QR natively without a library
+  // Show tip to user
+  showToast('Prenez la photo, puis copiez le lien manuellement si besoin', 'success');
+  event.target.value = '';
+}
