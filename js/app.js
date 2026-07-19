@@ -91,6 +91,80 @@ async function loadPublicProfil(profilId) {
 
 
 
+
+async function afficherPageInvitation(email, entrepriseId) {
+  // Load entreprise profil
+  let profil = {};
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + entrepriseId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    profil = (data && data[0]) || {};
+  } catch(e) {}
+
+  document.body.innerHTML =
+    '<div style="font-family:Inter,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#0F172A,#1E3A8A);display:flex;align-items:center;justify-content:center;padding:20px">' +
+    '<div style="background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:400px;text-align:center">' +
+      '<div style="font-size:48px;margin-bottom:12px">🔐</div>' +
+      '<div style="font-size:22px;font-weight:800;color:#0F172A;margin-bottom:4px">Bani<span style="color:#2563EB">Pay</span></div>' +
+      '<div style="font-size:14px;color:#64748B;margin-bottom:24px">Invitation accès comptable</div>' +
+      '<div style="background:#EFF6FF;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
+        '<div style="font-size:12px;color:#94A3B8;margin-bottom:4px">Entreprise</div>' +
+        '<div style="font-size:16px;font-weight:700;color:#0F172A">' + escapeHTML(profil.raison || 'Entreprise') + '</div>' +
+        (profil.secteur ? '<div style="font-size:12px;color:#64748B;margin-top:2px">' + profil.secteur + '</div>' : '') +
+      '</div>' +
+      '<div style="font-size:13px;color:#64748B;margin-bottom:24px">' +
+        'Vous avez été invité(e) à accéder aux données comptables de cette entreprise en lecture seule.' +
+      '</div>' +
+      '<button id="btn-acc" style="width:100%;padding:14px;background:#059669;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit">' +
+        '\u2705 Accepter' +
+      '</button>' +
+      '<button id="btn-ref" style="width:100%;padding:14px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
+        'Refuser' +
+      '</button>' +
+      '<div style="margin-top:20px;font-size:11px;color:#94A3B8">Propulsé par <strong style="color:#2563EB">BaniPay</strong></div>' +
+    '</div></div>';
+  setTimeout(function() {
+    const btnA = document.getElementById('btn-accept-inv');
+    const btnR = document.getElementById('btn-refuse-inv');
+    if (btnA) btnA.onclick = function() { accepterInvitationEmail(encodeURIComponent(email), entrepriseId); };
+    if (btnR) btnR.onclick = function() { refuserInvitationEmail(encodeURIComponent(email), entrepriseId); };
+  }, 100);
+}
+
+async function accepterInvitationEmail(emailEnc, entrepriseId) {
+  const email = decodeURIComponent(emailEnc);
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email), {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'acceptee' })
+    });
+    document.body.innerHTML =
+      '<div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px">' +
+        '<div style="font-size:64px;margin-bottom:16px">✅</div>' +
+        '<h2 style="color:#059669;margin-bottom:8px">Invitation acceptée !</h2>' +
+        '<p style="color:#64748B;margin-bottom:24px">Connectez-vous à BaniPay pour accéder aux données.</p>' +
+        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#2563EB;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir BaniPay</a>' +
+      '</div>';
+  } catch(e) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#EF4444">Erreur: ' + e.message + '</div>';
+  }
+}
+
+async function refuserInvitationEmail(emailEnc, entrepriseId) {
+  const email = decodeURIComponent(emailEnc);
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email), {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'refusee' })
+    });
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial"><div style="font-size:48px">❌</div><h2>Invitation refusée</h2></div>';
+  } catch(e) {}
+}
+
 async function afficherDocumentPublic(docId) {
   const urlParams = new URLSearchParams(window.location.search);
   const docType = urlParams.get('type'); // 'devis' ou null
@@ -207,6 +281,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (portailId) { await loadPublicProfil(portailId); return; }
   if (profilId) { await loadPublicProfil(profilId); return; }
+
+  // Invitation comptable par email
+  const inviteEmail = params.get('invite_email');
+  const entrepriseId = params.get('entreprise');
+  if (inviteEmail && entrepriseId) {
+    await afficherPageInvitation(inviteEmail, entrepriseId);
+    return;
+  }
 
   // Action sur un devis (accepter/refuser via lien)
   const devisId = params.get('devis');
