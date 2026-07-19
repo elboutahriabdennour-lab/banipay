@@ -1446,46 +1446,75 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 </div>
 
 <!-- ===== DASHBOARD COMPTABLE FULL ===== -->
-<div class="screen" id="screen-comptable">
-  <div class="topbar">
-    <div class="topbar-brand">📊 Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button onclick="quitterComptable()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Quitter</button>
+<!-- ===== ESPACE COMPTABLE ===== -->
+<div class="screen" id="screen-comptable" style="background:#F8FAFC;min-height:100vh">
+  <!-- Header violet comptable -->
+  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:20px 20px 28px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:20px;font-weight:900;color:#fff">Bani<span style="color:#818CF8">Pay</span></div>
+      <button onclick="quitterComptable()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Déconnexion</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff" id="comptable-avatar">C</div>
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Espace Comptable</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-top:2px" id="cpt-nom-display">Comptable</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px" id="cpt-email-display"></div>
+      </div>
     </div>
   </div>
-  <div class="hero" style="padding-bottom:20px">
-    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;margin:0 auto 10px" id="comptable-avatar">C</div>
-    <div class="hero-lbl">Espace Comptable</div>
-    <div class="hero-amount" style="font-size:16px" id="cpt-nb-entreprises">0 entreprise(s)</div>
-    <div class="hero-sub-txt" id="cpt-sub">Chargement...</div>
+
+  <!-- Stats rapides -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 16px 8px">
+    <div style="background:#fff;border-radius:14px;padding:14px;text-align:center;border:1px solid #E2E8F0">
+      <div style="font-size:22px;font-weight:800;color:#4338CA" id="cpt-nb-ent">0</div>
+      <div style="font-size:10px;color:#94A3B8;margin-top:2px">Entreprises</div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:14px;text-align:center;border:1px solid #E2E8F0">
+      <div style="font-size:22px;font-weight:800;color:#059669" id="cpt-nb-fac">0</div>
+      <div style="font-size:10px;color:#94A3B8;margin-top:2px">Factures</div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:14px;text-align:center;border:1px solid #E2E8F0">
+      <div style="font-size:22px;font-weight:800;color:#D97706" id="cpt-tva-total">0</div>
+      <div style="font-size:10px;color:#94A3B8;margin-top:2px">TVA (MAD)</div>
+    </div>
   </div>
-  <div class="sec-label">Mes entreprises clientes</div>
-  <div id="cpt-entreprises-list"></div>
-  <div style="padding:16px 20px">
-    <button onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:100%;padding:12px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">👤 Mon profil comptable</button>
+
+  <!-- Liste entreprises -->
+  <div style="padding:8px 16px 4px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8">Mes entreprises clientes</div>
+  </div>
+  <div id="cpt-entreprises-list" style="padding:0 16px"></div>
+
+  <!-- Bouton profil -->
+  <div style="padding:12px 16px 20px">
+    <button onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:100%;padding:12px;background:#fff;color:#4338CA;border:1.5px solid #C7D2FE;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👤 Mon profil comptable</button>
   </div>
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-cpt-entreprise">
-  <div class="topbar">
-    <div class="topbar-right" style="margin-right:auto">
-      <button class="back-btn" onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
+<!-- ===== VUE ENTREPRISE (COMPTABLE) ===== -->
+<div class="screen" id="screen-cpt-entreprise" style="background:#F8FAFC">
+  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:14px 20px;display:flex;align-items:center;gap:12px">
+    <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
+    <div>
+      <div style="font-size:14px;font-weight:700;color:#fff" id="cpt-ent-nom">Entreprise</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5)" id="cpt-ent-sub"></div>
     </div>
-    <div style="color:#fff;font-size:14px;font-weight:600;flex:1;text-align:center" id="cpt-ent-nom">Entreprise</div>
-    <div style="width:40px"></div>
   </div>
-  <div style="background:#1E3A8A;padding:8px 20px 16px;text-align:center">
-    <div style="font-size:11px;color:rgba(255,255,255,0.5)" id="cpt-ent-sub"></div>
-  </div>
+
+  <!-- KPIs -->
   <div id="cpt-ent-kpis"></div>
-  <div style="display:flex;gap:6px;padding:12px 20px;overflow-x:auto">
-    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#2563EB;color:#fff">🧾 Factures</button>
-    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📝 Devis</button>
-    <button id="cpt-tab-tva" onclick="cptEntTab('tva')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📊 TVA</button>
-    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">ℹ️ Infos</button>
+
+  <!-- Onglets -->
+  <div style="display:flex;gap:6px;padding:12px 16px;overflow-x:auto;background:#fff;border-bottom:1px solid #F1F5F9">
+    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#4338CA;color:#fff">🧾 Factures</button>
+    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📝 Devis</button>
+    <button id="cpt-tab-tva" onclick="cptEntTab('tva')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📊 TVA</button>
+    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">ℹ️ Infos</button>
   </div>
-  <div id="cpt-ent-content"></div>
+
+  <div id="cpt-ent-content" style="padding-bottom:20px"></div>
   <div class="pb"></div>
 </div>
 
@@ -1508,7 +1537,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div class="p-card-title">Informations</div>
       <div class="p-row"><span class="p-lbl">Email</span><span class="p-val" id="cpt-email">&#8212;</span></div>
       <div class="p-row"><span class="p-lbl">Cabinet</span><span class="p-val" id="cpt-cabinet">&#8212;</span></div>
-      <div class="p-row"><span class="p-lbl">Entreprises</span><span class="p-val" id="cpt-nb-ent">0</span></div>
+      <div class="p-row"><span class="p-lbl">Entreprises</span><span class="p-val" id="cpt-nb-ent-2">0</span></div>
     </div>
     <button class="p-btn danger" onclick="doLogout()" style="margin-top:12px">&#9196;&#65039; Se d&#233;connecter</button>
   </div>
