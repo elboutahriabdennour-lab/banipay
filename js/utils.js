@@ -21,23 +21,22 @@ function getRef(prefix, list) {
 }
 
 
-function showToast(msg, type = 'default') {
+function showToast(msg, type) {
+  if (!type) type = 'default';
   const t = document.getElementById('toast');
   if (!t) return;
-  // Force reset before showing
-  t.classList.remove('show');
-  void t.offsetWidth; // reflow
-  t.textContent = msg;
-  t.className = '';
-  t.classList.add('toast', 'show', 'toast-' + type);
   clearTimeout(_toastTimer);
-  // Loading messages stay longer, others 3s
-  const duration = msg.startsWith('⏳') ? 5000 : 2000;
-  _toastTimer = setTimeout(() => {
+  t.classList.remove('show');
+  void t.offsetWidth;
+  t.textContent = msg;
+  t.className = 'toast show toast-' + type;
+  const duration = msg.startsWith('⏳') ? 4000 : 2500;
+  _toastTimer = setTimeout(function() {
     t.classList.remove('show');
-    setTimeout(() => { t.className = 'toast'; }, 300);
+    setTimeout(function() { t.className = 'toast'; t.textContent = ''; }, 400);
   }, duration);
 }
+
 
 function hideToast() {
   const t = document.getElementById('toast');
