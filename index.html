@@ -1433,83 +1433,47 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 <!-- ===== DASHBOARD COMPTABLE FULL ===== -->
 <div class="screen" id="screen-comptable">
   <div class="topbar">
-    <div class="topbar-brand">&#128202; Bani<span>Pay</span></div>
+    <div class="topbar-brand">📊 Bani<span>Pay</span></div>
     <div class="topbar-right">
-      <div class="t-avatar" id="comptable-avatar" onclick="goScreen('comptable-profil')">C</div>
+      <button onclick="quitterComptable()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Quitter</button>
     </div>
   </div>
-  <div class="hero">
+  <div class="hero" style="padding-bottom:20px">
+    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;margin:0 auto 10px" id="comptable-avatar">C</div>
     <div class="hero-lbl">Espace Comptable</div>
-    <div class="hero-amount" id="cpt-nb-entreprises">0 entreprise(s)</div>
-    <div class="hero-sub-txt" id="cpt-sub">G&#233;rez vos clients</div>
-    <div class="hero-grid">
-      <div class="hero-box"><div class="hero-box-val g" id="cpt-total-ca">0</div><div class="hero-box-lbl">CA total</div></div>
-      <div class="hero-box"><div class="hero-box-val o" id="cpt-total-att">0</div><div class="hero-box-lbl">En attente</div></div>
-      <div class="hero-box"><div class="hero-box-val r" id="cpt-total-ret">0</div><div class="hero-box-lbl">En retard</div></div>
-    </div>
+    <div class="hero-amount" style="font-size:16px" id="cpt-nb-entreprises">0 entreprise(s)</div>
+    <div class="hero-sub-txt" id="cpt-sub">Chargement...</div>
   </div>
-  <div class="sec-header"><div class="sec-title">Mes entreprises clientes</div></div>
-  <div class="card-list" id="cpt-entreprises-list"></div>
+  <div class="sec-label">Mes entreprises clientes</div>
+  <div id="cpt-entreprises-list"></div>
+  <div style="padding:16px 20px">
+    <button onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:100%;padding:12px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">👤 Mon profil comptable</button>
+  </div>
   <div class="pb"></div>
-  <div class="bottom-nav">
-    <div class="nav-item active"><div class="nav-ico">&#127968;</div><div class="nav-lbl" style="color:#2563EB">Entreprises</div></div>
-    <div class="nav-fab"><button class="fab" style="background:#9333EA" onclick="ouvrirInvitation()">&#128203;</button></div>
-    <div class="nav-item" onclick="goScreen('comptable-profil')"><div class="nav-ico">&#128100;</div><div class="nav-lbl">Profil</div></div>
-  </div>
 </div>
 
-<!-- ===== VUE ENTREPRISE COMPTABLE ===== -->
 <div class="screen" id="screen-cpt-entreprise">
   <div class="topbar">
-    <div class="topbar-brand" id="cpt-ent-nom" style="font-size:16px">Entreprise</div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('comptable')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
+    <div class="topbar-right" style="margin-right:auto">
+      <button class="back-btn" onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
     </div>
+    <div style="color:#fff;font-size:14px;font-weight:600;flex:1;text-align:center" id="cpt-ent-nom">Entreprise</div>
+    <div style="width:40px"></div>
   </div>
-  <div class="hero">
-    <div class="hero-lbl">Situation financi&#232;re</div>
-    <div class="hero-amount" id="cpt-ent-ca">0 MAD</div>
-    <div class="hero-sub-txt" id="cpt-ent-sub">chargement...</div>
-    <div class="hero-grid">
-      <div class="hero-box"><div class="hero-box-val g" id="cpt-ent-payee">0</div><div class="hero-box-lbl">Pay&#233;es</div></div>
-      <div class="hero-box"><div class="hero-box-val o" id="cpt-ent-att">0</div><div class="hero-box-lbl">En attente</div></div>
-      <div class="hero-box"><div class="hero-box-val r" id="cpt-ent-ret">0</div><div class="hero-box-lbl">En retard</div></div>
-    </div>
+  <div style="background:#1E3A8A;padding:8px 20px 16px;text-align:center">
+    <div style="font-size:11px;color:rgba(255,255,255,0.5)" id="cpt-ent-sub"></div>
   </div>
-  <div class="filter-tabs" style="padding-top:12px">
-    <button class="ftab active" onclick="cptEntTab('factures',this)">Factures</button>
-    <button class="ftab" onclick="cptEntTab('tva',this)">TVA</button>
-    <button class="ftab" onclick="cptEntTab('infos',this)">Infos l&#233;gales</button>
+  <div id="cpt-ent-kpis"></div>
+  <div style="display:flex;gap:6px;padding:12px 20px;overflow-x:auto">
+    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#2563EB;color:#fff">🧾 Factures</button>
+    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📝 Devis</button>
+    <button id="cpt-tab-tva" onclick="cptEntTab('tva')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📊 TVA</button>
+    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 14px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">ℹ️ Infos</button>
   </div>
-  <div id="cpt-tab-factures">
-    <div class="filter-tabs">
-      <button class="ftab active" onclick="cptFilterF('toutes',this)">Toutes</button>
-      <button class="ftab" onclick="cptFilterF('payee',this)">Pay&#233;es</button>
-      <button class="ftab" onclick="cptFilterF('attente',this)">En attente</button>
-      <button class="ftab" onclick="cptFilterF('retard',this)">En retard</button>
-    </div>
-    <div class="card-list" id="cpt-factures-list"></div>
-  </div>
-  <div id="cpt-tab-tva" style="display:none;padding:0 20px;overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin-top:10px">
-      <thead><tr style="background:#0F172A">
-        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th>
-        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th>
-        <th style="padding:10px 12px;font-size:11px;color:#34D399;text-align:right">TVA</th>
-        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th>
-      </tr></thead>
-      <tbody id="cpt-tva-body"></tbody>
-    </table>
-    <button onclick="exportCptTVA()" style="width:100%;margin-top:12px;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">&#128229; Export CSV TVA</button>
-  </div>
-  <div id="cpt-tab-infos" style="display:none;padding:16px">
-    <div class="p-card" id="cpt-infos-legales"></div>
-    <div class="p-card" style="margin-top:12px" id="cpt-infos-banque"></div>
-  </div>
+  <div id="cpt-ent-content"></div>
   <div class="pb"></div>
 </div>
 
-<!-- ===== PROFIL COMPTABLE ===== -->
 <div class="screen" id="screen-comptable-profil">
   <div class="topbar">
     <div class="topbar-brand">Mon profil</div>
