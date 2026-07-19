@@ -29,6 +29,17 @@ async function loadComptableApp() {
       CPT.entreprises.forEach(function(inv) {
         inv.profil = (profils||[]).find(function(p) { return p.id === inv.entreprise_id; }) || {};
       });
+
+      // Load factures for stats
+      await Promise.all(CPT.entreprises.map(async function(inv) {
+        try {
+          const facs = await fetch(
+            SUPABASE_URL + '/rest/v1/factures?user_id=eq.' + inv.entreprise_id + '&select=ttc,tva,statut',
+            { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+          ).then(function(r) { return r.json(); });
+          inv._factures = facs || [];
+        } catch(e) { inv._factures = []; }
+      }));
     }
 
     renderComptableDashboard();
@@ -45,10 +56,23 @@ async function loadComptableApp() {
 function renderComptableDashboard() {
   const email = sb.user?.email || '';
   const nom = sb.user?.user_metadata?.nom || email.split('@')[0] || 'Comptable';
+  const cabinet = sb.user?.user_metadata?.cabinet || '';
 
+  // Header
   const av = el('comptable-avatar');
   if (av) av.textContent = nom.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'C';
+  setEl('cpt-nom-display', nom + (cabinet ? ' · ' + cabinet : ''));
+  setEl('cpt-email-display', email);
 
+  // Stats globales
+  const totalFac = CPT.entreprises.reduce(function(s, inv) { return s + (inv._factures||[]).length; }, 0);
+  const totalTVA = CPT.entreprises.reduce(function(s, inv) {
+    return s + (inv._factures||[]).filter(function(f){return f.statut==='payee';}).reduce(function(s2,f){return s2+(Number(f.tva)||0);}, 0);
+  }, 0);
+
+  setEl('cpt-nb-ent', CPT.entreprises.length);
+  setEl('cpt-nb-fac', totalFac);
+  setEl('cpt-tva-total', Math.round(totalTVA).toLocaleString('fr-FR'));
   setEl('cpt-nb-entreprises', CPT.entreprises.length + ' entreprise(s)');
   setEl('cpt-sub', 'Connecté en tant que comptable');
 
@@ -64,17 +88,20 @@ function renderComptableDashboard() {
   list.innerHTML = CPT.entreprises.map(function(inv) {
     const p = inv.profil || {};
     const initiales = (p.raison||'?').split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || '?';
+    const facs = inv._factures || [];
+    const caTotal = facs.reduce(function(s,f){return s+(Number(f.ttc)||0);},0);
     const div = document.createElement('div');
-    div.className = 'card';
+    div.style.cssText = 'background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;border:1px solid #E2E8F0;cursor:pointer;display:flex;align-items:center;gap:12px';
     div.dataset.eid = inv.entreprise_id;
     div.onclick = function() { ouvrirEntreprise(this.dataset.eid); };
     div.innerHTML =
-      '<div class="card-ico" style="background:#EFF6FF;color:#2563EB;font-weight:700;font-size:14px">' + initiales + '</div>' +
-      '<div class="card-body">' +
-        '<div class="card-name">' + escapeHTML(p.raison||'Entreprise') + '</div>' +
-        '<div class="card-ref">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div>' +
+      '<div style="width:44px;height:44px;border-radius:12px;background:#EEF2FF;color:#4338CA;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + initiales + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:13px;font-weight:700;color:#0F172A">' + escapeHTML(p.raison||'Entreprise') + '</div>' +
+        '<div style="font-size:11px;color:#64748B;margin-top:2px">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div>' +
+        '<div style="font-size:11px;color:#059669;font-weight:600;margin-top:2px">' + facs.length + ' factures · ' + Math.round(caTotal).toLocaleString('fr-FR') + ' MAD</div>' +
       '</div>' +
-      '<div class="card-end"><div class="card-amount" style="font-size:11px;color:#059669">Actif</div></div>' +
+      '<div style="color:#4338CA;font-size:18px">›</div>' +
     '</div>';
     return div.outerHTML;
   }).join('');
@@ -158,7 +185,7 @@ function cptEntTab(tab) {
   tabs.forEach(function(t) {
     const btn = el('cpt-tab-' + t);
     if (btn) {
-      btn.style.background = t === tab ? '#2563EB' : '#F1F5F9';
+      btn.style.background = t === tab ? '#4338CA' : '#F1F5F9';
       btn.style.color = t === tab ? '#fff' : '#64748B';
     }
   });
