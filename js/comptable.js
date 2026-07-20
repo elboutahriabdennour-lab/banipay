@@ -23,7 +23,11 @@ async function loadComptableApp() {
     CPT.entreprises = invitations || [];
 
     if (CPT.entreprises.length > 0) {
-      const ids = CPT.entreprises.map(function(i) { return i.entreprise_id; });
+      const ids = CPT.entreprises.map(function(i) { return i.entreprise_id; }).filter(function(id) { return id && id !== 'null'; });
+      if (!ids.length) {
+        renderComptableDashboard();
+        return;
+      }
 
       // Charger profils + factures en parallèle
       const [profils, toutesFactures, tousControles] = await Promise.all([
