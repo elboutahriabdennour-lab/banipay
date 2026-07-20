@@ -314,6 +314,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       verifierChangementsDevis();
       verifierRappels();
       await traiterInvitation(inviteToken);
+      await loadAchats();
       if (window._pendingDocId) {
           const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
           window._pendingDocId = null;
