@@ -1689,12 +1689,19 @@ async function renderNotificationsComptable() {
 }
 async function accepterInvitationComptable(invId, entrepriseId) {
   try {
+    // 1. Mettre à jour l'invitation
     await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'acceptee' })
     });
-    showToast('✅ Invitation acceptée ! Entreprise ajoutée.', 'success');
+
+    // 2. Charger le profil de l'entreprise pour l'ajouter comme client
+    if (entrepriseId) {
+      await ajouterEntrepriseCommeClient(entrepriseId);
+    }
+
+    showToast('✅ Invitation acceptée ! Entreprise ajoutée à vos clients.', 'success');
     await loadComptableApp();
     switchCptNav('dashboard');
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
@@ -1742,4 +1749,56 @@ function ouvrirPDFComptable(fac, profil) {
     badge_lettre: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.lettre; }),
     badge_tva: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.tva_verifie; }),
   });
+}
+
+// ============================================================
+// AUTO-AJOUT ENTREPRISE COMME CLIENT DU COMPTABLE
+// ============================================================
+
+async function ajouterEntrepriseCommeClient(entrepriseId) {
+  try {
+    // Charger le profil de l'entreprise
+    const resp = await fetch(
+      SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + entrepriseId + '&select=*',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const profils = await resp.json() || [];
+    const profil = profils[0];
+    if (!profil) return;
+
+    // Vérifier si déjà dans les clients
+    const existResp = await fetch(
+      SUPABASE_URL + '/rest/v1/clients?user_id=eq.' + sb.user.id + '&reference_id=eq.' + entrepriseId + '&limit=1',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const exist = await existResp.json() || [];
+    if (exist.length > 0) return; // Déjà ajouté
+
+    // Ajouter comme client
+    await fetch(SUPABASE_URL + '/rest/v1/clients', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        user_id: sb.user.id,
+        nom: profil.raison || profil.email || '',
+        email: profil.email || '',
+        tel: profil.tel || '',
+        adresse: profil.adresse || '',
+        ville: profil.ville || '',
+        ice: profil.ice || '',
+        rc: profil.rc || '',
+        note: 'Client BaniPay · ' + (profil.secteur || ''),
+        reference_id: entrepriseId,
+        type: 'entreprise_banipay'
+      })
+    });
+    console.log('Entreprise ajoutée comme client:', profil.raison);
+  } catch(e) {
+    console.error('ajouterEntrepriseCommeClient:', e);
+  }
 }
