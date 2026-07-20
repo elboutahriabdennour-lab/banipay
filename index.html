@@ -1274,17 +1274,26 @@
   <!-- Header violet -->
   <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:16px 20px 12px;flex-shrink:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <!-- Logo -->
       <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Bani<span style="color:#818CF8">Pay</span></div>
-      <!-- Avatar cliquable → profil comptable -->
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="position:relative">
-          <div id="comptable-avatar" onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;cursor:pointer">C</div>
-        </div>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#fff" id="cpt-nom-display">Comptable</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.5)" id="cpt-email-display"></div>
+      <!-- Droite: Mon espace + Avatar -->
+      <div style="display:flex;align-items:center;gap:8px">
+        <!-- Bouton Mon espace (ses propres factures/devis) -->
+        <button onclick="basculerModeEntreprise()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:1px">
+          <span style="font-size:14px">🧾</span>
+          <span style="font-size:9px">Mon espace</span>
+        </button>
+        <!-- Avatar → profil comptable -->
+        <div onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="display:flex;flex-direction:column;align-items:center;cursor:pointer">
+          <div id="comptable-avatar" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">C</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px">Profil</div>
         </div>
       </div>
+    </div>
+    <!-- Nom et email -->
+    <div style="margin-bottom:2px">
+      <div style="font-size:13px;font-weight:700;color:#fff" id="cpt-nom-display">Comptable</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4)" id="cpt-email-display"></div>
     </div>
     <!-- Navigation onglets -->
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
