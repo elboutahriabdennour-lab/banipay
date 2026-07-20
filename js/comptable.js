@@ -804,7 +804,7 @@ async function mettreAJourInvitation(invId, statut) {
 
 function switchCptNav(tab) {
   // Update nav buttons
-  ['dashboard','entreprises','traiter','historique','activite'].forEach(function(t) {
+  ['dashboard','entreprises','traiter','historique','activite','notifs'].forEach(function(t) {
     const btn = document.getElementById('cpt-nav-' + t);
     if (!btn) return;
     if (t === tab) {
@@ -893,6 +893,9 @@ function switchCptNav(tab) {
     content.innerHTML = '';
     content.appendChild(tmp);
     renderActiviteClients();
+
+  } else if (tab === 'notifs') {
+    renderNotificationsComptable();
   }
 }
 
@@ -914,6 +917,8 @@ function renderComptableDashboard() {
   setEl('cpt-nom-display', nom + (cabinet ? ' · ' + cabinet : ''));
   setEl('cpt-email-display', email);
   setEl('cpt-nb-entreprises', (CPT.entreprises||[]).length + ' entreprise(s)');
+  // Charger badge notifications
+  chargerNotificationsComptable();
 
   // Load remarques for all entreprises
   CPT.entreprises.forEach(function(inv) {
@@ -1494,13 +1499,13 @@ function copierLienComptable() {
 }
 
 async function envoyerInvitationDepuisProfil() {
-  const emailEnt = (el('cpt-invite-email')?.value || '').trim().toLowerCase();
+  const emailEnt = (document.getElementById('cpt-invite-email')?.value || '').trim().toLowerCase();
   if (!emailEnt || !emailEnt.includes('@')) { showToast('Email invalide', 'error'); return; }
   const emailCpt = sb.user?.email;
   const nomCpt = sb.user?.user_metadata?.nom || emailCpt;
 
   try {
-    // Enregistrer invitation en DB
+    // 1. Créer invitation en DB
     await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
       method: 'POST',
       headers: {
@@ -1517,81 +1522,30 @@ async function envoyerInvitationDepuisProfil() {
       })
     });
 
-    // Générer lien d'invitation
-    const inviteUrl = window.location.origin + window.location.pathname +
-      '?invite_cpt=' + encodeURIComponent(emailCpt) +
-      '&pour=' + encodeURIComponent(emailEnt) +
-      '&nom=' + encodeURIComponent(nomCpt);
+    // 2. Créer notification dans notifications_app pour l'entreprise
+    await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        user_id: sb.user?.id,
+        destinataire_email: emailEnt,
+        type: 'invitation_comptable',
+        titre: 'Invitation de votre comptable',
+        corps: nomCpt + ' souhaite accéder à vos documents BaniPay en tant que comptable.',
+        meta: JSON.stringify({ comptable_email: emailCpt, nom_comptable: nomCpt }),
+        lue: false
+      })
+    });
 
-    // Partager le lien
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Invitation BaniPay',
-          text: nomCpt + ' vous invite à rejoindre BaniPay comme son client comptable.',
-          url: inviteUrl
-        });
-      } catch(e2) {
-        navigator.clipboard?.writeText(inviteUrl);
-        showToast('✅ Lien copié !', 'success');
-      }
-    } else {
-      navigator.clipboard?.writeText(inviteUrl);
-      showToast('✅ Lien d\'invitation copié !', 'success');
-    }
+    if (document.getElementById('cpt-invite-email')) document.getElementById('cpt-invite-email').value = '';
+    showToast('✅ Invitation envoyée ! L\'entreprise sera notifiée.', 'success');
 
-    if (el('cpt-invite-email')) el('cpt-invite-email').value = '';
-    showToast('✅ Invitation envoyée !', 'success');
-
-  } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
-  }
-}
-
-function ouvrirEditionComptable() {
-  const meta = sb.user?.user_metadata || {};
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end';
-  const box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:80vh;overflow-y:auto;box-sizing:border-box';
-  box.innerHTML =
-    '<div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>' +
-    '<div style="font-size:16px;font-weight:700;margin-bottom:16px">Modifier mon profil</div>' +
-    '<label style="font-size:12px;color:#64748B;font-weight:600">Nom complet</label>' +
-    '<input id="edit-cpt-nom" class="f-inp" value="' + escapeHTML(meta.nom||'') + '" style="margin-bottom:10px">' +
-    '<label style="font-size:12px;color:#64748B;font-weight:600">Cabinet</label>' +
-    '<input id="edit-cpt-cabinet" class="f-inp" value="' + escapeHTML(meta.cabinet||'') + '" style="margin-bottom:10px">' +
-    '<label style="font-size:12px;color:#64748B;font-weight:600">Téléphone</label>' +
-    '<input id="edit-cpt-tel" class="f-inp" value="' + escapeHTML(meta.tel||'') + '" style="margin-bottom:10px">' +
-    '<label style="font-size:12px;color:#64748B;font-weight:600">Spécialité</label>' +
-    '<input id="edit-cpt-specialite" class="f-inp" value="' + escapeHTML(meta.specialite||'') + '" placeholder="Ex: Audit, Fiscalité, PME..." style="margin-bottom:16px">' +
-    '<button id="btn-save-cpt-profil" style="width:100%;padding:12px;background:#4338CA;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💾 Sauvegarder</button>' +
-    '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;margin-top:8px;padding:12px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>';
-
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-  overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
-
-  box.querySelector('#btn-save-cpt-profil').onclick = async function() {
-    const newMeta = {
-      nom: el('edit-cpt-nom')?.value.trim() || meta.nom,
-      cabinet: el('edit-cpt-cabinet')?.value.trim() || meta.cabinet,
-      tel: el('edit-cpt-tel')?.value.trim() || meta.tel,
-      specialite: el('edit-cpt-specialite')?.value.trim() || meta.specialite,
-      role: 'comptable'
-    };
-    try {
-      await fetch(SUPABASE_URL + '/auth/v1/user', {
-        method: 'PUT',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: newMeta })
-      });
-      if (sb.user) sb.user.user_metadata = Object.assign(sb.user.user_metadata || {}, newMeta);
-      overlay.remove();
-      renderComptableProfil();
-      showToast('✅ Profil mis à jour !', 'success');
-    } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
-  };
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
 
 // ============================================================
@@ -1620,4 +1574,123 @@ function appendModeBanner() {
     '<button onclick="revenirEspaceComptable()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">← Espace comptable</button>';
   document.body.appendChild(banner);
   document.body.style.paddingTop = '36px';
+}
+
+
+async function chargerNotificationsComptable() {
+  const email = sb.user?.email;
+  if (!email) return;
+
+  try {
+    // Charger invitations en attente pour ce comptable
+    const resp = await fetch(
+      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.en_attente&order=created_at.desc',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const invitations = await resp.json() || [];
+
+    // Charger notifications générales
+    const respN = await fetch(
+      SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email) + '&lue=eq.false&order=created_at.desc&limit=20',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const notifs = await respN.json() || [];
+
+    CPT.invitationsEnAttente = invitations;
+    CPT.notifications = notifs;
+
+    // Badge sur l'icône notification
+    const total = invitations.length + notifs.length;
+    const badge = document.getElementById('cpt-notif-badge');
+    if (badge) {
+      badge.textContent = total > 0 ? total : '';
+      badge.style.display = total > 0 ? 'flex' : 'none';
+    }
+
+    return { invitations, notifs };
+  } catch(e) {
+    return { invitations: [], notifs: [] };
+  }
+}
+
+async function renderNotificationsComptable() {
+  const content = document.getElementById('cpt-main-content');
+  if (!content) return;
+
+  const { invitations, notifs } = await chargerNotificationsComptable();
+
+  content.innerHTML =
+    '<div style="padding:16px">' +
+      '<div style="font-size:16px;font-weight:700;margin-bottom:16px">🔔 Notifications</div>' +
+
+      // Invitations en attente
+      (invitations.length ? '<div style="font-size:12px;font-weight:700;color:#4338CA;text-transform:uppercase;margin-bottom:10px">Invitations en attente</div>' +
+        invitations.map(function(inv) {
+          return '<div style="background:#EEF2FF;border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid #C7D2FE">' +
+            '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' +
+              '<div style="font-size:24px">🏢</div>' +
+              '<div>' +
+                '<div style="font-size:13px;font-weight:700">' + escapeHTML(inv.entreprise_email || '') + '</div>' +
+                '<div style="font-size:11px;color:#64748B">Invite à accéder à ses documents</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="display:flex;gap:8px">' +
+              '<button class="btn-accept-inv" data-id="' + inv.id + '" data-eid="' + (inv.entreprise_id||'') + '" style="flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
+              '<button class="btn-reject-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#FEF2F2;color:#EF4444;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
+            '</div>' +
+          '</div>';
+        }).join('') : '') +
+
+      // Autres notifications
+      (notifs.length ? '<div style="font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin:14px 0 10px">Autres notifications</div>' +
+        notifs.map(function(n) {
+          return '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #E2E8F0;margin-bottom:8px">' +
+            '<div style="font-size:13px;font-weight:600;margin-bottom:4px">' + escapeHTML(n.titre||'') + '</div>' +
+            '<div style="font-size:12px;color:#64748B">' + escapeHTML(n.corps||'') + '</div>' +
+          '</div>';
+        }).join('') : '') +
+
+      (!invitations.length && !notifs.length ?
+        '<div style="text-align:center;padding:40px;color:#94A3B8"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:14px;font-weight:600">Aucune notification</div></div>' : '') +
+
+    '</div>';
+
+  // Events accepter/refuser
+  content.addEventListener('click', async function(e) {
+    const btnAccept = e.target.closest('.btn-accept-inv');
+    if (btnAccept) {
+      const invId = btnAccept.dataset.id;
+      const entrepriseId = btnAccept.dataset.eid;
+      await accepterInvitationComptable(invId, entrepriseId);
+      return;
+    }
+    const btnReject = e.target.closest('.btn-reject-inv');
+    if (btnReject) {
+      await refuserInvitationComptable(btnReject.dataset.id);
+    }
+  }, { once: true });
+}
+async function accepterInvitationComptable(invId, entrepriseId) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'acceptee' })
+    });
+    showToast('✅ Invitation acceptée ! Entreprise ajoutée.', 'success');
+    await loadComptableApp();
+    switchCptNav('dashboard');
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
+
+async function refuserInvitationComptable(invId) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'refusee' })
+    });
+    showToast('Invitation refusée', 'success');
+    renderNotificationsComptable();
+  } catch(e) { showToast('Erreur', 'error'); }
 }
