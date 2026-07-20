@@ -191,6 +191,21 @@ async function doLogin() {
       STATE.produits = []; STATE.avoirs = []; STATE.achats = [];
       await loadAll();
       await loadAchats();
+
+      // Traiter invitation en attente
+      if (window._pendingInviteCpt) {
+        const inv = window._pendingInviteCpt;
+        window._pendingInviteCpt = null;
+        try {
+          await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(inv.emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(inv.pourEmail), {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ statut: 'acceptee', entreprise_id: sb.user.id })
+          });
+          showToast('✅ Invitation acceptée ! Votre comptable a maintenant accès.', 'success');
+        } catch(e2) {}
+      }
+
       goScreen('dashboard');
       showToast('✅ Bienvenue !', 'success');
     }
