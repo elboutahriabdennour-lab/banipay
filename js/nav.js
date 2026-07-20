@@ -119,11 +119,42 @@ async function renderNotifScreen() {
     const btnA = e.target.closest('.btn-accept-cpt-inv');
     if (btnA) {
       const invId = btnA.dataset.id;
+      // Récupérer l'email du comptable depuis l'invitation
+      const invResp = await fetch(
+        SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId + '&select=*',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+      );
+      const invData = await invResp.json();
+      const inv = invData && invData[0];
+
       await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
         method: 'PATCH',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ statut: 'acceptee', entreprise_id: sb.user?.id })
       });
+
+      // Ajouter le comptable comme contact dans les clients de l'entreprise
+      if (inv && inv.comptable_email) {
+        try {
+          await fetch(SUPABASE_URL + '/rest/v1/clients', {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + sb.token,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates,return=minimal'
+            },
+            body: JSON.stringify({
+              user_id: sb.user?.id,
+              nom: inv.comptable_email.split('@')[0],
+              email: inv.comptable_email,
+              note: 'Mon comptable BaniPay',
+              type: 'comptable_banipay'
+            })
+          });
+        } catch(e2) {}
+      }
+
       showToast('✅ Comptable accepté !', 'success');
       renderNotifScreen();
       renderMonComptable();
