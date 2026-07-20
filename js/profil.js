@@ -432,83 +432,7 @@ async function loadArchive() {
 // GESTION ACCÈS COMPTABLE PAR EMAIL
 // ============================================================
 
-async function renderAccesComptable() {
-  // Invitation comptable par email (nouvelle version)
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end';
-  const box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;box-sizing:border-box';
-  box.innerHTML =
-    '<div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>' +
-    '<div style="font-size:17px;font-weight:700;margin-bottom:6px">🤝 Inviter mon comptable</div>' +
-    '<div style="font-size:13px;color:#64748B;margin-bottom:16px">Votre comptable reçoit un lien pour accéder à vos documents en lecture seule</div>' +
-    '<label style="font-size:12px;font-weight:600;color:#64748B">Email de votre comptable</label>' +
-    '<input id="inv-cpt-email" class="f-inp" type="email" placeholder="comptable@cabinet.ma" style="margin:8px 0 12px">' +
-    '<button id="btn-inv-cpt" style="width:100%;padding:13px;background:#4338CA;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Envoyer invitation</button>' +
-    '<button id="btn-close-inv-cpt" style="width:100%;margin-top:8px;padding:11px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
-    '<div id="inv-cpt-err" style="color:#EF4444;font-size:12px;text-align:center;margin-top:8px"></div>';
-
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-  overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
-  box.querySelector('#btn-close-inv-cpt').onclick = function() { overlay.remove(); };
-
-  box.querySelector('#btn-inv-cpt').onclick = async function() {
-    const emailCpt = (document.getElementById('inv-cpt-email')?.value || '').trim().toLowerCase();
-    if (!emailCpt || !emailCpt.includes('@')) {
-      document.getElementById('inv-cpt-err').textContent = 'Email invalide';
-      return;
-    }
-    const emailEnt = sb.user?.email;
-    const uid = sb.user?.id;
-
-    try {
-      // Enregistrer invitation
-      await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + sb.token,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates,return=minimal'
-        },
-        body: JSON.stringify({
-          comptable_email: emailCpt,
-          entreprise_email: emailEnt,
-          entreprise_id: uid,
-          statut: 'en_attente',
-          sens: 'entreprise_vers_comptable'
-        })
-      });
-
-      // Générer lien invitation
-      const p = STATE.profil || {};
-      const invUrl = window.location.origin + window.location.pathname +
-        '?invite_email=' + encodeURIComponent(emailCpt) +
-        '&entreprise=' + uid +
-        '&nom=' + encodeURIComponent(p.raison || emailEnt);
-
-      // Partager
-      if (navigator.share) {
-        try {
-          await navigator.share({ title: 'Invitation BaniPay', text: 'Accédez à mes documents BaniPay', url: invUrl });
-        } catch(e2) {
-          navigator.clipboard?.writeText(invUrl);
-          showToast('✅ Lien copié !', 'success');
-        }
-      } else {
-        navigator.clipboard?.writeText(invUrl);
-        showToast('✅ Lien copié !', 'success');
-      }
-
-      overlay.remove();
-      showToast('✅ Invitation envoyée !', 'success');
-
-    } catch(e) {
-      document.getElementById('inv-cpt-err').textContent = 'Erreur: ' + e.message;
-    }
-  };
-}
+async function renderAccesComptable() { inviterComptable(); }
 
 
 function renderReleves() {
@@ -600,3 +524,167 @@ async function supprimerReleve(id) {
     showToast('Relevé supprimé', 'success');
   } catch(e) { showToast('Erreur', 'error'); }
 }
+
+
+async function inviterComptable() {
+  // Ouvrir modal invitation
+  const overlay = document.createElement('div');
+  overlay.id = 'modal-inv-cpt';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;box-sizing:border-box';
+  box.innerHTML =
+    '<div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>' +
+    '<div style="font-size:17px;font-weight:700;margin-bottom:6px">🤝 Inviter mon comptable</div>' +
+    '<div style="font-size:13px;color:#64748B;margin-bottom:16px">Saisissez l\'email de votre comptable. Il recevra une notification dans BaniPay.</div>' +
+    '<input id="inv-cpt-email-input" class="f-inp" type="email" placeholder="comptable@cabinet.ma" style="margin-bottom:12px">' +
+    '<button id="btn-send-inv-cpt" style="width:100%;padding:13px;background:#4338CA;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✉️ Envoyer l\'invitation</button>' +
+    '<button id="btn-close-inv-cpt-modal" style="width:100%;padding:11px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
+    '<div id="inv-cpt-feedback" style="font-size:12px;text-align:center;margin-top:10px;min-height:16px"></div>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
+  document.getElementById('btn-close-inv-cpt-modal').onclick = function() { overlay.remove(); };
+
+  document.getElementById('btn-send-inv-cpt').onclick = async function() {
+    const emailCpt = (document.getElementById('inv-cpt-email-input')?.value || '').trim().toLowerCase();
+    const feedback = document.getElementById('inv-cpt-feedback');
+    if (!emailCpt || !emailCpt.includes('@')) {
+      feedback.style.color = '#EF4444';
+      feedback.textContent = 'Email invalide';
+      return;
+    }
+
+    const uid = sb.user?.id;
+    const emailEnt = sb.user?.email;
+    const profil = STATE.profil || {};
+    feedback.style.color = '#4338CA';
+    feedback.textContent = '⏳ Envoi en cours...';
+
+    try {
+      // 1. Créer invitation en DB
+      const resp = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + sb.token,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          comptable_email: emailCpt,
+          entreprise_email: emailEnt,
+          entreprise_id: uid,
+          statut: 'en_attente',
+          sens: 'entreprise_vers_comptable'
+        })
+      });
+
+      // 2. Chercher si le comptable a un compte BaniPay
+      const userResp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_user_by_email', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: emailCpt })
+      }).catch(function() { return { ok: false }; });
+
+      // 3. Notifier via notifications_app si comptable a un compte
+      // On utilise une approche différente: stocker la notification avec l'email cible
+      await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + sb.token,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          user_id: uid, // sera lu par le comptable via son email
+          destinataire_email: emailCpt,
+          type: 'invitation_comptable',
+          titre: 'Invitation de ' + (profil.raison || emailEnt),
+          corps: (profil.raison || emailEnt) + ' vous invite à accéder à ses documents BaniPay.',
+          meta: JSON.stringify({ entreprise_id: uid, entreprise_email: emailEnt, comptable_email: emailCpt }),
+          lue: false
+        })
+      });
+
+      feedback.style.color = '#059669';
+      feedback.textContent = '✅ Invitation envoyée ! Le comptable sera notifié à sa prochaine connexion.';
+
+      setTimeout(function() { overlay.remove(); }, 2000);
+
+    } catch(e) {
+      feedback.style.color = '#EF4444';
+      feedback.textContent = 'Erreur: ' + e.message;
+    }
+  };
+}
+
+// ── SECTION "MON COMPTABLE" DANS PROFIL ENTREPRISE ─────────
+
+async function renderMonComptable() {
+  const container = document.getElementById('mon-comptable-section');
+  if (!container) return;
+
+  const uid = sb.user?.id;
+  const emailEnt = sb.user?.email;
+
+  try {
+    // Chercher une invitation acceptée
+    const resp = await fetch(
+      SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + uid + '&statut=eq.acceptee&order=created_at.desc&limit=1',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const invs = await resp.json() || [];
+
+    if (!invs.length) {
+      container.innerHTML =
+        '<div style="text-align:center;padding:20px;background:#F8FAFC;border-radius:14px">' +
+          '<div style="font-size:32px;margin-bottom:10px">👤</div>' +
+          '<div style="font-size:14px;font-weight:600;color:#64748B;margin-bottom:12px">Aucun comptable lié</div>' +
+          '<button onclick="inviterComptable()" style="padding:11px 24px;background:#4338CA;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🤝 Inviter mon comptable</button>' +
+        '</div>';
+      return;
+    }
+
+    const inv = invs[0];
+    const emailCpt = inv.comptable_email;
+
+    container.innerHTML =
+      '<div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px">' +
+        '<div style="display:flex;align-items:center;gap:12px">' +
+          '<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">' +
+            (emailCpt[0] || 'C').toUpperCase() +
+          '</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-size:14px;font-weight:700">' + escapeHTML(emailCpt) + '</div>' +
+            '<div style="font-size:11px;color:rgba(255,255,255,0.6)">Comptable lié</div>' +
+          '</div>' +
+          '<span style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600">✅ Actif</span>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#EEF2FF;color:#4338CA;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer</button>' +
+        '<button onclick="revoquerComptable(\'' + inv.id + '\')" style="flex:1;padding:10px;background:#FEF2F2;color:#EF4444;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🚫 Révoquer</button>' +
+      '</div>';
+
+  } catch(e) {
+    container.innerHTML = '<div style="color:#EF4444;font-size:12px">Erreur chargement</div>';
+  }
+}
+
+async function revoquerComptable(invId) {
+  if (!confirm('Révoquer l\'accès de votre comptable ?')) return;
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'revoquee' })
+    });
+    showToast('Accès révoqué', 'success');
+    renderMonComptable();
+  } catch(e) { showToast('Erreur', 'error'); }
+}
+
+// ── CÔTÉ COMPTABLE ─────────────────────────────────────────
