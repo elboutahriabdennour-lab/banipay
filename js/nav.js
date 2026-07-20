@@ -89,6 +89,15 @@ function goScreen(name) {
   const sc = el('screen-' + name);
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
 
+  // Update bottom nav active state
+  const _navMap = {'dashboard':'nav-home','nouvelle':'nav-home','detail':'nav-home',
+    'devis-list':'nav-devis','nouveau-devis':'nav-devis','detail-devis':'nav-devis',
+    'clients':'nav-clients','nouveau-client':'nav-clients','detail-client':'nav-clients',
+    'profil':'nav-profil','stats':'nav-profil','parametres':'nav-profil','archive':'nav-profil'};
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  const _activeNav = _navMap[name];
+  if (_activeNav) { const _nb = document.getElementById(_activeNav); if(_nb) _nb.classList.add('active'); }
+
   const actions = {
     'archive': renderArchive,
     'annuaire': filtrerAnnuaire,
