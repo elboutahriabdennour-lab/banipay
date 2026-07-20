@@ -6,210 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1E3A8A">
-<meta name="description" content="BaniPay — ">
-<title>BaniPay</title>
+<meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
+<title>BaniPay — Gestion Factures &amp; Devis</title>
 <link rel="stylesheet" href="css/style.css">
-<style>
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:#0F172A;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-.screen{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;background:#F8FAFC;-webkit-overflow-scrolling:touch}
-.screen.active{display:block}
-
-/* AUTH */
-#screen-auth.active{display:flex;align-items:center;justify-content:center;background:#0F172A;padding:24px;min-height:100vh}
-.auth-wrap{min-height:100vh;background:linear-gradient(160deg,#0F172A 0%,#1E1B4B 60%,#3730A3 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-.auth-logo{text-align:center;margin-bottom:28px}
-.auth-logo h1{font-size:32px;font-weight:700;color:#fff;letter-spacing:-0.5px}
-.auth-logo h1 span{color:#60A5FA}
-.auth-logo p{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.15em;margin-top:6px;text-transform:uppercase}
-.auth-card{background:#fff;border-radius:16px;padding:28px 24px;box-shadow:0 4px 32px rgba(0,0,0,0.2)}
-.auth-title{font-size:18px;font-weight:600;color:#0F172A;margin-bottom:20px}
-.a-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#94A3B8;display:block;margin-bottom:6px;margin-top:14px}
-.a-lbl:first-of-type{margin-top:0}
-.a-inp{width:100%;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:13px 16px;font-size:15px;font-family:inherit;color:#0F172A;outline:none;-webkit-appearance:none;transition:all 0.15s}
-.a-inp:focus{border-color:#2563EB;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
-.a-inp::placeholder{color:#CBD5E1}
-.a-btn{width:100%;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:20px;transition:opacity 0.15s}
-.a-btn:active{opacity:0.88}
-.a-btn-blue{background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;box-shadow:0 4px 12px rgba(79,70,229,0.25)}
-.a-btn-green{background:#059669;color:#fff}
-.a-link{text-align:center;font-size:13px;color:#94A3B8;margin-top:14px}
-.a-link a{color:#2563EB;font-weight:600;cursor:pointer}
-.a-err{font-size:12px;color:#EF4444;margin-top:8px;min-height:18px}
-.a-footer{text-align:center;font-size:11px;color:rgba(255,255,255,0.2);margin-top:18px}
-.pwd-bar{height:3px;background:#E2E8F0;border-radius:2px;margin-top:6px;overflow:hidden}
-.pwd-fill{height:100%;border-radius:2px;transition:all 0.3s}
-.pwd-hint{font-size:11px;color:#94A3B8;margin-top:4px;min-height:16px}
-
-/* TOPBAR */
-.topbar{background:linear-gradient(135deg,#1E1B4B,#3730A3);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
-.topbar-brand{font-size:20px;font-weight:700;color:#fff}
-.topbar-brand span{color:#60A5FA}
-.topbar-right{display:flex;align-items:center;gap:10px}
-.t-avatar{width:34px;height:34px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0}
-.t-icon{font-size:20px;cursor:pointer;color:rgba(255,255,255,0.75)}
-
-/* HERO */
-.hero{background:linear-gradient(160deg,#0F172A,#1E1B4B,#3730A3);padding:4px 20px 20px}
-.hero-lbl{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
-.hero-amount{font-size:32px;font-weight:700;color:#fff;margin-bottom:4px}
-.hero-sub-txt{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:16px}
-.hero-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.hero-box{background:rgba(255,255,255,0.08);border-radius:10px;padding:10px;text-align:center}
-.hero-box-val{font-size:14px;font-weight:600}
-.hero-box-val.g{color:#34D399}.hero-box-val.o{color:#FB923C}.hero-box-val.r{color:#F87171}
-.hero-box-lbl{font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px}
-
-/* ALERT */
-.alerte-bar{background:#FEF2F2;border-left:3px solid #EF4444;padding:10px 16px;margin:12px 20px;border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer}
-.alerte-bar.hidden{display:none}
-.alerte-text{font-size:12px;color:#EF4444;font-weight:500}
-.alerte-action{font-size:12px;color:#EF4444;font-weight:600;margin-left:auto}
-
-/* SECTION */
-.sec-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#64748B;padding:16px 20px 10px}
-.sec-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 10px}
-.sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#64748B}
-.sec-action{font-size:12px;font-weight:500;color:#2563EB;cursor:pointer}
-
-/* QUICK ACTIONS */
-.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px}
-.qa-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px 4px}
-.qa-ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.qa-lbl{font-size:10px;font-weight:500;color:#64748B;text-align:center}
-
-/* CARDS */
-.card-list{padding:0 20px;display:flex;flex-direction:column;gap:8px}
-.card{background:#fff;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid #F1F5F9;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:opacity 0.15s}
-.card:active{opacity:0.88}
-.card-ico{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.card-body{flex:1;min-width:0}
-.card-name{font-size:14px;font-weight:600;color:#0F172A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-ref{font-size:11px;color:#94A3B8;margin-top:2px}
-.card-end{text-align:right;flex-shrink:0}
-.card-amt{font-size:14px;font-weight:600;color:#0F172A}
-.badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;text-transform:uppercase;margin-top:3px}
-.b-payee{background:#ECFDF5;color:#059669}
-.b-envoyee,.b-attente,.b-envoye{background:#FFFBEB;color:#D97706}
-.b-retard,.b-refuse{background:#FEF2F2;color:#EF4444}
-.b-accepte{background:#ECFDF5;color:#059669}
-.b-converti{background:#EFF6FF;color:#2563EB}
-
-/* FILTER TABS */
-.filter-tabs{display:flex;gap:6px;padding:0 20px 12px;overflow-x:auto;scrollbar-width:none}
-.filter-tabs::-webkit-scrollbar{display:none}
-.ftab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s}
-.ftab.active{background:#2563EB;color:#fff}
-.ftab:not(.active){background:#F1F5F9;color:#64748B}
-
-/* BOTTOM NAV */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E2E8F0;display:flex;padding:10px 20px 20px;z-index:50}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
-.nav-ico{font-size:20px}
-.nav-lbl{font-size:10px;font-weight:500;color:#94A3B8}
-.nav-item.active .nav-lbl{color:#4F46E5}
-.nav-fab{flex:1;display:flex;justify-content:center}
-.fab{width:50px;height:50px;background:linear-gradient(135deg,#4F46E5,#3730A3);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;margin-top:-16px;box-shadow:0 4px 12px rgba(37,99,235,0.35);cursor:pointer;border:none;font-family:inherit}
-
-/* FORM */
-.form-header{background:linear-gradient(135deg,#1E1B4B,#4F46E5);padding:16px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #F1F5F9;position:sticky;top:0;z-index:10}
-.back-btn{width:36px;height:36px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:none;font-family:inherit;flex-shrink:0}
-.form-title{font-size:18px;font-weight:600;color:#0F172A}
-.form-section{padding:0 20px 14px}
-.f-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#94A3B8;margin-bottom:6px;display:block}
-.f-inp{width:100%;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;color:#0F172A;outline:none;-webkit-appearance:none;transition:border-color 0.15s}
-.f-inp:focus{border-color:#2563EB;background:#fff}
-.f-inp::placeholder{color:#CBD5E1}
-.f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* LIGNES */
-.ligne-item{background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.ligne-desc{flex:1;font-size:13px;color:#0F172A;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ligne-amt{font-size:13px;font-weight:600;color:#0F172A;flex-shrink:0}
-.ligne-del{font-size:16px;color:#94A3B8;cursor:pointer;background:none;border:none;flex-shrink:0}
-.add-ligne{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px 14px;border:1.5px dashed #CBD5E1;border-radius:10px;cursor:pointer;color:#2563EB;font-size:13px;font-weight:500;background:none;font-family:inherit}
-
-/* TOTAL */
-.total-recap{background:#1E293B;border-radius:12px;padding:16px;margin:0 20px 16px}
-.tr-row{display:flex;justify-content:space-between;padding:4px 0}
-.tr-lbl{font-size:12px;color:rgba(255,255,255,0.5)}
-.tr-val{font-size:13px;color:rgba(255,255,255,0.8);font-weight:500}
-.tr-sep{height:1px;background:rgba(255,255,255,0.1);margin:8px 0}
-.tr-row.main .tr-lbl{font-size:13px;color:#fff;font-weight:600}
-.tr-row.main .tr-val{font-size:18px;color:#fff;font-weight:700}
-
-/* SEND BTNS */
-.send-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 20px}
-.s-btn{border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
-.s-btn.blue{background:#2563EB;color:#fff}
-.s-btn.gray{background:#F1F5F9;color:#0F172A}
-.s-btn.green{background:#059669;color:#fff}
-.s-btn.red{background:#EF4444;color:#fff}
-
-/* DETAIL */
-.detail-top{background:#1E3A8A;padding:20px}
-.d-back{display:flex;align-items:center;gap:8px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px}
-.d-client{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
-.d-amount{font-size:28px;font-weight:700;color:#fff}
-.d-meta{font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px}
-.d-body{padding:16px}
-.d-card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:14px;border:1px solid #F1F5F9}
-.d-card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;padding:12px 16px;border-bottom:1px solid #F1F5F9}
-.d-ligne{display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #F1F5F9;font-size:13px}
-.d-ligne:last-child{border-bottom:none}
-.d-tot-row{display:flex;justify-content:space-between;font-size:13px;padding:8px 16px;border-bottom:1px solid #F1F5F9;color:#64748B}
-.d-tot-row:last-child{border-bottom:none}
-.d-tot-row.main{font-weight:700;color:#0F172A;font-size:15px;background:#F8FAFC}
-.action-item{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #F1F5F9;border-left:3px solid #2563EB;font-size:14px;font-weight:500;color:#0F172A;font-family:inherit;width:100%;text-align:left;margin-bottom:8px}
-.action-item.success{color:#059669;border-left-color:#059669}
-.action-item.danger{color:#EF4444;border-left-color:#EF4444}
-.action-item.whatsapp{color:#25D366;border-left-color:#25D366}
-.action-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-
-/* MODAL */
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
-.modal-overlay.active{display:flex}
-.modal{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
-.modal-handle{width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px}
-.modal-title{font-size:17px;font-weight:600;color:#0F172A;margin-bottom:16px}
-.m-inp{width:100%;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:12px 14px;font-size:14px;font-family:inherit;color:#0F172A;outline:none;margin-bottom:10px;-webkit-appearance:none}
-.m-inp:focus{border-color:#2563EB;background:#fff}
-.m-btn{width:100%;padding:14px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:4px}
-.m-btn-sec{width:100%;padding:12px;background:none;color:#94A3B8;border:none;border-radius:10px;font-size:13px;font-family:inherit;cursor:pointer}
-
-/* EMPTY */
-.empty{text-align:center;padding:40px 20px;color:#94A3B8}
-.empty-ico{font-size:40px;margin-bottom:12px}
-.empty-title{font-size:15px;font-weight:600;color:#64748B;margin-bottom:6px}
-
-/* PROFIL */
-.profil-hero{background:#1E3A8A;padding:20px;display:flex;align-items:center;gap:16px}
-.profil-av{width:56px;height:56px;border-radius:14px;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0}
-.p-nom-big{font-size:18px;font-weight:700;color:#fff}
-.p-id{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;font-family:monospace}
-.p-badge{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:6px;font-size:11px}
-.p-card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:14px;border:1px solid #F1F5F9}
-.p-card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;padding:12px 16px;border-bottom:1px solid #F1F5F9}
-.p-row{display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #F1F5F9;font-size:13px}
-.p-row:last-child{border-bottom:none}
-.p-lbl{color:#94A3B8}
-.p-val{font-weight:500;color:#0F172A;text-align:right;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.p-btn{display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #F1F5F9;font-size:14px;font-weight:500;font-family:inherit;width:100%;text-align:left;margin-bottom:10px;color:#0F172A}
-.p-btn.danger{color:#EF4444}
-.p-btn.blue{color:#2563EB}
-
-/* TOAST */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:#0F172A;color:#fff;padding:12px 20px;border-radius:30px;font-size:13px;font-weight:500;z-index:200;transition:transform 0.3s;white-space:nowrap;max-width:90vw;text-align:center}
-.toast.show{transform:translateX(-50%) translateY(0)}
-
-/* SPACING */
-.pb{height:100px}
-
-
-#screen-comptable.active{display:flex!important}
-#screen-cpt-entreprise.active{display:flex!important}</style>
 </head>
 <body>
 
@@ -247,7 +46,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="quick-actions">
     <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#EFF6FF">➕</div><div class="qa-lbl">Facture</div></div>
     <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#FFFBEB">📝</div><div class="qa-lbl">Devis</div></div>
-    <div class="qa-item" onclick="renderAvoirList();goScreen('avoir-list',null)"><div class="qa-ico" style="background:#ECFDF5">↩️</div><div class="qa-lbl">Avoirs</div></div>
+    <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#ECFDF5">↩️</div><div class="qa-lbl">Avoir</div></div>
     <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#F1F5F9">📤</div><div class="qa-lbl">Export</div></div>
   </div>
   <div style="height:8px"></div>
@@ -315,27 +114,13 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="total-ttc">0 MAD</span></div>
   </div>
   <div class="form-section">
-    <div class="f-row">
-      <div>
-        <label class="f-lbl">Devise</label>
-        <select id="f-devise" class="f-inp" onchange="STATE.deviseF=this.value;updateTotauxF()">
-          <option value="MAD" selected>MAD 🇲🇦</option>
-          <option value="EUR">EUR 🇪🇺</option>
-          <option value="USD">USD 🇺🇸</option>
-          <option value="GBP">GBP 🇬🇧</option>
-          <option value="AED">AED 🇦🇪</option>
-        </select>
-      </div>
-      <div>
-        <label class="f-lbl">Mode paiement</label>
-        <select id="f-paiement" class="f-inp">
+    <label class="f-lbl">Mode de paiement</label>
+    <select id="f-paiement" class="f-inp">
       <option value="virement">Virement bancaire</option>
       <option value="cheque">Chèque</option>
       <option value="especes">Espèces</option>
-          <option value="carte">Carte bancaire</option>
-        </select>
-      </div>
-    </div>
+      <option value="carte">Carte bancaire</option>
+    </select>
   </div>
   <div class="form-section">
     <label class="f-lbl">Statut</label>
@@ -386,7 +171,6 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="topbar">
     <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
     <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
       <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-devis',null)">+ Nouveau</span>
     </div>
   </div>
@@ -508,7 +292,6 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="topbar">
     <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
     <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
       <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-produit',null)">+ Ajouter</span>
     </div>
   </div>
@@ -576,11 +359,6 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 
 <!-- PROFIL -->
 <div class="screen" id="screen-profil">
-  <div class="topbar" style="background:#1E3A8A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
-    <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    <div style="color:#fff;font-size:14px;font-weight:600">Mon Profil</div>
-    <div style="width:32px"></div>
-  </div>
   <div class="profil-hero">
     <div class="profil-av" id="pv-initiales">?</div>
     <div>
@@ -591,17 +369,12 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   </div>
   <!-- QR -->
   <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #F1F5F9;text-align:center">
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:12px">🔗 Mon lien public & QR Code</div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:12px">QR Code & Lien public</div>
     <canvas id="qr-canvas" width="120" height="120" style="border-radius:8px;display:block;margin:0 auto 10px;background:#F8FAFC"></canvas>
-    <div style="font-size:10px;color:#64748B;margin-bottom:10px;word-break:break-all;padding:0 8px" id="pv-lien">—</div>
+    <div style="font-size:11px;color:#94A3B8;margin-bottom:10px;word-break:break-all" id="pf-lien-comptable" style="display:none">—</div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button onclick="copierLienProfil()" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier lien</button>
-      <button onclick="partagerProfil()" style="background:#ECFDF5;color:#059669;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
-    </div>
-    <div style="margin-top:12px;border-top:1px solid #F1F5F9;padding-top:12px">
-      <div style="font-size:10px;color:#94A3B8;margin-bottom:8px">🔐 Lien accès comptable</div>
-      <div style="font-size:9px;color:#64748B;word-break:break-all;margin-bottom:8px" id="comptable-link-display"></div>
-      <button onclick="renderAccesComptable()" style="width:100%;margin-top:10px;padding:12px;background:#F3E8FF;color:#9333EA;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔐 Gérer l'accès comptable</button>
+      <div id="comptable-link-display" style="font-size:11px;color:#94A3B8;margin-bottom:8px;word-break:break-all"></div>
+      <button onclick="copierLienComptable()" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
     </div>
   </div>
   <div style="padding:0 16px" id="profil-view">
@@ -610,7 +383,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     </div>
     <div id="pv-objectif" style="display:none;background:#EFF6FF;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#1D4ED8"></div>
     <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
-    <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#2563EB">📁 Archive documents</button>
+    <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#4F46E5">📁 Archive documents</button>
     <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#059669">🏦 Relevés bancaires</button>
     <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#059669">🏢 Annuaire BaniPay</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
@@ -648,13 +421,8 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
     <label class="f-lbl">RIB / IBAN</label><input id="pe-rib" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">Conditions de paiement</label><input id="pe-conditions" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">🔐 Code comptable (6 chiffres)</label>
-    <div style="position:relative">
-      <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px;padding-right:44px">
-      <button type="button" onclick="togglePwd('pf-code-comptable','eye-code')" style="position:absolute;right:12px;top:14px;background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8" id="eye-code">👁️</button>
-    </div>
-    <div style="background:#EFF6FF;border-radius:8px;padding:10px 12px;margin-bottom:16px;font-size:11px;color:#1D4ED8">
-      💡 <strong>Comment ça marche :</strong> Partagez le lien comptable à votre comptable. Il saisira ce code pour accéder à vos données en lecture seule.
-    </div>
+    <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px">
+    <div style="font-size:11px;color:#94A3B8;margin-bottom:16px">Partagez ce code avec votre comptable</div>
     <div style="margin-bottom:12px">
       <div class="f-lbl">Logo entreprise</div>
       <div id="logo-preview-container" style="margin-bottom:8px"></div>
@@ -681,11 +449,6 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
   <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
   <div style="padding:0 20px;margin-top:16px;padding-bottom:20px" id="sa-top-produits"></div>
-  <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:8px">
-    <div style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;margin-bottom:4px">Export données</div>
-    <button onclick="exporterCSV()" style="background:#059669;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export Factures CSV</button>
-    <button onclick="exporterCSVDevis()" style="background:#D97706;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export Devis CSV</button>
-  </div>
   <div class="pb"></div>
 </div>
 
@@ -694,7 +457,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <div class="auth-wrap">
     <div class="auth-logo">
       <h1>Bani<span>Pay</span></h1>
-      <p></p>
+      
     </div>
     <div class="auth-card">
       <div id="aw-normal">
@@ -702,7 +465,10 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
         <label class="a-lbl">Email</label>
         <input id="login-email" class="a-inp" type="email" placeholder="votre@email.com" autocomplete="email">
         <label class="a-lbl">Mot de passe</label>
-        <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password">
+        <div style="position:relative">
+          <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
+          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-login">👁️</button>
+        </div>
         <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
           <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer" onchange="toggleRememberMe()">
           <label for="remember-me" style="font-size:13px;color:#64748B;cursor:pointer">Se souvenir de moi</label>
@@ -715,41 +481,32 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div id="aw-signup" style="display:none">
         <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#94A3B8;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
         <div class="auth-title">Créer un compte</div>
-
-        <!-- Choix du type de compte - EN PREMIER -->
-        <div style="margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:10px;text-align:center">Je suis...</div>
-          <div style="display:flex;gap:8px">
-            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #2563EB;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#EFF6FF;transition:all 0.2s">
-              <div style="font-size:28px;margin-bottom:6px">🏢</div>
-              <div style="font-size:13px;color:#2563EB;font-weight:700">Entreprise</div>
-              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes factures</div>
-            </div>
-            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F8FAFC;transition:all 0.2s">
-              <div style="font-size:28px;margin-bottom:6px">📊</div>
-              <div style="font-size:13px;color:#64748B;font-weight:700">Comptable</div>
-              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes clients</div>
-            </div>
-          </div>
-          <input type="hidden" id="signup-role" value="entreprise">
-        </div>
-
-        <!-- Champs spécifiques comptable -->
-        <div id="signup-comptable-fields" style="display:none;background:#F3E8FF;border-radius:12px;padding:12px;margin-bottom:12px">
-          <label class="a-lbl" style="color:#9333EA">Cabinet comptable</label>
-          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet" style="border-color:#C7D2FE">
-        </div>
-
         <label class="a-lbl">Nom complet</label><input id="signup-nom" class="a-inp" type="text" placeholder="Ahmed Benali">
         <label class="a-lbl">Email</label><input id="signup-email" class="a-inp" type="email" placeholder="votre@email.com">
         <label class="a-lbl">Mot de passe</label>
-        <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password">
+        <div style="position:relative">
+          <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password" style="padding-right:44px">
+          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-signup">👁️</button>
+        </div>
         <div class="pwd-bar"><div id="pwd-bar" class="pwd-fill"></div></div>
         <div id="pwd-hint" class="pwd-hint"></div>
         <label class="a-lbl">Confirmer</label>
         <input id="signup-password2" class="a-inp" type="password" placeholder="Retapez" oninput="checkPwdMatch()">
         <div id="pwd-match" style="font-size:11px;margin-top:4px;min-height:16px"></div>
         <div id="signup-err" class="a-err"></div>
+        <input type="hidden" id="signup-role" value="entreprise">
+        <div id="signup-comptable-fields" style="display:none">
+          <label class="a-lbl">Cabinet comptable</label>
+          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet" style="margin-bottom:10px">
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #2563EB;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#EFF6FF">
+            <div>🏢</div><div style="font-size:12px;color:#2563EB;font-weight:600">Entreprise</div>
+          </div>
+          <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#F8FAFC">
+            <div>📊</div><div style="font-size:12px;color:#64748B;font-weight:600">Comptable</div>
+          </div>
+        </div>
         <button class="a-btn a-btn-blue" onclick="doSignup()">Créer mon compte</button>
         <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
       </div>
@@ -780,18 +537,15 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
         <button class="a-btn a-btn-green" onclick="accederComptable()">Accéder →</button>
       </div>
     </div>
-    <div class="a-footer">BaniPay · v2.0</div>
+    <div class="a-footer">Données sécurisées · BaniPay v2.0</div>
   </div>
 </div>
 
 <!-- DASHBOARD COMPTABLE -->
 <div class="screen" id="screen-dashboard-comptable">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('comptable',null)" style="cursor:pointer">🔐 Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
-      <button class="a-btn a-btn-blue" onclick="quitterComptable()" style="padding:8px 14px;margin-top:0;font-size:12px;width:auto">Quitter</button>
-    </div>
+    <div class="topbar-brand">🔐 Bani<span>Pay</span></div>
+    <div class="topbar-right"><button class="a-btn a-btn-blue" onclick="quitterComptable()" style="padding:8px 14px;margin-top:0;font-size:12px;width:auto">Quitter</button></div>
   </div>
   <div class="hero">
     <div class="hero-lbl">Vue comptable</div>
@@ -1183,273 +937,15 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   </div>
 </div>
 
-
-<!-- ===== ARCHIVE DOCUMENTS ===== -->
-<div class="screen" id="screen-archive">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    </div>
-  </div>
-  <div class="hero" style="padding-bottom:16px">
-    <div class="hero-lbl">Archive Entreprise</div>
-    <div class="hero-amount" id="archive-count">0 document(s)</div>
-    <div class="hero-sub-txt">Partagée avec votre comptable</div>
-  </div>
-  <div style="padding:12px 20px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div class="qa-item" onclick="ajouterDocumentArchive('statuts')"><div class="qa-ico" style="background:#EFF6FF">📋</div><div class="qa-lbl">Statuts</div></div>
-      <div class="qa-item" onclick="ajouterDocumentArchive('rib')"><div class="qa-ico" style="background:#ECFDF5">🏦</div><div class="qa-lbl">RIB</div></div>
-      <div class="qa-item" onclick="ajouterDocumentArchive('cnss')"><div class="qa-ico" style="background:#FFFBEB">🛡️</div><div class="qa-lbl">Attestation CNSS</div></div>
-      <div class="qa-item" onclick="ajouterDocumentArchive('patente')"><div class="qa-ico" style="background:#F3E8FF">📄</div><div class="qa-lbl">Patente</div></div>
-      <div class="qa-item" onclick="ajouterDocumentArchive('ice')"><div class="qa-ico" style="background:#FEF2F2">🔢</div><div class="qa-lbl">Certificat ICE</div></div>
-      <div class="qa-item" onclick="ajouterDocumentArchive('autre')"><div class="qa-ico" style="background:#F1F5F9">📁</div><div class="qa-lbl">Autre doc</div></div>
-    </div>
-    <input type="file" id="archive-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="uploadDocumentArchive(event)">
-  </div>
-  <div class="sec-label">Documents uploadés</div>
-  <div class="card-list" id="archive-list"></div>
-  <div class="pb"></div>
-</div>
-
-
-<!-- ===== ANNUAIRE BANIPAY ===== -->
-<div class="screen" id="screen-annuaire">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    </div>
-  </div>
-  <div class="hero" style="padding-bottom:16px">
-    <div class="hero-lbl">Annuaire BaniPay</div>
-    <div class="hero-sub-txt">Entreprises utilisant BaniPay</div>
-  </div>
-  <div style="padding:12px 20px">
-    <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher une entreprise..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
-    <div style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
-      <button class="ftab active" onclick="filtrerAnnuaireSecteur('',this)">Tous</button>
-      <button class="ftab" onclick="filtrerAnnuaireSecteur('BTP & Construction',this)">BTP</button>
-      <button class="ftab" onclick="filtrerAnnuaireSecteur('Commerce & Négoce',this)">Commerce</button>
-      <button class="ftab" onclick="filtrerAnnuaireSecteur('Transport & Logistique',this)">Transport</button>
-      <button class="ftab" onclick="filtrerAnnuaireSecteur('Conseil & Expertise',this)">Conseil</button>
-      <button class="ftab" onclick="filtrerAnnuaireSecteur('Informatique & Tech',this)">Tech</button>
-    </div>
-  </div>
-  <div class="card-list" id="annuaire-list"></div>
-  <div class="pb"></div>
-</div>
-
-
-<!-- ===== LISTE AVOIRS ===== -->
-<div class="screen" id="screen-avoir-list">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    </div>
-  </div>
-  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px">
-    <div class="sec-title">Avoirs émis</div>
-    <button onclick="goScreen('avoir',null)" style="background:#DC2626;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button>
-  </div>
-  <div id="avoir-list-items"></div>
-  <div class="pb"></div>
-</div>
-
-
-<!-- ===== RELEVÉS BANCAIRES ===== -->
-<div class="screen" id="screen-releves">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    </div>
-  </div>
-  <div class="hero" style="padding-bottom:20px">
-    <div class="hero-lbl">Relevés bancaires</div>
-    <div class="hero-sub-txt">Partagés avec votre comptable</div>
-  </div>
-  <div style="padding:16px 20px">
-    <!-- Upload nouveau relevé -->
-    <div style="background:#ECFDF5;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid #A7F3D0">
-      <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:10px">📤 Ajouter un relevé</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <select id="releve-mois" class="f-inp" style="flex:1">
-          <option value="01">Janvier</option>
-          <option value="02">Février</option>
-          <option value="03">Mars</option>
-          <option value="04">Avril</option>
-          <option value="05">Mai</option>
-          <option value="06">Juin</option>
-          <option value="07">Juillet</option>
-          <option value="08">Août</option>
-          <option value="09">Septembre</option>
-          <option value="10">Octobre</option>
-          <option value="11">Novembre</option>
-          <option value="12">Décembre</option>
-        </select>
-        <select id="releve-annee" class="f-inp" style="flex:1">
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-        </select>
-      </div>
-      <input id="releve-banque" class="f-inp" placeholder="Nom de la banque (ex: CIH, Attijariwafa...)" style="margin-bottom:10px">
-      <label style="display:block;background:#fff;border:2px dashed #A7F3D0;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#059669;font-weight:600">
-        📎 Sélectionner le relevé (PDF/Image)
-        <input type="file" id="releve-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadReleve(event)">
-      </label>
-    </div>
-  </div>
-  <div class="sec-label">Relevés uploadés</div>
-  <div id="releves-list"></div>
-  <div class="pb"></div>
-</div>
-
-
-<!-- ===== FACTURES D'ACHAT ===== -->
-<div class="screen" id="screen-achats">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
-    </div>
-  </div>
-  <div class="hero" style="padding-bottom:16px">
-    <div class="hero-lbl">Factures d'achat</div>
-    <div class="hero-amount" id="achats-total">0 MAD</div>
-    <div class="hero-sub-txt">Dépenses & fournisseurs</div>
-  </div>
-
-  <!-- Filtres -->
-  <div style="display:flex;gap:8px;padding:12px 20px;overflow-x:auto">
-    <button class="ftab active" id="ftab-all-achat" onclick="filtrerAchats('tous',this)">Tous</button>
-    <button class="ftab" id="ftab-att-achat" onclick="filtrerAchats('attente',this)">En attente</button>
-    <button class="ftab" id="ftab-pay-achat" onclick="filtrerAchats('payee',this)">Payées</button>
-    <button class="ftab" id="ftab-banipay-achat" onclick="filtrerAchats('banipay',this)">BaniPay</button>
-  </div>
-
-  <div id="achats-list"></div>
-
-  <!-- FAB -->
-  <button class="fab" onclick="goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#EF4444,#DC2626)">+</button>
-  <div class="pb"></div>
-</div>
-
-<!-- ===== NOUVELLE FACTURE D'ACHAT ===== -->
-<div class="screen" id="screen-nouvelle-achat">
-  <div class="form-header">
-    <div class="back-btn" onclick="goScreen('achats',null)">←</div>
-    <div class="form-title">Nouvelle facture d'achat</div>
-  </div>
-
-  <!-- Import via lien BaniPay -->
-  <div style="margin:12px 20px;background:#FEF2F2;border-radius:14px;padding:14px">
-    <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:8px">📲 Fournisseur sur BaniPay ?</div>
-    <div style="font-size:11px;color:#64748B;margin-bottom:10px">Collez son lien profil BaniPay pour importer ses infos automatiquement</div>
-    <div style="display:flex;gap:8px">
-      <input id="achat-fournisseur-lien" style="flex:1;padding:10px;border:1.5px solid #FECACA;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="Lien profil BaniPay fournisseur...">
-      <button onclick="importerFournisseurBaniPay()" style="padding:10px 14px;background:#EF4444;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
-    </div>
-  </div>
-
-  <div class="form-section">
-    <div class="form-label">Fournisseur *</div>
-    <input class="form-input" id="achat-fournisseur" placeholder="Nom du fournisseur">
-  </div>
-  <div class="form-section">
-    <div class="form-label">Référence facture</div>
-    <input class="form-input" id="achat-ref" placeholder="Ex: FACT-2026-001">
-  </div>
-  <div style="display:flex;gap:12px;padding:0 20px">
-    <div style="flex:1;margin-bottom:14px">
-      <div class="form-label">Date</div>
-      <input class="form-input" id="achat-date" type="date">
-    </div>
-    <div style="flex:1;margin-bottom:14px">
-      <div class="form-label">Échéance</div>
-      <input class="form-input" id="achat-echeance" type="date">
-    </div>
-  </div>
-  <div style="display:flex;gap:12px;padding:0 20px">
-    <div style="flex:1;margin-bottom:14px">
-      <div class="form-label">Montant HT (MAD)</div>
-      <input class="form-input" id="achat-ht" type="number" placeholder="0.00" oninput="calcAchatTotaux()">
-    </div>
-    <div style="flex:1;margin-bottom:14px">
-      <div class="form-label">TVA %</div>
-      <select class="form-input" id="achat-tva-taux" onchange="calcAchatTotaux()">
-        <option value="20">20%</option>
-        <option value="14">14%</option>
-        <option value="10">10%</option>
-        <option value="7">7%</option>
-        <option value="0">0%</option>
-      </select>
-    </div>
-  </div>
-  <div style="padding:0 20px;margin-bottom:14px;background:#F8FAFC;margin:0 20px 14px;border-radius:12px;padding:12px">
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:4px"><span>TVA</span><span id="achat-tva-display">0,00 MAD</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#0F172A"><span>TTC</span><span id="achat-ttc-display">0,00 MAD</span></div>
-  </div>
-  <div class="form-section">
-    <div class="form-label">Catégorie</div>
-    <select class="form-input" id="achat-categorie">
-      <option value="materiel">Matériel & Équipement</option>
-      <option value="services">Services & Prestations</option>
-      <option value="fournitures">Fournitures & Consommables</option>
-      <option value="transport">Transport & Logistique</option>
-      <option value="immobilier">Immobilier & Loyer</option>
-      <option value="autre">Autre</option>
-    </select>
-  </div>
-  <div class="form-section">
-    <div class="form-label">Statut</div>
-    <select class="form-input" id="achat-statut">
-      <option value="attente">En attente de paiement</option>
-      <option value="payee">Payée</option>
-    </select>
-  </div>
-  <div class="form-section">
-    <div class="form-label">Note</div>
-    <textarea class="form-input" id="achat-note" rows="2" placeholder="Notes..."></textarea>
-  </div>
-
-  <!-- Import pièce jointe -->
-  <div style="margin:0 20px 14px">
-    <div class="form-label">Pièce jointe (scan/photo)</div>
-    <label style="display:block;background:#F8FAFC;border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#64748B">
-      📷 Scanner ou importer la facture
-      <input type="file" id="achat-pj" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)">
-    </label>
-    <div id="achat-pj-preview" style="margin-top:8px"></div>
-  </div>
-
-  <!-- Hidden fields for fournisseur BaniPay -->
-  <input type="hidden" id="achat-fournisseur-id" value="">
-  <input type="hidden" id="achat-fournisseur-banipay" value="0">
-
-  <div style="padding:0 20px 20px">
-    <button class="a-btn a-btn-blue" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#EF4444,#DC2626)">💾 Enregistrer la facture</button>
-  </div>
-  <div class="pb"></div>
-</div>
-
 <input type="hidden" id="search-produit-inp">
 <input type="hidden" id="filtre-categorie">
 <div class="toast" id="toast"></div>
 <!-- CLIENTS -->
   <div class="screen" id="screen-clients">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
-      <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-client',null)">+ Ajouter</span>
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Bani<span>Pay</span></div>
+      <div class="avatar" id="av-clients" onclick="goScreen('profil',null)">AB</div>
     </div>
-  </div>
     <div style="padding:0 20px 12px">
       <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client..." oninput="renderClients()" style="margin-top:12px">
     </div>
@@ -1474,22 +970,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div class="back-btn" onclick="goScreen('clients',null)">←</div>
       <div class="form-title">Nouveau client</div>
     </div>
-    <!-- Import via lien/QR -->
-    <div style="margin:12px 20px;background:linear-gradient(135deg,#EFF6FF,#E0E7FF);border-radius:14px;padding:14px">
-      <div style="font-size:12px;font-weight:700;color:#1D4ED8;margin-bottom:8px">📲 Importer depuis BaniPay</div>
-      <div style="font-size:11px;color:#4B5563;margin-bottom:10px">Collez le lien profil BaniPay de votre client pour remplir automatiquement le formulaire</div>
-      <div style="display:flex;gap:8px">
-        <input id="import-client-lien" style="flex:1;padding:10px 12px;border:1.5px solid #BFDBFE;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="https://banipay-three.vercel.app?profil=...">
-        <button onclick="importerDepuisLienForm()" style="padding:10px 14px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Importer</button>
-      </div>
-      <div style="text-align:center;margin-top:8px">
-        <label style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #BFDBFE;border-radius:10px;padding:8px 14px;cursor:pointer;font-size:12px;color:#2563EB;font-weight:600">
-          📷 Scanner QR code
-          <input type="file" accept="image/*" capture="environment" style="display:none" onchange="importerDepuisQRCodeForm(event)">
-        </label>
-      </div>
-    </div>
-    <div style="height:4px"></div>
+    <div style="height:14px"></div>
     <div class="form-section"><div class="form-label">Nom / Raison sociale *</div><input class="form-input" id="cl-nom" placeholder="Ex: SARL BTP Maroc"></div>
     <div class="form-section"><div class="form-label">Téléphone</div><input class="form-input" id="cl-tel" type="tel" placeholder="+212 6XX XX XX XX"></div>
     <div class="form-section"><div class="form-label">Email</div><input class="form-input" id="cl-email" type="email" placeholder="contact@client.ma"></div>
@@ -1641,62 +1122,85 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 </div>
 
 <!-- ===== DASHBOARD COMPTABLE FULL ===== -->
-<!-- ===== ESPACE COMPTABLE ===== -->
-<div class="screen" id="screen-comptable" style="background:#F8FAFC;min-height:100vh;flex-direction:column">
-  <!-- Header -->
-  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:20px 20px 24px;flex-shrink:0">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:20px;font-weight:900;color:#fff" onclick="switchCptNav('dashboard')" style="cursor:pointer">Bani<span style="color:#818CF8">Pay</span></div>
-      <button onclick="quitterComptable()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">⏏️</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff" id="comptable-avatar">C</div>
-      <div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Espace Comptable</div>
-        <div style="font-size:15px;font-weight:700;color:#fff;margin-top:1px" id="cpt-nom-display">Comptable</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px" id="cpt-email-display"></div>
-      </div>
-    </div>
-    <!-- Navigation onglets comptable -->
-    <div style="display:flex;gap:6px;margin-top:16px;overflow-x:auto">
-      <button id="cpt-nav-dashboard" onclick="switchCptNav('dashboard')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.9);color:#4338CA">📊 Vue globale</button>
-      <button id="cpt-nav-entreprises" onclick="switchCptNav('entreprises')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🏢 Entreprises</button>
-      <button id="cpt-nav-traiter" onclick="switchCptNav('traiter')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📥 À traiter</button>
-      <button id="cpt-nav-historique" onclick="switchCptNav('historique')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📋 Historique</button>
-      <button id="cpt-nav-activite" onclick="switchCptNav('activite')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📡 Activité</button>
+<div class="screen" id="screen-comptable">
+  <div class="topbar">
+    <div class="topbar-brand">&#128202; Bani<span>Pay</span></div>
+    <div class="topbar-right">
+      <div class="t-avatar" id="comptable-avatar" onclick="goScreen('comptable-profil')">C</div>
     </div>
   </div>
+  <div class="hero">
+    <div class="hero-lbl">Espace Comptable</div>
+    <div class="hero-amount" id="cpt-nb-entreprises">0 entreprise(s)</div>
+    <div class="hero-sub-txt" id="cpt-sub">G&#233;rez vos clients</div>
+    <div class="hero-grid">
+      <div class="hero-box"><div class="hero-box-val g" id="cpt-total-ca">0</div><div class="hero-box-lbl">CA total</div></div>
+      <div class="hero-box"><div class="hero-box-val o" id="cpt-total-att">0</div><div class="hero-box-lbl">En attente</div></div>
+      <div class="hero-box"><div class="hero-box-val r" id="cpt-total-ret">0</div><div class="hero-box-lbl">En retard</div></div>
+    </div>
+  </div>
+  <div class="sec-header"><div class="sec-title">Mes entreprises clientes</div></div>
+  <div class="card-list" id="cpt-entreprises-list"></div>
+  <div class="pb"></div>
+  <div class="bottom-nav">
+    <div class="nav-item active"><div class="nav-ico">&#127968;</div><div class="nav-lbl" style="color:#2563EB">Entreprises</div></div>
+    <div class="nav-fab"><button class="fab" style="background:#9333EA" onclick="ouvrirInvitation()">&#128203;</button></div>
+    <div class="nav-item" onclick="goScreen('comptable-profil')"><div class="nav-ico">&#128100;</div><div class="nav-lbl">Profil</div></div>
+  </div>
+</div>
 
-  <!-- Contenu dynamique -->
-  <div id="cpt-main-content" style="flex:1;overflow-y:auto"></div>
-
+<!-- ===== VUE ENTREPRISE COMPTABLE ===== -->
+<div class="screen" id="screen-cpt-entreprise">
+  <div class="topbar">
+    <div class="topbar-brand" id="cpt-ent-nom" style="font-size:16px">Entreprise</div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('comptable')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="hero-lbl">Situation financi&#232;re</div>
+    <div class="hero-amount" id="cpt-ent-ca">0 MAD</div>
+    <div class="hero-sub-txt" id="cpt-ent-sub">chargement...</div>
+    <div class="hero-grid">
+      <div class="hero-box"><div class="hero-box-val g" id="cpt-ent-payee">0</div><div class="hero-box-lbl">Pay&#233;es</div></div>
+      <div class="hero-box"><div class="hero-box-val o" id="cpt-ent-att">0</div><div class="hero-box-lbl">En attente</div></div>
+      <div class="hero-box"><div class="hero-box-val r" id="cpt-ent-ret">0</div><div class="hero-box-lbl">En retard</div></div>
+    </div>
+  </div>
+  <div class="filter-tabs" style="padding-top:12px">
+    <button class="ftab active" onclick="cptEntTab('factures',this)">Factures</button>
+    <button class="ftab" onclick="cptEntTab('tva',this)">TVA</button>
+    <button class="ftab" onclick="cptEntTab('infos',this)">Infos l&#233;gales</button>
+  </div>
+  <div id="cpt-tab-factures">
+    <div class="filter-tabs">
+      <button class="ftab active" onclick="cptFilterF('toutes',this)">Toutes</button>
+      <button class="ftab" onclick="cptFilterF('payee',this)">Pay&#233;es</button>
+      <button class="ftab" onclick="cptFilterF('attente',this)">En attente</button>
+      <button class="ftab" onclick="cptFilterF('retard',this)">En retard</button>
+    </div>
+    <div class="card-list" id="cpt-factures-list"></div>
+  </div>
+  <div id="cpt-tab-tva" style="display:none;padding:0 20px;overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;margin-top:10px">
+      <thead><tr style="background:#0F172A">
+        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th>
+        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th>
+        <th style="padding:10px 12px;font-size:11px;color:#34D399;text-align:right">TVA</th>
+        <th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th>
+      </tr></thead>
+      <tbody id="cpt-tva-body"></tbody>
+    </table>
+    <button onclick="exportCptTVA()" style="width:100%;margin-top:12px;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">&#128229; Export CSV TVA</button>
+  </div>
+  <div id="cpt-tab-infos" style="display:none;padding:16px">
+    <div class="p-card" id="cpt-infos-legales"></div>
+    <div class="p-card" style="margin-top:12px" id="cpt-infos-banque"></div>
+  </div>
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-cpt-entreprise" style="background:#F8FAFC">
-  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:14px 20px;display:flex;align-items:center;gap:12px">
-    <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
-    <div>
-      <div style="font-size:14px;font-weight:700;color:#fff" id="cpt-ent-nom">Entreprise</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.5)" id="cpt-ent-sub"></div>
-    </div>
-  </div>
-
-  <!-- KPIs -->
-  <div id="cpt-ent-kpis"></div>
-
-  <!-- Onglets -->
-  <div style="display:flex;gap:6px;padding:12px 16px;overflow-x:auto;background:#fff;border-bottom:1px solid #F1F5F9">
-    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#4338CA;color:#fff">🧾 Factures</button>
-    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📝 Devis</button>
-    <button id="cpt-tab-tva" onclick="cptEntTab('tva')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📊 TVA</button>
-    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">ℹ️ Infos</button>
-  </div>
-
-  <div id="cpt-ent-content" style="padding-bottom:20px"></div>
-  <div class="pb"></div>
-</div>
-
+<!-- ===== PROFIL COMPTABLE ===== -->
 <div class="screen" id="screen-comptable-profil">
   <div class="topbar">
     <div class="topbar-brand">Mon profil</div>
@@ -1716,7 +1220,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
       <div class="p-card-title">Informations</div>
       <div class="p-row"><span class="p-lbl">Email</span><span class="p-val" id="cpt-email">&#8212;</span></div>
       <div class="p-row"><span class="p-lbl">Cabinet</span><span class="p-val" id="cpt-cabinet">&#8212;</span></div>
-      <div class="p-row"><span class="p-lbl">Entreprises</span><span class="p-val" id="cpt-nb-ent-2">0</span></div>
+      <div class="p-row"><span class="p-lbl">Entreprises</span><span class="p-val" id="cpt-nb-ent">0</span></div>
     </div>
     <button class="p-btn danger" onclick="doLogout()" style="margin-top:12px">&#9196;&#65039; Se d&#233;connecter</button>
   </div>
@@ -1792,6 +1296,7 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 </div>
 
 
+<script
 
 </div>
 
@@ -1809,6 +1314,115 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
   <script src="js/comptable.js"></script>
   <script src="js/achats.js"></script>
 <script src="js/app.js"></script>
+
+<!-- ARCHIVE -->
+<div class="screen" id="screen-archive">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Archive Entreprise</div><div class="hero-amount" id="archive-count">0 document(s)</div><div class="hero-sub-txt">Partagée avec votre comptable</div></div>
+  <div style="padding:12px 20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <div class="qa-item" onclick="ajouterDocumentArchive('statuts')"><div class="qa-ico">📋</div><div class="qa-lbl">Statuts</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('rib')"><div class="qa-ico">🏦</div><div class="qa-lbl">RIB</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('cnss')"><div class="qa-ico">🛡️</div><div class="qa-lbl">CNSS</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('patente')"><div class="qa-ico">📄</div><div class="qa-lbl">Patente</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('ice')"><div class="qa-ico">🔢</div><div class="qa-lbl">ICE</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('autre')"><div class="qa-ico">📁</div><div class="qa-lbl">Autre</div></div>
+  </div><input type="file" id="archive-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="uploadDocumentArchive(event)"></div>
+  <div class="sec-label">Documents uploadés</div>
+  <div id="archive-list"></div><div class="pb"></div>
+</div>
+
+<!-- ANNUAIRE -->
+<div class="screen" id="screen-annuaire">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Annuaire BaniPay</div><div class="hero-sub-txt">Entreprises utilisant BaniPay</div></div>
+  <div style="padding:12px 20px">
+    <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
+    <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px">
+      <button class="ftab active" onclick="filtrerAnnuaireSecteur('',this)">Tous</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('BTP & Construction',this)">BTP</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Commerce & Négoce',this)">Commerce</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Transport & Logistique',this)">Transport</button>
+    </div>
+  </div>
+  <div id="annuaire-list"></div><div class="pb"></div>
+</div>
+
+<!-- AVOIR LIST -->
+<div class="screen" id="screen-avoir-list">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#DC2626;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
+  <div id="avoir-list-items"></div><div class="pb"></div>
+</div>
+
+<!-- RELEVES -->
+<div class="screen" id="screen-releves">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:20px"><div class="hero-lbl">Relevés bancaires</div><div class="hero-sub-txt">Partagés avec votre comptable</div></div>
+  <div style="padding:16px 20px">
+    <div style="background:#ECFDF5;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid #A7F3D0">
+      <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:10px">📤 Ajouter un relevé</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <select id="releve-mois" class="f-inp" style="flex:1"><option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option><option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option><option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option><option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option></select>
+        <select id="releve-annee" class="f-inp" style="flex:1"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
+      </div>
+      <input id="releve-banque" class="f-inp" placeholder="Nom de la banque..." style="margin-bottom:10px">
+      <label style="display:block;background:#fff;border:2px dashed #A7F3D0;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#059669;font-weight:600">📎 Sélectionner le relevé<input type="file" id="releve-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadReleve(event)"></label>
+    </div>
+  </div>
+  <div class="sec-label">Relevés uploadés</div>
+  <div id="releves-list"></div><div class="pb"></div>
+</div>
+
+<!-- ACHATS -->
+<div class="screen" id="screen-achats">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
+  <div style="display:flex;gap:8px;padding:12px 20px;overflow-x:auto">
+    <button class="ftab active" onclick="filtrerAchats('tous',this)">Tous</button>
+    <button class="ftab" onclick="filtrerAchats('attente',this)">En attente</button>
+    <button class="ftab" onclick="filtrerAchats('payee',this)">Payées</button>
+    <button class="ftab" onclick="filtrerAchats('banipay',this)">BaniPay</button>
+  </div>
+  <div id="achats-list"></div>
+  <button class="fab" onclick="goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#EF4444,#DC2626)">+</button>
+  <div class="pb"></div>
+</div>
+
+<!-- NOUVELLE ACHAT -->
+<div class="screen" id="screen-nouvelle-achat">
+  <div class="form-header"><div class="back-btn" onclick="goScreen('achats',null)">←</div><div class="form-title">Nouvelle facture d'achat</div></div>
+  <div style="margin:12px 20px;background:#FEF2F2;border-radius:14px;padding:14px">
+    <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:8px">📲 Fournisseur sur BaniPay ?</div>
+    <div style="display:flex;gap:8px">
+      <input id="achat-fournisseur-lien" style="flex:1;padding:10px;border:1.5px solid #FECACA;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="Lien profil BaniPay...">
+      <button onclick="importerFournisseurBaniPay()" style="padding:10px 14px;background:#EF4444;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
+    </div>
+  </div>
+  <div class="form-section"><div class="form-label">Fournisseur *</div><input class="form-input" id="achat-fournisseur" placeholder="Nom du fournisseur"></div>
+  <div class="form-section"><div class="form-label">Référence</div><input class="form-input" id="achat-ref" placeholder="Ex: FACT-2026-001"></div>
+  <div style="display:flex;gap:12px;padding:0 20px">
+    <div style="flex:1;margin-bottom:14px"><div class="form-label">Date</div><input class="form-input" id="achat-date" type="date"></div>
+    <div style="flex:1;margin-bottom:14px"><div class="form-label">Échéance</div><input class="form-input" id="achat-echeance" type="date"></div>
+  </div>
+  <div style="display:flex;gap:12px;padding:0 20px">
+    <div style="flex:1;margin-bottom:14px"><div class="form-label">Montant HT</div><input class="form-input" id="achat-ht" type="number" placeholder="0.00" oninput="calcAchatTotaux()"></div>
+    <div style="flex:1;margin-bottom:14px"><div class="form-label">TVA %</div><select class="form-input" id="achat-tva-taux" onchange="calcAchatTotaux()"><option value="20">20%</option><option value="14">14%</option><option value="10">10%</option><option value="7">7%</option><option value="0">0%</option></select></div>
+  </div>
+  <div style="margin:0 20px 14px;background:#F8FAFC;border-radius:12px;padding:12px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:4px"><span>TVA</span><span id="achat-tva-display">0,00 MAD</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>TTC</span><span id="achat-ttc-display">0,00 MAD</span></div>
+  </div>
+  <div class="form-section"><div class="form-label">Catégorie</div><select class="form-input" id="achat-categorie"><option value="materiel">Matériel</option><option value="services">Services</option><option value="fournitures">Fournitures</option><option value="transport">Transport</option><option value="autre">Autre</option></select></div>
+  <div class="form-section"><div class="form-label">Statut</div><select class="form-input" id="achat-statut"><option value="attente">En attente</option><option value="payee">Payée</option></select></div>
+  <div class="form-section"><div class="form-label">Note</div><textarea class="form-input" id="achat-note" rows="2" placeholder="Notes..."></textarea></div>
+  <div style="margin:0 20px 14px"><div class="form-label">Pièce jointe</div><label style="display:block;background:#F8FAFC;border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#64748B">📷 Scanner ou importer<input type="file" id="achat-pj" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div id="achat-pj-preview" style="margin-top:8px"></div></div>
+  <input type="hidden" id="achat-fournisseur-id" value=""><input type="hidden" id="achat-fournisseur-banipay" value="0">
+  <div style="padding:0 20px 20px"><button class="a-btn" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff">💾 Enregistrer</button></div>
+  <div class="pb"></div>
+</div>
+
 </body>
-</html<!-- ===== ESPACE COMPTABLE ===== -->
->
+</html
+#screen-comptable.active{display:flex!important;flex-direction:column}
+.screen{display:none}>
