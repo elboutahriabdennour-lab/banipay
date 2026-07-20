@@ -21,7 +21,7 @@ async function loadAll() {
     // Load paiements
     const pays = await sb.get('paiements', `user_id=eq.${uid}&order=created_at.desc`);
     STATE.paiements = pays || [];
-    genNotifications();
+    await genNotifications();
   } catch(e) { console.error('loadAll:', e); showToast('Erreur de chargement', 'error'); }
 }
 
