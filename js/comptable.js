@@ -1338,3 +1338,90 @@ async function ouvrirFactureComptable(factureId) {
     if (_ba) ajouterRemarque(factureId);
   });
 }
+
+// ============================================================
+// CONTRÔLE DEPUIS DÉTAIL FACTURE (avec confirmation)
+// ============================================================
+
+async function sauvegarderControle(factureId, data) {
+  const uid = sb.user?.id;
+  if (!uid) return;
+  try {
+    const payload = Object.assign({
+      facture_id: String(factureId),
+      entreprise_id: CPT.currentEntrepriseId,
+      comptable_id: uid,
+      comptable_email: sb.user?.email,
+    }, data);
+
+    await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    // Update local state
+    if (!CPT.currentControles) CPT.currentControles = [];
+    const local = CPT.currentControles.find(function(c2) { return String(c2.facture_id) === String(factureId); });
+    if (local) { Object.assign(local, data); }
+    else { CPT.currentControles.push(Object.assign({ facture_id: String(factureId) }, data)); }
+
+    // Update in entreprise cache
+    const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
+    if (inv) {
+      if (!inv._controles) inv._controles = [];
+      const lc = inv._controles.find(function(c3) { return String(c3.facture_id) === String(factureId); });
+      if (lc) { Object.assign(lc, data); }
+      else { inv._controles.push(Object.assign({ facture_id: String(factureId) }, data)); }
+      inv._etat = calculerEtat(inv);
+    }
+  } catch(e) {
+    showToast('Erreur sauvegarde: ' + e.message, 'error');
+  }
+}
+
+async function toggleLettrage(factureId) {
+  const ctrl = (CPT.currentControles || []).find(function(c2) { return String(c2.facture_id) === String(factureId); }) || {};
+  const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
+
+  if (ctrl.lettre) {
+    if (!confirm('Voulez-vous retirer le lettrage de cette facture ?')) return;
+    await sauvegarderControle(factureId, { lettre: false, lettre_at: null, lettre_par: null });
+    const btn = document.getElementById('btn-lettrage-ov');
+    if (btn) { btn.textContent = '☐'; btn.style.borderColor = '#E2E8F0'; btn.style.background = '#fff'; }
+    ajouterHistorique('Lettrage retiré — ', factureId);
+    showToast('Lettrage retiré', 'success');
+  } else {
+    const now = new Date().toISOString();
+    await sauvegarderControle(factureId, { lettre: true, lettre_at: now, lettre_par: nom });
+    const btn = document.getElementById('btn-lettrage-ov');
+    if (btn) { btn.textContent = '☑'; btn.style.borderColor = '#D97706'; btn.style.background = '#FFFBEB'; }
+    ajouterHistorique('Lettrage effectué — ', factureId);
+    showToast('☑ Lettrage enregistré', 'success');
+  }
+}
+
+async function toggleTVA(factureId) {
+  const ctrl = (CPT.currentControles || []).find(function(c2) { return String(c2.facture_id) === String(factureId); }) || {};
+  const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
+
+  if (ctrl.tva_verifie) {
+    await sauvegarderControle(factureId, { tva_verifie: false, tva_verifie_at: null, tva_verifie_par: null });
+    const btn = document.getElementById('btn-tva-ov');
+    if (btn) { btn.textContent = '☐'; btn.style.borderColor = '#E2E8F0'; btn.style.background = '#fff'; }
+    ajouterHistorique('TVA non vérifiée — ', factureId);
+    showToast('TVA non vérifiée', 'success');
+  } else {
+    const now = new Date().toISOString();
+    await sauvegarderControle(factureId, { tva_verifie: true, tva_verifie_at: now, tva_verifie_par: nom });
+    const btn = document.getElementById('btn-tva-ov');
+    if (btn) { btn.textContent = '☑'; btn.style.borderColor = '#9333EA'; btn.style.background = '#F3E8FF'; }
+    ajouterHistorique('TVA vérifiée — ', factureId);
+    showToast('☑ TVA vérifiée', 'success');
+  }
+}
