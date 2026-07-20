@@ -61,11 +61,11 @@ const sb = {
     sb._setSession(d);
   },
 
-  async signup(email, pwd, nom) {
+  async signup(email, pwd, meta) {
     const r = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pwd, data: { nom } })
+      body: JSON.stringify({ email: email, password: pwd, data: meta })
     });
     const d = await r.json();
     if (d.error) throw new Error(d.error.message || d.error);
