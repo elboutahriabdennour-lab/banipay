@@ -1272,17 +1272,18 @@
 <!-- ===== DASHBOARD COMPTABLE FULL ===== -->
 <div class="screen" id="screen-comptable" style="background:#F8FAFC;flex-direction:column">
   <!-- Header violet -->
-  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:20px 20px 16px;flex-shrink:0">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:16px 20px 12px;flex-shrink:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Bani<span style="color:#818CF8">Pay</span></div>
-      <button onclick="quitterComptable()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Déco</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-      <div id="comptable-avatar" style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">C</div>
-      <div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Espace Comptable</div>
-        <div style="font-size:15px;font-weight:700;color:#fff" id="cpt-nom-display">Comptable</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4)" id="cpt-email-display"></div>
+      <!-- Avatar cliquable → profil comptable -->
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="position:relative">
+          <div id="comptable-avatar" onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;cursor:pointer">C</div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#fff" id="cpt-nom-display">Comptable</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5)" id="cpt-email-display"></div>
+        </div>
       </div>
     </div>
     <!-- Navigation onglets -->
