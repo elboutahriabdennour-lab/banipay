@@ -49,7 +49,7 @@ function previewPDF() {
 
 
 function genDocPDF(opts) {
-  const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id=''} = opts;
+  const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false} = opts;
   const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
   const colorHeader = isAvoir?'#DC2626':isDevis?'#D97706':isBC?'#7C3AED':isBL?'#059669':(color||'#4F46E5');
   const paye = Number(montant_recu)||0;
@@ -216,6 +216,10 @@ ${(p.banque||p.rib)?`<div class="bank-box">
     ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+p.ville:''):''}
   </div>
   <div class="footer-right" style="text-align:right">
+    ${(badge_lettre||badge_tva)?`<div style="display:flex;gap:4px;justify-content:flex-end;margin-bottom:4px">
+      ${badge_lettre?'<span style="background:#059669;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px">L</span>':''}
+      ${badge_tva?'<span style="background:#9333EA;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px">T</span>':''}
+    </div>`:''}
     ${qrUrl?`<img src="${qrUrl}" style="width:40px;height:40px;display:block;margin-bottom:2px">`:''}
     ${docUrl?`<div style="font-size:7px;color:#94A3B8;max-width:80px;word-break:break-all">${docUrl.replace('https://','')}</div>`:''}
     <div class="footer-page">Page 1/1</div>
