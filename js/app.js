@@ -291,6 +291,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Invitation depuis profil comptable (?invite_cpt=email&pour=email)
+  const inviteCpt = params.get('invite_cpt');
+  const pourEmail = params.get('pour');
+  const nomCpt = params.get('nom');
+  if (inviteCpt && pourEmail) {
+    await afficherInvitationComptable(inviteCpt, pourEmail, nomCpt);
+    return;
+  }
+
   // Action sur un devis (accepter/refuser via lien)
   const devisId = params.get('devis');
   const devisAction = params.get('action');
@@ -419,3 +428,53 @@ function ecouterChangementsDevis(userId) {
 }
 
 // goScreen — routing complet
+// ============================================================
+// PAGE ACCEPTATION INVITATION COMPTABLE
+// ============================================================
+
+async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
+  // Afficher page d'accueil avec modal d'invitation
+  goScreen('auth');
+  
+  // Attendre que l'DOM soit prêt
+  setTimeout(function() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML =
+      '<div style="background:#fff;border-radius:20px;padding:28px;max-width:380px;width:100%;text-align:center">' +
+        '<div style="font-size:48px;margin-bottom:16px">🤝</div>' +
+        '<div style="font-size:18px;font-weight:700;margin-bottom:8px">Invitation comptable</div>' +
+        '<div style="font-size:14px;color:#64748B;margin-bottom:6px">' + escapeHTML(decodeURIComponent(nomCpt || emailCpt)) + '</div>' +
+        '<div style="font-size:13px;color:#64748B;margin-bottom:20px">vous invite à partager vos documents BaniPay</div>' +
+        '<div style="background:#EEF2FF;border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#4338CA">' +
+          'Le comptable pourra consulter vos factures, devis et documents en lecture seule.' +
+        '</div>' +
+        '<button id="btn-accepter-inv-cpt" style="width:100%;padding:13px;background:#059669;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✅ Accepter</button>' +
+        '<button class="btn-close-inv" style="width:100%;padding:11px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Refuser</button>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+    overlay.querySelector('.btn-close-inv').onclick = function() { overlay.remove(); };
+
+    overlay.querySelector('#btn-accepter-inv-cpt').onclick = async function() {
+      try {
+        // Mettre à jour le statut de l'invitation
+        await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(pourEmail), {
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ statut: 'acceptee' })
+        });
+        overlay.remove();
+        showToast('✅ Invitation acceptée !', 'success');
+        // Si connecté, recharger
+        if (sb.token) { await loadAll(); goScreen('dashboard'); }
+      } catch(e) {
+        showToast('Erreur: ' + e.message, 'error');
+      }
+    };
+  }, 500);
+}
