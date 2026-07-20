@@ -76,35 +76,62 @@ async function importerFournisseurBaniPay() {
   const lien = (el('achat-fournisseur-lien')?.value || '').trim();
   if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
 
-  let profilId = null;
-  try {
-    const url = new URL(lien);
-    profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
-  } catch(e) {
-    profilId = lien.split('profil=')[1]?.split('&')[0];
-  }
-  if (!profilId) { showToast('Lien invalide', 'error'); return; }
-
-  showToast('\u23f3 Chargement fournisseur...');
+  showToast('\u23f3 Chargement...');
 
   try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const data = await r.json();
-    const p = data && data[0];
-    if (!p) { showToast('Profil introuvable', 'error'); return; }
+    const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
 
-    // Remplir les champs
-    if (el('achat-fournisseur')) { el('achat-fournisseur').value = p.raison || ''; el('achat-fournisseur').style.background = '#ECFDF5'; }
-    if (el('achat-fournisseur-id')) el('achat-fournisseur-id').value = p.id || '';
-    if (el('achat-fournisseur-banipay')) el('achat-fournisseur-banipay').value = '1';
-    if (el('achat-fournisseur-lien')) el('achat-fournisseur-lien').value = '';
+    // CAS 1: Lien profil entreprise (?profil=xxx ou ?portail=xxx)
+    const profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
+    if (profilId) {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+      });
+      const data = await r.json();
+      const p = data && data[0];
+      if (!p) { showToast('Profil introuvable', 'error'); return; }
+      remplirFournisseur(p.raison || '', p.id || '', true);
+      showToast('\u2705 Fournisseur importé : ' + p.raison, 'success');
+      return;
+    }
 
-    showToast('\u2705 Fournisseur importé : ' + p.raison, 'success');
+    // CAS 2: Lien profil comptable (?comptable=CPT-xxxx)
+    const comptableId = url.searchParams.get('comptable');
+    if (comptableId) {
+      // Extract UUID from CPT-xxxxxxxx
+      const uid = comptableId.replace('CPT-', '').toLowerCase();
+      // Search in auth users by partial id - use profils if comptable has one
+      // Or just fill in the email from the invitation
+      const invResp = await fetch(
+        SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + sb.user?.id + '&statut=eq.acceptee&limit=1',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+      );
+      const invs = await invResp.json() || [];
+      if (invs.length) {
+        const emailCpt = invs[0].comptable_email;
+        remplirFournisseur(emailCpt, null, true);
+        showToast('\u2705 Comptable importé : ' + emailCpt, 'success');
+      } else {
+        showToast('Aucun comptable lié', 'error');
+      }
+      return;
+    }
+
+    showToast('Lien non reconnu', 'error');
+
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
   }
+}
+
+function remplirFournisseur(nom, id, isBaniPay) {
+  if (el('achat-fournisseur')) {
+    el('achat-fournisseur').value = nom;
+    el('achat-fournisseur').style.background = '#ECFDF5';
+  }
+  if (el('achat-fournisseur-id')) el('achat-fournisseur-id').value = id || '';
+  if (el('achat-fournisseur-banipay')) el('achat-fournisseur-banipay').value = isBaniPay ? '1' : '0';
+  if (el('achat-fournisseur-lien')) el('achat-fournisseur-lien').value = '';
 }
 
 // ============================================================
