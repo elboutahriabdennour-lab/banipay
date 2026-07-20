@@ -89,6 +89,11 @@ function goScreen(name) {
   const sc = el('screen-' + name);
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
 
+  // Show/hide bottom nav
+  const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','dashboard-comptable','pdf-viewer'];
+  const _bottomNav = document.querySelector('.bottom-nav');
+  if (_bottomNav) _bottomNav.style.display = _noNav.includes(name) ? 'none' : 'flex';
+
   // Update bottom nav active state
   const _navMap = {'dashboard':'nav-home','nouvelle':'nav-home','detail':'nav-home',
     'devis-list':'nav-devis','nouveau-devis':'nav-devis','detail-devis':'nav-devis',
