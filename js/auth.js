@@ -36,6 +36,7 @@ async function renvoyerConfirmation() {
 }
 
 async function doLogout() {
+  localStorage.removeItem('bp_remember_v2');
   sb.logout();
   Object.assign(STATE, { factures:[], devis:[], clients:[], produits:[], avoirs:[], paiements:[], profil:{}, notifications:[] });
   goScreen('auth');
@@ -153,10 +154,10 @@ async function doLogin() {
     // Se souvenir de l'email
     if (remember) {
       localStorage.setItem('bp_saved_email', email);
-      localStorage.setItem('bp_remember', '1');
+      localStorage.setItem('bp_remember_v2', '1');
     } else {
       localStorage.removeItem('bp_saved_email');
-      localStorage.removeItem('bp_remember');
+      localStorage.removeItem('bp_remember_v2');
     }
     // Détecter le rôle depuis les metadata (défini à l'inscription)
     const metaRole = sb.user?.user_metadata?.role;
