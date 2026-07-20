@@ -324,10 +324,10 @@ function renderCptFactures() {
   list.innerHTML =
     creerFiltreCpt() +
     // En-tête colonnes
-    '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1F5F9">' +
+    '<div style="display:grid;grid-template-columns:1fr 36px 36px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1F5F9">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#94A3B8">Facture</div>' +
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#D97706;text-align:center">Lett.</div>' +
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9333EA;text-align:center">TVA</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#059669;text-align:center">L</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#9333EA;text-align:center">T</div>' +
     '</div>' +
     (f.length ? f.map(function(fac) {
       const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id); }) || {};
@@ -340,15 +340,17 @@ function renderCptFactures() {
           '<div style="display:flex;gap:6px;margin-top:3px;align-items:center">' +
             '<span style="background:' + (statutBg[fac.statut] || '#F1F5F9') + ';color:' + (statutColor[fac.statut] || '#64748B') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[fac.statut] || '') + '</span>' +
             (remarques.length ? '<span style="font-size:9px;color:#EF4444;font-weight:600">📝 ' + remarques.length + ' remarque(s)</span>' : '') +
+            '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.lettre ? '#059669' : '#E2E8F0') + ';color:' + (ctrl.lettre ? '#fff' : '#94A3B8') + '">L</span>' +
+            '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.tva_verifie ? '#9333EA' : '#E2E8F0') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#94A3B8') + '">T</span>' +
           '</div>' +
         '</div>' +
         // Checkbox lettrage (contrôle rapide inline)
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:2px solid ' + (ctrl.lettre ? '#D97706' : '#E2E8F0') + ';background:' + (ctrl.lettre ? '#FFFBEB' : '#fff') + ';font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">' + (ctrl.lettre ? '☑' : '☐') + '</button>' +
+          '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#059669' : '#F1F5F9') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CBD5E1') + '">L</button>' +
         '</div>' +
         // Checkbox TVA (contrôle rapide inline)
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-tva" data-facid="' + fac.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:2px solid ' + (ctrl.tva_verifie ? '#9333EA' : '#E2E8F0') + ';background:' + (ctrl.tva_verifie ? '#F3E8FF' : '#fff') + ';font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">' + (ctrl.tva_verifie ? '☑' : '☐') + '</button>' +
+          '<button class="btn-tva" data-facid="' + fac.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.tva_verifie ? '#9333EA' : '#F1F5F9') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.tva_verifie ? '#fff' : '#CBD5E1') + '">T</button>' +
         '</div>' +
       '</div>';
     }).join('') : '<div class="empty"><div class="empty-ico">🧾</div><div class="empty-title">Aucune facture</div></div>');
@@ -372,11 +374,11 @@ async function toggleLettrageRapide(factureId, btn) {
     if (!confirm('Retirer le lettrage ?')) return;
     await sauvegarderControle(factureId, { lettre: false, lettre_at: null, lettre_par: null });
     btn.dataset.lettre = '0';
-    btn.textContent = '☐'; btn.style.borderColor = '#E2E8F0'; btn.style.background = '#fff';
+    btn.textContent = 'L'; btn.style.background = '#F1F5F9'; btn.style.color = '#CBD5E1';
   } else {
     await sauvegarderControle(factureId, { lettre: true, lettre_at: new Date().toISOString(), lettre_par: nom });
     btn.dataset.lettre = '1';
-    btn.textContent = '☑'; btn.style.borderColor = '#D97706'; btn.style.background = '#FFFBEB';
+    btn.textContent = 'L'; btn.style.background = '#059669'; btn.style.color = '#fff';
   }
   ajouterHistorique(isLettree ? 'Lettrage retiré — ' : 'Lettrage effectué — ', factureId);
   showToast('Lettrage mis à jour', 'success');
@@ -391,11 +393,11 @@ async function toggleTVARapide(factureId, btn) {
   if (isTVA) {
     await sauvegarderControle(factureId, { tva_verifie: false, tva_verifie_at: null, tva_verifie_par: null });
     btn.dataset.tva = '0';
-    btn.textContent = '☐'; btn.style.borderColor = '#E2E8F0'; btn.style.background = '#fff';
+    btn.textContent = 'T'; btn.style.background = '#F1F5F9'; btn.style.color = '#CBD5E1';
   } else {
     await sauvegarderControle(factureId, { tva_verifie: true, tva_verifie_at: new Date().toISOString(), tva_verifie_par: nom });
     btn.dataset.tva = '1';
-    btn.textContent = '☑'; btn.style.borderColor = '#9333EA'; btn.style.background = '#F3E8FF';
+    btn.textContent = 'T'; btn.style.background = '#9333EA'; btn.style.color = '#fff';
   }
   ajouterHistorique(isTVA ? 'TVA non vérifiée — ' : 'TVA vérifiée — ', factureId);
   showToast('TVA mise à jour', 'success');
@@ -1295,8 +1297,9 @@ async function ouvrirFactureComptable(factureId) {
   overlay.innerHTML =
     '<div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">' +
       '<button class="close-fac-overlay" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
-      '<div><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(fac.ref || '') + '</div>' +
+      '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(fac.ref || '') + '</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.5)">' + escapeHTML(fac.client || '') + '</div></div>' +
+      '<button class="btn-voir-pdf-cpt" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 PDF</button>' +
     '</div>' +
 
     '<div style="margin:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E2E8F0">' +
@@ -1342,6 +1345,7 @@ async function ouvrirFactureComptable(factureId) {
 
   document.body.appendChild(overlay);
   overlay.querySelector('.close-fac-overlay').onclick = function() { overlay.remove(); };
+  overlay.querySelector('.btn-voir-pdf-cpt').onclick = function() { ouvrirPDFComptable(fac, CPT.currentProfil || {}); };
   var _btnL = overlay.querySelector('.btn-lettr-ov');
   if (_btnL) _btnL.onclick = function() { toggleLettrage(factureId); };
   var _btnT = overlay.querySelector('.btn-tva-ov');
@@ -1706,4 +1710,36 @@ async function refuserInvitationComptable(invId) {
     showToast('Invitation refusée', 'success');
     renderNotificationsComptable();
   } catch(e) { showToast('Erreur', 'error'); }
+}
+
+// ============================================================
+// PDF FACTURE VUE COMPTABLE
+// ============================================================
+
+function ouvrirPDFComptable(fac, profil) {
+  const lignes = typeof fac.lignes === 'string' ? JSON.parse(fac.lignes || '[]') : (fac.lignes || []);
+  genDocPDF({
+    type: 'FACTURE',
+    ref: fac.ref,
+    color: '#4F46E5',
+    emetteur: profil,
+    destinataire: { nom: fac.client, chantier: fac.chantier },
+    date: fac.date_emission,
+    echeance: fac.echeance,
+    paiement: fac.paiement,
+    statut: fac.statut,
+    lignes: lignes,
+    note: fac.note || '',
+    ht: fac.ht,
+    tva: fac.tva,
+    ttc: fac.ttc,
+    devise: fac.devise || 'MAD',
+    montant_recu: fac.montant_recu || 0,
+    showStamp: fac.statut === 'payee',
+    doc_id: fac.id,
+    doc_url: window.location.origin + window.location.pathname + '?doc=' + fac.id,
+    // Badge comptable L/T
+    badge_lettre: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.lettre; }),
+    badge_tva: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.tva_verifie; }),
+  });
 }
