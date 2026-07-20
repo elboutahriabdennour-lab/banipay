@@ -148,7 +148,7 @@ async function doLogin() {
       const cEl = el('confirm-email-display');
       if (cEl) cEl.textContent = email;
       if (errEl) errEl.textContent = '';
-      showToast('Confirmez votre email avant de continuer', 'error');
+      showToast('📧 Vérifiez votre email pour activer votre compte', 'error');
       return;
     }
     // Se souvenir de l'email
