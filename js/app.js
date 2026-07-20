@@ -338,33 +338,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Restore + verify session
-  if (sb.restoreSession()) {
+  // Restore session - toujours passer par auth d'abord
+  // Sauf si "remember me" activé explicitement
+  const remembered = localStorage.getItem('bp_remember_v2') === '1';
+  
+  if (remembered && sb.restoreSession()) {
     const valid = await sb.verifySession();
     if (!valid) {
       sb.logout();
+      localStorage.removeItem('bp_remember_v2');
       goScreen('auth');
     } else {
-      // Même détection de rôle que doLogin
+      // Auto-login uniquement si "remember me" coché
       const metaRole = sb.user?.user_metadata?.role;
-      let role = 'entreprise';
-      if (metaRole === 'comptable') {
-        role = 'comptable';
-      } else if (!metaRole) {
-        // Vérifier invitations seulement si pas de profil entreprise
-        try {
-          const email = sb.user?.email || '';
-          const [invR, profR] = await Promise.all([
-            fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.acceptee&limit=1',
-              { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(r => r.json()),
-            fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + sb.user.id + '&limit=1',
-              { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(r => r.json()),
-          ]);
-          if (invR && invR.length > 0 && (!profR || !profR.length)) {
-            role = 'comptable';
-          }
-        } catch(e2) {}
-      }
+      let role = metaRole || 'entreprise';
       CPT.role = role;
       if (role === 'comptable') {
         await loadComptableApp();
@@ -374,11 +361,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         verifierChangementsDevis();
         verifierRappels();
         await loadAchats();
-        if (window._inviteToken) await traiterInvitation(window._inviteToken);
         goScreen('dashboard');
       }
     }
   } else {
+    // Pas de "remember me" → toujours montrer l'écran de connexion
+    // Pré-remplir l'email si sauvegardé
     goScreen('auth');
   }
 
