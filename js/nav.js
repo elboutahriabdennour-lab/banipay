@@ -1,42 +1,38 @@
 // BANIPAY — nav.js
 
-function genNotifications() {
+async function genNotifications() {
   STATE.notifications = [];
   const today_d = new Date();
+  const email = sb.user?.email;
+  const uid = sb.user?.id;
+
   // Factures en retard
-  STATE.factures.filter(f => f.statut === 'retard').forEach(f => {
-    STATE.notifications.push({ type: 'danger', icon: '⚠️', title: `Facture ${f.ref} en retard`, body: `Client: ${f.client} · ${fmt(f.ttc)} MAD`, factureId: f.id });
+  (STATE.factures || []).filter(f => f.statut === 'retard').forEach(f => {
+    STATE.notifications.push({ type: 'danger', icon: '⚠️', title: 'Facture ' + f.ref + ' en retard', body: 'Client: ' + f.client });
   });
-  // Devis acceptés (non lus)
-  STATE.devis.filter(d => d.statut === 'accepte' && d.notif_lue === false).forEach(d => {
-    STATE.notifications.push({ type: 'success', icon: '✅', title: 'Devis ' + d.ref + ' accepté !', body: 'Client: ' + d.client + ' · ' + fmt(d.ttc) + ' MAD · Convertir en facture ?', devisId: d.id, action: 'openDetailDevis(' + d.id + ')' });
+
+  // Devis acceptés non lus
+  (STATE.devis || []).filter(d => d.statut === 'accepte' && !d.notif_lue).forEach(d => {
+    STATE.notifications.push({ type: 'success', icon: '✅', title: 'Devis ' + d.ref + ' accepté', body: 'Client: ' + d.client });
   });
-  // Devis refusés (non lus)
-  STATE.devis.filter(d => d.statut === 'refuse' && d.notif_lue === false).forEach(d => {
-    STATE.notifications.push({ type: 'error', icon: '❌', title: 'Devis ' + d.ref + ' refusé', body: 'Client: ' + d.client, devisId: d.id });
-  });
-  // Devis expirés
-  STATE.devis.filter(d => {
-    if (d.statut !== 'envoye') return false;
-    const exp = new Date(d.date_emission);
-    exp.setDate(exp.getDate() + (d.validite || 30));
-    return exp < today_d;
-  }).forEach(d => {
-    STATE.notifications.push({ type: 'warning', icon: '📝', title: `Devis ${d.ref} expiré`, body: `Client: ${d.client}`, devisId: d.id });
-  });
-  // Update badge
-  const badge = el('notif-badge');
-  if (badge) {
-    badge.textContent = STATE.notifications.length;
-    badge.style.display = STATE.notifications.length > 0 ? 'flex' : 'none';
+
+  // Invitations comptable en attente (depuis notifications_app par email)
+  if (email) {
+    try {
+      const resp = await fetch(
+        SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email) + '&lue=eq.false&order=created_at.desc&limit=10',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+      );
+      const notifs = await resp.json() || [];
+      notifs.forEach(function(n) {
+        STATE.notifications.push({ type: 'info', icon: n.type === 'invitation_comptable' ? '🤝' : '🔔', title: n.titre || '', body: n.corps || '', id: n.id });
+      });
+    } catch(e2) {}
   }
+
+  badgeF();
 }
 
-
-// ===== DASHBOARD.JS =====
-// ============================================================
-// BANIPAY — Dashboard
-// ============================================================
 
 function badgeF(s) { return {attente:'En attente',retard:'Retard',payee:'Payée',envoyee:'Envoyée'}[s]||s; }
 
