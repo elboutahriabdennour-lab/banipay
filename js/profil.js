@@ -103,12 +103,6 @@ function updateComptableLinkDisplay() {
   if(el_lien) el_lien.textContent = lien;
 }
 
-function copierLienComptable() {
-  const email = sb.user?.email; if(!email) return;
-  const lien = `${window.location.origin}${window.location.pathname}?comptable=${encodeURIComponent(email)}`;
-  navigator.clipboard?.writeText(lien).then(()=>showToast('✅ Lien copié !','success'));
-}
-
 function copierLienProfil() {
   const id = STATE.profil.id_unique||'BP-000000';
   const lien = `${window.location.origin}${window.location.pathname}?profil=${id}`;
