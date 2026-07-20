@@ -271,6 +271,7 @@ async function afficherDocumentPublic(docId) {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+  goScreen('auth'); // Défaut: page de connexion
   applyDarkMode();
   loadSavedCredentials();
   const params = new URLSearchParams(window.location.search);
@@ -344,7 +345,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       sb.logout();
       goScreen('auth');
     } else {
-      const role = sb.user?.user_metadata?.role || 'entreprise';
+      // Même détection de rôle que doLogin
+      const metaRole = sb.user?.user_metadata?.role;
+      let role = 'entreprise';
+      if (metaRole === 'comptable') {
+        role = 'comptable';
+      } else if (!metaRole) {
+        // Vérifier invitations seulement si pas de profil entreprise
+        try {
+          const email = sb.user?.email || '';
+          const [invR, profR] = await Promise.all([
+            fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.acceptee&limit=1',
+              { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(r => r.json()),
+            fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + sb.user.id + '&limit=1',
+              { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(r => r.json()),
+          ]);
+          if (invR && invR.length > 0 && (!profR || !profR.length)) {
+            role = 'comptable';
+          }
+        } catch(e2) {}
+      }
       CPT.role = role;
       if (role === 'comptable') {
         await loadComptableApp();
@@ -352,6 +372,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         await loadAll();
         verifierChangementsDevis();
+        verifierRappels();
+        await loadAchats();
         if (window._inviteToken) await traiterInvitation(window._inviteToken);
         goScreen('dashboard');
       }
