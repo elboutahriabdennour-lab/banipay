@@ -194,7 +194,11 @@ async function doLogin() {
       goScreen('comptable');
       showToast('✅ Bienvenue dans votre espace comptable !', 'success');
     } else {
+      // Reset données avant chargement nouveau compte
+      STATE.factures = []; STATE.devis = []; STATE.clients = [];
+      STATE.produits = []; STATE.avoirs = []; STATE.achats = [];
       await loadAll();
+      await loadAchats();
       goScreen('dashboard');
       showToast('✅ Bienvenue !', 'success');
     }
