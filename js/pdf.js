@@ -51,7 +51,7 @@ function previewPDF() {
 function genDocPDF(opts) {
   const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id=''} = opts;
   const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
-  const colorHeader = isAvoir?'#DC2626':isDevis?'#D97706':isBC?'#7C3AED':isBL?'#059669':(color||'#2563EB');
+  const colorHeader = isAvoir?'#DC2626':isDevis?'#D97706':isBC?'#7C3AED':isBL?'#059669':(color||'#4F46E5');
   const paye = Number(montant_recu)||0;
   const restant = Math.max(0, ttc - paye);
 
