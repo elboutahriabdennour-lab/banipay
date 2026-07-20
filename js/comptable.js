@@ -248,7 +248,7 @@ function renderFicheEntreprise() {
 
 function cptEntTab(tab) {
   CPT.currentTab = tab;
-  ['factures', 'devis', 'avoirs', 'infos'].forEach(function(t) {
+  ['factures', 'devis', 'avoirs', 'infos', 'releves'].forEach(function(t) {
     const btn = el('cpt-tab-' + t);
     if (btn) {
       btn.style.background = t === tab ? '#4338CA' : '#F1F5F9';
@@ -259,6 +259,7 @@ function cptEntTab(tab) {
   else if (tab === 'devis') renderCptDevis();
   else if (tab === 'avoirs') renderCptTVA();
   else if (tab === 'infos') renderCptInfos();
+  else if (tab === 'releves') renderCptReleves();
 }
 
 // Filtres actifs
@@ -1106,4 +1107,234 @@ async function declarerTVAMois(mois) {
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
   }
+}
+
+// ============================================================
+// REMARQUES COMPTABLE
+// ============================================================
+
+async function ajouterRemarque(factureId) {
+  const contenu = (el('nouvelle-remarque')?.value || '').trim();
+  if (!contenu) { showToast('Écrivez une remarque', 'error'); return; }
+
+  const uid = sb.user?.id;
+  const email = sb.user?.email;
+  const nom = sb.user?.user_metadata?.nom || email?.split('@')[0] || 'Comptable';
+
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/remarques_comptable', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        facture_id: factureId,
+        entreprise_id: CPT.currentEntrepriseId,
+        comptable_id: uid,
+        comptable_email: email,
+        comptable_nom: nom,
+        contenu: contenu,
+        statut: 'ouverte'
+      })
+    });
+
+    if (r.ok) {
+      // Notifier l'entreprise
+      const fac = (CPT.currentFactures || []).find(function(f) { return f.id === factureId; });
+      await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + sb.token,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          user_id: CPT.currentEntrepriseId,
+          type: 'remarque_comptable',
+          titre: 'Remarque comptable',
+          corps: 'Votre comptable a ajouté une remarque sur la facture ' + (fac?.ref || ''),
+          facture_id: factureId,
+          lue: false
+        })
+      });
+      ajouterHistorique('Remarque ajoutée — ', factureId);
+      if (el('nouvelle-remarque')) el('nouvelle-remarque').value = '';
+      showToast('✅ Remarque ajoutée', 'success');
+      document.getElementById('fac-comptable-overlay')?.remove();
+      await ouvrirFactureComptable(factureId);
+    }
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+async function resoudreRemarque(remarqueId) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/remarques_comptable?id=eq.' + remarqueId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ statut: 'resolue' })
+    });
+    ajouterHistorique('Remarque résolue', '');
+    showToast('✅ Remarque résolue', 'success');
+    const factureId = CPT.currentFactureId;
+    document.getElementById('fac-comptable-overlay')?.remove();
+    await ouvrirFactureComptable(factureId);
+  } catch(e) {
+    showToast('Erreur', 'error');
+  }
+}
+
+// ============================================================
+// RELEVES BANCAIRES VUE COMPTABLE
+// ============================================================
+
+async function renderCptReleves() {
+  const list = el('cpt-ent-content');
+  if (!list) return;
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#94A3B8">Chargement...</div>';
+  try {
+    const resp = await fetch(
+      SUPABASE_URL + '/rest/v1/releves_bancaires?user_id=eq.' + CPT.currentEntrepriseId + '&order=annee.desc,mois.desc',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const releves = await resp.json() || [];
+    const moisLabels = ['','Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+    if (!releves.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-ico">🏦</div><div class="empty-title">Aucun releve</div><div>Aucun releve partage</div></div>';
+      return;
+    }
+    list.innerHTML = '<div style="padding:16px">' +
+      '<div style="font-size:14px;font-weight:700;margin-bottom:14px">🏦 Releves bancaires</div>' +
+      releves.map(function(rv) {
+        return '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E2E8F0;margin-bottom:10px;display:flex;align-items:center;gap:12px">' +
+          '<div style="width:44px;height:44px;border-radius:12px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
+          '<div style="flex:1">' +
+            '<div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(rv.mois)] || rv.mois) + ' ' + rv.annee + '</div>' +
+            '<div style="font-size:11px;color:#64748B">' + escapeHTML(rv.banque || '') + '</div>' +
+          '</div>' +
+          '<span data-rid="' + rv.id + '" class="badge-releve" style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;cursor:pointer;background:' + (rv.vu_par_comptable ? '#ECFDF5' : '#FFFBEB') + ';color:' + (rv.vu_par_comptable ? '#059669' : '#D97706') + '">' + (rv.vu_par_comptable ? 'Vu' : 'Marquer vu') + '</span>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+    list.addEventListener('click', async function handler(ev) {
+      const badge = ev.target.closest('.badge-releve');
+      if (!badge || badge.textContent === 'Vu') return;
+      const rid = badge.dataset.rid;
+      await fetch(SUPABASE_URL + '/rest/v1/releves_bancaires?id=eq.' + rid, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vu_par_comptable: true })
+      });
+      badge.textContent = 'Vu';
+      badge.style.background = '#ECFDF5';
+      badge.style.color = '#059669';
+      showToast('Releve marque comme vu', 'success');
+    });
+  } catch(ex) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#EF4444">Erreur: ' + ex.message + '</div>';
+  }
+}
+
+// ============================================================
+// DETAIL FACTURE VUE COMPTABLE
+// ============================================================
+
+async function ouvrirFactureComptable(factureId) {
+  const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(factureId); });
+  if (!fac) return;
+
+  CPT.currentFactureId = factureId;
+
+  // Marquer comme consulte
+  const ctrl = (CPT.currentControles || []).find(function(c2) { return String(c2.facture_id) === String(factureId); }) || {};
+  if (!ctrl.consulte) {
+    await sauvegarderControle(factureId, { consulte: true, consulte_at: new Date().toISOString() });
+  }
+
+  // Charger remarques
+  let remarques = [];
+  try {
+    const resp = await fetch(
+      SUPABASE_URL + '/rest/v1/remarques_comptable?facture_id=eq.' + factureId + '&order=created_at.desc',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    remarques = await resp.json() || [];
+  } catch(e2) {}
+
+  const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
+  const ctrlFresh = (CPT.currentControles || []).find(function(c3) { return String(c3.facture_id) === String(factureId); }) || {};
+
+  const overlay = document.createElement('div');
+  overlay.id = 'fac-comptable-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F8FAFC;overflow-y:auto;font-family:inherit';
+
+  overlay.innerHTML =
+    '<div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">' +
+      '<button class="close-fac-overlay" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
+      '<div><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(fac.ref || '') + '</div>' +
+      '<div style="font-size:11px;color:rgba(255,255,255,0.5)">' + escapeHTML(fac.client || '') + '</div></div>' +
+    '</div>' +
+
+    '<div style="margin:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E2E8F0">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:10px">' +
+        '<div><div style="font-size:10px;color:#94A3B8">Date</div><div style="font-size:12px;font-weight:600">' + (fac.date_emission || '') + '</div></div>' +
+        '<div><div style="font-size:10px;color:#94A3B8">TTC</div><div style="font-size:18px;font-weight:800">' + fmt(fac.ttc || 0) + ' MAD</div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<div style="flex:1;background:#F8FAFC;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#94A3B8">HT</div><div style="font-size:12px;font-weight:600">' + fmt(fac.ht || 0) + '</div></div>' +
+        '<div style="flex:1;background:#F3E8FF;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#9333EA">TVA</div><div style="font-size:12px;font-weight:600;color:#9333EA">' + fmt(fac.tva || 0) + '</div></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E2E8F0">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:12px">Checklist</div>' +
+      '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1F5F9">' +
+        '<div><div style="font-size:12px;font-weight:600">Lettrage</div></div>' +
+        '<button id="btn-lettrage-ov" class="btn-lettr-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.lettre ? '#D97706' : '#E2E8F0') + ';background:' + (ctrlFresh.lettre ? '#FFFBEB' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.lettre ? '☑' : '☐') + '</button>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;padding:10px 0">' +
+        '<div><div style="font-size:12px;font-weight:600">TVA verifiee</div></div>' +
+        '<button id="btn-tva-ov" class="btn-tva-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.tva_verifie ? '#9333EA' : '#E2E8F0') + ';background:' + (ctrlFresh.tva_verifie ? '#F3E8FF' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.tva_verifie ? '☑' : '☐') + '</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E2E8F0">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:10px">Remarques</div>' +
+      '<div id="remarques-list-ov">' +
+        (remarques.length ? remarques.map(function(rem) {
+          return '<div style="background:' + (rem.statut === 'resolue' ? '#ECFDF5' : '#FFFBEB') + ';border-radius:10px;padding:10px;margin-bottom:8px">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+              '<span style="font-size:11px;font-weight:600;color:' + (rem.statut === 'resolue' ? '#059669' : '#D97706') + '">' + escapeHTML(rem.comptable_nom || '') + '</span>' +
+              (rem.statut !== 'resolue' ? '<button class="btn-resoudre" data-rid="' + rem.id + '" style="background:#059669;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit">Resoudre</button>' : '<span style="font-size:10px;color:#059669">Resolu</span>') +
+            '</div>' +
+            '<div style="font-size:12px">' + escapeHTML(rem.contenu) + '</div>' +
+          '</div>';
+        }).join('') : '<div style="text-align:center;color:#94A3B8;font-size:12px;padding:8px">Aucune remarque</div>') +
+      '</div>' +
+      '<textarea id="nouvelle-remarque" style="width:100%;padding:10px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;font-family:inherit;resize:none;margin-top:10px;box-sizing:border-box" rows="2" placeholder="Ajouter une remarque..."></textarea>' +
+      '<button class="btn-ajouter-remarque" style="width:100%;margin-top:8px;padding:10px;background:#4338CA;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Ajouter</button>' +
+    '</div>' +
+    '<div style="height:40px"></div>';
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('.close-fac-overlay').onclick = function() { overlay.remove(); };
+  var _btnL = overlay.querySelector('.btn-lettr-ov');
+  if (_btnL) _btnL.onclick = function() { toggleLettrage(factureId); };
+  var _btnT = overlay.querySelector('.btn-tva-ov');
+  if (_btnT) _btnT.onclick = function() { toggleTVA(factureId); };
+  overlay.addEventListener('click', function(ev) {
+    var _br = ev.target.closest('.btn-resoudre');
+    if (_br) resoudreRemarque(_br.dataset.rid);
+    var _ba = ev.target.closest('.btn-ajouter-remarque');
+    if (_ba) ajouterRemarque(factureId);
+  });
 }
