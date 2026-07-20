@@ -447,7 +447,10 @@ function renderCptTVA() {
         '<div style="text-align:right"><div style="font-size:11px;color:#64748B">HT: ' + fmt(d.ht) + '</div><div style="font-size:13px;font-weight:700;color:#9333EA">TVA: ' + fmt(d.tva) + ' MAD</div></div>' +
       '</div>';
     }).join('') +
-    '<button onclick="exportCptTVA()" style="width:100%;margin-top:16px;padding:12px;background:#9333EA;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Exporter TVA CSV</button>' +
+    '<div style="display:flex;gap:8px;margin-top:16px">' +
+        '<button onclick="declarerTVAMois()" style="flex:1;padding:12px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✅ Déclarer TVA du mois</button>' +
+        '<button onclick="exportCptTVA()" style="flex:1;padding:12px;background:#9333EA;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export CSV</button>' +
+      '</div>' +
   '</div>';
 }
 
@@ -1041,5 +1044,66 @@ async function renderActiviteClients() {
 
   } catch(e) {
     list.innerHTML = '<div style="text-align:center;padding:40px;color:#EF4444">Erreur: ' + e.message + '</div>';
+  }
+}
+
+// ============================================================
+// DÉCLARATION TVA MENSUELLE (notifie l'entreprise)
+// ============================================================
+
+async function declarerTVAMois(mois) {
+  if (!mois) {
+    const now = new Date();
+    mois = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  }
+  if (!confirm('Déclarer la TVA vérifiée pour ' + mois + ' ? L\'entreprise sera notifiée.')) return;
+
+  const uid = sb.user?.id;
+  const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
+  const email = sb.user?.email;
+
+  try {
+    // Marquer toutes les factures du mois comme TVA vérifiée
+    const facsMois = (CPT.currentFactures || []).filter(function(f) {
+      return (f.date_emission || '').startsWith(mois);
+    });
+
+    for (let i = 0; i < facsMois.length; i++) {
+      const fac = facsMois[i];
+      await sauvegarderControle(fac.id, {
+        tva_verifie: true,
+        tva_verifie_at: new Date().toISOString(),
+        tva_verifie_par: nom
+      });
+    }
+
+    // Calculer TVA totale du mois
+    const tvaTotale = facsMois.filter(function(f) { return f.statut === 'payee'; })
+      .reduce(function(s, f) { return s + (Number(f.tva) || 0); }, 0);
+
+    // Notifier l'entreprise
+    await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        user_id: CPT.currentEntrepriseId,
+        type: 'tva_declaree',
+        titre: 'TVA vérifiée — ' + mois,
+        corps: 'Votre comptable ' + nom + ' a vérifié la TVA de ' + mois + '. TVA collectée : ' + fmt(tvaTotale) + ' MAD sur ' + facsMois.length + ' facture(s).',
+        lue: false
+      })
+    });
+
+    ajouterHistorique('TVA déclarée — ' + mois + ' (' + facsMois.length + ' factures)', '');
+    showToast('✅ TVA ' + mois + ' déclarée et entreprise notifiée !', 'success');
+    renderCptTVA();
+
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
   }
 }
