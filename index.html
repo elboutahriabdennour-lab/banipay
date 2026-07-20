@@ -1316,99 +1316,54 @@
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-comptable-profil">
-  <div class="topbar">
-    <div class="topbar-brand">Mon profil</div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('comptable')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
+<div class="screen" id="screen-comptable-profil" style="background:#F8FAFC">
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:0 0 30px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px">
+      <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
+      <div style="font-size:14px;font-weight:700;color:#fff">Mon profil</div>
+      <button onclick="partagerProfilComptable()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+    </div>
+    <!-- Avatar -->
+    <div style="text-align:center;padding:10px 0">
+      <div id="cpt-profil-av" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 12px">C</div>
+      <div id="cpt-profil-nom" style="font-size:20px;font-weight:700;color:#fff">Mon compte</div>
+      <div id="cpt-profil-cabinet" style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:4px"></div>
+      <div id="cpt-profil-email" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px"></div>
     </div>
   </div>
-  <div class="profil-hero">
-    <div class="profil-av" id="cpt-profil-av">C</div>
-    <div>
-      <div class="p-nom-big" id="cpt-profil-nom">Mon compte</div>
-      <div class="p-id">Compte Comptable</div>
+
+  <!-- QR Code + Lien -->
+  <div style="margin:-20px 20px 16px;background:#fff;border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+    <div style="font-size:12px;font-weight:700;color:#4338CA;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Mon lien profil</div>
+    <div id="cpt-qr-container" style="display:flex;justify-content:center;margin-bottom:14px"></div>
+    <div id="cpt-lien-display" style="font-size:11px;color:#64748B;background:#F8FAFC;padding:8px;border-radius:8px;word-break:break-all;margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="copierLienComptable()" style="flex:1;padding:10px;background:#EEF2FF;color:#4338CA;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfilComptable()" style="flex:1;padding:10px;background:#4338CA;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     </div>
   </div>
-  <div style="padding:16px">
-    <div class="p-card">
-      <div class="p-card-title">Informations</div>
-      <div class="p-row"><span class="p-lbl">Email</span><span class="p-val" id="cpt-email">&#8212;</span></div>
-      <div class="p-row"><span class="p-lbl">Cabinet</span><span class="p-val" id="cpt-cabinet">&#8212;</span></div>
-      <div class="p-row"><span class="p-lbl">Entreprises</span><span class="p-val" id="cpt-nb-ent">0</span></div>
-    </div>
-    <button class="p-btn danger" onclick="doLogout()" style="margin-top:12px">&#9196;&#65039; Se d&#233;connecter</button>
+
+  <!-- Inviter une entreprise -->
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E2E8F0">
+    <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:12px">📧 Inviter une entreprise</div>
+    <div style="font-size:12px;color:#64748B;margin-bottom:10px">Saisissez l'email de l'entreprise — elle recevra un lien pour accepter l'accès</div>
+    <input id="cpt-invite-email" class="f-inp" type="email" placeholder="email@entreprise.ma" style="margin-bottom:10px">
+    <button onclick="envoyerInvitationDepuisProfil()" style="width:100%;padding:11px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Envoyer l'invitation</button>
+  </div>
+
+  <!-- Mes infos -->
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E2E8F0">
+    <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:12px">⚙️ Mes informations</div>
+    <div id="cpt-profil-infos"></div>
+    <button onclick="ouvrirEditionComptable()" style="width:100%;margin-top:12px;padding:10px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">✏️ Modifier</button>
+  </div>
+
+  <!-- Actions -->
+  <div style="margin:0 20px 20px;display:flex;flex-direction:column;gap:8px">
+    <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#FEF2F2;color:#EF4444;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
   </div>
   <div class="pb"></div>
 </div>
 
-<!-- ===== MODALS SUPPLEMENTAIRES ===== -->
-<div class="modal-overlay" id="modal-invitation">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">&#128203; Mon lien d'invitation</div>
-    <div style="background:#F3E8FF;border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:#9333EA">
-      Partagez ce lien avec vos clients pour qu'ils vous donnent acc&#232;s &#224; leurs donn&#233;es.
-    </div>
-    <div style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:12px;font-size:11px;color:#64748B;word-break:break-all;margin-bottom:12px;font-family:monospace" id="invitation-link-display">&#8212;</div>
-    <button class="m-btn" onclick="copierLienInvitation()">&#128203; Copier le lien</button>
-    <button class="m-btn" style="background:#25D366;margin-top:8px" onclick="partagerInvitationWhatsApp()">&#128241; WhatsApp</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Fermer</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-accept-invite">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:40px;margin-bottom:8px">&#128202;</div>
-      <div class="modal-title" style="margin-bottom:4px">Invitation comptable</div>
-    </div>
-    <div style="background:#F3E8FF;border-radius:12px;padding:14px;margin-bottom:16px">
-      <div style="font-size:14px;font-weight:600;color:#0F172A" id="invite-comptable-nom">&#8212;</div>
-      <div style="font-size:12px;color:#64748B" id="invite-comptable-cabinet">&#8212;</div>
-    </div>
-    <div style="background:#FFFBEB;border-left:3px solid #D97706;border-radius:8px;padding:10px;font-size:12px;color:#92400E;margin-bottom:16px">
-      &#9888;&#65039; Acc&#232;s en <strong>lecture seule</strong> uniquement.
-    </div>
-    <button class="m-btn green" onclick="accepterInvitation()">&#10003; Accepter</button>
-    <button class="m-btn-sec" onclick="refuserInvitation()">&#10006; Refuser</button>
-  </div>
-</div>
-
-<!-- MODAL LIGNE BC -->
-<div class="modal-overlay" id="modal-ligne-bc">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter un article</div>
-    <input class="m-inp" id="mlbc-desc" placeholder="D&#233;signation de l'article">
-    <input class="m-inp" id="mlbc-qte" type="number" placeholder="Quantit&#233;" value="1">
-    <input class="m-inp" id="mlbc-pu" type="number" placeholder="Prix unitaire HT">
-    <button class="m-btn" onclick="confirmerLigneBC()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL LIGNE BL -->
-<div class="modal-overlay" id="modal-ligne-bl">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter un article</div>
-    <input class="m-inp" id="mlbl-desc" placeholder="D&#233;signation de l'article">
-    <input class="m-inp" id="mlbl-qte" type="number" placeholder="Quantit&#233;" value="1">
-    <button class="m-btn" onclick="confirmerLigneBL()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- TOAST -->
-
-<div class="bottom-nav">
-  <div class="nav-item" id="nav-home" onclick="goScreen('dashboard',null)"><div class="nav-ico">🏠</div><div class="nav-lbl">Accueil</div></div>
-  <div class="nav-item" id="nav-devis" onclick="goScreen('devis-list',null)"><div class="nav-ico">📝</div><div class="nav-lbl">Devis</div></div>
-  <div class="nav-fab"><button class="fab" onclick="goScreen('nouvelle',null)" style="position:relative;bottom:auto;right:auto;width:48px;height:48px;font-size:24px">＋</button></div>
-  <div class="nav-item" id="nav-clients" onclick="goScreen('clients',null)"><div class="nav-ico">👥</div><div class="nav-lbl">Clients</div></div>
-  <div class="nav-item" id="nav-profil" onclick="goScreen('profil',null)"><div class="nav-ico">👤</div><div class="nav-lbl">Profil</div></div>
-</div>
-</body>
-</html>
+>
