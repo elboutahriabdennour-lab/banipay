@@ -42,41 +42,110 @@ function badgeF(s) { return {attente:'En attente',retard:'Retard',payee:'Payée'
 
 function badgeDV(s) { return {envoye:'Envoyé',accepte:'Accepté',refuse:'Refusé',converti:'→Facture',expire:'Expiré'}[s]||s; }
 
-function renderNotifScreen() {
+async function renderNotifScreen() {
   const list = el('notif-list');
   if (!list) return;
-  if (!STATE.notifications.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>`;
+
+  const uid = sb.user?.id;
+  const emailEnt = sb.user?.email;
+
+  // Load invitations from comptables (en_attente)
+  let invitationsCpt = [];
+  try {
+    const resp = await fetch(
+      SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + uid + '&statut=eq.en_attente&order=created_at.desc',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    invitationsCpt = await resp.json() || [];
+
+    // Also check by email (for invitations created before entreprise_id was set)
+    if (emailEnt) {
+      const resp2 = await fetch(
+        SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_email=eq.' + encodeURIComponent(emailEnt) + '&statut=eq.en_attente&order=created_at.desc',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+      );
+      const byEmail = await resp2.json() || [];
+      // Merge without duplicates
+      byEmail.forEach(function(inv) {
+        if (!invitationsCpt.find(function(i) { return i.id === inv.id; })) {
+          invitationsCpt.push(inv);
+        }
+      });
+    }
+  } catch(e2) {}
+
+  // Normal notifications
+  const allNotifs = STATE.notifications || [];
+
+  if (!allNotifs.length && !invitationsCpt.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>';
     return;
   }
-  const colors = { danger:'#FEF2F2', warning:'#FFFBEB', success:'#ECFDF5', info:'#EFF6FF' };
-  const borders = { danger:'#EF4444', warning:'#D97706', success:'#059669', info:'#2563EB' };
-  list.innerHTML = STATE.notifications.map((n,i) => `
-    <div style="background:${colors[n.type]||'#F8FAFC'};border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;gap:12px;border-left:3px solid ${borders[n.type]||'#2563EB'};cursor:pointer"
-      onclick="${n.factureId ? `goScreen('detail');openDetail(${n.factureId})` : n.devisId ? `goScreen('detail-devis');openDetailDevis(${n.devisId})` : ''}">
-      <div style="font-size:22px;flex-shrink:0">${n.icon}</div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#0F172A">${n.title}</div>
-        <div style="font-size:12px;color:#64748B;margin-top:2px">${n.body}</div>
-      </div>
-    </div>`).join('');
+
+  let html = '';
+
+  // Show pending comptable invitations first
+  if (invitationsCpt.length) {
+    html += '<div style="padding:10px 20px 4px;font-size:11px;font-weight:700;color:#4338CA;text-transform:uppercase">Invitations en attente</div>';
+    html += invitationsCpt.map(function(inv) {
+      return '<div style="margin:8px 20px;background:#EEF2FF;border-radius:14px;padding:16px;border:1px solid #C7D2FE">' +
+        '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">' +
+          '<div style="font-size:24px">📊</div>' +
+          '<div>' +
+            '<div style="font-size:13px;font-weight:700">' + escapeHTML(inv.comptable_email||'') + '</div>' +
+            '<div style="font-size:11px;color:#4338CA">Souhaite accéder à vos documents</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button class="btn-accept-cpt-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
+          '<button class="btn-refuse-cpt-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#FEF2F2;color:#EF4444;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Normal notifications
+  if (allNotifs.length) {
+    const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅' };
+    html += allNotifs.map(function(n) {
+      return '<div class="notif-item' + (n.lue ? '' : ' notif-unread') + '">' +
+        '<div class="notif-ico">' + (typeIco[n.type] || '🔔') + '</div>' +
+        '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.titre||'') + '</div>' +
+        '<div class="notif-msg">' + escapeHTML(n.corps||'') + '</div></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  list.innerHTML = html;
+
+  // Event delegation
+  list.addEventListener('click', async function(e) {
+    const btnA = e.target.closest('.btn-accept-cpt-inv');
+    if (btnA) {
+      const invId = btnA.dataset.id;
+      await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: 'acceptee', entreprise_id: sb.user?.id })
+      });
+      showToast('✅ Comptable accepté !', 'success');
+      renderNotifScreen();
+      renderMonComptable();
+      return;
+    }
+    const btnR = e.target.closest('.btn-refuse-cpt-inv');
+    if (btnR) {
+      await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + btnR.dataset.id, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statut: 'refusee' })
+      });
+      showToast('Invitation refusée', 'success');
+      renderNotifScreen();
+    }
+  }, { once: true });
 }
 
-// ============================================================
-// INIT APP
-// ============================================================
-
-
-
-
-// ============================================================
-// BANIPAY — Système Comptable
-// ============================================================
-
-// STATE comptable
-// ============================================================
-// ROLE SELECTION (inscription)
-// ============================================================
 
 function goScreen(name) {
   // Auth guard — protected screens require valid session
@@ -128,7 +197,7 @@ function goScreen(name) {
     'tva': renderTVA,
     'recherche': initRecherche,
     'notifications': renderNotifScreen,
-    'profil': renderProfil,
+    'profil': function() { renderProfil(); setTimeout(renderMonComptable, 300); },
     'comptable': renderComptableDashboard,
     'comptable-profil': renderComptableProfil,
     'cpt-entreprise': function() {},
