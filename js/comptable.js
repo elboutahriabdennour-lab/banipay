@@ -802,6 +802,15 @@ async function mettreAJourInvitation(invId, statut) {
 // NAVIGATION ESPACE COMPTABLE
 // ============================================================
 
+function _cptEmptyState() {
+  return '<div style="margin:16px;background:#EEF2FF;border-radius:16px;padding:20px;text-align:center">' +
+    '<div style="font-size:32px;margin-bottom:10px">🤝</div>' +
+    '<div style="font-size:14px;font-weight:700;color:#4338CA;margin-bottom:6px">Aucune entreprise</div>' +
+    '<div style="font-size:12px;color:#64748B;margin-bottom:14px">Invitez vos clients depuis votre profil</div>' +
+    '<button class="btn-go-profil-cpt" style="padding:11px 20px;background:#4338CA;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Inviter</button>' +
+  '</div>';
+}
+
 function switchCptNav(tab) {
   // Update nav buttons
   ['dashboard','entreprises','traiter','historique','activite','notifs'].forEach(function(t) {
@@ -820,42 +829,45 @@ function switchCptNav(tab) {
   if (!content) return;
 
   if (tab === 'dashboard') {
-    // KPIs + liste entreprises
+    // KPIs clients uniquement (pas les propres factures du comptable)
     const totalFac = (CPT.allFactures || []).length;
     const nonLettres = totalFac - (CPT.allControles || []).filter(function(c){return c.lettre;}).length;
     const tvaKo = totalFac - (CPT.allControles || []).filter(function(c){return c.tva_verifie;}).length;
     const entAction = (CPT.entreprises || []).filter(function(e){return e._etat==='rouge';}).length;
     const docsAControler = totalFac - (CPT.allControles || []).filter(function(c){return c.consulte;}).length;
+    const nbEnts = (CPT.entreprises||[]).length;
 
     content.innerHTML =
+      // KPIs
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 16px 8px">' +
-        kpiBox((CPT.entreprises||[]).length, 'Entreprises', '#4338CA', '#EEF2FF') +
+        kpiBox(nbEnts, 'Entreprises', '#4338CA', '#EEF2FF') +
         kpiBox(docsAControler, 'À contrôler', '#2563EB', '#EFF6FF') +
         kpiBox(nonLettres, 'Non lettrées', '#D97706', '#FFFBEB') +
         kpiBox(tvaKo, 'TVA à vérifier', '#9333EA', '#F3E8FF') +
       '</div>' +
+
+      // Message si pas d'entreprises
+      (nbEnts === 0 ? _cptEmptyState() : '') +
+
+      // Liste entreprises
       '<div style="padding:0 16px 4px;display:flex;justify-content:space-between;align-items:center">' +
-        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8">Entreprises</div>' +
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8">Mes entreprises</div>' +
         '<div style="display:flex;gap:6px">' +
-          '<button onclick="trierEntreprises(\'action\')" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#EEF2FF;color:#4338CA;cursor:pointer;font-family:inherit;font-weight:600">Priorité</button>' +
-          '<button onclick="trierEntreprises(\'lettrage\')" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#F1F5F9;color:#64748B;cursor:pointer;font-family:inherit">Lettrage</button>' +
-          '<button onclick="trierEntreprises(\'nom\')" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#F1F5F9;color:#64748B;cursor:pointer;font-family:inherit">Nom</button>' +
+          '<button class="btn-tri-action" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#EEF2FF;color:#4338CA;cursor:pointer;font-family:inherit;font-weight:600">Priorité</button>' +
+          '<button class="btn-tri-lettrage" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#F1F5F9;color:#64748B;cursor:pointer;font-family:inherit">Lettrage</button>' +
+          '<button class="btn-tri-nom" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#F1F5F9;color:#64748B;cursor:pointer;font-family:inherit">Nom</button>' +
         '</div>' +
       '</div>' +
-      '<div id="cpt-entreprises-list" style="padding:0 16px"></div>' +
-      '<div style="padding:12px 16px 20px;display:flex;flex-direction:column;gap:8px">' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
-          '<button onclick="basculerModeEntreprise()" style="padding:14px 10px;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center">🧾<br><span style=\"font-size:10px;font-weight:600\">Mes factures</span></button>' +
-          '<button onclick="basculerModeDevis()" style="padding:14px 10px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center">📝<br><span style=\"font-size:10px;font-weight:600\">Mes devis</span></button>' +
-        '</div>' +
-        '<div style="display:flex;gap:8px">' +
-          '<button onclick="ouvrirGestionEntreprises()" style="flex:1;padding:11px;background:#EEF2FF;color:#4338CA;border:1.5px solid #C7D2FE;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Gérer</button>' +
-          '<button onclick="renderComptableProfil();goScreen(\'comptable-profil\',null)" style="flex:1;padding:11px;background:#fff;color:#64748B;border:1.5px solid #E2E8F0;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">👤 Profil</button>' +
-        '</div>' +
-      '</div>';
+      '<div id="cpt-entreprises-list" style="padding:0 16px"></div>';
 
     renderListeEntreprises();
-
+    // Event delegation for buttons
+    content.addEventListener('click', function(e) {
+      if (e.target.closest('.btn-go-profil-cpt')) { renderComptableProfil(); goScreen('comptable-profil', null); }
+      if (e.target.closest('.btn-tri-action')) { trierEntreprises('action'); }
+      if (e.target.closest('.btn-tri-lettrage')) { trierEntreprises('lettrage'); }
+      if (e.target.closest('.btn-tri-nom')) { trierEntreprises('nom'); }
+    });
   } else if (tab === 'entreprises') {
     content.innerHTML =
       '<div style="padding:16px">' +
