@@ -612,6 +612,32 @@
       <div id="aw-signup" style="display:none">
         <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#94A3B8;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
         <div class="auth-title">Créer un compte</div>
+
+        <!-- ÉTAPE 1: Choisir le type de compte EN PREMIER -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:10px;text-align:center">Je suis...</div>
+          <div style="display:flex;gap:8px">
+            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #4F46E5;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#EEF2FF">
+              <div style="font-size:28px;margin-bottom:6px">🏢</div>
+              <div style="font-size:13px;font-weight:700;color:#4F46E5">Entreprise</div>
+              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes factures</div>
+            </div>
+            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F8FAFC">
+              <div style="font-size:28px;margin-bottom:6px">📊</div>
+              <div style="font-size:13px;font-weight:700;color:#64748B">Comptable</div>
+              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes clients</div>
+            </div>
+          </div>
+          <input type="hidden" id="signup-role" value="entreprise">
+        </div>
+
+        <!-- Champ cabinet (comptable uniquement) -->
+        <div id="signup-comptable-fields" style="display:none;background:#EEF2FF;border-radius:12px;padding:12px;margin-bottom:12px">
+          <label class="a-lbl" style="color:#4F46E5">Cabinet comptable</label>
+          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet (optionnel)">
+        </div>
+
+        <!-- ÉTAPE 2: Informations personnelles -->
         <label class="a-lbl">Nom complet</label><input id="signup-nom" class="a-inp" type="text" placeholder="Ahmed Benali">
         <label class="a-lbl">Email</label><input id="signup-email" class="a-inp" type="email" placeholder="votre@email.com">
         <label class="a-lbl">Mot de passe</label>
@@ -621,24 +647,11 @@
         </div>
         <div class="pwd-bar"><div id="pwd-bar" class="pwd-fill"></div></div>
         <div id="pwd-hint" class="pwd-hint"></div>
-        <label class="a-lbl">Confirmer</label>
-        <input id="signup-password2" class="a-inp" type="password" placeholder="Retapez" oninput="checkPwdMatch()">
+        <label class="a-lbl">Confirmer le mot de passe</label>
+        <input id="signup-password2" class="a-inp" type="password" placeholder="Retapez le mot de passe" oninput="checkPwdMatch()">
         <div id="pwd-match" style="font-size:11px;margin-top:4px;min-height:16px"></div>
         <div id="signup-err" class="a-err"></div>
-        <input type="hidden" id="signup-role" value="entreprise">
-        <div id="signup-comptable-fields" style="display:none">
-          <label class="a-lbl">Cabinet comptable</label>
-          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet" style="margin-bottom:10px">
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #2563EB;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#EFF6FF">
-            <div>🏢</div><div style="font-size:12px;color:#2563EB;font-weight:600">Entreprise</div>
-          </div>
-          <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:#F8FAFC">
-            <div>📊</div><div style="font-size:12px;color:#64748B;font-weight:600">Comptable</div>
-          </div>
-        </div>
-        <button class="a-btn a-btn-blue" onclick="doSignup()">Créer mon compte</button>
+        <button class="a-btn a-btn-blue" onclick="doSignup()" style="margin-top:8px">Créer mon compte</button>
         <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
       </div>
       <div id="aw-confirm" style="display:none">
