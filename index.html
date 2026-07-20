@@ -362,7 +362,14 @@
 
 <!-- PROFIL -->
 <div class="screen" id="screen-profil">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
+    </div>
+  </div>
   <div class="profil-hero">
+    <button onclick="partagerProfil()" style="position:absolute;top:60px;right:16px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     <div class="profil-av" id="pv-initiales">?</div>
     <div>
       <div class="p-nom-big" id="pv-nom">Mon Entreprise</div>
@@ -547,8 +554,10 @@
 <!-- DASHBOARD COMPTABLE -->
 <div class="screen" id="screen-dashboard-comptable">
   <div class="topbar">
-    <div class="topbar-brand">🔐 Bani<span>Pay</span></div>
-    <div class="topbar-right"><button class="a-btn a-btn-blue" onclick="quitterComptable()" style="padding:8px 14px;margin-top:0;font-size:12px;width:auto">Quitter</button></div>
+    <div class="topbar-brand" onclick="goScreen('comptable',null)" style="cursor:pointer">🔐 Bani<span>Pay</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
+      <button class="a-btn a-btn-blue" onclick="quitterComptable()" style="padding:8px 14px;margin-top:0;font-size:12px;width:auto">Quitter</button></div>
   </div>
   <div class="hero">
     <div class="hero-lbl">Vue comptable</div>
@@ -945,10 +954,13 @@
 <div class="toast" id="toast"></div>
 <!-- CLIENTS -->
   <div class="screen" id="screen-clients">
-    <div class="app-header" style="padding-top:16px">
-      <div class="brand">Bani<span>Pay</span></div>
-      <div class="avatar" id="av-clients" onclick="goScreen('profil',null)">AB</div>
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
+      <button onclick="ouvrirScannerQR()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">+ Ajouter</button>
     </div>
+  </div>
     <div style="padding:0 20px 12px">
       <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client..." oninput="renderClients()" style="margin-top:12px">
     </div>
