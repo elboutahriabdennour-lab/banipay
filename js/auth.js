@@ -77,18 +77,18 @@ function selectRole(role) {
   if (role === 'entreprise') {
     entBtn.style.border = '2px solid #2563EB';
     entBtn.style.background = '#EFF6FF';
-    entBtn.querySelector('div:nth-child(2)').style.color = '#2563EB';
+    entBtn.style.transform = 'scale(1.02)';
     cptBtn.style.border = '2px solid #E2E8F0';
     cptBtn.style.background = '#F8FAFC';
-    cptBtn.querySelector('div:nth-child(2)').style.color = '#64748B';
+    cptBtn.style.transform = 'scale(1)';
     if (cptFields) cptFields.style.display = 'none';
   } else {
     cptBtn.style.border = '2px solid #9333EA';
     cptBtn.style.background = '#F3E8FF';
-    cptBtn.querySelector('div:nth-child(2)').style.color = '#9333EA';
+    cptBtn.style.transform = 'scale(1.02)';
     entBtn.style.border = '2px solid #E2E8F0';
     entBtn.style.background = '#F8FAFC';
-    entBtn.querySelector('div:nth-child(2)').style.color = '#64748B';
+    entBtn.style.transform = 'scale(1)';
     if (cptFields) cptFields.style.display = 'block';
   }
   const roleInput = el('signup-role');
@@ -158,18 +158,29 @@ async function doLogin() {
       localStorage.removeItem('bp_saved_email');
       localStorage.removeItem('bp_remember');
     }
-    // Détecter le rôle - metadata OU invitations acceptées
-    let role = sb.user?.user_metadata?.role || 'entreprise';
+    // Détecter le rôle depuis les metadata (défini à l'inscription)
+    const metaRole = sb.user?.user_metadata?.role;
+    let role = 'entreprise';
 
-    // Si rôle pas défini, vérifier si ce compte a des invitations comptable acceptées
-    if (role === 'entreprise') {
+    if (metaRole === 'comptable') {
+      // Rôle explicitement défini comme comptable à l'inscription
+      role = 'comptable';
+    } else if (!metaRole) {
+      // Rôle non défini (ancien compte) - vérifier les invitations acceptées
+      // MAIS seulement si l'email apparaît comme comptable (pas comme entreprise)
       try {
         const invCheck = await fetch(
           SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.acceptee&limit=1',
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
         );
         const invData = await invCheck.json();
-        if (invData && invData.length > 0) {
+        // Vérifier aussi que ce compte n'a PAS de profil entreprise
+        const profCheck = await fetch(
+          SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + sb.user.id + '&limit=1',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+        );
+        const profData = await profCheck.json();
+        if (invData && invData.length > 0 && (!profData || !profData.length)) {
           role = 'comptable';
         }
       } catch(e2) {}
@@ -194,3 +205,11 @@ async function doLogin() {
 // ============================================================
 // LOAD COMPTABLE APP
 // ============================================================
+
+
+
+// Accepter invitation depuis modal (ancien système)
+async function accepterInvitation() {
+  closeAllModals();
+  await doLogin();
+}
