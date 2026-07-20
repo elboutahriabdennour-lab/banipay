@@ -97,6 +97,13 @@ const sb = {
   },
 
   restoreSession() {
+    // Seulement si "remember me v2" est activé
+    const remembered = localStorage.getItem('bp_remember_v2') === '1';
+    if (!remembered) {
+      // Pas de remember me → nettoyer les tokens et forcer la connexion
+      ['bp_t','bp_u','bp_r'].forEach(k => localStorage.removeItem(k));
+      return false;
+    }
     const t = localStorage.getItem('bp_t');
     const u = localStorage.getItem('bp_u');
     if (t && u) {
@@ -105,10 +112,7 @@ const sb = {
         if (!user || !user.id || !user.email) { sb.logout(); return false; }
         sb.token = t;
         sb.user = user;
-        // Auto refresh token si remember me activé
-        if (localStorage.getItem('bp_remember') === '1') {
-          sb.refreshSession().catch(() => {});
-        }
+        sb.refreshSession().catch(() => {});
         return true;
       } catch(e) { sb.logout(); return false; }
     }
@@ -133,7 +137,7 @@ const sb = {
   logout() {
     clearInterval(sb.refreshTimer);
     sb.token = null; sb.user = null;
-    ['bp_t','bp_u','bp_r'].forEach(k => localStorage.removeItem(k));
+    ['bp_t','bp_u','bp_r','bp_remember_v2','bp_remember'].forEach(k => localStorage.removeItem(k));
   }
 };
 
