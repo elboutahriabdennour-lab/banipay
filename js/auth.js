@@ -140,17 +140,8 @@ async function doLogin() {
   if (errEl) errEl.textContent = '⏳ Connexion...';
   try {
     await sb.login(email, pwd);
-    const confirmed = sb.user?.email_confirmed_at || sb.user?.confirmed_at;
-    if (!confirmed) {
-      sb.logout();
-      window._pendingConfirmEmail = email;
-      switchTab('confirm');
-      const cEl = el('confirm-email-display');
-      if (cEl) cEl.textContent = email;
-      if (errEl) errEl.textContent = '';
-      showToast('📧 Vérifiez votre email pour activer votre compte', 'error');
-      return;
-    }
+    // Email confirmation désactivée dans Supabase - pas de vérification
+    // const confirmed = sb.user?.email_confirmed_at || sb.user?.confirmed_at;
     // Se souvenir de l'email
     if (remember) {
       localStorage.setItem('bp_saved_email', email);
@@ -162,6 +153,7 @@ async function doLogin() {
     // Détecter le rôle depuis les metadata (défini à l'inscription)
     const metaRole = sb.user?.user_metadata?.role;
     let role = 'entreprise';
+    if (errEl) errEl.textContent = '⏳ Rôle détecté: ' + (metaRole || 'non défini');
 
     if (metaRole === 'comptable') {
       // Rôle explicitement défini comme comptable à l'inscription
