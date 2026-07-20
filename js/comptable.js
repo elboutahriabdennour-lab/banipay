@@ -26,6 +26,7 @@ async function loadComptableApp() {
       const ids = CPT.entreprises.map(function(i) { return i.entreprise_id; }).filter(function(id) { return id && id !== 'null'; });
       if (!ids.length) {
         renderComptableDashboard();
+    chargerNotificationsComptable(); // Load notification badge
         return;
       }
 
