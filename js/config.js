@@ -137,7 +137,15 @@ const sb = {
   logout() {
     clearInterval(sb.refreshTimer);
     sb.token = null; sb.user = null;
-    ['bp_t','bp_u','bp_r','bp_remember_v2','bp_remember'].forEach(k => localStorage.removeItem(k));
+    ['bp_t','bp_u','bp_r','bp_remember_v2','bp_remember'].forEach(function(k) { localStorage.removeItem(k); });
+    // Vider STATE et CPT pour éviter le cache entre comptes
+    Object.keys(STATE).forEach(function(k) { delete STATE[k]; });
+    Object.keys(CPT).forEach(function(k) { delete CPT[k]; });
+    // Réinitialiser les valeurs par défaut
+    STATE.factures = []; STATE.devis = []; STATE.clients = [];
+    STATE.produits = []; STATE.avoirs = []; STATE.achats = [];
+    CPT.entreprises = []; CPT.allFactures = []; CPT.allControles = [];
+    CPT.role = null; CPT.currentEntrepriseId = null;
   }
 };
 
