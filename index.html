@@ -516,6 +516,11 @@
     <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
     <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#4F46E5">📁 Archive documents</button>
     <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#059669">🏦 Relevés bancaires</button>
+    <!-- Section Mon Comptable -->
+    <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E2E8F0;overflow:hidden">
+      <div style="padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#64748B">Mon comptable</div>
+      <div id="mon-comptable-section" style="padding:14px 16px">Chargement...</div>
+    </div>
     <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#059669">🏢 Annuaire BaniPay</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#9333EA">🔐 Lien accès comptable</button>
@@ -1287,6 +1292,10 @@
       <button id="cpt-nav-traiter" onclick="switchCptNav('traiter')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📥 À traiter</button>
       <button id="cpt-nav-historique" onclick="switchCptNav('historique')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📋 Historique</button>
       <button id="cpt-nav-activite" onclick="switchCptNav('activite')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📡 Activité</button>
+      <div style="position:relative;display:inline-flex">
+        <button id="cpt-nav-notifs" onclick="switchCptNav('notifs')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🔔 Notifs</button>
+        <span id="cpt-notif-badge" style="position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center"></span>
+      </div>
     </div>
   </div>
   <!-- Contenu dynamique -->
