@@ -93,6 +93,8 @@ function goScreen(name) {
     'archive': renderArchive,
     'stats': () => { renderStats(); renderStatsDashboard(); verifierRappels(); },
     'annuaire': filtrerAnnuaire,
+    'achats': renderAchats,
+    'nouvelle-achat': () => { calcAchatTotaux(); },
     'avoir-list': renderAvoirList,
     'dashboard': renderDashboard,
     'nouvelle': initNouvelle,
