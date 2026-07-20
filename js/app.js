@@ -459,19 +459,49 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
     overlay.querySelector('#btn-accepter-inv-cpt').onclick = async function() {
       try {
         // Mettre à jour le statut de l'invitation
+          // L'entreprise doit être connectée pour accepter
+        if (!sb.token || !sb.user) {
+          overlay.remove();
+          window._pendingInviteCpt = { emailCpt, pourEmail };
+          goScreen('auth');
+          showToast('Connectez-vous pour accepter', 'error');
+          return;
+        }
+
+        const entrepriseId = sb.user.id;
+        // Mettre à jour invitation avec l'ID réel de l'entreprise
         await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(pourEmail), {
           method: 'PATCH',
           headers: {
             'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY),
+            'Authorization': 'Bearer ' + sb.token,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ statut: 'acceptee' })
+          body: JSON.stringify({ statut: 'acceptee', entreprise_id: entrepriseId })
         });
+
+        // Notifier le comptable
+        await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + sb.token,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            user_id: entrepriseId, // on stocke pour retrouver le comptable via email
+            type: 'invitation_acceptee',
+            titre: 'Invitation acceptée',
+            corps: (sb.user.user_metadata?.nom || sb.user.email) + ' a accepté votre invitation comptable.',
+            lue: false
+          })
+        });
+
         overlay.remove();
-        showToast('✅ Invitation acceptée !', 'success');
-        // Si connecté, recharger
-        if (sb.token) { await loadAll(); goScreen('dashboard'); }
+        showToast('✅ Invitation acceptée ! Votre comptable a maintenant accès.', 'success');
+        await loadAll();
+        goScreen('dashboard');
       } catch(e) {
         showToast('Erreur: ' + e.message, 'error');
       }
