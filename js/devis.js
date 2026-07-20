@@ -33,6 +33,11 @@ function filterDevis(f, btn) {
 }
 
 function initNouveauDevis(prefill) {
+  // Populate client suggestions
+  const _dl2 = document.getElementById('client-datalist-devis');
+  if (_dl2 && STATE.clients) {
+    _dl2.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
+  }
   STATE.lignesD = prefill?.lignes ? [...prefill.lignes] : [];
   STATE.deviseD = prefill?.devise || 'MAD';
   el('d-client') && (el('d-client').value = prefill?.client || '');
