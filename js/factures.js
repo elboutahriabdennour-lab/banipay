@@ -60,6 +60,11 @@ function setFilter(f, btn) {
 // ============================================================
 
 function initNouvelle(prefill) {
+  // Populate client suggestions
+  const _dl = document.getElementById('client-datalist');
+  if (_dl && STATE.clients) {
+    _dl.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
+  }
   STATE.lignesF = prefill?.lignes ? [...prefill.lignes] : [];
   STATE.deviseF = prefill?.devise || 'MAD';
   el('f-client') && (el('f-client').value = prefill?.client || '');
