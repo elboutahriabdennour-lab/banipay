@@ -538,3 +538,109 @@ async function revoquerAccesComptable(invId) {
     await renderAccesComptable();
   } catch(e) { showToast('Erreur', 'error'); }
 }
+
+// ============================================================
+// RELEVÉS BANCAIRES
+// ============================================================
+
+STATE.releves = STATE.releves || [];
+
+async function loadReleves() {
+  try {
+    const uid = sb.user?.id;
+    if (!uid) return;
+    const r = await sb.get('releves_bancaires', 'user_id=eq.' + uid + '&order=annee.desc,mois.desc');
+    STATE.releves = r || [];
+    renderReleves();
+  } catch(e) { STATE.releves = []; renderReleves(); }
+}
+
+function renderReleves() {
+  const list = el('releves-list');
+  if (!list) return;
+
+  // Set current month/year defaults
+  const now = new Date();
+  const moisEl = el('releve-mois');
+  const anneeEl = el('releve-annee');
+  if (moisEl && !moisEl.dataset.set) {
+    moisEl.value = String(now.getMonth() + 1).padStart(2, '0');
+    anneeEl.value = String(now.getFullYear());
+    moisEl.dataset.set = '1';
+  }
+
+  const releves = STATE.releves || [];
+  if (!releves.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">🏦</div><div class="empty-title">Aucun relevé</div><div>Uploadez vos relevés pour les partager avec votre comptable</div></div>';
+    return;
+  }
+
+  const moisLabels = ['', 'Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  list.innerHTML = releves.map(function(r) {
+    return '<div class="card" style="margin:0 20px 10px">' +
+      '<div style="display:flex;align-items:center;gap:12px">' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(r.mois)] || r.mois) + ' ' + r.annee + '</div>' +
+          '<div style="font-size:11px;color:#64748B">' + escapeHTML(r.banque || '') + '</div>' +
+          '<div style="font-size:10px;color:#94A3B8;margin-top:2px">' + (r.nom_fichier || '') + ' · ' + (r.taille || '') + '</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
+          '<span style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:' + (r.vu_par_comptable ? '#ECFDF5' : '#FFFBEB') + ';color:' + (r.vu_par_comptable ? '#059669' : '#D97706') + '">' + (r.vu_par_comptable ? '✓ Vu' : '⏳ En attente') + '</span>' +
+          '<button onclick="supprimerReleve(\'' + r.id + '\')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function uploadReleve(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const mois = el('releve-mois')?.value || '01';
+  const annee = el('releve-annee')?.value || '2026';
+  const banque = (el('releve-banque')?.value || '').trim() || 'Banque';
+  const uid = sb.user?.id;
+  if (!uid) return;
+
+  showToast('\u23f3 Upload en cours...');
+
+  try {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const releve = {
+        id: Date.now().toString(),
+        user_id: uid,
+        mois: mois,
+        annee: annee,
+        banque: banque,
+        nom_fichier: file.name,
+        taille: (file.size / 1024).toFixed(0) + ' KB',
+        data: e.target.result,
+        vu_par_comptable: false,
+        created_at: new Date().toISOString()
+      };
+
+      await sb.post('releves_bancaires', releve);
+      STATE.releves.unshift(releve);
+      renderReleves();
+      if (el('releve-banque')) el('releve-banque').value = '';
+      showToast('\u2705 Relevé ajouté !', 'success');
+    };
+    reader.readAsDataURL(file);
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+  event.target.value = '';
+}
+
+async function supprimerReleve(id) {
+  if (!confirm('Supprimer ce relevé ?')) return;
+  try {
+    await sb.delete('releves_bancaires', 'id=eq.' + id);
+    STATE.releves = STATE.releves.filter(function(r) { return r.id !== id; });
+    renderReleves();
+    showToast('Relevé supprimé', 'success');
+  } catch(e) { showToast('Erreur', 'error'); }
+}
