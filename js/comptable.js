@@ -506,16 +506,6 @@ function exportCptTVA() {
 
 // ============================================================
 // PROFIL COMPTABLE
-// ============================================================
-
-function renderComptableProfil() {
-  const email = sb.user?.email || '';
-  const meta = sb.user?.user_metadata || {};
-  setEl('cpt-profil-email', email);
-  setEl('cpt-profil-nom', meta.nom || email.split('@')[0]);
-  setEl('cpt-profil-cabinet', meta.cabinet || '');
-}
-
 function quitterComptable() {
   if (confirm('Se déconnecter ?')) { sb.logout(); goScreen('auth'); }
 }
@@ -850,7 +840,10 @@ function switchCptNav(tab) {
       '</div>' +
       '<div id="cpt-entreprises-list" style="padding:0 16px"></div>' +
       '<div style="padding:12px 16px 20px;display:flex;flex-direction:column;gap:8px">' +
-        '<button onclick="basculerModeEntreprise()" style="width:100%;padding:13px;background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏢 Mes factures & devis</button>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+          '<button onclick="basculerModeEntreprise()" style="padding:14px 10px;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center">🧾<br><span style=\"font-size:10px;font-weight:600\">Mes factures</span></button>' +
+          '<button onclick="basculerModeDevis()" style="padding:14px 10px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center">📝<br><span style=\"font-size:10px;font-weight:600\">Mes devis</span></button>' +
+        '</div>' +
         '<div style="display:flex;gap:8px">' +
           '<button onclick="ouvrirGestionEntreprises()" style="flex:1;padding:11px;background:#EEF2FF;color:#4338CA;border:1.5px solid #C7D2FE;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Gérer</button>' +
           '<button onclick="renderComptableProfil();goScreen(\'comptable-profil\',null)" style="flex:1;padding:11px;background:#fff;color:#64748B;border:1.5px solid #E2E8F0;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">👤 Profil</button>' +
@@ -1424,4 +1417,203 @@ async function toggleTVA(factureId) {
     ajouterHistorique('TVA vérifiée — ', factureId);
     showToast('☑ TVA vérifiée', 'success');
   }
+}
+
+// ============================================================
+// PROFIL COMPTABLE — QR + PARTAGE + INVITATION
+// ============================================================
+
+function renderComptableProfil() {
+  const user = sb.user;
+  if (!user) return;
+  const meta = user.user_metadata || {};
+  const nom = meta.nom || user.email?.split('@')[0] || 'Comptable';
+  const cabinet = meta.cabinet || '';
+  const email = user.email || '';
+  const uid = user.id || '';
+
+  // Avatar
+  const av = el('cpt-profil-av');
+  if (av) av.textContent = nom.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'C';
+  setEl('cpt-profil-nom', nom);
+  setEl('cpt-profil-cabinet', cabinet ? '🏛️ ' + cabinet : 'Comptable BaniPay');
+  setEl('cpt-profil-email', email);
+
+  // Lien profil
+  const lienId = 'CPT-' + uid.substr(0,8).toUpperCase();
+  const lien = window.location.origin + window.location.pathname + '?comptable=' + lienId;
+  setEl('cpt-lien-display', lien);
+
+  // QR code
+  const qrContainer = el('cpt-qr-container');
+  if (qrContainer) {
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(lien);
+    qrContainer.innerHTML = '<img src="' + qrUrl + '" style="border-radius:10px;border:3px solid #EEF2FF" width="140" height="140">';
+  }
+
+  // Infos
+  const infos = el('cpt-profil-infos');
+  if (infos) {
+    const rows = [
+      ['Nom', nom], ['Cabinet', cabinet], ['Email', email],
+      ['Spécialité', meta.specialite || ''], ['Téléphone', meta.tel || '']
+    ].filter(function(r) { return r[1]; });
+    infos.innerHTML = rows.map(function(r) {
+      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F8FAFC;font-size:12px">' +
+        '<span style="color:#94A3B8">' + r[0] + '</span>' +
+        '<span style="font-weight:600">' + escapeHTML(String(r[1])) + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  window._cptLien = lien;
+}
+
+function partagerProfilComptable() {
+  const lien = window._cptLien || el('cpt-lien-display')?.textContent;
+  if (!lien) return;
+  const nom = sb.user?.user_metadata?.nom || 'Comptable';
+  if (navigator.share) {
+    navigator.share({ title: nom + ' — BaniPay Comptable', text: 'Voici le profil de votre comptable BaniPay : ' + nom, url: lien })
+      .catch(function() { navigator.clipboard?.writeText(lien); showToast('Lien copié !', 'success'); });
+  } else {
+    navigator.clipboard?.writeText(lien);
+    showToast('✅ Lien copié !', 'success');
+  }
+}
+
+function copierLienComptable() {
+  const lien = window._cptLien || el('cpt-lien-display')?.textContent;
+  if (!lien) return;
+  navigator.clipboard?.writeText(lien);
+  showToast('✅ Lien copié !', 'success');
+}
+
+async function envoyerInvitationDepuisProfil() {
+  const emailEnt = (el('cpt-invite-email')?.value || '').trim().toLowerCase();
+  if (!emailEnt || !emailEnt.includes('@')) { showToast('Email invalide', 'error'); return; }
+  const emailCpt = sb.user?.email;
+  const nomCpt = sb.user?.user_metadata?.nom || emailCpt;
+
+  try {
+    // Enregistrer invitation en DB
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({
+        comptable_email: emailCpt,
+        entreprise_email: emailEnt,
+        statut: 'en_attente',
+        sens: 'comptable_vers_entreprise'
+      })
+    });
+
+    // Générer lien d'invitation
+    const inviteUrl = window.location.origin + window.location.pathname +
+      '?invite_cpt=' + encodeURIComponent(emailCpt) +
+      '&pour=' + encodeURIComponent(emailEnt) +
+      '&nom=' + encodeURIComponent(nomCpt);
+
+    // Partager le lien
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Invitation BaniPay',
+          text: nomCpt + ' vous invite à rejoindre BaniPay comme son client comptable.',
+          url: inviteUrl
+        });
+      } catch(e2) {
+        navigator.clipboard?.writeText(inviteUrl);
+        showToast('✅ Lien copié !', 'success');
+      }
+    } else {
+      navigator.clipboard?.writeText(inviteUrl);
+      showToast('✅ Lien d\'invitation copié !', 'success');
+    }
+
+    if (el('cpt-invite-email')) el('cpt-invite-email').value = '';
+    showToast('✅ Invitation envoyée !', 'success');
+
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+function ouvrirEditionComptable() {
+  const meta = sb.user?.user_metadata || {};
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:80vh;overflow-y:auto;box-sizing:border-box';
+  box.innerHTML =
+    '<div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>' +
+    '<div style="font-size:16px;font-weight:700;margin-bottom:16px">Modifier mon profil</div>' +
+    '<label style="font-size:12px;color:#64748B;font-weight:600">Nom complet</label>' +
+    '<input id="edit-cpt-nom" class="f-inp" value="' + escapeHTML(meta.nom||'') + '" style="margin-bottom:10px">' +
+    '<label style="font-size:12px;color:#64748B;font-weight:600">Cabinet</label>' +
+    '<input id="edit-cpt-cabinet" class="f-inp" value="' + escapeHTML(meta.cabinet||'') + '" style="margin-bottom:10px">' +
+    '<label style="font-size:12px;color:#64748B;font-weight:600">Téléphone</label>' +
+    '<input id="edit-cpt-tel" class="f-inp" value="' + escapeHTML(meta.tel||'') + '" style="margin-bottom:10px">' +
+    '<label style="font-size:12px;color:#64748B;font-weight:600">Spécialité</label>' +
+    '<input id="edit-cpt-specialite" class="f-inp" value="' + escapeHTML(meta.specialite||'') + '" placeholder="Ex: Audit, Fiscalité, PME..." style="margin-bottom:16px">' +
+    '<button id="btn-save-cpt-profil" style="width:100%;padding:12px;background:#4338CA;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💾 Sauvegarder</button>' +
+    '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;margin-top:8px;padding:12px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
+
+  box.querySelector('#btn-save-cpt-profil').onclick = async function() {
+    const newMeta = {
+      nom: el('edit-cpt-nom')?.value.trim() || meta.nom,
+      cabinet: el('edit-cpt-cabinet')?.value.trim() || meta.cabinet,
+      tel: el('edit-cpt-tel')?.value.trim() || meta.tel,
+      specialite: el('edit-cpt-specialite')?.value.trim() || meta.specialite,
+      role: 'comptable'
+    };
+    try {
+      await fetch(SUPABASE_URL + '/auth/v1/user', {
+        method: 'PUT',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: newMeta })
+      });
+      if (sb.user) sb.user.user_metadata = Object.assign(sb.user.user_metadata || {}, newMeta);
+      overlay.remove();
+      renderComptableProfil();
+      showToast('✅ Profil mis à jour !', 'success');
+    } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+  };
+}
+
+// ============================================================
+// MODE DEVIS POUR LE COMPTABLE
+// ============================================================
+
+function basculerModeDevis() {
+  CPT.modeEntreprise = true;
+  if (!STATE.devis || !STATE.devis.length) {
+    loadAll().then(function() {
+      appendModeBanner();
+      goScreen('devis-list');
+    });
+  } else {
+    appendModeBanner();
+    goScreen('devis-list');
+  }
+}
+
+function appendModeBanner() {
+  document.getElementById('mode-entreprise-banner')?.remove();
+  const banner = document.createElement('div');
+  banner.id = 'mode-entreprise-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#4338CA;color:#fff;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600';
+  banner.innerHTML = '📋 Mode Production — Vos propres documents' +
+    '<button onclick="revenirEspaceComptable()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">← Espace comptable</button>';
+  document.body.appendChild(banner);
+  document.body.style.paddingTop = '36px';
 }
