@@ -10,7 +10,6 @@ STATE._realtimeChannel = null;
 // ============================================================
 
 function getConvId(entrepriseId, comptableEmail) {
-  // ID unique déterministe pour une paire entreprise/comptable
   return 'conv_' + entrepriseId + '_' + btoa(comptableEmail).replace(/=/g,'').substr(0, 12);
 }
 
@@ -42,12 +41,50 @@ async function loadConversations() {
   }
 }
 
-function badgeMessages() {
+// FIX: vrai comptage de messages non lus, plus de "!" codé en dur
+async function badgeMessages() {
   const badge = document.getElementById('msg-badge');
   if (!badge) return;
-  // Count conversations with unread messages (simplified - count all convs for now)
-  const count = STATE.conversations.length;
-  badge.style.display = count > 0 ? 'flex' : 'none';
+  const uid = sb.user?.id;
+  const convIds = (STATE.conversations || []).map(function(c){return c.id;});
+  if (!uid || !convIds.length) {
+    badge.style.display = 'none';
+    badge.textContent = '';
+    return;
+  }
+  try {
+    const idsFilter = convIds.map(function(id){return '"' + id + '"';}).join(',');
+    const r = await fetch(
+      SUPABASE_URL + '/rest/v1/messages?conversation_id=in.(' + idsFilter + ')&lu=eq.false&expediteur_id=neq.' + uid + '&select=id',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const data = await r.json() || [];
+    const count = data.length;
+    badge.textContent = count > 9 ? '9+' : (count > 0 ? count : '');
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  } catch(e) {
+    badge.style.display = 'none';
+  }
+}
+
+// Même logique pour le badge messages côté espace comptable
+async function badgeMessagesComptable() {
+  const badge = document.getElementById('cpt-msg-badge');
+  if (!badge) return;
+  await loadConversations();
+  const uid = sb.user?.id;
+  const convIds = (STATE.conversations || []).map(function(c){return c.id;});
+  if (!uid || !convIds.length) { badge.style.display = 'none'; badge.textContent = ''; return; }
+  try {
+    const idsFilter = convIds.map(function(id){return '"' + id + '"';}).join(',');
+    const r = await fetch(
+      SUPABASE_URL + '/rest/v1/messages?conversation_id=in.(' + idsFilter + ')&lu=eq.false&expediteur_id=neq.' + uid + '&select=id',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const count = (await r.json() || []).length;
+    badge.textContent = count > 9 ? '9+' : (count > 0 ? count : '');
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  } catch(e) { badge.style.display = 'none'; }
 }
 
 // ============================================================
@@ -94,7 +131,6 @@ function renderConversations() {
     '</div>';
   }).join('');
 
-  // Event delegation
   list.addEventListener('click', function(e) {
     const item = e.target.closest('.conv-item');
     if (item) ouvrirConversation(item.dataset.id);
@@ -115,21 +151,18 @@ async function ouvrirConversation(convId) {
     ? (conv.entreprise_email || '').split('@')[0]
     : (conv.comptable_email || '').split('@')[0];
 
-  // Set header
   const header = document.getElementById('chat-nom');
   if (header) header.textContent = nomContact;
 
-  // Load messages
   await chargerMessages(convId);
   goScreen('chat');
 
-  // Subscribe to realtime
   abonnerRealtime(convId);
 
-  // Scroll to bottom
   setTimeout(scrollToBottom, 100);
 }
 
+// FIX: marque les messages reçus comme lus à l'ouverture + rafraîchit le badge
 async function chargerMessages(convId) {
   try {
     const r = await fetch(
@@ -138,6 +171,20 @@ async function chargerMessages(convId) {
     );
     STATE.messagesConv = await r.json() || [];
     renderMessages();
+
+    const uid = sb.user?.id;
+    if (uid) {
+      await fetch(
+        SUPABASE_URL + '/rest/v1/messages?conversation_id=eq.' + convId + '&expediteur_id=neq.' + uid + '&lu=eq.false',
+        {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lu: true })
+        }
+      );
+      badgeMessages();
+      badgeMessagesComptable();
+    }
   } catch(e) {
     STATE.messagesConv = [];
   }
@@ -154,7 +201,6 @@ function renderMessages() {
     return;
   }
 
-  // Group messages by date
   let lastDate = '';
   container.innerHTML = msgs.map(function(m) {
     const isMine = m.expediteur_id === uid;
@@ -223,7 +269,6 @@ async function envoyerMessage() {
     lu: false
   };
 
-  // Clear input immediately
   if (input) input.value = '';
   window._pendingMsgPJ = null;
   window._pendingMsgPJNom = null;
@@ -244,11 +289,9 @@ async function envoyerMessage() {
     const created = await r.json();
     const newMsg = (created && created[0]) ? created[0] : msg;
 
-    // Add to local state and render
     STATE.messagesConv.push(newMsg);
     renderMessages();
 
-    // Update conversation last message
     await fetch(SUPABASE_URL + '/rest/v1/conversations?id=eq.' + convId, {
       method: 'PATCH',
       headers: {
@@ -279,7 +322,6 @@ function attacherFichierMsg(event) {
     window._pendingMsgPJ = e.target.result;
     window._pendingMsgPJNom = file.name;
 
-    // Show preview
     const old = document.getElementById('msg-pj-preview');
     if (old) old.remove();
     const preview = document.createElement('div');
@@ -317,13 +359,11 @@ function voirPJMessage(msgId) {
 // ============================================================
 
 function abonnerRealtime(convId) {
-  // Unsubscribe previous channel
   if (STATE._realtimeChannel) {
     try { STATE._realtimeChannel.unsubscribe(); } catch(e2) {}
     STATE._realtimeChannel = null;
   }
 
-  // Use polling as fallback (every 3 seconds)
   if (STATE._pollInterval) clearInterval(STATE._pollInterval);
   STATE._pollInterval = setInterval(async function() {
     if (STATE.currentConvId !== convId) {
@@ -360,7 +400,6 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
   const uid = sb.user?.id;
   const role = sb.user?.user_metadata?.role || 'entreprise';
 
-  // Déterminer les IDs selon le rôle
   let entId = entrepriseId || uid;
   let entEmail = entrepriseEmail || sb.user?.email;
   let cptEmail = comptableEmail;
@@ -368,11 +407,8 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
   if (role === 'entreprise') {
     entId = uid;
     entEmail = sb.user?.email;
-    // cptEmail doit être fourni
   } else {
-    // role === 'comptable'
     cptEmail = sb.user?.email;
-    // entId et entEmail doivent être fournis
   }
 
   if (!cptEmail || !entId) {
@@ -382,7 +418,6 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
 
   const convId = getConvId(entId, cptEmail);
 
-  // Créer la conversation si elle n'existe pas
   try {
     await fetch(SUPABASE_URL + '/rest/v1/conversations', {
       method: 'POST',
@@ -402,7 +437,6 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
       })
     });
 
-    // Add to local state if not there
     if (!(STATE.conversations || []).find(function(c) { return c.id === convId; })) {
       STATE.conversations = STATE.conversations || [];
       STATE.conversations.unshift({
@@ -422,7 +456,6 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
   }
 }
 
-// Shortcut: démarrer conv avec comptable lié
 async function messagerAvecComptable() {
   const uid = sb.user?.id;
   try {
@@ -436,7 +469,6 @@ async function messagerAvecComptable() {
   } catch(e) { showToast('Erreur', 'error'); }
 }
 
-// Shortcut: démarrer conv avec une entreprise (côté comptable)
 async function messagerAvecEntreprise(entrepriseId, entrepriseEmail) {
   await demarrerConversation(entrepriseId, entrepriseEmail, sb.user?.email);
 }
