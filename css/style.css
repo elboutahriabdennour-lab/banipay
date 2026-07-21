@@ -196,3 +196,5 @@ html,body{font-family:'Inter',-apple-system,sans-serif;background:#F8FAFC;color:
 
 #screen-comptable.active{display:flex!important;flex-direction:column}
 .bottom-nav{display:none}
+
+#screen-chat.active{display:flex!important;flex-direction:column}
