@@ -229,6 +229,33 @@ function openDetailClient(id) {
         <div class="card-end"><div class="card-amt">${fmt(f.ttc)} MAD</div><div class="badge b-${f.statut}">${badgeF(f.statut)}</div></div>
       </div>`).join('') || '<div style="color:#94A3B8;font-size:13px;padding:8px 0">Aucune facture</div>';
   }
+  // Afficher lien BaniPay si client est une entreprise BaniPay
+  const lienSection = document.getElementById('dc-lien-section');
+  const lienEl = document.getElementById('dc-lien-banipay');
+  const btnCopier = document.getElementById('dc-btn-copier-lien');
+  const btnPartager = document.getElementById('dc-btn-partager-lien');
+  const clientData = STATE.currentClient;
+
+  if (lienSection && clientData && clientData.lien_banipay) {
+    lienSection.style.display = 'block';
+    if (lienEl) lienEl.textContent = clientData.lien_banipay;
+    if (btnCopier) btnCopier.onclick = function() {
+      navigator.clipboard?.writeText(clientData.lien_banipay);
+      showToast('Lien copié !', 'success');
+    };
+    if (btnPartager) btnPartager.onclick = function() {
+      if (navigator.share) {
+        navigator.share({ title: clientData.nom, url: clientData.lien_banipay })
+          .catch(function() { navigator.clipboard?.writeText(clientData.lien_banipay); });
+      } else {
+        navigator.clipboard?.writeText(clientData.lien_banipay);
+        showToast('Lien copié !', 'success');
+      }
+    };
+  } else if (lienSection) {
+    lienSection.style.display = 'none';
+  }
+
   goScreen('detail-client');
 }
 
@@ -389,4 +416,57 @@ function importerDepuisQRCodeForm(event) {
   // Show tip to user
   showToast('Prenez la photo, puis copiez le lien manuellement si besoin', 'success');
   event.target.value = '';
+}
+
+
+// ============================================================
+// IMPORT CLIENT VIA LIEN BANIPAY
+// ============================================================
+
+async function importerClientVieLien() {
+  const lien = (document.getElementById('cl-lien-import')?.value || '').trim();
+  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+
+  showToast('⏳ Chargement...', 'success');
+
+  try {
+    let profilId = null;
+    try {
+      const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
+      profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
+    } catch(e2) {
+      profilId = lien.split('profil=')[1]?.split('&')[0];
+    }
+    if (!profilId) { showToast('Lien invalide', 'error'); return; }
+
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    const data = await r.json();
+    const p = data && data[0];
+    if (!p) { showToast('Profil introuvable', 'error'); return; }
+
+    // Remplir le formulaire
+    const set = function(id, val) { const el2 = document.getElementById(id); if (el2 && val) el2.value = val; };
+    set('cl-nom', p.raison || p.nom);
+    set('cl-tel', p.tel);
+    set('cl-email', p.email);
+    set('cl-adresse', (p.adresse || '') + (p.ville ? ', ' + p.ville : ''));
+    set('cl-ice', p.ice);
+    set('cl-identif', p.identifiant_fiscal);
+    set('cl-note', 'Client BaniPay · ' + (p.secteur || ''));
+
+    // Stocker le lien pour la fiche client
+    window._clientLienBaniPay = lien.startsWith('http') ? lien : window.location.origin + window.location.pathname + '?profil=' + profilId;
+    window._clientRefId = p.id;
+
+    if (document.getElementById('cl-lien-import')) {
+      document.getElementById('cl-lien-import').value = '';
+      document.getElementById('cl-lien-import').style.background = '#ECFDF5';
+    }
+    showToast('✅ Profil importé : ' + (p.raison || p.nom), 'success');
+
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
 }
