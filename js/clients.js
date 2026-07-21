@@ -470,3 +470,16 @@ async function importerClientVieLien() {
     showToast('Erreur: ' + e.message, 'error');
   }
 }
+
+function ouvrirMsgClient() {
+  const c = STATE.currentClient;
+  if (!c) return;
+  // Find conversation with this client
+  // Client might be a BaniPay entreprise (reference_id) or just a contact
+  if (c.reference_id) {
+    // BaniPay client - need to find their email and start conv
+    demarrerConversation(c.reference_id, c.email, sb.user?.email);
+  } else {
+    showToast('Ce client n a pas de compte BaniPay', 'error');
+  }
+}
