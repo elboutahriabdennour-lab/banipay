@@ -1326,18 +1326,24 @@
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <!-- Logo -->
       <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Bani<span style="color:#818CF8">Pay</span></div>
-      <!-- Droite: Mon espace + Avatar -->
-      <div style="display:flex;align-items:center;gap:8px">
-        <!-- Bouton Mon espace (ses propres factures/devis) -->
-        <button onclick="basculerModeEntreprise()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:1px">
-          <span style="font-size:14px">🧾</span>
-          <span style="font-size:9px">Mon espace</span>
-        </button>
-        <!-- Avatar → profil comptable -->
-        <div onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="display:flex;flex-direction:column;align-items:center;cursor:pointer">
-          <div id="comptable-avatar" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff">C</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:1px">Profil</div>
+      <!-- Droite: actions -->
+      <div style="display:flex;align-items:center;gap:6px">
+        <!-- Messages -->
+        <div onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px">
+          💬
+          <span id="cpt-msg-badge" style="position:absolute;top:-2px;right:-2px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center">!</span>
         </div>
+        <!-- Notifications -->
+        <div onclick="switchCptNav('notifs')" style="position:relative;cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px">
+          🔔
+          <span id="cpt-notif-badge" style="position:absolute;top:-2px;right:-2px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center"></span>
+        </div>
+        <!-- Mon espace -->
+        <div onclick="basculerModeEntreprise()" style="cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px" title="Mes factures & devis">
+          🧾
+        </div>
+        <!-- Avatar → profil -->
+        <div id="comptable-avatar" onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;cursor:pointer">C</div>
       </div>
     </div>
     <!-- Nom et email -->
@@ -1352,10 +1358,7 @@
       <button id="cpt-nav-traiter" onclick="switchCptNav('traiter')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📥 À traiter</button>
       <button id="cpt-nav-historique" onclick="switchCptNav('historique')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📋 Historique</button>
       <button id="cpt-nav-activite" onclick="switchCptNav('activite')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📡 Activité</button>
-      <div style="position:relative;display:inline-flex">
-        <button id="cpt-nav-notifs" onclick="switchCptNav('notifs')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🔔 Notifs</button>
-        <span id="cpt-notif-badge" style="position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center"></span>
-      </div>
+      <button id="cpt-nav-notifs" onclick="switchCptNav('notifs')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🔔 Notifs</button>
     </div>
   </div>
   <!-- Contenu dynamique -->
