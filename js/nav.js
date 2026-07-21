@@ -5,17 +5,14 @@ async function genNotifications() {
   const email = sb.user?.email;
   const uid = sb.user?.id;
 
-  // Factures en retard
   (STATE.factures || []).filter(f => f.statut === 'retard').forEach(f => {
     STATE.notifications.push({ type: 'danger', icon: '⚠️', title: 'Facture ' + f.ref + ' en retard', body: 'Client: ' + f.client });
   });
 
-  // Devis acceptés non lus
   (STATE.devis || []).filter(d => d.statut === 'accepte' && !d.notif_lue).forEach(d => {
     STATE.notifications.push({ type: 'success', icon: '✅', title: 'Devis ' + d.ref + ' accepté', body: 'Client: ' + d.client });
   });
 
-  // Invitations comptable en attente (depuis notifications_app par email destinataire)
   if (email) {
     try {
       const resp = await fetch(
@@ -24,12 +21,11 @@ async function genNotifications() {
       );
       const notifs = await resp.json() || [];
       notifs.forEach(function(n) {
-        STATE.notifications.push({ type: 'info', icon: n.type === 'invitation_comptable' ? '🤝' : '🔔', title: n.titre || '', body: n.corps || '', id: n.id });
+        STATE.notifications.push({ type: 'info', icon: n.type === 'invitation_comptable' ? '🤝' : '🔔', title: n.titre || '', body: n.corps || '', id: n.id, raw: n });
       });
     } catch(e2) {}
   }
 
-  // Badge cloche mis à jour avec le nombre réel de notifications non lues
   const badge = document.getElementById('notif-badge');
   if (badge) {
     const count = STATE.notifications.length;
@@ -50,7 +46,6 @@ async function renderNotifScreen() {
   const uid = sb.user?.id;
   const emailEnt = sb.user?.email;
 
-  // Load invitations from comptables (en_attente)
   let invitationsCpt = [];
   try {
     const resp = await fetch(
@@ -102,13 +97,20 @@ async function renderNotifScreen() {
   }
 
   if (allNotifs.length) {
-    const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅' };
+    const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝' };
     html += allNotifs.map(function(n) {
+      const isDoc = n.type === 'facture_recue' || n.type === 'devis_recu';
+      let meta = {};
+      try { meta = JSON.parse((n.raw && n.raw.meta) || '{}'); } catch(e3) {}
       return '<div class="notif-item' + (n.lue ? '' : ' notif-unread') + '">' +
         '<div class="notif-ico">' + (typeIco[n.type] || '🔔') + '</div>' +
-        '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.titre||'') + '</div>' +
-        '<div class="notif-msg">' + escapeHTML(n.corps||'') + '</div></div>' +
-      '</div>';
+        '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
+        '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
+        (isDoc ? '<div style="display:flex;gap:6px;margin-top:8px">' +
+          '<button class="btn-doc-accept" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
+          '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
+        '</div>' : '') +
+        '</div></div>';
     }).join('');
   }
 
@@ -166,6 +168,41 @@ async function renderNotifScreen() {
       });
       showToast('Invitation refusée', 'success');
       renderNotifScreen();
+      return;
+    }
+
+    // Nouveau: accepter/refuser une facture/devis reçu via BaniPay directement depuis la notification
+    const btnDA = e.target.closest('.btn-doc-accept');
+    const btnDR = e.target.closest('.btn-doc-refuse');
+    if (btnDA || btnDR) {
+      const target = btnDA || btnDR;
+      const t = target.dataset.type;
+      const docId = target.dataset.docid;
+      const nid = target.dataset.nid;
+      if (!t || !docId) return;
+      const table = t === 'devis' ? 'devis' : 'factures';
+      const champ = t === 'devis' ? 'statut' : 'reponse_client';
+      const valeur = btnDA ? (t === 'devis' ? 'accepte' : 'acceptee') : (t === 'devis' ? 'refuse' : 'refusee');
+      const patchBody = {}; patchBody[champ] = valeur;
+      try {
+        await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
+          method: 'PATCH',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(patchBody)
+        });
+        if (nid) {
+          await fetch(SUPABASE_URL + '/rest/v1/notifications_app?id=eq.' + nid, {
+            method: 'PATCH',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lue: true })
+          });
+        }
+        showToast(btnDA ? '✅ Accepté' : '❌ Refusé', 'success');
+        await genNotifications();
+        renderNotifScreen();
+      } catch(e4) {
+        showToast('Erreur: ' + e4.message, 'error');
+      }
     }
   }, { once: true });
 }
