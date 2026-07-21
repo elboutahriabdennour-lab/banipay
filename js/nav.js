@@ -186,7 +186,7 @@ function goScreen(name) {
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
 
   // Show/hide bottom nav
-  const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','dashboard-comptable','pdf-viewer'];
+  const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','dashboard-comptable','pdf-viewer','chat'];
   const _bottomNav = document.querySelector('.bottom-nav');
   if (_bottomNav) _bottomNav.style.display = _noNav.includes(name) ? 'none' : 'flex';
 
@@ -206,6 +206,8 @@ function goScreen(name) {
     'nouvelle-achat': function() { calcAchatTotaux(); },
     'avoir-list': renderAvoirList,
     'releves': function() { loadReleves(); },
+    'messages': function() { loadConversations().then(renderConversations); },
+    'chat': function() {},
     'dashboard': renderDashboard,
     'nouvelle': initNouvelle,
     'devis-list': renderDevisList,
