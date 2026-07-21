@@ -984,6 +984,10 @@ async function basculerModeEntreprise() {
 
 function revenirEspaceComptable() {
   CPT.modeEntreprise = false;
+  // Hide the retour button and persistent pill
+  const btn = document.getElementById('btn-retour-comptable');
+  if (btn) btn.style.display = 'none';
+  document.getElementById('cpt-mode-pill')?.remove();
   document.getElementById('mode-entreprise-banner')?.remove();
   document.body.style.paddingTop = '';
   // Reset STATE to avoid mixing data
@@ -1601,29 +1605,18 @@ function basculerModeDevis() {
 }
 
 function appendModeBanner() {
-  // Remove any existing banner
-  document.getElementById('mode-entreprise-banner')?.remove();
-  // Add a small pill button in the topbar next to the message button
-  const topbar = document.querySelector('#screen-dashboard .topbar');
-  if (!topbar) {
-    // Fallback: small fixed pill
-    const pill = document.createElement('div');
-    pill.id = 'mode-entreprise-banner';
-    pill.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;background:#4338CA;color:#fff;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
-    pill.innerHTML = '← Espace comptable';
-    pill.onclick = revenirEspaceComptable;
-    document.body.appendChild(pill);
-    return;
-  }
-  const btn = document.createElement('button');
-  btn.id = 'mode-entreprise-banner';
-  btn.style.cssText = 'background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-right:6px';
-  btn.innerHTML = '← Comptable';
-  btn.onclick = revenirEspaceComptable;
-  // Insert before first child of topbar-right
-  const right = topbar.querySelector('.topbar-right');
-  if (right) right.insertBefore(btn, right.firstChild);
-  else topbar.appendChild(btn);
+  // Show dedicated button in dashboard topbar
+  const btn = document.getElementById('btn-retour-comptable');
+  if (btn) btn.style.display = 'inline-flex';
+
+  // Also add a persistent fixed pill for other screens
+  document.getElementById('cpt-mode-pill')?.remove();
+  const pill = document.createElement('div');
+  pill.id = 'cpt-mode-pill';
+  pill.style.cssText = 'position:fixed;bottom:90px;right:16px;z-index:9999;background:#4338CA;color:#fff;border-radius:24px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(67,56,202,0.4);display:flex;align-items:center;gap:6px';
+  pill.innerHTML = '📊 Espace comptable';
+  pill.onclick = revenirEspaceComptable;
+  document.body.appendChild(pill);
 }
 
 
