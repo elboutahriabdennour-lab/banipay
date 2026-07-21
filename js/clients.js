@@ -45,13 +45,11 @@ async function importerClientDepuisLien() {
   const lien = input?.value.trim();
   if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
 
-  // Extract profil ID from URL
   let profilId = null;
   try {
     const url = new URL(lien);
     profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
   } catch(e) {
-    // Try as raw ID
     profilId = lien.trim();
   }
 
@@ -68,13 +66,11 @@ async function importerClientDepuisLien() {
 
     if (!p) { showToast('Profil introuvable', 'error'); return; }
 
-    // Check if client already exists
     const exists = STATE.clients.find(c =>
       c.nom === p.raison || (p.ice && c.ice === p.ice)
     );
     if (exists) { showToast('Ce client existe déjà : ' + p.raison, 'error'); return; }
 
-    // Create client from profil
     const newClient = {
       user_id: sb.user.id,
       nom: p.raison || '',
@@ -83,6 +79,7 @@ async function importerClientDepuisLien() {
       adresse: p.adresse ? (p.adresse + (p.ville ? ', ' + p.ville : '')) : '',
       ice: p.ice || '',
       notes: 'Importé via profil BaniPay',
+      reference_id: p.id || null,
       created_at: new Date().toISOString(),
     };
 
@@ -99,8 +96,6 @@ async function importerClientDepuisLien() {
 }
 
 async function importerClientDepuisQRImage(event) {
-  // On iOS, the camera captures a photo but we can't decode QR natively
-  // Best approach: show the image and ask user to copy the URL manually
   showToast('📷 Prenez une photo du QR, puis copiez le lien affiché', 'success');
   event.target.value = '';
 }
@@ -114,15 +109,12 @@ async function chargerClientDepuisLien(lien) {
 
 function rechercherClientOuLien() {
   const val = el('search-client-inp')?.value || '';
-  // If user pasted a BaniPay link, trigger the profile loader
   if (val.includes('?profil=') || val.match(/BP-[A-Z0-9]+/)) {
-    // Auto-fill the QR input and trigger load
     setTimeout(async () => {
       const input = el('search-client-inp');
       if (!input) return;
       const lien = input.value.trim();
       input.value = '';
-      // Create a virtual scanner session
       window._qrLinkToLoad = lien;
       const fakeInput = document.createElement('input');
       fakeInput.id = 'qr-link-input';
@@ -201,6 +193,7 @@ async function sauvegarderClient() {
 function openDetailClient(id) {
   STATE.currentClient = STATE.clients.find(x=>x.id===id);
   if (!STATE.currentClient) return;
+  window._currentClientId = id; // FIX: variable manquante — bouton Supprimer était cassé
   const c = STATE.currentClient;
   window._clientNom = c.nom;
   setEl('dc-nom', c.nom);
@@ -229,7 +222,6 @@ function openDetailClient(id) {
         <div class="card-end"><div class="card-amt">${fmt(f.ttc)} MAD</div><div class="badge b-${f.statut}">${badgeF(f.statut)}</div></div>
       </div>`).join('') || '<div style="color:#94A3B8;font-size:13px;padding:8px 0">Aucune facture</div>';
   }
-  // Afficher lien BaniPay si client est une entreprise BaniPay
   const lienSection = document.getElementById('dc-lien-section');
   const lienEl = document.getElementById('dc-lien-banipay');
   const btnCopier = document.getElementById('dc-btn-copier-lien');
@@ -261,16 +253,16 @@ function openDetailClient(id) {
 
 async function supprimerClient(id) {
   if (!id || !confirm('Supprimer ce client ?')) return;
-  await sb.del('clients',`id=eq.${id}&user_id=eq.${sb.user.id}`);
-  STATE.clients = STATE.clients.filter(c=>c.id!==id);
-  updateClientDatalist();
-  showToast('Client supprimé');
-  goScreen('clients');
+  try {
+    await sb.del('clients',`id=eq.${id}&user_id=eq.${sb.user.id}`);
+    STATE.clients = STATE.clients.filter(c=>c.id!==id);
+    updateClientDatalist();
+    showToast('Client supprimé', 'success');
+    goScreen('clients');
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  }
 }
-
-// ============================================================
-// PRODUITS
-// ============================================================
 
 function ouvrirModifClient(id) {
   const c = STATE.clients.find(x => x.id === id) || STATE.currentClient;
@@ -316,31 +308,18 @@ async function sauvegarderModifClient() {
 
 function modifierClient(id) { ouvrirModifClient(id); }
 
-// ============================================================
-// MODIFIER PRODUIT
-// ============================================================
-
-
-
-// ============================================================
-// IMPORT CLIENT DEPUIS LIEN / QR DANS LE FORMULAIRE
-// ============================================================
-
 async function importerDepuisLienForm() {
   const lien = (el('import-client-lien')?.value || '').trim();
   if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
 
-  // Extraire l'ID profil depuis l'URL
   let profilId = null;
   try {
     const url = new URL(lien);
     profilId = url.searchParams.get('profil') || url.searchParams.get('portail') || url.searchParams.get('doc');
     if (!profilId) {
-      // Try to extract from path or last segment
       profilId = lien.split('profil=')[1]?.split('&')[0] || lien.split('portail=')[1]?.split('&')[0];
     }
   } catch(e) {
-    // If not a valid URL, try as raw ID
     profilId = lien.includes('=') ? lien.split('=').pop() : lien;
   }
 
@@ -349,14 +328,12 @@ async function importerDepuisLienForm() {
   showToast('⏳ Chargement du profil...');
 
   try {
-    // Fetch from profils_entreprise by id_unique
     const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + encodeURIComponent(profilId) + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const data = await r.json();
     let p = data && data[0];
 
-    // If not found by id_unique, try by id
     if (!p) {
       const r2 = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + profilId + '&select=*', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -367,11 +344,9 @@ async function importerDepuisLienForm() {
 
     if (!p) { showToast('Profil introuvable', 'error'); return; }
 
-    // Remplir le formulaire automatiquement
     remplirFormulaireClient(p);
     showToast('✅ Profil importé : ' + (p.raison || ''), 'success');
 
-    // Vider le champ lien
     if (el('import-client-lien')) el('import-client-lien').value = '';
 
   } catch(e) {
@@ -380,7 +355,6 @@ async function importerDepuisLienForm() {
 }
 
 function remplirFormulaireClient(p) {
-  // Remplir tous les champs disponibles
   const fields = {
     'cl-nom': p.raison || '',
     'cl-tel': p.tel || '',
@@ -396,7 +370,6 @@ function remplirFormulaireClient(p) {
     const inp = el(id);
     if (inp && fields[id]) {
       inp.value = fields[id];
-      // Highlight filled fields
       inp.style.background = '#ECFDF5';
       inp.style.borderColor = '#059669';
       setTimeout(function() {
@@ -406,22 +379,15 @@ function remplirFormulaireClient(p) {
     }
   });
 
-  // Scroll to first filled field
   const firstField = el('cl-nom');
   if (firstField) firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function importerDepuisQRCodeForm(event) {
-  // On iOS, camera captures image - we can't decode QR natively without a library
-  // Show tip to user
   showToast('Prenez la photo, puis copiez le lien manuellement si besoin', 'success');
   event.target.value = '';
 }
 
-
-// ============================================================
-// IMPORT CLIENT VIA LIEN BANIPAY
-// ============================================================
 
 async function importerClientVieLien() {
   const lien = (document.getElementById('cl-lien-import')?.value || '').trim();
@@ -446,7 +412,6 @@ async function importerClientVieLien() {
     const p = data && data[0];
     if (!p) { showToast('Profil introuvable', 'error'); return; }
 
-    // Remplir le formulaire
     const set = function(id, val) { const el2 = document.getElementById(id); if (el2 && val) el2.value = val; };
     set('cl-nom', p.raison || p.nom);
     set('cl-tel', p.tel);
@@ -456,7 +421,6 @@ async function importerClientVieLien() {
     set('cl-identif', p.identifiant_fiscal);
     set('cl-note', 'Client BaniPay · ' + (p.secteur || ''));
 
-    // Stocker le lien pour la fiche client
     window._clientLienBaniPay = lien.startsWith('http') ? lien : window.location.origin + window.location.pathname + '?profil=' + profilId;
     window._clientRefId = p.id;
 
@@ -474,10 +438,7 @@ async function importerClientVieLien() {
 function ouvrirMsgClient() {
   const c = STATE.currentClient;
   if (!c) return;
-  // Find conversation with this client
-  // Client might be a BaniPay entreprise (reference_id) or just a contact
   if (c.reference_id) {
-    // BaniPay client - need to find their email and start conv
     demarrerConversation(c.reference_id, c.email, sb.user?.email);
   } else {
     showToast('Ce client n a pas de compte BaniPay', 'error');
