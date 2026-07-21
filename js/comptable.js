@@ -229,7 +229,6 @@ function renderFicheEntreprise() {
           '<div style="font-size:10px;color:#9333EA">TVA à vérifier</div>' +
         '</div>' +
       '</div>' +
-      // Barres de progression
       '<div style="margin-bottom:8px">' +
         '<div style="display:flex;justify-content:space-between;font-size:11px;color:#64748B;margin-bottom:4px"><span>Lettrage</span><span style="font-weight:700">' + txL + '%</span></div>' +
         '<div style="height:8px;background:#F1F5F9;border-radius:4px"><div style="height:100%;background:#D97706;border-radius:4px;width:' + txL + '%"></div></div>' +
@@ -323,7 +322,6 @@ function renderCptFactures() {
 
   list.innerHTML =
     creerFiltreCpt() +
-    // En-tête colonnes
     '<div style="display:grid;grid-template-columns:1fr 36px 36px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1F5F9">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#94A3B8">Facture</div>' +
       '<div style="font-size:11px;font-weight:800;color:#059669;text-align:center">L</div>' +
@@ -333,7 +331,6 @@ function renderCptFactures() {
       const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id); }) || {};
       const remarques = (CPT.currentRemarques || []).filter(function(r) { return String(r.facture_id) === String(fac.id) && r.statut === 'ouverte'; });
       return '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:12px 16px;border-bottom:1px solid #F8FAFC;align-items:center">' +
-        // Facture info (cliquable pour ouvrir détail)
         '<div class="fac-row-click" data-fid="' + fac.id + '" style="cursor:pointer">' +
           '<div style="font-size:12px;font-weight:700">' + escapeHTML(fac.ref || '') + '</div>' +
           '<div style="font-size:11px;color:#64748B">' + escapeHTML(fac.client || '') + ' · ' + fmt(fac.ttc || 0) + ' MAD</div>' +
@@ -344,27 +341,22 @@ function renderCptFactures() {
             '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.tva_verifie ? '#9333EA' : '#E2E8F0') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#94A3B8') + '">T</span>' +
           '</div>' +
         '</div>' +
-        // Checkbox lettrage (contrôle rapide inline)
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#059669' : '#F1F5F9') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CBD5E1') + '">L</button>' +
         '</div>' +
-        // Checkbox TVA (contrôle rapide inline)
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-tva" data-facid="' + fac.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.tva_verifie ? '#9333EA' : '#F1F5F9') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.tva_verifie ? '#fff' : '#CBD5E1') + '">T</button>' +
         '</div>' +
       '</div>';
     }).join('') : '<div class="empty"><div class="empty-ico">🧾</div><div class="empty-title">Aucune facture</div></div>');
 
-  // Event delegation for inline controls
   list.addEventListener('click', function(e) {
     const row = e.target.closest('.fac-row-click');
     if (row) {
-      // Open PDF directly + controls below
       const facId = row.dataset.fid;
       const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
       if (fac) {
         ouvrirPDFComptable(fac, CPT.currentProfil || {});
-        // Small delay then show controls overlay at bottom
         setTimeout(function() { attacherControlsToViewer(facId); }, 300);
       }
       return;
@@ -392,7 +384,6 @@ async function toggleLettrageRapide(factureId, btn) {
   }
   ajouterHistorique(isLettree ? 'Lettrage retiré — ' : 'Lettrage effectué — ', factureId);
   showToast('Lettrage mis à jour', 'success');
-  // Refresh état entreprise
   const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
   if (inv) { inv._etat = calculerEtat(inv); }
 }
@@ -549,7 +540,6 @@ async function renderVueATraiter() {
   const list = el('cpt-ent-content');
   if (!list) return;
 
-  // Collecter tous les éléments à traiter de toutes les entreprises
   const items = [];
 
   CPT.entreprises.forEach(function(inv) {
@@ -558,28 +548,24 @@ async function renderVueATraiter() {
     const ctrls = inv._controles || [];
     const rems = inv._remarques || [];
 
-    // Factures non lettrées
     const lettresIds = ctrls.filter(function(c) { return c.lettre; }).map(function(c) { return String(c.facture_id); });
     const nonLettrees = facs.filter(function(f) { return !lettresIds.includes(String(f.id)); });
     if (nonLettrees.length) {
       items.push({ entreprise: p.raison || 'Entreprise', type: 'lettrage', count: nonLettrees.length, eid: inv.entreprise_id, label: nonLettrees.length + ' facture(s) non lettrée(s)', color: '#D97706', bg: '#FFFBEB' });
     }
 
-    // TVA non vérifiée
     const tvaIds = ctrls.filter(function(c) { return c.tva_verifie; }).map(function(c) { return String(c.facture_id); });
     const tvaKo = facs.filter(function(f) { return !tvaIds.includes(String(f.id)); });
     if (tvaKo.length) {
       items.push({ entreprise: p.raison || 'Entreprise', type: 'tva', count: tvaKo.length, eid: inv.entreprise_id, label: tvaKo.length + ' TVA non vérifiée(s)', color: '#9333EA', bg: '#F3E8FF' });
     }
 
-    // Remarques ouvertes
     const remsOuvertes = rems.filter(function(r) { return r.statut === 'ouverte'; });
     if (remsOuvertes.length) {
       items.push({ entreprise: p.raison || 'Entreprise', type: 'remarque', count: remsOuvertes.length, eid: inv.entreprise_id, label: remsOuvertes.length + ' remarque(s) ouverte(s)', color: '#EF4444', bg: '#FEF2F2' });
     }
   });
 
-  // KPIs globaux à traiter
   const totalLettrage = items.filter(function(i) { return i.type === 'lettrage'; }).reduce(function(s, i) { return s + i.count; }, 0);
   const totalTVA = items.filter(function(i) { return i.type === 'tva'; }).reduce(function(s, i) { return s + i.count; }, 0);
   const totalRem = items.filter(function(i) { return i.type === 'remarque'; }).reduce(function(s, i) { return s + i.count; }, 0);
@@ -617,7 +603,6 @@ async function renderVueATraiter() {
       ) +
     '</div>';
 
-  // Event delegation for "Voir" buttons
   list.addEventListener('click', function(e) {
     const btn = e.target.closest('.btn-voir-ent');
     if (btn) {
@@ -645,7 +630,6 @@ function ajouterHistorique(action, factureId) {
     action: action + ref,
     comptable: nom
   });
-  // Garder max 100 entrées
   if (CPT.historique.length > 100) CPT.historique = CPT.historique.slice(0, 100);
 }
 
@@ -755,7 +739,6 @@ async function ouvrirGestionEntreprises() {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  // Events
   document.getElementById('btn-close-gestion').onclick = function() { overlay.remove(); };
   document.getElementById('btn-send-invite-ent').onclick = function() { envoyerInvitationEntreprise(); };
 
@@ -825,7 +808,6 @@ function _cptEmptyState() {
 }
 
 function switchCptNav(tab) {
-  // Update nav buttons
   ['dashboard','entreprises','traiter','historique','activite','notifs'].forEach(function(t) {
     const btn = document.getElementById('cpt-nav-' + t);
     if (!btn) return;
@@ -842,7 +824,6 @@ function switchCptNav(tab) {
   if (!content) return;
 
   if (tab === 'dashboard') {
-    // KPIs clients uniquement (pas les propres factures du comptable)
     const totalFac = (CPT.allFactures || []).length;
     const nonLettres = totalFac - (CPT.allControles || []).filter(function(c){return c.lettre;}).length;
     const tvaKo = totalFac - (CPT.allControles || []).filter(function(c){return c.tva_verifie;}).length;
@@ -851,7 +832,6 @@ function switchCptNav(tab) {
     const nbEnts = (CPT.entreprises||[]).length;
 
     content.innerHTML =
-      // KPIs
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 16px 8px">' +
         kpiBox(nbEnts, 'Entreprises', '#4338CA', '#EEF2FF') +
         kpiBox(docsAControler, 'À contrôler', '#2563EB', '#EFF6FF') +
@@ -859,10 +839,8 @@ function switchCptNav(tab) {
         kpiBox(tvaKo, 'TVA à vérifier', '#9333EA', '#F3E8FF') +
       '</div>' +
 
-      // Message si pas d'entreprises
       (nbEnts === 0 ? _cptEmptyState() : '') +
 
-      // Liste entreprises
       '<div style="padding:0 16px 4px;display:flex;justify-content:space-between;align-items:center">' +
         '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8">Mes entreprises</div>' +
         '<div style="display:flex;gap:6px">' +
@@ -874,7 +852,6 @@ function switchCptNav(tab) {
       '<div id="cpt-entreprises-list" style="padding:0 16px"></div>';
 
     renderListeEntreprises();
-    // Event delegation for buttons
     content.addEventListener('click', function(e) {
       if (e.target.closest('.btn-go-profil-cpt')) { renderComptableProfil(); goScreen('comptable-profil', null); }
       if (e.target.closest('.btn-tri-action')) { trierEntreprises('action'); }
@@ -898,7 +875,6 @@ function switchCptNav(tab) {
     renderListeEntreprises();
 
   } else if (tab === 'traiter') {
-    // Use cpt-ent-content temporarily
     const tmp = document.createElement('div');
     tmp.id = 'cpt-ent-content';
     content.innerHTML = '';
@@ -931,7 +907,6 @@ function kpiBox(val, label, color, bg) {
   '</div>';
 }
 
-// Override renderComptableDashboard to use new navigation
 function renderComptableDashboard() {
   const email = sb.user?.email || '';
   const nom = sb.user?.user_metadata?.nom || email.split('@')[0] || 'Comptable';
@@ -942,10 +917,8 @@ function renderComptableDashboard() {
   setEl('cpt-nom-display', nom + (cabinet ? ' · ' + cabinet : ''));
   setEl('cpt-email-display', email);
   setEl('cpt-nb-entreprises', (CPT.entreprises||[]).length + ' entreprise(s)');
-  // Charger badge notifications
   chargerNotificationsComptable();
 
-  // Load remarques for all entreprises
   CPT.entreprises.forEach(function(inv) {
     inv._remarques = inv._remarques || [];
   });
@@ -958,39 +931,27 @@ function renderComptableDashboard() {
 // ============================================================
 
 async function basculerModeEntreprise() {
-  // Le comptable bascule vers l'interface entreprise
-  // ses propres données (factures, devis, clients...)
+  // Le comptable bascule vers l'interface entreprise — ses propres données
   CPT.modeEntreprise = true;
 
-  // Charger ses données personnelles si pas encore fait
   if (!STATE.factures || !STATE.factures.length) {
     showToast('\u23f3 Chargement...', 'success');
     await loadAll();
   }
 
-  // Afficher un bandeau indiquant qu'on est en mode entreprise
-  const banner = document.createElement('div');
-  banner.id = 'mode-entreprise-banner';
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#2563EB;color:#fff;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600';
-  banner.innerHTML = '🏢 Mode Entreprise — Vos propres factures' +
-    '<button onclick="revenirEspaceComptable()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">← Retour comptable</button>';
-  document.body.appendChild(banner);
-
-  // Pousser le contenu vers le bas
-  document.body.style.paddingTop = '36px';
+  // Pill flottante discrète (remplace l'ancienne bannière pleine largeur)
+  appendModeBanner();
 
   goScreen('dashboard');
 }
 
 function revenirEspaceComptable() {
   CPT.modeEntreprise = false;
-  // Hide the retour button and persistent pill
   const btn = document.getElementById('btn-retour-comptable');
   if (btn) btn.style.display = 'none';
   document.getElementById('cpt-mode-pill')?.remove();
-  document.getElementById('mode-entreprise-banner')?.remove();
+  document.getElementById('mode-entreprise-banner')?.remove(); // nettoyage legacy si présent
   document.body.style.paddingTop = '';
-  // Reset STATE to avoid mixing data
   STATE.factures = []; STATE.devis = []; STATE.clients = [];
   STATE.produits = []; STATE.avoirs = []; STATE.achats = [];
   goScreen('comptable');
@@ -1014,7 +975,6 @@ async function renderActiviteClients() {
       return;
     }
 
-    // Charger toutes les factures et devis récents (7 derniers jours)
     const dateLimit = new Date();
     dateLimit.setDate(dateLimit.getDate() - 7);
     const dateLimitStr = dateLimit.toISOString().split('T')[0];
@@ -1026,7 +986,6 @@ async function renderActiviteClients() {
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
     ]);
 
-    // Fusionner et trier par date
     const events = [];
 
     (recentFac || []).forEach(function(f) {
@@ -1041,7 +1000,6 @@ async function renderActiviteClients() {
       events.push({ date: d.created_at, type: 'devis', icon: '📝', label: 'Nouveau devis ' + (d.ref || ''), sous: d.client || '', montant: fmt(d.ttc || 0) + ' MAD', entreprise: entreprise, statut: d.statut, eid: d.user_id });
     });
 
-    // Trier par date décroissante
     events.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
 
     if (!events.length) {
@@ -1097,7 +1055,6 @@ async function declarerTVAMois(mois) {
   const email = sb.user?.email;
 
   try {
-    // Marquer toutes les factures du mois comme TVA vérifiée
     const facsMois = (CPT.currentFactures || []).filter(function(f) {
       return (f.date_emission || '').startsWith(mois);
     });
@@ -1111,11 +1068,9 @@ async function declarerTVAMois(mois) {
       });
     }
 
-    // Calculer TVA totale du mois
     const tvaTotale = facsMois.filter(function(f) { return f.statut === 'payee'; })
       .reduce(function(s, f) { return s + (Number(f.tva) || 0); }, 0);
 
-    // Notifier l'entreprise
     await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
       method: 'POST',
       headers: {
@@ -1175,7 +1130,6 @@ async function ajouterRemarque(factureId) {
     });
 
     if (r.ok) {
-      // Notifier l'entreprise
       const fac = (CPT.currentFactures || []).find(function(f) { return f.id === factureId; });
       await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
         method: 'POST',
@@ -1287,13 +1241,11 @@ async function ouvrirFactureComptable(factureId) {
 
   CPT.currentFactureId = factureId;
 
-  // Marquer comme consulte
   const ctrl = (CPT.currentControles || []).find(function(c2) { return String(c2.facture_id) === String(factureId); }) || {};
   if (!ctrl.consulte) {
     await sauvegarderControle(factureId, { consulte: true, consulte_at: new Date().toISOString() });
   }
 
-  // Charger remarques
   let remarques = [];
   try {
     const resp = await fetch(
@@ -1381,15 +1333,15 @@ async function ouvrirFactureComptable(factureId) {
 async function sauvegarderControle(factureId, data) {
   const uid = sb.user?.id;
   if (!uid) return;
-  try {
-    const payload = Object.assign({
-      facture_id: String(factureId),
-      entreprise_id: CPT.currentEntrepriseId,
-      comptable_id: uid,
-      comptable_email: sb.user?.email,
-    }, data);
+  const payload = Object.assign({
+    facture_id: String(factureId),
+    entreprise_id: CPT.currentEntrepriseId,
+    comptable_id: uid,
+    comptable_email: sb.user?.email,
+  }, data);
 
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
+  try {
+    let resp = await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -1399,11 +1351,30 @@ async function sauvegarderControle(factureId, data) {
       },
       body: JSON.stringify(payload)
     });
+
+    // Fallback PATCH si le POST échoue
     if (!resp.ok && resp.status !== 201 && resp.status !== 204) {
-      const errText = await resp.text();
-      console.error('sauvegarderControle error:', resp.status, errText);
-      showToast('Erreur DB: ' + resp.status, 'error');
-      return;
+      console.warn('sauvegarderControle: POST échoué (' + resp.status + '), tentative PATCH...');
+      resp = await fetch(
+        SUPABASE_URL + '/rest/v1/controles_factures?facture_id=eq.' + encodeURIComponent(String(factureId)) +
+        '&entreprise_id=eq.' + encodeURIComponent(CPT.currentEntrepriseId),
+        {
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + sb.token,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(data)
+        }
+      );
+      if (!resp.ok && resp.status !== 204) {
+        const errText = await resp.text();
+        console.error('sauvegarderControle error (PATCH):', resp.status, errText);
+        showToast('Erreur DB: ' + resp.status, 'error');
+        return;
+      }
     }
 
     // Update local state
@@ -1412,7 +1383,6 @@ async function sauvegarderControle(factureId, data) {
     if (local) { Object.assign(local, data); }
     else { CPT.currentControles.push(Object.assign({ facture_id: String(factureId) }, data)); }
 
-    // Update in entreprise cache
     const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
     if (inv) {
       if (!inv._controles) inv._controles = [];
@@ -1421,7 +1391,6 @@ async function sauvegarderControle(factureId, data) {
       else { inv._controles.push(Object.assign({ facture_id: String(factureId) }, data)); }
       inv._etat = calculerEtat(inv);
     }
-    // Also update CPT.allControles (global cache)
     if (!CPT.allControles) CPT.allControles = [];
     const globalCtrl = CPT.allControles.find(function(c4) { return String(c4.facture_id) === String(factureId); });
     if (globalCtrl) { Object.assign(globalCtrl, data); }
@@ -1486,26 +1455,22 @@ function renderComptableProfil() {
   const email = user.email || '';
   const uid = user.id || '';
 
-  // Avatar
   const av = el('cpt-profil-av');
   if (av) av.textContent = nom.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'C';
   setEl('cpt-profil-nom', nom);
   setEl('cpt-profil-cabinet', cabinet ? '🏛️ ' + cabinet : 'Comptable BaniPay');
   setEl('cpt-profil-email', email);
 
-  // Lien profil
   const lienId = 'CPT-' + uid.substr(0,8).toUpperCase();
   const lien = window.location.origin + window.location.pathname + '?comptable=' + lienId;
   setEl('cpt-lien-display', lien);
 
-  // QR code
   const qrContainer = el('cpt-qr-container');
   if (qrContainer) {
     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(lien);
     qrContainer.innerHTML = '<img src="' + qrUrl + '" style="border-radius:10px;border:3px solid #EEF2FF" width="140" height="140">';
   }
 
-  // Infos
   const infos = el('cpt-profil-infos');
   if (infos) {
     const rows = [
@@ -1550,7 +1515,6 @@ async function envoyerInvitationDepuisProfil() {
   const nomCpt = sb.user?.user_metadata?.nom || emailCpt;
 
   try {
-    // 1. Créer invitation en DB
     await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
       method: 'POST',
       headers: {
@@ -1567,7 +1531,6 @@ async function envoyerInvitationDepuisProfil() {
       })
     });
 
-    // 2. Créer notification dans notifications_app pour l'entreprise
     await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
       method: 'POST',
       headers: {
@@ -1611,11 +1574,11 @@ function basculerModeDevis() {
 }
 
 function appendModeBanner() {
-  // Show dedicated button in dashboard topbar
+  // Bouton dédié dans la topbar du dashboard
   const btn = document.getElementById('btn-retour-comptable');
   if (btn) btn.style.display = 'inline-flex';
 
-  // Also add a persistent fixed pill for other screens
+  // Pill flottante discrète, en bas à droite, sur tous les autres écrans
   document.getElementById('cpt-mode-pill')?.remove();
   const pill = document.createElement('div');
   pill.id = 'cpt-mode-pill';
@@ -1631,16 +1594,14 @@ async function chargerNotificationsComptable() {
   if (!email) return;
 
   try {
-    // Charger invitations en attente pour ce comptable
     const resp = await fetch(
       SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.en_attente&order=created_at.desc',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     const invitations = await resp.json() || [];
 
-    // Charger notifications générales
     const respN = await fetch(
-      SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email) + '&lue=eq.false&order=created_at.desc&limit=20',
+      SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&lue=eq.false&order=created_at.desc&limit=20',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     const notifs = await respN.json() || [];
@@ -1648,7 +1609,6 @@ async function chargerNotificationsComptable() {
     CPT.invitationsEnAttente = invitations;
     CPT.notifications = notifs;
 
-    // Badge sur l'icône notification
     const total = invitations.length + notifs.length;
     const badge = document.getElementById('cpt-notif-badge');
     if (badge) {
@@ -1672,7 +1632,6 @@ async function renderNotificationsComptable() {
     '<div style="padding:16px">' +
       '<div style="font-size:16px;font-weight:700;margin-bottom:16px">🔔 Notifications</div>' +
 
-      // Invitations en attente
       (invitations.length ? '<div style="font-size:12px;font-weight:700;color:#4338CA;text-transform:uppercase;margin-bottom:10px">Invitations en attente</div>' +
         invitations.map(function(inv) {
           return '<div style="background:#EEF2FF;border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid #C7D2FE">' +
@@ -1690,7 +1649,6 @@ async function renderNotificationsComptable() {
           '</div>';
         }).join('') : '') +
 
-      // Autres notifications
       (notifs.length ? '<div style="font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin:14px 0 10px">Autres notifications</div>' +
         notifs.map(function(n) {
           return '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #E2E8F0;margin-bottom:8px">' +
@@ -1704,7 +1662,6 @@ async function renderNotificationsComptable() {
 
     '</div>';
 
-  // Events accepter/refuser
   content.addEventListener('click', async function(e) {
     const btnAccept = e.target.closest('.btn-accept-inv');
     if (btnAccept) {
@@ -1721,14 +1678,12 @@ async function renderNotificationsComptable() {
 }
 async function accepterInvitationComptable(invId, entrepriseId) {
   try {
-    // 1. Mettre à jour l'invitation
     await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'acceptee' })
     });
 
-    // 2. Charger le profil de l'entreprise pour l'ajouter comme client
     if (entrepriseId) {
       await ajouterEntrepriseCommeClient(entrepriseId);
     }
@@ -1777,7 +1732,6 @@ function ouvrirPDFComptable(fac, profil) {
     showStamp: fac.statut === 'payee',
     doc_id: fac.id,
     doc_url: window.location.origin + window.location.pathname + '?doc=' + fac.id,
-    // Badge comptable L/T
     badge_lettre: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.lettre; }),
     badge_tva: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.tva_verifie; }),
   });
@@ -1789,7 +1743,6 @@ function ouvrirPDFComptable(fac, profil) {
 
 async function ajouterEntrepriseCommeClient(entrepriseId) {
   try {
-    // Charger le profil de l'entreprise
     const resp = await fetch(
       SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + entrepriseId + '&select=*',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
@@ -1798,15 +1751,13 @@ async function ajouterEntrepriseCommeClient(entrepriseId) {
     const profil = profils[0];
     if (!profil) return;
 
-    // Vérifier si déjà dans les clients
     const existResp = await fetch(
       SUPABASE_URL + '/rest/v1/clients?user_id=eq.' + sb.user.id + '&reference_id=eq.' + entrepriseId + '&limit=1',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     const exist = await existResp.json() || [];
-    if (exist.length > 0) return; // Déjà ajouté
+    if (exist.length > 0) return;
 
-    // Ajouter comme client
     await fetch(SUPABASE_URL + '/rest/v1/clients', {
       method: 'POST',
       headers: {
@@ -1840,11 +1791,9 @@ async function ajouterEntrepriseCommeClient(entrepriseId) {
 // ============================================================
 
 function attacherControlsToViewer(factureId) {
-  // Check if PDF viewer is open
   const viewer = document.getElementById('pdf-fullscreen');
   if (!viewer) return;
 
-  // Remove existing controls bar
   document.getElementById('pdf-cpt-controls')?.remove();
 
   const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(factureId); }) || {};
@@ -1867,7 +1816,6 @@ function attacherControlsToViewer(factureId) {
 
   viewer.appendChild(bar);
 
-  // Events L/T
   bar.querySelector('.btn-l-ctrl').onclick = async function() {
     await toggleLettrageRapide(factureId, this);
     const txt = document.getElementById('pdf-ctrl-lettre-txt');
