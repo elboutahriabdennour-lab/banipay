@@ -159,3 +159,106 @@ function archiverProduit(id) {
 // ============================================================
 // ACOMPTES & PAIEMENTS COMPLETS
 // ============================================================
+// ============================================================
+// ENVOI UNIFIÉ — WhatsApp / Email / Lien / BaniPay
+// ============================================================
+
+window._envoiCourant = null;
+
+function ouvrirModalEnvoi(type, id) {
+  const doc = type === 'facture'
+    ? STATE.factures.find(x => x.id === id)
+    : STATE.devis.find(x => x.id === id);
+  if (!doc) return;
+
+  window._envoiCourant = { type, id, doc };
+  setEl('me-titre', 'Envoyer ' + (type === 'facture' ? 'la facture' : 'le devis') + ' ' + doc.ref);
+  const picker = el('me-banipay-picker');
+  if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
+  el('modal-envoyer')?.classList.add('active');
+}
+
+function envoyerVia(canal) {
+  const ctx = window._envoiCourant;
+  if (!ctx) return;
+  const { type, id, doc } = ctx;
+  const p = STATE.profil || {};
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + (type === 'devis' ? '&type=devis' : '');
+
+  if (canal === 'whatsapp') {
+    const msg = encodeURIComponent(
+      'Bonjour ' + (doc.client||'') + ',\n\n' +
+      'Veuillez trouver ' + (type === 'facture' ? 'notre facture' : 'notre devis') + ' *' + doc.ref + '*.\n\n' +
+      '• Montant TTC : *' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + '*\n\n' +
+      '📎 Consulter et répondre :\n' + docUrl + '\n\n' +
+      'Cordialement,\n' + (p.raison||'') + (p.tel ? '\n📞 ' + p.tel : '')
+    );
+    window.open('https://wa.me/?text=' + msg, '_blank');
+    closeAllModals();
+
+  } else if (canal === 'email') {
+    const sujet = encodeURIComponent((type === 'facture' ? 'Facture ' : 'Devis ') + doc.ref);
+    const corps = encodeURIComponent(
+      'Bonjour ' + (doc.client||'') + ',\n\n' +
+      'Veuillez trouver ci-joint ' + (type === 'facture' ? 'notre facture' : 'notre devis') + ' ' + doc.ref + '.\n' +
+      'Montant TTC : ' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + '\n\n' +
+      'Consulter et répondre : ' + docUrl + '\n\n' +
+      'Cordialement,\n' + (p.raison||'')
+    );
+    window.location.href = 'mailto:' + (doc.client_email || '') + '?subject=' + sujet + '&body=' + corps;
+    closeAllModals();
+
+  } else if (canal === 'lien') {
+    navigator.clipboard?.writeText(docUrl).then(() => showToast('✅ Lien copié !', 'success'));
+    closeAllModals();
+
+  } else if (canal === 'banipay') {
+    afficherPickerClientsBaniPay();
+  }
+}
+
+function afficherPickerClientsBaniPay() {
+  const picker = el('me-banipay-picker');
+  if (!picker) return;
+  const clientsBP = (STATE.clients || []).filter(c => c.reference_id);
+  picker.style.display = 'block';
+  if (!clientsBP.length) {
+    picker.innerHTML = '<div style="font-size:12px;color:#94A3B8;padding:10px;text-align:center">Aucun client avec compte BaniPay lié. Importez-le via son lien de profil dans la fiche client.</div>';
+    return;
+  }
+  picker.innerHTML = clientsBP.map(c =>
+    '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteBaniPay(\'' + c.reference_id + '\',\'' + escapeHTML(c.nom||'').replace(/'/g,"\\'") + '\')">' +
+      '<div class="card-ico" style="background:#EEF2FF">🅿️</div>' +
+      '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.email||'') + '</div></div>' +
+    '</div>'
+  ).join('');
+}
+
+async function envoyerVersCompteBaniPay(destinataireId, destinataireNom) {
+  const ctx = window._envoiCourant;
+  if (!ctx) return;
+  const { type, id, doc } = ctx;
+  const p = STATE.profil || {};
+
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        user_id: destinataireId,
+        type: type === 'facture' ? 'facture_recue' : 'devis_recu',
+        titre: (type === 'facture' ? 'Nouvelle facture' : 'Nouveau devis') + ' — ' + (p.raison || sb.user?.email),
+        corps: (p.raison || sb.user?.email) + ' vous a envoyé ' + (type === 'facture' ? 'la facture' : 'le devis') + ' ' + doc.ref + ' (' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + ').',
+        meta: JSON.stringify({ doc_type: type, doc_id: id, emetteur_id: sb.user?.id, emetteur_raison: p.raison || '' }),
+        lue: false
+      })
+    });
+    showToast('✅ Envoyé à ' + destinataireNom + ' sur BaniPay !', 'success');
+    closeAllModals();
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+  }
+}
