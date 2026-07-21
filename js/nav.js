@@ -2,7 +2,6 @@
 
 async function genNotifications() {
   STATE.notifications = [];
-  const today_d = new Date();
   const email = sb.user?.email;
   const uid = sb.user?.id;
 
@@ -16,11 +15,11 @@ async function genNotifications() {
     STATE.notifications.push({ type: 'success', icon: '✅', title: 'Devis ' + d.ref + ' accepté', body: 'Client: ' + d.client });
   });
 
-  // Invitations comptable en attente (depuis notifications_app par email)
+  // Invitations comptable en attente (depuis notifications_app par email destinataire)
   if (email) {
     try {
       const resp = await fetch(
-        SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email) + '&lue=eq.false&order=created_at.desc&limit=10',
+        SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&lue=eq.false&order=created_at.desc&limit=10',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
       );
       const notifs = await resp.json() || [];
@@ -30,7 +29,13 @@ async function genNotifications() {
     } catch(e2) {}
   }
 
-  badgeF();
+  // Badge cloche mis à jour avec le nombre réel de notifications non lues
+  const badge = document.getElementById('notif-badge');
+  if (badge) {
+    const count = STATE.notifications.length;
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  }
 }
 
 
@@ -54,14 +59,12 @@ async function renderNotifScreen() {
     );
     invitationsCpt = await resp.json() || [];
 
-    // Also check by email (for invitations created before entreprise_id was set)
     if (emailEnt) {
       const resp2 = await fetch(
         SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_email=eq.' + encodeURIComponent(emailEnt) + '&statut=eq.en_attente&order=created_at.desc',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
       );
       const byEmail = await resp2.json() || [];
-      // Merge without duplicates
       byEmail.forEach(function(inv) {
         if (!invitationsCpt.find(function(i) { return i.id === inv.id; })) {
           invitationsCpt.push(inv);
@@ -70,7 +73,6 @@ async function renderNotifScreen() {
     }
   } catch(e2) {}
 
-  // Normal notifications
   const allNotifs = STATE.notifications || [];
 
   if (!allNotifs.length && !invitationsCpt.length) {
@@ -80,7 +82,6 @@ async function renderNotifScreen() {
 
   let html = '';
 
-  // Show pending comptable invitations first
   if (invitationsCpt.length) {
     html += '<div style="padding:10px 20px 4px;font-size:11px;font-weight:700;color:#4338CA;text-transform:uppercase">Invitations en attente</div>';
     html += invitationsCpt.map(function(inv) {
@@ -100,7 +101,6 @@ async function renderNotifScreen() {
     }).join('');
   }
 
-  // Normal notifications
   if (allNotifs.length) {
     const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅' };
     html += allNotifs.map(function(n) {
@@ -114,12 +114,10 @@ async function renderNotifScreen() {
 
   list.innerHTML = html;
 
-  // Event delegation
   list.addEventListener('click', async function(e) {
     const btnA = e.target.closest('.btn-accept-cpt-inv');
     if (btnA) {
       const invId = btnA.dataset.id;
-      // Récupérer l'email du comptable depuis l'invitation
       const invResp = await fetch(
         SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId + '&select=*',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
@@ -133,7 +131,6 @@ async function renderNotifScreen() {
         body: JSON.stringify({ statut: 'acceptee', entreprise_id: sb.user?.id })
       });
 
-      // Ajouter le comptable comme contact dans les clients de l'entreprise
       if (inv && inv.comptable_email) {
         try {
           await fetch(SUPABASE_URL + '/rest/v1/clients', {
@@ -175,7 +172,6 @@ async function renderNotifScreen() {
 
 
 function goScreen(name) {
-  // Auth guard — protected screens require valid session
   const publicScreens = ['auth'];
   if (!publicScreens.includes(name) && !sb.token && !['portail','profil-public'].includes(name)) {
     if (name !== 'auth') { goScreen('auth'); return; }
@@ -185,12 +181,10 @@ function goScreen(name) {
   const sc = el('screen-' + name);
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
 
-  // Show/hide bottom nav
   const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','dashboard-comptable','pdf-viewer','chat'];
   const _bottomNav = document.querySelector('.bottom-nav');
   if (_bottomNav) _bottomNav.style.display = _noNav.includes(name) ? 'none' : 'flex';
 
-  // Update bottom nav active state
   const _navMap = {'dashboard':'nav-home','nouvelle':'nav-home','detail':'nav-home',
     'devis-list':'nav-devis','nouveau-devis':'nav-devis','detail-devis':'nav-devis',
     'clients':'nav-clients','nouveau-client':'nav-clients','detail-client':'nav-clients',
