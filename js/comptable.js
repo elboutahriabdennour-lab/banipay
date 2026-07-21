@@ -1389,7 +1389,7 @@ async function sauvegarderControle(factureId, data) {
       comptable_email: sb.user?.email,
     }, data);
 
-    await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -1399,6 +1399,12 @@ async function sauvegarderControle(factureId, data) {
       },
       body: JSON.stringify(payload)
     });
+    if (!resp.ok && resp.status !== 201 && resp.status !== 204) {
+      const errText = await resp.text();
+      console.error('sauvegarderControle error:', resp.status, errText);
+      showToast('Erreur DB: ' + resp.status, 'error');
+      return;
+    }
 
     // Update local state
     if (!CPT.currentControles) CPT.currentControles = [];
