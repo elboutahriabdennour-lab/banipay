@@ -984,9 +984,11 @@ async function basculerModeEntreprise() {
 
 function revenirEspaceComptable() {
   CPT.modeEntreprise = false;
-  // Supprimer le bandeau
   document.getElementById('mode-entreprise-banner')?.remove();
   document.body.style.paddingTop = '';
+  // Reset STATE to avoid mixing data
+  STATE.factures = []; STATE.devis = []; STATE.clients = [];
+  STATE.produits = []; STATE.avoirs = []; STATE.achats = [];
   goScreen('comptable');
 }
 
@@ -1409,6 +1411,12 @@ async function sauvegarderControle(factureId, data) {
       else { inv._controles.push(Object.assign({ facture_id: String(factureId) }, data)); }
       inv._etat = calculerEtat(inv);
     }
+    // Also update CPT.allControles (global cache)
+    if (!CPT.allControles) CPT.allControles = [];
+    const globalCtrl = CPT.allControles.find(function(c4) { return String(c4.facture_id) === String(factureId); });
+    if (globalCtrl) { Object.assign(globalCtrl, data); }
+    else { CPT.allControles.push(Object.assign({ facture_id: String(factureId), entreprise_id: CPT.currentEntrepriseId }, data)); }
+
   } catch(e) {
     showToast('Erreur sauvegarde: ' + e.message, 'error');
   }
@@ -1593,14 +1601,29 @@ function basculerModeDevis() {
 }
 
 function appendModeBanner() {
+  // Remove any existing banner
   document.getElementById('mode-entreprise-banner')?.remove();
-  const banner = document.createElement('div');
-  banner.id = 'mode-entreprise-banner';
-  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#4338CA;color:#fff;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600';
-  banner.innerHTML = '📋 Mode Production — Vos propres documents' +
-    '<button onclick="revenirEspaceComptable()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">← Espace comptable</button>';
-  document.body.appendChild(banner);
-  document.body.style.paddingTop = '36px';
+  // Add a small pill button in the topbar next to the message button
+  const topbar = document.querySelector('#screen-dashboard .topbar');
+  if (!topbar) {
+    // Fallback: small fixed pill
+    const pill = document.createElement('div');
+    pill.id = 'mode-entreprise-banner';
+    pill.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;background:#4338CA;color:#fff;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)';
+    pill.innerHTML = '← Espace comptable';
+    pill.onclick = revenirEspaceComptable;
+    document.body.appendChild(pill);
+    return;
+  }
+  const btn = document.createElement('button');
+  btn.id = 'mode-entreprise-banner';
+  btn.style.cssText = 'background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-right:6px';
+  btn.innerHTML = '← Comptable';
+  btn.onclick = revenirEspaceComptable;
+  // Insert before first child of topbar-right
+  const right = topbar.querySelector('.topbar-right');
+  if (right) right.insertBefore(btn, right.firstChild);
+  else topbar.appendChild(btn);
 }
 
 
