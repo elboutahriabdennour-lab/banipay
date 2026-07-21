@@ -1141,13 +1141,22 @@
 
   <!-- DETAIL CLIENT -->
   <div class="screen" id="screen-detail-client">
-    <div style="background:#1E3A8A;padding:20px">
+    <div style="background:linear-gradient(135deg,#1E1B4B,#3730A3);padding:20px">
       <div style="display:flex;align-items:center;gap:10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px" onclick="goScreen('clients',null)">← Retour</div>
       <div style="font-size:22px;font-weight:700;color:#fff" id="dc-nom"></div>
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px" id="dc-meta"></div>
     </div>
     <div style="padding:16px">
-      <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:14px;border:1px solid #F1F5F9" id="dc-infos"></div>
+      <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1px solid #F1F5F9" id="dc-infos"></div>
+      <!-- Lien BaniPay du client -->
+      <div id="dc-lien-section" style="display:none;background:#EEF2FF;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #C7D2FE">
+        <div style="font-size:11px;font-weight:700;color:#4F46E5;margin-bottom:6px">🔗 Profil BaniPay</div>
+        <div id="dc-lien-banipay" style="font-size:11px;color:#4F46E5;word-break:break-all;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <button id="dc-btn-copier-lien" style="flex:1;padding:7px;background:#fff;color:#4F46E5;border:1px solid #C7D2FE;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+          <button id="dc-btn-partager-lien" style="flex:1;padding:7px;background:#4F46E5;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+        </div>
+      </div>
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin-bottom:10px">Factures</div>
       <div id="dc-factures"></div>
       <button onclick="goScreen('nouvelle',null);setTimeout(()=>{const el=document.getElementById('f-client');if(el)el.value=window._clientNom||'';},100)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #F1F5F9;font-size:14px;font-weight:500;color:#2563EB;font-family:inherit;width:100%;text-align:left;margin-top:12px">
