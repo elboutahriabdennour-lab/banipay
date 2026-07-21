@@ -358,7 +358,17 @@ function renderCptFactures() {
   // Event delegation for inline controls
   list.addEventListener('click', function(e) {
     const row = e.target.closest('.fac-row-click');
-    if (row) { ouvrirFactureComptable(row.dataset.fid); return; }
+    if (row) {
+      // Open PDF directly + controls below
+      const facId = row.dataset.fid;
+      const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
+      if (fac) {
+        ouvrirPDFComptable(fac, CPT.currentProfil || {});
+        // Small delay then show controls overlay at bottom
+        setTimeout(function() { attacherControlsToViewer(facId); }, 300);
+      }
+      return;
+    }
     const btnL = e.target.closest('.btn-lettr');
     if (btnL) { toggleLettrageRapide(btnL.dataset.facid, btnL); return; }
     const btnT = e.target.closest('.btn-tva');
@@ -1801,4 +1811,55 @@ async function ajouterEntrepriseCommeClient(entrepriseId) {
   } catch(e) {
     console.error('ajouterEntrepriseCommeClient:', e);
   }
+}
+
+// ============================================================
+// BARRE DE CONTRÔLE FLOTTANTE SUR LE PDF VIEWER
+// ============================================================
+
+function attacherControlsToViewer(factureId) {
+  // Check if PDF viewer is open
+  const viewer = document.getElementById('pdf-fullscreen');
+  if (!viewer) return;
+
+  // Remove existing controls bar
+  document.getElementById('pdf-cpt-controls')?.remove();
+
+  const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(factureId); }) || {};
+
+  const bar = document.createElement('div');
+  bar.id = 'pdf-cpt-controls';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#fff;border-top:1px solid #E2E8F0;padding:12px 16px;display:flex;gap:10px;align-items:center;box-shadow:0 -4px 20px rgba(0,0,0,0.1)';
+  bar.innerHTML =
+    '<button class="btn-l-ctrl" data-fid="' + factureId + '" style="width:44px;height:44px;border-radius:10px;border:none;background:' + (ctrl.lettre ? '#059669' : '#F1F5F9') + ';color:' + (ctrl.lettre ? '#fff' : '#94A3B8') + ';font-size:18px;font-weight:900;cursor:pointer;font-family:inherit">L</button>' +
+    '<div style="flex:1">' +
+      '<div style="font-size:12px;font-weight:700" id="pdf-ctrl-lettre-txt">' + (ctrl.lettre ? '✓ Lettré' : 'Non lettré') + '</div>' +
+      '<div style="font-size:10px;color:#94A3B8">' + (ctrl.lettre_at ? new Date(ctrl.lettre_at).toLocaleDateString('fr-FR') : '') + '</div>' +
+    '</div>' +
+    '<button class="btn-t-ctrl" data-fid="' + factureId + '" style="width:44px;height:44px;border-radius:10px;border:none;background:' + (ctrl.tva_verifie ? '#9333EA' : '#F1F5F9') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#94A3B8') + ';font-size:18px;font-weight:900;cursor:pointer;font-family:inherit">T</button>' +
+    '<div style="flex:1">' +
+      '<div style="font-size:12px;font-weight:700" id="pdf-ctrl-tva-txt">' + (ctrl.tva_verifie ? '✓ TVA ok' : 'TVA non vérifiée') + '</div>' +
+      '<div style="font-size:10px;color:#94A3B8">' + (ctrl.tva_verifie_at ? new Date(ctrl.tva_verifie_at).toLocaleDateString('fr-FR') : '') + '</div>' +
+    '</div>' +
+    '<button class="btn-open-remarques" style="padding:8px 12px;background:#4338CA;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📝 Remarques</button>';
+
+  viewer.appendChild(bar);
+
+  // Events L/T
+  bar.querySelector('.btn-l-ctrl').onclick = async function() {
+    await toggleLettrageRapide(factureId, this);
+    const txt = document.getElementById('pdf-ctrl-lettre-txt');
+    if (txt) txt.textContent = this.dataset.lettre === '1' ? '✓ Lettré' : 'Non lettré';
+  };
+  bar.querySelector('.btn-t-ctrl').onclick = async function() {
+    await toggleTVARapide(factureId, this);
+    const txt = document.getElementById('pdf-ctrl-tva-txt');
+    if (txt) txt.textContent = this.dataset.tva === '1' ? '✓ TVA ok' : 'TVA non vérifiée';
+  };
+  var btnRem = bar.querySelector('.btn-open-remarques');
+  if (btnRem) btnRem.onclick = function() {
+    document.getElementById('pdf-fullscreen')?.remove();
+    document.getElementById('pdf-cpt-controls')?.remove();
+    ouvrirFactureComptable(factureId);
+  };
 }
