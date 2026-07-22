@@ -153,6 +153,9 @@ function renderDetailDevis() {
   const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré' };
   actions.push(`<div style="background:${statutColors[d.statut]||'#64748B'}20;border-left:3px solid ${statutColors[d.statut]||'#64748B'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#64748B'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
 
+  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
+  actions.push(`<button class="action-item" style="color:#4338CA;border-left-color:#4338CA" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#EEF2FF">📨</div>Envoyer</button>`);
+
   // Actions selon statut
   if (d.statut === 'envoye') {
     actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#ECFDF5">✅</div>Marquer accepté</button>`);
@@ -550,31 +553,44 @@ async function partagerDevisNatif(id) {
 }
 
 // ============================================================
-// ACCEPTER / REFUSER DEVIS (côté client via lien)
+// ACCEPTER / REFUSER — DEVIS ET FACTURES (via lien public)
 // ============================================================
 
-async function traiterActionDevis(devisId, action) {
+// Fonction générique : gère à la fois les devis (champ `statut`) et les
+// factures (champ `reponse_client`, car les factures n'avaient pas de
+// champ de réponse client dédié avant).
+async function traiterActionDocument(docId, type, action) {
+  const isFacture = type === 'facture';
+  const table = isFacture ? 'factures' : 'devis';
+  const champ = isFacture ? 'reponse_client' : 'statut';
+  const valeurAcceptee = isFacture ? 'acceptee' : 'accepte';
+  const valeurRefusee = isFacture ? 'refusee' : 'refuse';
+  const libelleDoc = isFacture ? 'facture' : 'devis';
+
   // Afficher une page de confirmation propre
   document.body.innerHTML = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
       <div style="font-size:48px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
-      <h2 style="color:#0F172A;margin-bottom:8px">${action === 'accepter' ? 'Acceptation du devis' : 'Refus du devis'}</h2>
+      <h2 style="color:#0F172A;margin-bottom:8px">${action === 'accepter' ? 'Acceptation' : 'Refus'} de ${isFacture ? 'la facture' : 'devis'}</h2>
       <p style="color:#64748B;margin-bottom:24px">Chargement...</p>
     </div>
   `;
 
   try {
-    // Load devis
-    const r = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + devisId + '&select=*', {
+    // Charger le document
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const data = await r.json();
     const d = data && data[0];
-    if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">Devis introuvable</div>'; return; }
+    if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">' + (isFacture ? 'Facture' : 'Devis') + ' introuvable</div>'; return; }
 
-    // Update status
-    const nouveauStatut = action === 'accepter' ? 'accepte' : 'refuse';
-    await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + devisId, {
+    // Mettre à jour le statut / la réponse client
+    const nouvelleValeur = action === 'accepter' ? valeurAcceptee : valeurRefusee;
+    const patchBody = { notif_lue: false };
+    patchBody[champ] = nouvelleValeur;
+
+    await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
       method: 'PATCH',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -582,24 +598,29 @@ async function traiterActionDevis(devisId, action) {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ statut: nouveauStatut, notif_lue: false })
+      body: JSON.stringify(patchBody)
     });
 
-    // Show confirmation page
+    // Page de confirmation
     document.body.innerHTML = `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
         <div style="font-size:64px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
-        <h2 style="color:#0F172A;margin-bottom:8px">Devis ${action === 'accepter' ? 'accepté' : 'refusé'} !</h2>
+        <h2 style="color:#0F172A;margin-bottom:8px">${isFacture ? 'Facture' : 'Devis'} ${action === 'accepter' ? 'acceptée' : 'refusée'} !</h2>
         <div style="background:${action === 'accepter' ? '#ECFDF5' : '#FEF2F2'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
           <div style="font-size:13px;color:#64748B">Référence : <strong>${d.ref}</strong></div>
           <div style="font-size:13px;color:#64748B;margin-top:4px">Client : <strong>${d.client}</strong></div>
           <div style="font-size:13px;color:#64748B;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
         </div>
-        <p style="color:#64748B;font-size:13px">${action === 'accepter' ? 'L\'entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.' : 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\'entreprise.'}</p>
+        <p style="color:#64748B;font-size:13px">${action === 'accepter' ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.' : 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\u2019entreprise.'}</p>
         <div style="margin-top:24px;font-size:11px;color:#94A3B8">Propulsé par <strong style="color:#2563EB">BaniPay</strong></div>
       </div>
     `;
   } catch(e) {
     document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#EF4444">Erreur: ' + e.message + '</div>';
   }
+}
+
+// Alias de compatibilité pour les anciens liens ?devis=ID&action=...
+async function traiterActionDevis(devisId, action) {
+  return traiterActionDocument(devisId, 'devis', action);
 }
