@@ -251,7 +251,7 @@ async function afficherDocumentPublic(docId) {
         const bAcc = document.createElement('button');
         bAcc.textContent = isDevis ? '✅ Accepter le devis' : '✅ Accepter la facture';
         bAcc.style.cssText = 'flex:1;padding:14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
-        bAcc.onclick = function() { traiterActionDocument(docId, typeDoc, 'accepter'); };
+        bAcc.onclick = function() { ouvrirModalSignature(docId, typeDoc); };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
         bRef.style.cssText = 'flex:1;padding:14px;background:#DC2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
