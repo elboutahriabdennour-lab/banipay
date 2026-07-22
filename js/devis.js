@@ -115,6 +115,7 @@ async function sauvegarderDevis() {
     if (r && r.length > 0) { STATE.devis.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
     autoAddClient(client);
     showToast('✅ Devis enregistré !', 'success');
+    logAudit('devis', r[0].id, 'creation', (r[0].ref || '') + ' — ' + client + ' — ' + fmt(r[0].ttc) + ' MAD');
     setTimeout(()=>goScreen('devis-list'), 800);
   } catch(e) { showToast('❌ '+e.message, 'error'); }
 }
@@ -202,9 +203,11 @@ async function convertirEnFacture(id) {
 
 async function supprimerDevis(id) {
   if (!confirm('Supprimer ce devis ?')) return;
+  const d = STATE.devis.find(x=>x.id===id);
   await sb.del('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`);
   STATE.devis = STATE.devis.filter(x=>x.id!==id);
   showToast('Supprimé'); goScreen('devis-list');
+  logAudit('devis', id, 'suppression', d?.ref || '');
 }
 
 function dupliquerDevis(id) {
@@ -559,7 +562,7 @@ async function partagerDevisNatif(id) {
 // Fonction générique : gère à la fois les devis (champ `statut`) et les
 // factures (champ `reponse_client`, car les factures n'avaient pas de
 // champ de réponse client dédié avant).
-async function traiterActionDocument(docId, type, action) {
+async function traiterActionDocument(docId, type, action, signatureData) {
   const isFacture = type === 'facture';
   const table = isFacture ? 'factures' : 'devis';
   const champ = isFacture ? 'reponse_client' : 'statut';
@@ -589,6 +592,7 @@ async function traiterActionDocument(docId, type, action) {
     const nouvelleValeur = action === 'accepter' ? valeurAcceptee : valeurRefusee;
     const patchBody = { notif_lue: false };
     patchBody[champ] = nouvelleValeur;
+    if (action === 'accepter' && signatureData) patchBody.signature_data = signatureData;
 
     await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
       method: 'PATCH',
@@ -600,6 +604,9 @@ async function traiterActionDocument(docId, type, action) {
       },
       body: JSON.stringify(patchBody)
     });
+
+    // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
+    try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : 'refus', d.ref || ''); } catch(eAudit) {}
 
     // Page de confirmation
     document.body.innerHTML = `
