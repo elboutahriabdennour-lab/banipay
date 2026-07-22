@@ -257,6 +257,7 @@ function goScreen(name) {
     'tva': renderTVA,
     'recherche': initRecherche,
     'notifications': renderNotifScreen,
+    'audit': renderJournalAudit,
     'profil': function() { renderProfil(); setTimeout(renderMonComptable, 300); },
     'comptable': renderComptableDashboard,
     'comptable-profil': renderComptableProfil,
