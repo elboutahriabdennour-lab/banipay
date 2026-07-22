@@ -194,5 +194,119 @@ function validateProduct(data) {
 }
 
 // ============================================================
+// JOURNAL D'AUDIT — traçabilité des actions clés
+// ============================================================
+
+// Enregistre une action dans le journal d'audit (best-effort, ne bloque jamais l'UI)
+async function logAudit(typeDoc, docId, action, details) {
+  try {
+    const uid = sb.user?.id;
+    if (!uid) return;
+    await sb.post('audit_log', {
+      user_id: uid,
+      type_doc: typeDoc,
+      doc_id: docId != null ? String(docId) : null,
+      action: action,
+      details: details || ''
+    });
+  } catch(e) {
+    // Silencieux : le journal ne doit jamais bloquer l'action métier
+    console.warn('logAudit:', e);
+  }
+}
+
+async function renderJournalAudit() {
+  const list = el('audit-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8">⏳ Chargement...</div>';
+  try {
+    const uid = sb.user?.id;
+    const logs = await sb.get('audit_log', 'user_id=eq.' + uid + '&order=created_at.desc&limit=100');
+    if (!logs || !logs.length) {
+      list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune activité enregistrée</div></div>';
+      return;
+    }
+    const actionIcons = { creation:'✨', modification:'✏️', suppression:'🗑️', acceptation:'✅', refus:'❌', paiement:'💰' };
+    const actionLabels = { creation:'Création', modification:'Modification', suppression:'Suppression', acceptation:'Acceptation', refus:'Refus', paiement:'Paiement' };
+    const typeLabels = { facture:'Facture', devis:'Devis', client:'Client', produit:'Article' };
+    list.innerHTML = logs.map(function(l) {
+      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F1F5F9;align-items:flex-start">' +
+        '<div style="width:32px;height:32px;border-radius:8px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-size:13px;font-weight:600">' + (typeLabels[l.type_doc] || l.type_doc) + ' — ' + (actionLabels[l.action] || l.action) + '</div>' +
+          (l.details ? '<div style="font-size:12px;color:#64748B;margin-top:2px">' + escapeHTML(l.details) + '</div>' : '') +
+          '<div style="font-size:11px;color:#94A3B8;margin-top:3px">' + formatDateTime(l.created_at) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#EF4444">Erreur de chargement</div>';
+  }
+}
+
+// ============================================================
+// EXPORT / IMPORT CSV GÉNÉRIQUE
+// ============================================================
+
+// Parseur CSV minimal mais robuste : gère les guillemets et les virgules dans les champs
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  // Retirer le BOM UTF-8 éventuel
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (inQuotes) {
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuotes = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') { inQuotes = true; }
+      else if (c === ',' || c === ';') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r') { /* ignore */ }
+      else { field += c; }
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+
+  if (!rows.length) return [];
+  const headers = rows[0].map(function(h) { return h.trim().toLowerCase(); });
+  return rows.slice(1).filter(function(r) { return r.some(function(v) { return v.trim() !== ''; }); }).map(function(r) {
+    const obj = {};
+    headers.forEach(function(h, idx) { obj[h] = (r[idx] || '').trim(); });
+    return obj;
+  });
+}
+
+function telechargerCSV(nomFichier, headers, rows) {
+  const csv = [headers].concat(rows).map(function(r) {
+    return r.map(function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nomFichier;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+}
+
+function lireFichierTexte(file) {
+  return new Promise(function(resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function(e) { resolve(e.target.result); };
+    reader.onerror = reject;
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+// ============================================================
 // BROUILLONS
 // ============================================================
