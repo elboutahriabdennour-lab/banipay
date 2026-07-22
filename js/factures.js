@@ -279,6 +279,8 @@ function renderDetail() {
   const actEl = el('detail-actions');
   if (!actEl) return;
   const actions = [];
+  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
+  actions.push(`<button class="action-item" style="color:#4338CA;border-left-color:#4338CA" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#EEF2FF">📨</div>Envoyer</button>`);
   if (f.statut !== 'payee') {
     actions.push(`<button class="action-item success" onclick="marquerPayee(${f.id})"><div class="action-ico" style="background:#ECFDF5">✅</div>Marquer payée</button>`);
     actions.push(`<button class="action-item" onclick="ouvrirPaiementPartiel(${f.id})"><div class="action-ico" style="background:#EFF6FF">💰</div>Enregistrer un paiement</button>`);
