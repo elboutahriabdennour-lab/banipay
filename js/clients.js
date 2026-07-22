@@ -27,6 +27,15 @@ function ouvrirScannerQR() {
       <div style="font-size:10px;color:#94A3B8;text-align:center;margin-top:6px">Prend une photo du QR code profil BaniPay</div>
     </div>
 
+    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">📥 Import en masse (CSV)</div>
+      <label style="display:block;text-align:center;padding:14px;border:2px dashed #C7D2FE;border-radius:10px;cursor:pointer;color:#4338CA;font-size:13px;font-weight:600;background:#EEF2FF">
+        📄 Choisir un fichier CSV
+        <input type="file" accept=".csv" style="display:none" onchange="importerClientsCSV(event)">
+      </label>
+      <button onclick="telechargerTemplateClientsCSV()" style="width:100%;margin-top:8px;padding:8px;background:none;color:#64748B;border:none;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">Télécharger un modèle vide</button>
+    </div>
+
     <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:20px">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">✏️ Saisie manuelle</div>
       <button onclick="document.getElementById('scanner-overlay').remove();goScreen('nouveau-client',null)" style="width:100%;padding:12px;background:#F1F5F9;color:#0F172A;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">➕ Nouveau client manuellement</button>
@@ -89,6 +98,7 @@ async function importerClientDepuisLien() {
       renderClients();
       document.getElementById('scanner-overlay')?.remove();
       showToast('✅ Client ' + p.raison + ' ajouté !', 'success');
+      logAudit('client', (result[0] || newClient).id, 'creation', p.raison + ' (import lien BaniPay)');
     }
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
@@ -186,6 +196,7 @@ async function sauvegarderClient() {
     STATE.clients.sort((a,b)=>a.nom.localeCompare(b.nom));
     updateClientDatalist();
     showToast('✅ Client ajouté !', 'success');
+    logAudit('client', r[0].id, 'creation', nom);
     setTimeout(()=>goScreen('clients'), 700);
   } catch(e) { showToast('❌ '+e.message, 'error'); }
 }
@@ -253,11 +264,13 @@ function openDetailClient(id) {
 
 async function supprimerClient(id) {
   if (!id || !confirm('Supprimer ce client ?')) return;
+  const c = STATE.clients.find(x => x.id === id);
   try {
     await sb.del('clients',`id=eq.${id}&user_id=eq.${sb.user.id}`);
     STATE.clients = STATE.clients.filter(c=>c.id!==id);
     updateClientDatalist();
     showToast('Client supprimé', 'success');
+    logAudit('client', id, 'suppression', c?.nom || '');
     goScreen('clients');
   } catch(e) {
     showToast('❌ ' + e.message, 'error');
@@ -301,6 +314,7 @@ async function sauvegarderModifClient() {
     Object.assign(c, data);
     updateClientDatalist();
     showToast('✅ Client mis à jour !', 'success');
+    logAudit('client', c.id, 'modification', nom);
     goScreen('detail-client');
     openDetailClient(c.id);
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
@@ -442,5 +456,84 @@ function ouvrirMsgClient() {
     demarrerConversation(c.reference_id, c.email, sb.user?.email);
   } else {
     showToast('Ce client n a pas de compte BaniPay', 'error');
+  }
+}
+
+// ============================================================
+// IMPORT / EXPORT CSV — CLIENTS
+// ============================================================
+
+function telechargerTemplateClientsCSV() {
+  telechargerCSV(
+    'modele_clients.csv',
+    ['nom', 'tel', 'email', 'adresse', 'ice', 'identifiant_fiscal', 'conditions_paiement', 'limite_credit', 'notes'],
+    [['SARL Exemple BTP', '+212600000000', 'contact@exemple.ma', 'Casablanca', '001234567000012', '', '30 jours', '', '']]
+  );
+}
+
+function exporterClientsCSV() {
+  if (!STATE.clients.length) { showToast('Aucun client à exporter', 'error'); return; }
+  const headers = ['nom', 'tel', 'email', 'adresse', 'ice', 'identifiant_fiscal', 'conditions_paiement', 'limite_credit', 'notes'];
+  const rows = STATE.clients.map(function(c) {
+    return [c.nom || '', c.tel || '', c.email || '', c.adresse || '', c.ice || '', c.identifiant_fiscal || '', c.conditions_paiement || '', c.limite_credit || '', c.notes || ''];
+  });
+  telechargerCSV('banipay_clients_' + today() + '.csv', headers, rows);
+  showToast('✅ Export clients téléchargé !', 'success');
+}
+
+async function importerClientsCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  showToast('⏳ Lecture du fichier...');
+  try {
+    const text = await lireFichierTexte(file);
+    const rows = parseCSV(text);
+    if (!rows.length) { showToast('Fichier CSV vide ou illisible', 'error'); return; }
+
+    // Colonnes acceptées (souples sur les noms de colonnes)
+    const getVal = function(r, keys) {
+      for (const k of keys) { if (r[k] !== undefined && r[k] !== '') return r[k]; }
+      return '';
+    };
+
+    let importes = 0, ignores = 0;
+    showToast('⏳ Import de ' + rows.length + ' ligne(s)...');
+
+    for (const r of rows) {
+      const nom = getVal(r, ['nom', 'name', 'raison', 'client']);
+      if (!nom) { ignores++; continue; }
+
+      const existe = STATE.clients.find(function(c) { return c.nom.toLowerCase() === nom.toLowerCase(); });
+      if (existe) { ignores++; continue; }
+
+      const body = {
+        user_id: sb.user.id,
+        nom: nom,
+        tel: getVal(r, ['tel', 'telephone', 'téléphone', 'phone']),
+        email: getVal(r, ['email', 'mail']),
+        adresse: getVal(r, ['adresse', 'address']),
+        ice: getVal(r, ['ice']),
+        identifiant_fiscal: getVal(r, ['identifiant_fiscal', 'if']),
+        conditions_paiement: getVal(r, ['conditions_paiement', 'conditions']),
+        limite_credit: parseFloat(getVal(r, ['limite_credit', 'limite'])) || null,
+        notes: getVal(r, ['notes', 'note']),
+      };
+
+      try {
+        const result = await sb.post('clients', body);
+        if (result && result.length) { STATE.clients.push(result[0]); importes++; }
+      } catch(e2) { ignores++; }
+    }
+
+    STATE.clients.sort(function(a, b) { return a.nom.localeCompare(b.nom); });
+    updateClientDatalist();
+    renderClients();
+    document.getElementById('scanner-overlay')?.remove();
+    showToast('✅ ' + importes + ' client(s) importé(s)' + (ignores ? ', ' + ignores + ' ignoré(s)' : ''), 'success');
+    logAudit('client', null, 'creation', importes + ' clients importés via CSV');
+  } catch(e) {
+    showToast('Erreur import: ' + e.message, 'error');
   }
 }
