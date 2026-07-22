@@ -841,6 +841,20 @@
   </div>
 </div>
 
+<!-- MODAL ENVOYER (WhatsApp / Email / Lien / Compte BaniPay) -->
+<div class="modal-overlay" id="modal-envoyer">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="me-titre">Envoyer le document</div>
+    <button class="m-btn" style="background:#25D366" onclick="envoyerVia('whatsapp')">📱 WhatsApp</button>
+    <button class="m-btn" style="background:#2563EB" onclick="envoyerVia('email')">✉️ Email</button>
+    <button class="m-btn" style="background:#64748B" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
+    <button class="m-btn" style="background:#4338CA" onclick="envoyerVia('banipay')">🅿️ Compte BaniPay</button>
+    <div id="me-banipay-picker" style="display:none;margin-top:10px"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
 <!-- ===== HISTORIQUE PAIEMENTS ===== -->
 <div class="screen" id="screen-historique-paiements">
   <div class="topbar">
@@ -1440,4 +1454,5 @@
   <div class="pb"></div>
 </div>
 
->
+</body>
+</html>
