@@ -165,6 +165,10 @@ async function refuserInvitationEmail(emailEnc, entrepriseId) {
   } catch(e) {}
 }
 
+// ============================================================
+// AFFICHAGE PUBLIC D'UN DOCUMENT (facture ou devis) + Accepter/Refuser
+// ============================================================
+
 async function afficherDocumentPublic(docId) {
   const urlParams = new URLSearchParams(window.location.search);
   const docType = urlParams.get('type'); // 'devis' ou null
@@ -230,35 +234,44 @@ async function afficherDocumentPublic(docId) {
       doc_url: window.location.href,
     });
 
-    // Si c'est un devis en attente → ajouter boutons Accepter/Refuser
-    if (isDevis && doc.statut !== 'accepte' && doc.statut !== 'refuse') {
+    // Type générique + champ de statut à considérer selon devis/facture
+    const typeDoc = isDevis ? 'devis' : 'facture';
+    const statutActuel = isDevis ? doc.statut : doc.reponse_client;
+    const valeurAcceptee = isDevis ? 'accepte' : 'acceptee';
+    const valeurRefusee = isDevis ? 'refuse' : 'refusee';
+    const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
+
+    // Boutons Accepter/Refuser — pour les devis ET les factures en attente
+    if (!dejaTraite) {
       setTimeout(function() {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const btnBar = document.createElement('div');
         btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #E2E8F0;flex-shrink:0';
         const bAcc = document.createElement('button');
-        bAcc.textContent = '✅ Accepter le devis';
+        bAcc.textContent = isDevis ? '✅ Accepter le devis' : '✅ Accepter la facture';
         bAcc.style.cssText = 'flex:1;padding:14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
-        bAcc.onclick = function() { traiterActionDevis(docId, 'accepter'); };
+        bAcc.onclick = function() { traiterActionDocument(docId, typeDoc, 'accepter'); };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
         bRef.style.cssText = 'flex:1;padding:14px;background:#DC2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
-        bRef.onclick = function() { traiterActionDevis(docId, 'refuser'); };
+        bRef.onclick = function() { traiterActionDocument(docId, typeDoc, 'refuser'); };
         btnBar.appendChild(bAcc);
         btnBar.appendChild(bRef);
         screen.appendChild(btnBar);
       }, 500);
     }
 
-    // Si devis déjà traité
-    if (isDevis && (doc.statut === 'accepte' || doc.statut === 'refuse')) {
+    // Si le document a déjà été traité (devis ou facture)
+    if (dejaTraite) {
       setTimeout(function() {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const info = document.createElement('div');
-        info.style.cssText = 'background:' + (doc.statut === 'accepte' ? '#ECFDF5' : '#FEF2F2') + ';padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:' + (doc.statut === 'accepte' ? '#059669' : '#DC2626') + ';border-top:1px solid #E2E8F0;flex-shrink:0';
-        info.textContent = doc.statut === 'accepte' ? '✅ Ce devis a été accepté' : '❌ Ce devis a été refusé';
+        info.style.cssText = 'background:' + (statutActuel === valeurAcceptee ? '#ECFDF5' : '#FEF2F2') + ';padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:' + (statutActuel === valeurAcceptee ? '#059669' : '#DC2626') + ';border-top:1px solid #E2E8F0;flex-shrink:0';
+        info.textContent = statutActuel === valeurAcceptee
+          ? ('✅ ' + (isDevis ? 'Ce devis a été accepté' : 'Cette facture a été acceptée'))
+          : ('❌ ' + (isDevis ? 'Ce devis a été refusé' : 'Cette facture a été refusée'));
         screen.appendChild(info);
       }, 500);
     }
@@ -300,11 +313,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Action sur un devis (accepter/refuser via lien)
+  // Action sur un devis ou une facture (accepter/refuser via lien)
   const devisId = params.get('devis');
-  const devisAction = params.get('action');
-  if (devisId && (devisAction === 'accepter' || devisAction === 'refuser')) {
-    await traiterActionDevis(devisId, devisAction);
+  const factureIdAction = params.get('facture');
+  const docAction = params.get('action');
+  if (devisId && (docAction === 'accepter' || docAction === 'refuser')) {
+    await traiterActionDocument(devisId, 'devis', docAction);
+    return;
+  }
+  if (factureIdAction && (docAction === 'accepter' || docAction === 'refuser')) {
+    await traiterActionDocument(factureIdAction, 'facture', docAction);
     return;
   }
 
