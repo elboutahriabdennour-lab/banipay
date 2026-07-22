@@ -197,6 +197,7 @@ async function sauvegarderFacture(isDraft = false) {
     // Auto-add client if new
     autoAddClient(client);
     showToast(isDraft ? '📋 Brouillon sauvegardé' : '✅ Facture enregistrée !', 'success');
+    logAudit('facture', r[0].id, 'creation', (r[0].ref || '') + ' — ' + client + ' — ' + fmt(body.ttc) + ' MAD');
     setTimeout(() => goScreen('dashboard'), 800);
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
@@ -312,6 +313,7 @@ async function marquerPayee(id) {
   STATE.currentFacture = f;
   renderDetail();
   showToast('✅ Facture payée !', 'success');
+  logAudit('facture', id, 'paiement', (f.ref || '') + ' — ' + fmt(f.ttc) + ' MAD (solde)');
 }
 
 async function marquerRetard(id) {
@@ -323,9 +325,11 @@ async function marquerRetard(id) {
 
 async function supprimerFacture(id) {
   if (!confirm('Supprimer cette facture ?')) return;
+  const f = STATE.factures.find(x => x.id === id);
   await sb.del('factures', `id=eq.${id}&user_id=eq.${sb.user.id}`);
   STATE.factures = STATE.factures.filter(x => x.id !== id);
   showToast('Facture supprimée');
+  logAudit('facture', id, 'suppression', f?.ref || '');
   goScreen('dashboard');
 }
 
