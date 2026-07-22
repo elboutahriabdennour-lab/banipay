@@ -73,16 +73,19 @@ async function sauvegarderProduit() {
     if (r && r.length > 0) { STATE.produits.push(r[0]); } else { throw new Error("Erreur serveur"); }
     STATE.produits.sort((a,b)=>a.nom.localeCompare(b.nom));
     showToast('✅ Article ajouté !','success');
+    logAudit('produit', r[0].id, 'creation', nom);
     setTimeout(()=>goScreen('produits'),600);
   } catch(e){showToast('❌ '+e.message,'error');}
 }
 
 async function supprimerProduit(id) {
   if(!confirm('Supprimer cet article ?')) return;
+  const p = STATE.produits.find(x => x.id === id);
   await sb.del('produits',`id=eq.${id}&user_id=eq.${sb.user.id}`);
   STATE.produits = STATE.produits.filter(p=>p.id!==id);
   renderProduits();
   showToast('Supprimé');
+  logAudit('produit', id, 'suppression', p?.nom || '');
 }
 
 // ============================================================
@@ -139,6 +142,7 @@ async function sauvegarderModifProduit() {
     Object.assign(p, data);
     renderProduits();
     showToast('✅ Article mis à jour !', 'success');
+    logAudit('produit', p.id, 'modification', nom);
     goScreen('produits');
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
@@ -157,8 +161,85 @@ function archiverProduit(id) {
 }
 
 // ============================================================
-// ACOMPTES & PAIEMENTS COMPLETS
+// IMPORT / EXPORT CSV — CATALOGUE PRODUITS
 // ============================================================
+
+function telechargerTemplateProduitsCSV() {
+  telechargerCSV(
+    'modele_produits.csv',
+    ['nom', 'description', 'reference', 'prix_ht', 'tva_rate', 'cout_achat', 'stock', 'unite', 'categorie'],
+    [['Prestation exemple', 'Détail optionnel', 'REF-001', '500.00', '20', '', '', 'u', 'service']]
+  );
+}
+
+function exporterProduitsCSV() {
+  if (!STATE.produits.length) { showToast('Aucun article à exporter', 'error'); return; }
+  const headers = ['nom', 'description', 'reference', 'prix_ht', 'tva_rate', 'cout_achat', 'stock', 'unite', 'categorie'];
+  const rows = STATE.produits.map(function(p) {
+    return [p.nom || '', p.description || '', p.reference || '', p.prix_ht || 0, p.tva_rate || 20, p.cout_achat || '', p.stock != null ? p.stock : '', p.unite || 'u', p.categorie || 'service'];
+  });
+  telechargerCSV('banipay_catalogue_' + today() + '.csv', headers, rows);
+  showToast('✅ Export catalogue téléchargé !', 'success');
+}
+
+async function importerProduitsCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+
+  showToast('⏳ Lecture du fichier...');
+  try {
+    const text = await lireFichierTexte(file);
+    const rows = parseCSV(text);
+    if (!rows.length) { showToast('Fichier CSV vide ou illisible', 'error'); return; }
+
+    const getVal = function(r, keys) {
+      for (const k of keys) { if (r[k] !== undefined && r[k] !== '') return r[k]; }
+      return '';
+    };
+    const catValides = ['service', 'produit', 'main-oeuvre', 'transport', 'materiaux', 'autre'];
+
+    let importes = 0, ignores = 0;
+    showToast('⏳ Import de ' + rows.length + ' ligne(s)...');
+
+    for (const r of rows) {
+      const nom = getVal(r, ['nom', 'name', 'designation', 'désignation']);
+      if (!nom) { ignores++; continue; }
+
+      const existe = STATE.produits.find(function(p) { return p.nom.toLowerCase() === nom.toLowerCase(); });
+      if (existe) { ignores++; continue; }
+
+      let categorie = (getVal(r, ['categorie', 'catégorie', 'category']) || 'service').toLowerCase();
+      if (!catValides.includes(categorie)) categorie = 'autre';
+
+      const body = {
+        user_id: sb.user.id,
+        nom: nom,
+        description: getVal(r, ['description', 'desc']),
+        reference: getVal(r, ['reference', 'référence', 'ref']),
+        prix_ht: parseFloat(getVal(r, ['prix_ht', 'prix', 'price'])) || 0,
+        tva_rate: parseFloat(getVal(r, ['tva_rate', 'tva'])) || 20,
+        cout_achat: parseFloat(getVal(r, ['cout_achat', 'coût_achat', 'cout'])) || null,
+        stock: getVal(r, ['stock']) !== '' ? parseInt(getVal(r, ['stock'])) : null,
+        unite: getVal(r, ['unite', 'unité', 'unit']) || 'u',
+        categorie: categorie,
+      };
+
+      try {
+        const result = await sb.post('produits', body);
+        if (result && result.length) { STATE.produits.push(result[0]); importes++; }
+      } catch(e2) { ignores++; }
+    }
+
+    STATE.produits.sort(function(a, b) { return a.nom.localeCompare(b.nom); });
+    renderProduits();
+    showToast('✅ ' + importes + ' article(s) importé(s)' + (ignores ? ', ' + ignores + ' ignoré(s)' : ''), 'success');
+    logAudit('produit', null, 'creation', importes + ' articles importés via CSV');
+  } catch(e) {
+    showToast('Erreur import: ' + e.message, 'error');
+  }
+}
+
 // ============================================================
 // ENVOI UNIFIÉ — WhatsApp / Email / Lien / BaniPay
 // ============================================================
