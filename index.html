@@ -62,6 +62,7 @@
     <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#ECFDF5">🧾</div><div class="qa-lbl">TVA</div></div>
     <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#F3E8FF">👥</div><div class="qa-lbl">Clients</div></div>
     <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#FFFBEB">📦</div><div class="qa-lbl">Catalogue</div></div>
+    <div class="qa-item" onclick="loadAbonnements();goScreen('abonnements',null)"><div class="qa-ico" style="background:#EEF2FF">🔁</div><div class="qa-lbl">Récurrent</div></div>
   </div>
   <div class="sec-header" style="margin-top:8px">
     <div class="sec-title">Mes factures</div>
@@ -135,6 +136,8 @@
   <script src="js/comptable.js"></script>
   <script src="js/messages.js"></script>
 <script src="js/achats.js"></script>
+<script src="js/stock.js"></script>
+<script src="js/abonnements.js"></script>
 <script src="js/signature.js"></script>
 <script src="js/app.js"></script>
 
@@ -175,6 +178,69 @@
   <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#DC2626;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
   <div id="avoir-list-items"></div><div class="pb"></div>
+</div>
+
+<!-- ABONNEMENTS (facturation récurrente) -->
+<div class="screen" id="screen-abonnements">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#4338CA;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
+  <div style="padding:0 20px 12px;font-size:12px;color:#64748B">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
+  <div class="card-list" id="abonnements-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- NOUVEL ABONNEMENT -->
+<div class="screen" id="screen-nouvel-abonnement">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('abonnements',null)">←</button>
+    <div class="form-title">Nouvel abonnement</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section"><label class="f-lbl">Client *</label><input id="ab-client" class="f-inp" placeholder="Nom du client" list="client-datalist-ab">
+    <datalist id="client-datalist-ab"></datalist></div>
+  <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="ab-chantier" class="f-inp" placeholder="Optionnel"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Fréquence</label>
+        <select id="ab-frequence" class="f-inp">
+          <option value="mensuel">Mensuel</option>
+          <option value="trimestriel">Trimestriel</option>
+          <option value="annuel">Annuel</option>
+        </select>
+      </div>
+      <div><label class="f-lbl">Jour de génération</label><input id="ab-jour" class="f-inp" type="number" min="1" max="28" value="1"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Date de début</label><input id="ab-date-debut" class="f-inp" type="date"></div>
+  <div class="form-section">
+    <label class="f-lbl">Prestations</label>
+    <div id="ab-lignes-container"></div>
+    <button class="add-ligne" onclick="openAddLigneAB()">＋ Ajouter une ligne</button>
+  </div>
+  <div class="total-recap">
+    <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="ab-total-ht">0 MAD</span></div>
+    <div class="tr-row main"><span class="tr-lbl">Total TTC (par échéance)</span><span class="tr-val" id="ab-total-ttc">0 MAD</span></div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Note</label><input id="ab-note" class="f-inp" placeholder="Note interne..."></div>
+  <div class="send-row" style="grid-template-columns:1fr">
+    <button class="s-btn blue" onclick="sauvegarderAbonnement()">💾 Créer l'abonnement</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- DETAIL ABONNEMENT -->
+<div class="screen" id="screen-detail-abonnement">
+  <div class="detail-top">
+    <div class="d-back" onclick="goScreen('abonnements',null)">← Retour</div>
+    <div class="d-client" id="dab-client"></div>
+    <div class="d-amount" id="dab-amount"></div>
+    <div class="d-meta" id="dab-ref"></div>
+  </div>
+  <div class="d-body">
+    <div class="d-card"><div class="d-card-title">Prestations récurrentes</div><div id="dab-lignes"></div></div>
+    <div id="dab-actions"></div>
+  </div>
+  <div class="pb"></div>
 </div>
 
 <!-- RELEVES -->
@@ -510,6 +576,7 @@
       <div><label class="f-lbl">Stock</label><input id="p-stock" class="f-inp" type="number" placeholder="0"></div>
     </div>
   </div>
+  <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="p-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
   <div class="form-section">
     <div class="f-row">
       <div><label class="f-lbl">TVA (%)</label>
@@ -607,6 +674,11 @@
     <label class="f-lbl">Banque</label><input id="pe-banque" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">RIB / IBAN</label><input id="pe-rib" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">Conditions de paiement</label><input id="pe-conditions" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">🎨 Couleur d'accent des PDF (factures)</label>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <input id="pe-couleur" type="color" value="#2563EB" style="width:52px;height:40px;border:1.5px solid #E2E8F0;border-radius:10px;padding:2px;cursor:pointer">
+      <div style="font-size:11px;color:#94A3B8">S'applique aux factures uniquement — devis/avoirs gardent leur code couleur habituel</div>
+    </div>
     <label class="f-lbl">🔐 Code comptable (6 chiffres)</label>
     <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px">
     <div style="font-size:11px;color:#94A3B8;margin-bottom:16px">Partagez ce code avec votre comptable</div>
@@ -813,6 +885,27 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-ligne-ab">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une ligne</div>
+    <input class="m-inp" id="mlab-desc" placeholder="Description de la prestation">
+    <input class="m-inp" id="mlab-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mlab-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <select class="m-inp" id="mlab-unite">
+      <option value="u">Unité (u)</option>
+      <option value="h">Heure (h)</option>
+      <option value="j">Jour (j)</option>
+      <option value="Fft">Forfait (Fft)</option>
+      <option value="m2">m²</option>
+      <option value="ml">ml</option>
+      <option value="kg">kg</option>
+    </select>
+    <button class="m-btn" onclick="confirmerLigneAB()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
 <!-- MODAL CATALOGUE -->
 <div class="modal-overlay" id="modal-produits">
   <div class="modal">
@@ -876,6 +969,29 @@
       <button class="m-btn" style="flex:1;margin-top:0;background:#059669" onclick="confirmerSignatureEtAccepter()">✅ Valider et accepter</button>
     </div>
     <button class="m-btn-sec" onclick="annulerSignature()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL AJUSTEMENT STOCK -->
+<div class="modal-overlay" id="modal-ajustement-stock">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="as-titre">Ajuster le stock</div>
+    <div style="background:#F8FAFC;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:flex;justify-content:space-between">
+      <span style="color:#64748B">Stock actuel</span><strong id="as-stock-actuel">0</strong>
+    </div>
+    <label class="a-lbl">Type de mouvement</label>
+    <select id="as-type" class="m-inp">
+      <option value="entree">⬆️ Entrée (réapprovisionnement)</option>
+      <option value="sortie">⬇️ Sortie manuelle</option>
+      <option value="ajustement">⚖️ Ajustement (nouvelle valeur)</option>
+    </select>
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="as-quantite" type="number" placeholder="Ex: 10" step="0.01">
+    <label class="a-lbl">Motif (optionnel)</label>
+    <input class="m-inp" id="as-motif" placeholder="Ex: Livraison fournisseur">
+    <button class="m-btn" onclick="confirmerAjustementStock()">✅ Valider</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
 </div>
 
@@ -983,6 +1099,7 @@
       <div><label class="f-lbl">Stock</label><input id="mp-stock" class="f-inp" type="number"></div>
     </div>
   </div>
+  <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="mp-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
   <div class="form-section"><label class="f-lbl">Cat&#233;gorie</label>
     <select id="mp-categorie" class="f-inp">
       <option value="service">Prestation de service</option>
