@@ -8,7 +8,7 @@ function exportPDF(id) {
   // Lien public de la facture
   const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
   genDocPDF({
-    type:'FACTURE', ref:f.ref, color:'#2563EB',
+    type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#2563EB',
     emetteur: profil,
     destinataire:{nom:f.client,chantier:f.chantier,ice:f.client_ice,tel:f.client_tel,adresse:f.client_adresse},
     date:f.date_emission, echeance:f.echeance,
@@ -30,7 +30,7 @@ function previewPDF() {
   if(!client){showToast('Remplissez le formulaire','error');return;}
   const ht=STATE.lignesF.reduce((s,l)=>s+l.qte*l.pu,0);
   genDocPDF({
-    type:'FACTURE', ref:el('f-ref')?.value, color:'#2563EB',
+    type:'FACTURE', ref:el('f-ref')?.value, color: (STATE.profil||{}).couleur_accent || '#2563EB',
     emetteur: STATE.profil||{},
     destinataire:{nom:client,chantier:el('f-chantier')?.value},
     date:el('f-date')?.value,
