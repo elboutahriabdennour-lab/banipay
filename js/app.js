@@ -344,8 +344,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       await traiterInvitation(inviteToken);
       await loadAchats();
     await loadConversations();
-      await loadAbonnements();
-      await verifierAbonnements();
+      if (typeof loadAbonnements === 'function') await loadAbonnements();
+      if (typeof verifierAbonnements === 'function') await verifierAbonnements();
       if (window._pendingDocId) {
           const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
           window._pendingDocId = null;
@@ -392,8 +392,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         verifierRappels();
         await loadAchats();
     await loadConversations();
-        await loadAbonnements();
-        await verifierAbonnements();
+        if (typeof loadAbonnements === 'function') await loadAbonnements();
+        if (typeof verifierAbonnements === 'function') await verifierAbonnements();
         goScreen('dashboard');
       }
     }
