@@ -30,7 +30,8 @@ function renderProfil() {
   const infosCard = el('pv-infos-card');
   if (infosCard) infosCard.innerHTML =
     `<div class="p-card-title">Informations entreprise</div>` +
-    fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('');
+    fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('') +
+    `<div class="p-row"><span class="p-lbl">🎨 Couleur PDF</span><span class="p-val"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${p.couleur_accent||'#2563EB'};vertical-align:middle;margin-right:6px;border:1px solid #E2E8F0"></span>${p.couleur_accent||'#2563EB'}</span></div>`;
   // QR
   const publicUrl = window.location.origin+window.location.pathname+'?profil='+id;
   setEl('pv-lien', publicUrl);
@@ -56,8 +57,9 @@ function goProfilEdit(show=true) {
     'pe-patente':'patente','pe-cnss':'cnss','pe-banque':'banque',
     'pe-rib':'rib','pe-conditions':'conditions',
     'pe-numerotation':'numerotation','pe-objectif':'objectif_mensuel',
+    'pe-couleur':'couleur_accent',
   };
-  Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||'';});
+  Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#2563EB':'');});
   const codeEl = el('pf-code-comptable');
   if(codeEl) codeEl.value = '';
 }
@@ -72,6 +74,7 @@ async function saveProfil() {
     'pe-patente':'patente','pe-cnss':'cnss','pe-banque':'banque',
     'pe-rib':'rib','pe-conditions':'conditions',
     'pe-numerotation':'numerotation','pe-objectif':'objectif_mensuel',
+    'pe-couleur':'couleur_accent',
   };
   Object.entries(map).forEach(([id,key])=>{
     const e=el(id);
