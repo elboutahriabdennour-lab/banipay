@@ -191,8 +191,8 @@ async function doLogin() {
       STATE.produits = []; STATE.avoirs = []; STATE.achats = []; STATE.abonnements = [];
       await loadAll();
       await loadAchats();
-      await loadAbonnements();
-      await verifierAbonnements();
+      if (typeof loadAbonnements === 'function') await loadAbonnements();
+      if (typeof verifierAbonnements === 'function') await verifierAbonnements();
 
       // Traiter invitation en attente
       if (window._pendingInviteCpt) {
