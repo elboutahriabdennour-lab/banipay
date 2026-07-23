@@ -16,26 +16,35 @@ function renderProduits() {
     return;
   }
   const catIcons = {service:'⚙️',produit:'📦','main-oeuvre':'👷',transport:'🚛',materiaux:'🧱',autre:'📋'};
-  list.innerHTML = data.map(p => `
+  list.innerHTML = data.map(p => {
+    const suiviStock = p.stock !== null && p.stock !== undefined;
+    const enAlerte = suiviStock && p.seuil_alerte != null && Number(p.stock) <= Number(p.seuil_alerte);
+    const rupture = suiviStock && Number(p.stock) <= 0;
+    const stockColor = rupture ? '#EF4444' : enAlerte ? '#D97706' : '#059669';
+    return `
     <div class="card">
       <div class="card-ico" style="background:#EFF6FF">${catIcons[p.categorie]||'📦'}</div>
       <div class="card-body">
         <div class="card-name">${p.nom}</div>
         <div class="card-ref">${p.unite||'u'} · ${p.description||''}</div>
+        ${enAlerte && !rupture ? '<div style="font-size:10px;color:#D97706;font-weight:600;margin-top:2px">⚠️ Stock bas (seuil: '+p.seuil_alerte+')</div>' : ''}
       </div>
       <div class="card-end">
         <div class="card-amt">${fmt(p.prix_ht)} MAD HT</div>
-        ${p.stock !== null && p.stock !== undefined ? `<div style="font-size:10px;color:${p.stock<=0?'#EF4444':'#059669'}">${p.stock} en stock</div>` : ''}
+        ${suiviStock ? `<div style="font-size:10px;color:${stockColor};font-weight:600">${p.stock} en stock</div>` : ''}
         <div style="display:flex;gap:4px;margin-top:2px">
           <button onclick="modifierProduit(${p.id})" style="font-size:11px;background:#EFF6FF;color:#2563EB;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">✏️</button>
+          ${suiviStock ? `<button onclick="ouvrirAjustementStock(${p.id})" style="font-size:11px;background:#F0FDF4;color:#059669;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">⚖️</button>
+          <button onclick="ouvrirHistoriqueStock(${p.id})" style="font-size:11px;background:#F8FAFC;color:#64748B;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">📦</button>` : ''}
           <button onclick="supprimerProduit(${p.id})" style="font-size:11px;background:#FEF2F2;color:#EF4444;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">🗑️</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function initNouveauProduit() {
-  ['p-nom','p-desc','p-ref','p-prix','p-prix-ttc','p-cout','p-stock'].forEach(id=>{const e=el(id);if(e)e.value='';});
+  ['p-nom','p-desc','p-ref','p-prix','p-prix-ttc','p-cout','p-stock','p-seuil'].forEach(id=>{const e=el(id);if(e)e.value='';});
   el('p-unite')&&(el('p-unite').value='u');
   el('p-categorie')&&(el('p-categorie').value='service');
   el('p-tva')&&(el('p-tva').value='20');
@@ -67,6 +76,7 @@ async function sauvegarderProduit() {
       tva_rate:parseFloat(el('p-tva')?.value)||20,
       cout_achat:parseFloat(el('p-cout')?.value)||null,
       stock:el('p-stock')?.value!==''?parseInt(el('p-stock')?.value):null,
+      seuil_alerte:el('p-seuil')?.value!==''?parseInt(el('p-seuil')?.value):null,
       unite:el('p-unite')?.value,
       categorie:el('p-categorie')?.value,
     });
@@ -103,6 +113,7 @@ function ouvrirModifProduit(id) {
   el('mp-tva') && (el('mp-tva').value = p.tva_rate || 20);
   el('mp-cout') && (el('mp-cout').value = p.cout_achat || '');
   el('mp-stock') && (el('mp-stock').value = p.stock !== null ? p.stock : '');
+  el('mp-seuil') && (el('mp-seuil').value = p.seuil_alerte !== null && p.seuil_alerte !== undefined ? p.seuil_alerte : '');
   el('mp-unite') && (el('mp-unite').value = p.unite || 'u');
   el('mp-categorie') && (el('mp-categorie').value = p.categorie || 'service');
   calcPrixTTCModif();
@@ -133,6 +144,7 @@ async function sauvegarderModifProduit() {
     tva_rate: parseFloat(el('mp-tva')?.value) || 20,
     cout_achat: parseFloat(el('mp-cout')?.value) || null,
     stock: el('mp-stock')?.value !== '' ? parseInt(el('mp-stock')?.value) : null,
+    seuil_alerte: el('mp-seuil')?.value !== '' ? parseInt(el('mp-seuil')?.value) : null,
     unite: el('mp-unite')?.value,
     categorie: el('mp-categorie')?.value,
   };
