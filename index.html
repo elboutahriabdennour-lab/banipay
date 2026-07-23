@@ -62,7 +62,7 @@
     <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#ECFDF5">🧾</div><div class="qa-lbl">TVA</div></div>
     <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#F3E8FF">👥</div><div class="qa-lbl">Clients</div></div>
     <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#FFFBEB">📦</div><div class="qa-lbl">Catalogue</div></div>
-    <div class="qa-item" onclick="loadAbonnements();goScreen('abonnements',null)"><div class="qa-ico" style="background:#EEF2FF">🔁</div><div class="qa-lbl">Récurrent</div></div>
+    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#EEF2FF">🔁</div><div class="qa-lbl">Récurrent</div></div>
   </div>
   <div class="sec-header" style="margin-top:8px">
     <div class="sec-title">Mes factures</div>
