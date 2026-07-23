@@ -38,7 +38,7 @@ async function renvoyerConfirmation() {
 async function doLogout() {
   localStorage.removeItem('bp_remember_v2');
   sb.logout();
-  Object.assign(STATE, { factures:[], devis:[], clients:[], produits:[], avoirs:[], paiements:[], profil:{}, notifications:[] });
+  Object.assign(STATE, { factures:[], devis:[], clients:[], produits:[], avoirs:[], paiements:[], profil:{}, notifications:[], abonnements:[] });
   goScreen('auth');
 }
 
@@ -188,9 +188,11 @@ async function doLogin() {
     } else {
       // Reset données avant chargement nouveau compte
       STATE.factures = []; STATE.devis = []; STATE.clients = [];
-      STATE.produits = []; STATE.avoirs = []; STATE.achats = [];
+      STATE.produits = []; STATE.avoirs = []; STATE.achats = []; STATE.abonnements = [];
       await loadAll();
       await loadAchats();
+      await loadAbonnements();
+      await verifierAbonnements();
 
       // Traiter invitation en attente
       if (window._pendingInviteCpt) {
