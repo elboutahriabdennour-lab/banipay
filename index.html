@@ -619,10 +619,14 @@
   <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #F1F5F9;text-align:center">
     <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:12px">QR Code & Lien public</div>
     <canvas id="qr-canvas" width="120" height="120" style="border-radius:8px;display:block;margin:0 auto 10px;background:#F8FAFC"></canvas>
-    <div style="font-size:11px;color:#94A3B8;margin-bottom:10px;word-break:break-all" id="pf-lien-comptable" style="display:none">—</div>
+    <!-- FIX: cet élément était auparavant absent du HTML alors que renderProfil()
+         essayait déjà de le remplir (setEl('pv-lien', ...)) — le lien affiché
+         sous le QR ne correspondait donc jamais au vrai lien public encodé
+         dans le QR code. -->
+    <div id="pv-lien" style="font-size:11px;color:#2563EB;margin-bottom:10px;word-break:break-all;background:#F8FAFC;padding:8px;border-radius:8px">—</div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <div id="comptable-link-display" style="font-size:11px;color:#94A3B8;margin-bottom:8px;word-break:break-all"></div>
-      <button onclick="copierLienComptable()" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="copierLienProfil()" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfil()" style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     </div>
   </div>
   <div style="padding:0 16px" id="profil-view">
