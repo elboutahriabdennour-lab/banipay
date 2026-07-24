@@ -167,8 +167,9 @@ function renderDetailDevis() {
   }
 
   // Partage
-  actions.push(`<button class="action-item" onclick="partagerDevisWhatsApp(${d.id})"><div class="action-ico" style="background:#ECFDF5">📱</div>Partager WhatsApp</button>`);
-  actions.push(`<button class="action-item" onclick="partagerDevisNatif(${d.id})"><div class="action-ico" style="background:#EFF6FF">📤</div>Partager / Copier lien</button>`);
+  // FIX: boutons "Partager WhatsApp" / "Partager / Copier lien" retirés —
+  // redondants avec le bouton "Envoyer" unifié (WhatsApp/Email/Lien/BaniPay)
+  // déjà en premier dans cette liste d'actions.
   actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#FFFBEB">📄</div>Voir PDF</button>`);
   actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#F3E8FF">📋</div>Dupliquer</button>`);
   actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#FEF2F2">🗑️</div>Supprimer</button>`);
