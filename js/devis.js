@@ -399,6 +399,7 @@ function exportDevisPDF(id) {
     devise: d.devise || 'MAD',
     doc_id: id,
     doc_url: window.location.origin + window.location.pathname + '?doc=' + id,
+    signatureClient: d.signature_data || null,
   });
 }
 
@@ -587,6 +588,27 @@ async function traiterActionDocument(docId, type, action, signatureData) {
     const data = await r.json();
     const d = data && data[0];
     if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">' + (isFacture ? 'Facture' : 'Devis') + ' introuvable</div>'; return; }
+
+    // FIX: un document déjà accepté ou refusé ne doit plus jamais changer
+    // d'état — que ce soit via un lien réutilisé (ancien message WhatsApp/
+    // email), un double-clic, ou un rechargement de page.
+    const statutActuel = d[champ];
+    const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
+    if (dejaTraite) {
+      document.body.innerHTML = `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+          <div style="font-size:64px;margin-bottom:16px">${statutActuel === valeurAcceptee ? '✅' : '❌'}</div>
+          <h2 style="color:#0F172A;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
+          <div style="background:${statutActuel === valeurAcceptee ? '#ECFDF5' : '#FEF2F2'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+            <div style="font-size:13px;color:#64748B">Référence : <strong>${d.ref}</strong></div>
+            <div style="font-size:13px;color:#64748B;margin-top:4px">Client : <strong>${d.client}</strong></div>
+          </div>
+          <p style="color:#64748B;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
+          <div style="margin-top:24px;font-size:11px;color:#94A3B8">Propulsé par <strong style="color:#2563EB">BaniPay</strong></div>
+        </div>
+      `;
+      return;
+    }
 
     // Mettre à jour le statut / la réponse client
     const nouvelleValeur = action === 'accepter' ? valeurAcceptee : valeurRefusee;
