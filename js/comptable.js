@@ -1401,6 +1401,16 @@ async function sauvegarderControle(factureId, data) {
     let ligneMiseAJour = [];
     if (resp.ok) {
       try { ligneMiseAJour = await resp.json(); } catch(eParse) { ligneMiseAJour = []; }
+    } else {
+      // FIX: diagnostic — un 401/403 ici indique presque toujours un blocage
+      // RLS (le comptable n'a pas le droit d'écrire sur cette ligne), pas
+      // "aucune ligne à modifier". On le distingue clairement en console.
+      const errText = await resp.text().catch(function() { return ''; });
+      console.warn('sauvegarderControle: PATCH a échoué (' + resp.status + ') — ' + errText);
+      if (resp.status === 401 || resp.status === 403) {
+        showToast('⛔ Accès refusé par la base (RLS) — voir migration_phase6_rls_controles.sql', 'error');
+        return;
+      }
     }
 
     if (!resp.ok || !ligneMiseAJour || ligneMiseAJour.length === 0) {
@@ -1418,7 +1428,11 @@ async function sauvegarderControle(factureId, data) {
       if (!resp.ok && resp.status !== 201 && resp.status !== 204) {
         const errText = await resp.text();
         console.error('sauvegarderControle error (INSERT):', resp.status, errText);
-        showToast('Erreur DB: ' + resp.status, 'error');
+        if (resp.status === 401 || resp.status === 403) {
+          showToast('⛔ Accès refusé par la base (RLS) — voir migration_phase6_rls_controles.sql', 'error');
+        } else {
+          showToast('Erreur DB: ' + resp.status, 'error');
+        }
         return;
       }
     }
