@@ -116,6 +116,12 @@ async function renderNotifScreen() {
 
   list.innerHTML = html;
 
+  // FIX: n'attacher l'écouteur qu'une seule fois sur ce noeud persistant.
+  // Auparavant { once: true } ne géraient qu'un seul clic total sur tout
+  // l'écran (accepter OU refuser UNE fois, plus rien ensuite).
+  if (list.dataset.clickBound === '1') return;
+  list.dataset.clickBound = '1';
+
   list.addEventListener('click', async function(e) {
     const btnA = e.target.closest('.btn-accept-cpt-inv');
     if (btnA) {
@@ -204,7 +210,7 @@ async function renderNotifScreen() {
         showToast('Erreur: ' + e4.message, 'error');
       }
     }
-  }, { once: true });
+  });
 }
 
 
