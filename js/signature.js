@@ -163,3 +163,34 @@ function getSignatureEntrepriseDataUrl() {
   if (!canvas || !window._sigEntrepriseHasDrawn) return null;
   return canvas.toDataURL('image/png');
 }
+
+// Permet d'utiliser une photo (cachet/tampon scanné) à la place d'une
+// signature dessinée à la main — l'image est posée sur le même canvas et
+// suit ensuite exactement le même chemin de sauvegarde.
+function importerPhotoSignatureEntreprise(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const canvas = document.getElementById('pe-sig-canvas');
+  if (!canvas) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Ajuste l'image au canvas en conservant ses proportions
+      const ratioImg = img.width / img.height;
+      const ratioCanvas = rect.width / rect.height;
+      let w, h, x, y;
+      if (ratioImg > ratioCanvas) { w = rect.width; h = rect.width / ratioImg; x = 0; y = (rect.height - h) / 2; }
+      else { h = rect.height; w = rect.height * ratioImg; y = 0; x = (rect.width - w) / 2; }
+      ctx.drawImage(img, x, y, w, h);
+      window._sigEntrepriseHasDrawn = true;
+      showToast('✅ Cachet importé — pensez à Enregistrer', 'success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
