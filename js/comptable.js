@@ -1379,37 +1379,47 @@ async function sauvegarderControle(factureId, data) {
   }, data);
 
   try {
-    let resp = await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + sb.token,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify(payload)
-    });
+    // FIX: on ne dépend plus d'une contrainte UNIQUE en base (upsert via
+    // merge-duplicates échouait silencieusement sans elle, et le PATCH de
+    // secours ne créait rien s'il n'y avait encore aucune ligne — le clic
+    // semblait fonctionner à l'écran mais rien n'était sauvegardé).
+    // Nouvelle logique : on tente d'abord un PATCH sur la ligne existante ;
+    // si aucune ligne ne correspond, on fait un INSERT direct.
+    let resp = await fetch(
+      SUPABASE_URL + '/rest/v1/controles_factures?facture_id=eq.' + encodeURIComponent(String(factureId)) +
+      '&entreprise_id=eq.' + encodeURIComponent(CPT.currentEntrepriseId),
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + sb.token,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(data)
+      }
+    );
 
-    // Fallback PATCH si le POST échoue
-    if (!resp.ok && resp.status !== 201 && resp.status !== 204) {
-      console.warn('sauvegarderControle: POST échoué (' + resp.status + '), tentative PATCH...');
-      resp = await fetch(
-        SUPABASE_URL + '/rest/v1/controles_factures?facture_id=eq.' + encodeURIComponent(String(factureId)) +
-        '&entreprise_id=eq.' + encodeURIComponent(CPT.currentEntrepriseId),
-        {
-          method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + sb.token,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify(data)
-        }
-      );
-      if (!resp.ok && resp.status !== 204) {
+    let ligneMiseAJour = [];
+    if (resp.ok) {
+      try { ligneMiseAJour = await resp.json(); } catch(eParse) { ligneMiseAJour = []; }
+    }
+
+    if (!resp.ok || !ligneMiseAJour || ligneMiseAJour.length === 0) {
+      // Aucune ligne existante à modifier (ou erreur) → on insère
+      resp = await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + sb.token,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok && resp.status !== 201 && resp.status !== 204) {
         const errText = await resp.text();
-        console.error('sauvegarderControle error (PATCH):', resp.status, errText);
+        console.error('sauvegarderControle error (INSERT):', resp.status, errText);
         showToast('Erreur DB: ' + resp.status, 'error');
         return;
       }
