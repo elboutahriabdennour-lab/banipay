@@ -481,6 +481,52 @@ function exporterClientsCSV() {
   showToast('✅ Export clients téléchargé !', 'success');
 }
 
+// ============================================================
+// SÉLECTEUR DE CLIENTS VISIBLE (facture / devis / abonnement)
+// ============================================================
+// FIX: le champ client ne s'appuyait que sur un <datalist>, invisible tant
+// qu'on ne commence pas à taper (et peu visible sur mobile) — l'utilisateur
+// n'avait donc aucun moyen de "voir" ses clients existants d'un coup d'œil.
+
+window._pickerClientTarget = null;
+
+function ouvrirPickerClients(targetInputId) {
+  window._pickerClientTarget = targetInputId;
+  el('search-client-picker') && (el('search-client-picker').value = '');
+  renderPickerClients(STATE.clients || []);
+  el('modal-clients-picker')?.classList.add('active');
+  setTimeout(function() { el('search-client-picker')?.focus(); }, 100);
+}
+
+function filtrerPickerClients() {
+  const q = (el('search-client-picker')?.value || '').toLowerCase();
+  const filtered = !q ? (STATE.clients || []) : (STATE.clients || []).filter(function(c) {
+    return c.nom.toLowerCase().includes(q) || (c.tel||'').includes(q) || (c.email||'').toLowerCase().includes(q);
+  });
+  renderPickerClients(filtered);
+}
+
+function renderPickerClients(liste) {
+  const container = el('clients-picker-list');
+  if (!container) return;
+  if (!liste.length) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#94A3B8">Aucun client — créez-en un depuis l\'écran Clients</div>';
+    return;
+  }
+  container.innerHTML = liste.map(function(c) {
+    return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + "'" + escapeHTML(c.nom||'').replace(/'/g,"\\'") + "'" + ')">' +
+      '<div class="card-ico" style="background:#EFF6FF;font-weight:700;color:#2563EB;font-size:16px">' + (c.nom||'?').charAt(0).toUpperCase() + '</div>' +
+      '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.tel||c.email||'') + '</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+function choisirClientPicker(nom) {
+  const target = window._pickerClientTarget;
+  if (target && el(target)) el(target).value = nom;
+  closeAllModals();
+}
+
 async function importerClientsCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
