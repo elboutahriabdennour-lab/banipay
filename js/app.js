@@ -251,7 +251,16 @@ async function afficherDocumentPublic(docId) {
         const bAcc = document.createElement('button');
         bAcc.textContent = isDevis ? '✅ Accepter le devis' : '✅ Accepter la facture';
         bAcc.style.cssText = 'flex:1;padding:14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
-        bAcc.onclick = function() { ouvrirModalSignature(docId, typeDoc); };
+        // FIX: si signature.js n'est pas déployé, ouvrirModalSignature n'existe
+        // pas et le clic sur "Accepter" échouait silencieusement (erreur JS
+        // invisible pour le client). On retombe sur l'acceptation directe.
+        bAcc.onclick = function() {
+          if (typeof ouvrirModalSignature === 'function') {
+            ouvrirModalSignature(docId, typeDoc);
+          } else {
+            traiterActionDocument(docId, typeDoc, 'accepter');
+          }
+        };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
         bRef.style.cssText = 'flex:1;padding:14px;background:#DC2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
@@ -515,6 +524,9 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
           },
           body: JSON.stringify({
             user_id: entrepriseId, // on stocke pour retrouver le comptable via email
+            // FIX: destinataire_email manquant — le comptable ne voyait jamais
+            // cette notification, chargerNotificationsComptable() filtrant dessus.
+            destinataire_email: emailCpt ? emailCpt.toLowerCase() : null,
             type: 'invitation_acceptee',
             titre: 'Invitation acceptée',
             corps: (sb.user.user_metadata?.nom || sb.user.email) + ' a accepté votre invitation comptable.',
