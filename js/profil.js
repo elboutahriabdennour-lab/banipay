@@ -35,7 +35,14 @@ function renderProfil() {
   // QR
   const publicUrl = window.location.origin+window.location.pathname+'?profil='+id;
   setEl('pv-lien', publicUrl);
-  setTimeout(()=>genQRCanvas('qr-canvas', publicUrl, 120), 100);
+  // FIX: genQRCanvas() dessinait un faux QR décoratif (carrés aléatoires),
+  // qui ne pouvait évidemment jamais être scanné — remplacé par un vrai QR
+  // code généré via l'API déjà utilisée ailleurs dans l'app (comptable, etc.)
+  const qrContainer = el('qr-canvas-container');
+  if (qrContainer) {
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(publicUrl);
+    qrContainer.innerHTML = '<img src="' + qrUrl + '" width="120" height="120" style="border-radius:8px;background:#F8FAFC">';
+  }
   // Objectif
   if(el('pv-objectif')) el('pv-objectif').textContent = p.objectif_mensuel ? fmtInt(p.objectif_mensuel)+' MAD/mois' : 'Non défini';
   // Comptable link
@@ -661,14 +668,26 @@ async function renderMonComptable() {
     const inv = invs[0];
     const emailCpt = inv.comptable_email;
 
+    // FIX: afficher le nom/cabinet du comptable plutôt que son email brut
+    let nomAffiche = emailCpt;
+    try {
+      const respCpt = await fetch(
+        SUPABASE_URL + '/rest/v1/profils_comptable?email=eq.' + encodeURIComponent(emailCpt) + '&select=nom,cabinet&limit=1',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+      );
+      const profCpt = await respCpt.json();
+      const p = profCpt && profCpt[0];
+      if (p && p.nom) nomAffiche = p.nom + (p.cabinet ? ' · ' + p.cabinet : '');
+    } catch(eCpt) {}
+
     container.innerHTML =
       '<div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px">' +
         '<div style="display:flex;align-items:center;gap:12px">' +
           '<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">' +
-            (emailCpt[0] || 'C').toUpperCase() +
+            (nomAffiche[0] || 'C').toUpperCase() +
           '</div>' +
           '<div style="flex:1">' +
-            '<div style="font-size:14px;font-weight:700">' + escapeHTML(emailCpt) + '</div>' +
+            '<div style="font-size:14px;font-weight:700">' + escapeHTML(nomAffiche) + '</div>' +
             '<div style="font-size:11px;color:rgba(255,255,255,0.6)">Comptable lié</div>' +
           '</div>' +
           '<span style="background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600">✅ Actif</span>' +
