@@ -974,8 +974,6 @@ async function basculerModeEntreprise() {
 
 function revenirEspaceComptable() {
   CPT.modeEntreprise = false;
-  const btn = document.getElementById('btn-retour-comptable');
-  if (btn) btn.style.display = 'none';
   document.getElementById('cpt-mode-pill')?.remove();
   document.getElementById('mode-entreprise-banner')?.remove(); // nettoyage legacy si présent
   document.body.style.paddingTop = '';
@@ -1622,9 +1620,9 @@ function basculerModeDevis() {
 }
 
 function appendModeBanner() {
-  // Bouton dédié dans la topbar du dashboard
-  const btn = document.getElementById('btn-retour-comptable');
-  if (btn) btn.style.display = 'inline-flex';
+  // FIX: un seul bouton de retour désormais — la pile flottante ci-dessous,
+  // visible sur tous les écrans (l'ancien bouton topbar n'existait que sur
+  // le dashboard, ce qui créait une incohérence entre les écrans).
 
   // Pill flottante discrète, en bas à droite, sur tous les autres écrans
   document.getElementById('cpt-mode-pill')?.remove();
