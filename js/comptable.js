@@ -1775,6 +1775,7 @@ function ouvrirPDFComptable(fac, profil) {
     montant_recu: fac.montant_recu || 0,
     showStamp: fac.statut === 'payee',
     doc_id: fac.id,
+    signatureClient: fac.signature_data || null,
     doc_url: window.location.origin + window.location.pathname + '?doc=' + fac.id,
     badge_lettre: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.lettre; }),
     badge_tva: !!(CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id) && c.tva_verifie; }),
