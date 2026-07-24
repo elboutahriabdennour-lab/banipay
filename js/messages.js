@@ -4,6 +4,7 @@ STATE.conversations = STATE.conversations || [];
 STATE.messagesConv = STATE.messagesConv || [];
 STATE.currentConvId = null;
 STATE._realtimeChannel = null;
+STATE._nomsEntreprisesConv = STATE._nomsEntreprisesConv || {}; // cache entreprise_id -> raison
 
 // ============================================================
 // UTILITAIRES CONVERSATION ID
@@ -35,10 +36,33 @@ async function loadConversations() {
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     STATE.conversations = await r.json() || [];
+
+    // FIX: résoudre les noms d'entreprise (raison sociale) pour l'affichage
+    // côté comptable, au lieu de montrer le préfixe de l'email du contact.
+    if (role === 'comptable') {
+      await chargerNomsEntreprisesConversations();
+    }
+
     badgeMessages();
   } catch(e) {
     STATE.conversations = [];
   }
+}
+
+async function chargerNomsEntreprisesConversations() {
+  const ids = Array.from(new Set((STATE.conversations || []).map(function(c) { return c.entreprise_id; }).filter(Boolean)));
+  const idsAResoudre = ids.filter(function(id) { return !STATE._nomsEntreprisesConv[id]; });
+  if (!idsAResoudre.length) return;
+  try {
+    const r = await fetch(
+      SUPABASE_URL + '/rest/v1/profils_entreprise?id=in.(' + idsAResoudre.join(',') + ')&select=id,raison',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const profils = await r.json() || [];
+    profils.forEach(function(p) {
+      if (p.raison) STATE._nomsEntreprisesConv[p.id] = p.raison;
+    });
+  } catch(e) {}
 }
 
 // FIX: vrai comptage de messages non lus, plus de "!" codé en dur
@@ -97,6 +121,19 @@ async function ouvrirMessagerie() {
   goScreen('messages');
 }
 
+// Résout le nom d'affichage d'un contact de conversation.
+// Côté comptable : raison sociale de l'entreprise si disponible (sinon email).
+// Côté entreprise : nom du comptable — pas de répertoire public dédié pour
+// l'instant, donc on retombe sur le préfixe de son email (limite connue).
+function nomContactConversation(c, role) {
+  if (role === 'comptable') {
+    const raison = STATE._nomsEntreprisesConv[c.entreprise_id];
+    if (raison) return raison;
+    return (c.entreprise_email || '').split('@')[0] || 'Entreprise';
+  }
+  return (c.comptable_email || '').split('@')[0] || 'Comptable';
+}
+
 function renderConversations() {
   const list = document.getElementById('conv-list');
   if (!list) return;
@@ -109,9 +146,7 @@ function renderConversations() {
   }
 
   list.innerHTML = convs.map(function(c) {
-    const name = role === 'comptable'
-      ? (c.entreprise_email || '').split('@')[0]
-      : (c.comptable_email || '').split('@')[0];
+    const name = nomContactConversation(c, role);
     const lastMsg = c.dernier_message || 'Nouvelle conversation';
     const time = c.derniere_activite ? new Date(c.derniere_activite).toLocaleDateString('fr-FR', {day:'2-digit',month:'short'}) : '';
     const initiale = (name[0] || '?').toUpperCase();
@@ -131,10 +166,13 @@ function renderConversations() {
     '</div>';
   }).join('');
 
-  list.addEventListener('click', function(e) {
-    const item = e.target.closest('.conv-item');
-    if (item) ouvrirConversation(item.dataset.id);
-  });
+  if (list.dataset.clickBound !== '1') {
+    list.dataset.clickBound = '1';
+    list.addEventListener('click', function(e) {
+      const item = e.target.closest('.conv-item');
+      if (item) ouvrirConversation(item.dataset.id);
+    });
+  }
 }
 
 // ============================================================
@@ -147,9 +185,7 @@ async function ouvrirConversation(convId) {
   if (!conv) return;
 
   const role = sb.user?.user_metadata?.role || 'entreprise';
-  const nomContact = role === 'comptable'
-    ? (conv.entreprise_email || '').split('@')[0]
-    : (conv.comptable_email || '').split('@')[0];
+  const nomContact = nomContactConversation(conv, role);
 
   const header = document.getElementById('chat-nom');
   if (header) header.textContent = nomContact;
