@@ -419,6 +419,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Polling 30s pour détecter acceptation/refus des devis
   if (sb.user?.id) ecouterChangementsDevis(sb.user.id);
+  // FIX: les notifications générales (facture_recue, devis_recu, remarque
+  // comptable, TVA déclarée...) n'étaient rafraîchies qu'au chargement de la
+  // page ou en changeant d'écran. Rafraîchissement périodique pour qu'elles
+  // apparaissent sans action manuelle de l'utilisateur.
+  if (sb.user?.id && CPT.role !== 'comptable') {
+    setInterval(function() {
+      if (sb.user?.id) genNotifications();
+    }, 30000);
+  }
 });
 
 function verifierChangementsDevis() {
