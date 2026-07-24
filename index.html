@@ -198,7 +198,11 @@
     <div class="form-title">Nouvel abonnement</div>
   </div>
   <div style="height:14px"></div>
-  <div class="form-section"><label class="f-lbl">Client *</label><input id="ab-client" class="f-inp" placeholder="Nom du client" list="client-datalist-ab">
+  <div class="form-section"><label class="f-lbl">Client *</label>
+    <div style="display:flex;gap:8px">
+      <input id="ab-client" class="f-inp" placeholder="Nom du client" list="client-datalist-ab" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('ab-client')" style="flex-shrink:0;padding:0 14px;background:#EFF6FF;color:#2563EB;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
     <datalist id="client-datalist-ab"></datalist></div>
   <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="ab-chantier" class="f-inp" placeholder="Optionnel"></div>
   <div class="form-section">
@@ -325,7 +329,10 @@
   <div style="height:14px"></div>
   <div class="form-section">
     <label class="f-lbl">Client *</label>
-    <input id="f-client" class="f-inp" placeholder="Nom du client" list="client-datalist">
+    <div style="display:flex;gap:8px">
+      <input id="f-client" class="f-inp" placeholder="Nom du client" list="client-datalist" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('f-client')" style="flex-shrink:0;padding:0 14px;background:#EFF6FF;color:#2563EB;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
     <datalist id="client-datalist"></datalist>
   </div>
   <div class="form-section">
@@ -434,7 +441,11 @@
     <div class="form-title">Nouveau devis</div>
   </div>
   <div style="height:14px"></div>
-  <div class="form-section"><label class="f-lbl">Client *</label><input id="d-client" class="f-inp" placeholder="Nom du client" list="client-datalist-devis">
+  <div class="form-section"><label class="f-lbl">Client *</label>
+    <div style="display:flex;gap:8px">
+      <input id="d-client" class="f-inp" placeholder="Nom du client" list="client-datalist-devis" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('d-client')" style="flex-shrink:0;padding:0 14px;background:#EFF6FF;color:#2563EB;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
     <datalist id="client-datalist-devis"></datalist></div>
   <div class="form-section">
     <div class="f-row">
@@ -934,6 +945,17 @@
   </div>
 </div>
 
+<!-- MODAL SÉLECTION CLIENT -->
+<div class="modal-overlay" id="modal-clients-picker">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👥 Choisir un client</div>
+    <input class="m-inp" id="search-client-picker" placeholder="Rechercher..." oninput="filtrerPickerClients()">
+    <div id="clients-picker-list" style="max-height:350px;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
 <!-- MODAL PAIEMENT -->
 <div class="modal-overlay" id="modal-paiement">
   <div class="modal">
@@ -1200,6 +1222,13 @@
             <input type="radio" id="param-tva-non" name="param-tva-assujetti" value="non"> Non
           </label>
         </div>
+      </div>
+    </div>
+    <!-- Affichage -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">🎨 Affichage</div>
+      <div style="padding:14px 16px">
+        <button class="p-btn" onclick="toggleDarkMode()">🌙 Basculer mode sombre / clair</button>
       </div>
     </div>
     <!-- Securite -->
