@@ -141,6 +141,19 @@ async function renderNotifScreen() {
 
       if (inv && inv.comptable_email) {
         try {
+          // FIX: récupère le nom/cabinet réel du comptable au lieu de
+          // deviner un nom depuis son email.
+          let nomCpt = inv.comptable_email.split('@')[0];
+          try {
+            const respCpt = await fetch(
+              SUPABASE_URL + '/rest/v1/profils_comptable?email=eq.' + encodeURIComponent(inv.comptable_email) + '&select=nom,cabinet&limit=1',
+              { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+            );
+            const profCpt = await respCpt.json();
+            const pc = profCpt && profCpt[0];
+            if (pc && pc.nom) nomCpt = pc.nom + (pc.cabinet ? ' · ' + pc.cabinet : '');
+          } catch(eCpt) {}
+
           await fetch(SUPABASE_URL + '/rest/v1/clients', {
             method: 'POST',
             headers: {
@@ -151,7 +164,7 @@ async function renderNotifScreen() {
             },
             body: JSON.stringify({
               user_id: sb.user?.id,
-              nom: inv.comptable_email.split('@')[0],
+              nom: nomCpt,
               email: inv.comptable_email,
               note: 'Mon comptable BaniPay',
               type: 'comptable_banipay'
