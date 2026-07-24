@@ -62,6 +62,10 @@ function goProfilEdit(show=true) {
   Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#2563EB':'');});
   const codeEl = el('pf-code-comptable');
   if(codeEl) codeEl.value = '';
+  // Initialiser le canvas de signature entreprise (si le module signature.js est présent)
+  if (typeof initSignatureEntrepriseCanvas === 'function') {
+    setTimeout(initSignatureEntrepriseCanvas, 50);
+  }
 }
 
 async function saveProfil() {
@@ -80,6 +84,15 @@ async function saveProfil() {
     const e=el(id);
     if(e){ data[key]=e.value.trim(); STATE.profil[key]=e.value.trim(); }
   });
+  // Signature d'entreprise : uniquement si (re)dessinée pendant cette édition,
+  // pour ne jamais écraser une signature déjà enregistrée sans raison.
+  if (typeof getSignatureEntrepriseDataUrl === 'function') {
+    const sigDataUrl = getSignatureEntrepriseDataUrl();
+    if (sigDataUrl !== null) {
+      data.signature_entreprise = sigDataUrl;
+      STATE.profil.signature_entreprise = sigDataUrl;
+    }
+  }
   // Generate id_unique if not exists
   if(!STATE.profil.id_unique) {
     data.id_unique = 'BP-'+uid6();
