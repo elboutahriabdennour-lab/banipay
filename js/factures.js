@@ -292,8 +292,10 @@ function renderDetail() {
   // PDF actions
   actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#EFF6FF">👁️</div>Aperçu PDF</button>`);
   actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#EFF6FF">💾</div>Enregistrer PDF</button>`);
-  actions.push(`<button class="action-item" onclick="partagerFacturePDF(${f.id})"><div class="action-ico" style="background:#ECFDF5">📤</div>Partager la facture</button>`);
-  // WhatsApp avec facture + lien
+  // FIX: bouton "Partager la facture" retiré — redondant avec "Envoyer"
+  // (déjà en premier dans cette liste), qui couvre WhatsApp/Email/Lien/BaniPay.
+  // "Relance WhatsApp" est conservé : usage distinct (relance d'impayé avec
+  // message de rappel), pas un simple partage initial.
   actions.push(`<button class="action-item whatsapp" onclick="relancerWhatsApp(${f.id})"><div class="action-ico" style="background:#DCFCE7">📱</div>Relance WhatsApp</button>`);
   // Avoir depuis cette facture
   actions.push(`<button class="action-item" style="color:#9333EA;border-left-color:#9333EA" onclick="creerAvoirDepuisFacture(${f.id})"><div class="action-ico" style="background:#F3E8FF">↩️</div>Créer un avoir</button>`);
