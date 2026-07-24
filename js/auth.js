@@ -183,6 +183,18 @@ async function doLogin() {
 
     if (role === 'comptable') {
       await loadComptableApp();
+      // Synchronise l'identité publique du comptable (nom/cabinet) — sans
+      // ça, aucun autre utilisateur ne peut jamais voir autre chose que son
+      // email brut (ni dans l'annuaire, ni dans les conversations, etc.)
+      await synchroniserProfilComptable();
+      // Le comptable doit apparaître comme son propre premier "client"
+      await assurerAutoClientComptable();
+      // FIX: rafraîchissement périodique des notifications (invitations en
+      // attente, etc.) — auparavant seulement chargées à l'ouverture du
+      // tableau de bord ou de l'onglet notifications.
+      setInterval(function() {
+        if (sb.user?.id) chargerNotificationsComptable();
+      }, 30000);
       goScreen('comptable');
       showToast('✅ Bienvenue dans votre espace comptable !', 'success');
     } else {
@@ -193,6 +205,9 @@ async function doLogin() {
       await loadAchats();
       if (typeof loadAbonnements === 'function') await loadAbonnements();
       if (typeof verifierAbonnements === 'function') await verifierAbonnements();
+      // Crée un profil entreprise minimal si absent, pour apparaître
+      // immédiatement dans l'annuaire BaniPay sans avoir à remplir le profil
+      await assurerProfilEntrepriseMinimal();
 
       // Traiter invitation en attente
       if (window._pendingInviteCpt) {
@@ -214,6 +229,83 @@ async function doLogin() {
   } catch(e) {
     if (errEl) errEl.textContent = '❌ ' + (e.message || 'Email ou mot de passe incorrect');
   }
+}
+
+// ============================================================
+// IDENTITÉ PUBLIQUE — ANNUAIRE, NOM/CABINET PARTOUT
+// ============================================================
+
+// Crée ou met à jour la fiche publique du comptable (nom/cabinet) à partir
+// des métadonnées d'inscription. Idempotent — appelé à chaque connexion.
+async function synchroniserProfilComptable() {
+  const user = sb.user;
+  if (!user) return;
+  const meta = user.user_metadata || {};
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/profils_comptable', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({
+        id: user.id,
+        email: user.email,
+        nom: meta.nom || user.email.split('@')[0],
+        cabinet: meta.cabinet || '',
+      })
+    });
+  } catch(e) { console.warn('synchroniserProfilComptable:', e); }
+}
+
+// S'assure qu'une entreprise a au moins un profil minimal (raison sociale)
+// dès la première connexion, pour apparaître dans l'annuaire BaniPay sans
+// attendre que l'utilisateur remplisse son profil manuellement.
+async function assurerProfilEntrepriseMinimal() {
+  if (STATE.profil && STATE.profil.raison) return; // déjà rempli
+  const user = sb.user;
+  if (!user) return;
+  const meta = user.user_metadata || {};
+  const raisonPlaceholder = meta.nom || user.email.split('@')[0];
+  try {
+    await sb.upsert('profils_entreprise', { id: user.id, raison: raisonPlaceholder });
+    STATE.profil.raison = raisonPlaceholder;
+  } catch(e) { console.warn('assurerProfilEntrepriseMinimal:', e); }
+}
+
+// Le comptable doit voir sa propre entité comme premier "client" de son
+// portefeuille — crée une invitation auto-acceptée vers lui-même si absente.
+async function assurerAutoClientComptable() {
+  const user = sb.user;
+  if (!user) return;
+  try {
+    const existe = await fetch(
+      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(user.email) + '&entreprise_email=eq.' + encodeURIComponent(user.email) + '&limit=1',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    ).then(function(r) { return r.json(); });
+    if (existe && existe.length) return; // déjà créé
+
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        comptable_email: user.email,
+        entreprise_email: user.email,
+        entreprise_id: user.id,
+        statut: 'acceptee',
+        sens: 'auto_soi_meme'
+      })
+    });
+    // Recharger pour que ce "client" apparaisse immédiatement
+    await loadComptableApp();
+  } catch(e) { console.warn('assurerAutoClientComptable:', e); }
 }
 
 // ============================================================
