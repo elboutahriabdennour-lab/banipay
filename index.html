@@ -693,6 +693,12 @@
       <button onclick="document.getElementById('logo-input').click()" class="s-btn gray" style="width:100%;margin-bottom:6px">📷 Choisir un logo</button>
       <button id="del-logo-btn" onclick="supprimerLogo()" class="s-btn" style="width:100%;background:#FEF2F2;color:#EF4444;display:none">🗑️ Supprimer le logo</button>
     </div>
+    <div style="margin-bottom:12px">
+      <div class="f-lbl">✍️ Ma signature / cachet</div>
+      <div style="font-size:11px;color:#94A3B8;margin-bottom:8px">S'appose automatiquement sur vos documents, à côté de la signature du client une fois le document accepté</div>
+      <canvas id="pe-sig-canvas" style="width:100%;height:120px;background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:10px;touch-action:none;display:block;margin-bottom:8px"></canvas>
+      <button onclick="typeof effacerSignatureEntreprise==='function' && effacerSignatureEntreprise()" class="s-btn gray" style="width:100%">🔄 Effacer ma signature</button>
+    </div>
     <button class="s-btn blue" onclick="saveProfil()" style="width:100%;margin-bottom:10px">💾 Enregistrer</button>
     <button class="s-btn gray" onclick="goProfilEdit(false)" style="width:100%;margin-bottom:20px">Annuler</button>
   </div>
