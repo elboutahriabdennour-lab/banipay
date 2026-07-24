@@ -5,6 +5,7 @@ STATE.messagesConv = STATE.messagesConv || [];
 STATE.currentConvId = null;
 STATE._realtimeChannel = null;
 STATE._nomsEntreprisesConv = STATE._nomsEntreprisesConv || {}; // cache entreprise_id -> raison
+STATE._nomsComptablesConv = STATE._nomsComptablesConv || {}; // cache comptable_email -> nom/cabinet
 
 // ============================================================
 // UTILITAIRES CONVERSATION ID
@@ -38,15 +39,35 @@ async function loadConversations() {
     STATE.conversations = await r.json() || [];
 
     // FIX: résoudre les noms d'entreprise (raison sociale) pour l'affichage
-    // côté comptable, au lieu de montrer le préfixe de l'email du contact.
+    // côté comptable, et les noms/cabinets de comptable pour l'affichage
+    // côté entreprise — au lieu de montrer le préfixe de l'email du contact.
     if (role === 'comptable') {
       await chargerNomsEntreprisesConversations();
+    } else {
+      await chargerNomsComptablesConversations();
     }
 
     badgeMessages();
   } catch(e) {
     STATE.conversations = [];
   }
+}
+
+async function chargerNomsComptablesConversations() {
+  const emails = Array.from(new Set((STATE.conversations || []).map(function(c) { return c.comptable_email; }).filter(Boolean)));
+  const emailsAResoudre = emails.filter(function(e) { return !STATE._nomsComptablesConv[e]; });
+  if (!emailsAResoudre.length) return;
+  try {
+    const filtre = emailsAResoudre.map(function(e) { return '"' + e + '"'; }).join(',');
+    const r = await fetch(
+      SUPABASE_URL + '/rest/v1/profils_comptable?email=in.(' + filtre + ')&select=email,nom,cabinet',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+    );
+    const profils = await r.json() || [];
+    profils.forEach(function(p) {
+      if (p.nom) STATE._nomsComptablesConv[p.email] = p.nom + (p.cabinet ? ' · ' + p.cabinet : '');
+    });
+  } catch(e) {}
 }
 
 async function chargerNomsEntreprisesConversations() {
@@ -121,16 +142,17 @@ async function ouvrirMessagerie() {
   goScreen('messages');
 }
 
-// Résout le nom d'affichage d'un contact de conversation.
-// Côté comptable : raison sociale de l'entreprise si disponible (sinon email).
-// Côté entreprise : nom du comptable — pas de répertoire public dédié pour
-// l'instant, donc on retombe sur le préfixe de son email (limite connue).
+// Résout le nom d'affichage d'un contact de conversation : raison sociale
+// de l'entreprise (côté comptable), ou nom/cabinet du comptable (côté
+// entreprise) — repli sur le préfixe de l'email seulement si introuvable.
 function nomContactConversation(c, role) {
   if (role === 'comptable') {
     const raison = STATE._nomsEntreprisesConv[c.entreprise_id];
     if (raison) return raison;
     return (c.entreprise_email || '').split('@')[0] || 'Entreprise';
   }
+  const nomCpt = STATE._nomsComptablesConv[c.comptable_email];
+  if (nomCpt) return nomCpt;
   return (c.comptable_email || '').split('@')[0] || 'Comptable';
 }
 
