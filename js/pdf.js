@@ -22,6 +22,7 @@ function exportPDF(id) {
     bl_ref: f.bl_ref||'',
     doc_id: id,
     doc_url: docUrl,
+    signatureClient: f.signature_data || null,
   });
 }
 
@@ -50,6 +51,10 @@ function previewPDF() {
 
 function genDocPDF(opts) {
   const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false} = opts;
+  // La signature de l'entreprise est automatiquement reprise depuis son profil
+  // (paramètres > Ma signature/cachet) — inutile de la repasser à chaque appel.
+  const signatureEmetteur = opts.signatureEmetteur || (p && p.signature_entreprise) || null;
+  const signatureClient = opts.signatureClient || null;
   const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
   const colorHeader = isAvoir?'#DC2626':isDevis?'#D97706':isBC?'#7C3AED':isBL?'#059669':(color||'#4F46E5');
   const paye = Number(montant_recu)||0;
@@ -203,8 +208,8 @@ ${(p.banque||p.rib)?`<div class="bank-box">
 
 <div style="flex:1;min-height:20px"></div>
 <div class="sig-zone">
-  <div class="sig-item"><div class="sig-lbl">Cachet & Signature émetteur</div></div>
-  <div class="sig-item"><div class="sig-lbl">Bon pour accord — Client</div></div>
+  <div class="sig-item"><div class="sig-lbl">Cachet & Signature émetteur</div>${signatureEmetteur?`<img src="${signatureEmetteur}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
+  <div class="sig-item"><div class="sig-lbl">Bon pour accord — Client</div>${signatureClient?`<img src="${signatureClient}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
 </div>
 
 <div style="flex:1"></div>
