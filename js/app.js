@@ -452,20 +452,43 @@ function ecouterChangementsDevis(userId) {
   setInterval(async function() {
     try {
       const devis = await sb.get('devis', 'user_id=eq.' + userId + '&statut=in.(accepte,refuse)&notif_lue=eq.false');
-      if (!devis || !devis.length) return;
-      devis.forEach(d => {
-        const ancien = STATE.devis.find(x => x.id === d.id);
-        if (!ancien) return;
-        if (d.statut === 'accepte' && ancien.statut !== 'accepte') {
-          showToast('✅ ' + d.client + ' a accepté le devis ' + d.ref + ' !', 'success');
-        } else if (d.statut === 'refuse' && ancien.statut !== 'refuse') {
-          showToast('❌ ' + d.client + ' a refusé le devis ' + d.ref, 'error');
-        }
-        ancien.statut = d.statut;
-        ancien.notif_lue = false;
-      });
-      genNotifications();
-      badgeF();
+      if (devis && devis.length) {
+        devis.forEach(d => {
+          const ancien = STATE.devis.find(x => x.id === d.id);
+          if (!ancien) return;
+          if (d.statut === 'accepte' && ancien.statut !== 'accepte') {
+            showToast('✅ ' + d.client + ' a accepté le devis ' + d.ref + ' !', 'success');
+          } else if (d.statut === 'refuse' && ancien.statut !== 'refuse') {
+            showToast('❌ ' + d.client + ' a refusé le devis ' + d.ref, 'error');
+          }
+          ancien.statut = d.statut;
+          ancien.notif_lue = false;
+        });
+      }
+
+      // FIX: même notification temps réel pour les factures — jusqu'ici
+      // seuls les devis étaient surveillés, une entreprise qui envoyait une
+      // facture via BaniPay ne recevait jamais de toast quand le client
+      // répondait (accepter/refuser).
+      const factures = await sb.get('factures', 'user_id=eq.' + userId + '&reponse_client=in.(acceptee,refusee)&notif_lue=eq.false');
+      if (factures && factures.length) {
+        factures.forEach(f => {
+          const ancienne = STATE.factures.find(x => x.id === f.id);
+          if (!ancienne) return;
+          if (f.reponse_client === 'acceptee' && ancienne.reponse_client !== 'acceptee') {
+            showToast('✅ ' + f.client + ' a accepté la facture ' + f.ref + ' !', 'success');
+          } else if (f.reponse_client === 'refusee' && ancienne.reponse_client !== 'refusee') {
+            showToast('❌ ' + f.client + ' a refusé la facture ' + f.ref, 'error');
+          }
+          ancienne.reponse_client = f.reponse_client;
+          ancienne.notif_lue = false;
+        });
+      }
+
+      if ((devis && devis.length) || (factures && factures.length)) {
+        genNotifications();
+        badgeF();
+      }
     } catch(e) {}
   }, 30000);
 }
