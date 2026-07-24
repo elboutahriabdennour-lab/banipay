@@ -21,7 +21,9 @@
     <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
     <div class="topbar-right">
       <!-- Bouton retour espace comptable (visible uniquement en mode entreprise) -->
-      <button id="btn-retour-comptable" onclick="revenirEspaceComptable()" style="display:none;background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;margin-right:2px">📊 Comptable</button>
+      <!-- FIX: bouton redondant retiré — un seul mécanisme de retour reste
+           (la pile flottante appendModeBanner(), présente sur tous les écrans,
+           contrairement à ce bouton qui n'existait que sur le dashboard) -->
       <span class="t-icon" onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer">💬<span id="msg-badge" style="position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center">!</span></span>
       <span class="t-icon" onclick="goScreen('notifications',null)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#EF4444;border-radius:50%;font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center">0</span></span>
       <span class="t-icon" onclick="goScreen('recherche',null)">🔍</span>
@@ -49,7 +51,7 @@
     <span>⚠️</span><div class="alerte-text" id="alerte-text">Factures en retard</div><div class="alerte-action">Voir →</div>
   </div>
   <div class="sec-label">Actions rapides</div>
-  <div class="quick-actions">
+  <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
     <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#EFF6FF">➕</div><div class="qa-lbl">Facture</div></div>
     <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#FFFBEB">📝</div><div class="qa-lbl">Devis</div></div>
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#ECFDF5">↩️</div><div class="qa-lbl">Avoir</div></div>
@@ -57,7 +59,7 @@
     <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#F1F5F9">📤</div><div class="qa-lbl">Export</div></div>
   </div>
   <div style="height:8px"></div>
-  <div class="quick-actions">
+  <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
     <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#EFF6FF">📊</div><div class="qa-lbl">Stats</div></div>
     <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#ECFDF5">🧾</div><div class="qa-lbl">TVA</div></div>
     <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#F3E8FF">👥</div><div class="qa-lbl">Clients</div></div>
@@ -618,7 +620,7 @@
   <!-- QR -->
   <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #F1F5F9;text-align:center">
     <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:12px">QR Code & Lien public</div>
-    <canvas id="qr-canvas" width="120" height="120" style="border-radius:8px;display:block;margin:0 auto 10px;background:#F8FAFC"></canvas>
+    <div id="qr-canvas-container" style="display:flex;justify-content:center;margin:0 auto 10px"></div>
     <!-- FIX: cet élément était auparavant absent du HTML alors que renderProfil()
          essayait déjà de le remplir (setEl('pv-lien', ...)) — le lien affiché
          sous le QR ne correspondait donc jamais au vrai lien public encodé
@@ -697,7 +699,12 @@
       <div class="f-lbl">✍️ Ma signature / cachet</div>
       <div style="font-size:11px;color:#94A3B8;margin-bottom:8px">S'appose automatiquement sur vos documents, à côté de la signature du client une fois le document accepté</div>
       <canvas id="pe-sig-canvas" style="width:100%;height:120px;background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:10px;touch-action:none;display:block;margin-bottom:8px"></canvas>
-      <button onclick="typeof effacerSignatureEntreprise==='function' && effacerSignatureEntreprise()" class="s-btn gray" style="width:100%">🔄 Effacer ma signature</button>
+      <div style="display:flex;gap:8px">
+        <button onclick="typeof effacerSignatureEntreprise==='function' && effacerSignatureEntreprise()" class="s-btn gray" style="flex:1">🔄 Effacer</button>
+        <label class="s-btn gray" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">📷 Importer un cachet
+          <input type="file" accept="image/*" style="display:none" onchange="typeof importerPhotoSignatureEntreprise==='function' && importerPhotoSignatureEntreprise(event)">
+        </label>
+      </div>
     </div>
     <button class="s-btn blue" onclick="saveProfil()" style="width:100%;margin-bottom:10px">💾 Enregistrer</button>
     <button class="s-btn gray" onclick="goProfilEdit(false)" style="width:100%;margin-bottom:20px">Annuler</button>
