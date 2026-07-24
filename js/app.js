@@ -231,6 +231,7 @@ async function afficherDocumentPublic(docId) {
       devis_ref: doc.devis_ref || '',
       bl_ref: doc.bl_ref || '',
       doc_id: docId,
+      signatureClient: doc.signature_data || null,
       doc_url: window.location.href,
     });
 
