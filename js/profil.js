@@ -16,7 +16,7 @@ function renderProfil() {
   if (badge) {
     badge.textContent = pct===100 ? '✅ Profil complet' : `${pct}% complété — ${required.length-filled} champ(s) manquant(s)`;
     badge.style.background = pct===100 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-    badge.style.color = pct===100 ? '#10B981' : '#EF4444';
+    badge.style.color = pct===100 ? '#7FA05C' : '#B23A2E';
   }
   // Info rows
   const fields = [
@@ -31,7 +31,7 @@ function renderProfil() {
   if (infosCard) infosCard.innerHTML =
     `<div class="p-card-title">Informations entreprise</div>` +
     fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('') +
-    `<div class="p-row"><span class="p-lbl">🎨 Couleur PDF</span><span class="p-val"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${p.couleur_accent||'#2563EB'};vertical-align:middle;margin-right:6px;border:1px solid #E2E8F0"></span>${p.couleur_accent||'#2563EB'}</span></div>`;
+    `<div class="p-row"><span class="p-lbl">🎨 Couleur PDF</span><span class="p-val"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${p.couleur_accent||'#C9971F'};vertical-align:middle;margin-right:6px;border:1px solid #E3DCCF"></span>${p.couleur_accent||'#C9971F'}</span></div>`;
   // QR
   const publicUrl = window.location.origin+window.location.pathname+'?profil='+id;
   setEl('pv-lien', publicUrl);
@@ -41,7 +41,7 @@ function renderProfil() {
   const qrContainer = el('qr-canvas-container');
   if (qrContainer) {
     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(publicUrl);
-    qrContainer.innerHTML = '<img src="' + qrUrl + '" width="120" height="120" style="border-radius:8px;background:#F8FAFC">';
+    qrContainer.innerHTML = '<img src="' + qrUrl + '" width="120" height="120" style="border-radius:8px;background:#F1EEE8">';
   }
   // Objectif
   if(el('pv-objectif')) el('pv-objectif').textContent = p.objectif_mensuel ? fmtInt(p.objectif_mensuel)+' MAD/mois' : 'Non défini';
@@ -66,7 +66,7 @@ function goProfilEdit(show=true) {
     'pe-numerotation':'numerotation','pe-objectif':'objectif_mensuel',
     'pe-couleur':'couleur_accent',
   };
-  Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#2563EB':'');});
+  Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#C9971F':'');});
   const codeEl = el('pf-code-comptable');
   if(codeEl) codeEl.value = '';
   // Initialiser le canvas de signature entreprise (si le module signature.js est présent)
@@ -173,21 +173,21 @@ function genQRCanvas(canvasId, text, size) {
   const canvas = el(canvasId); if(!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
-  ctx.strokeStyle='#0F172A'; ctx.lineWidth=6; ctx.strokeRect(3,3,size-6,size-6);
+  ctx.strokeStyle='#2A2420'; ctx.lineWidth=6; ctx.strokeRect(3,3,size-6,size-6);
   const drawCorner=(x,y)=>{
-    ctx.fillStyle='#0F172A';ctx.fillRect(x,y,28,28);
+    ctx.fillStyle='#2A2420';ctx.fillRect(x,y,28,28);
     ctx.fillStyle='#fff';ctx.fillRect(x+5,y+5,18,18);
-    ctx.fillStyle='#0F172A';ctx.fillRect(x+9,y+9,10,10);
+    ctx.fillStyle='#2A2420';ctx.fillRect(x+9,y+9,10,10);
   };
   drawCorner(12,12);drawCorner(size-40,12);drawCorner(12,size-40);
   // Random modules for visual
-  ctx.fillStyle='#0F172A';
+  ctx.fillStyle='#2A2420';
   const seed=text.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
   for(let i=0;i<40;i++){
     const rx=(seed*i*7)%size, ry=(seed*i*13)%size;
     if(rx>40&&rx<size-40&&ry>40&&ry<size-40) ctx.fillRect(rx,ry,4,4);
   }
-  ctx.fillStyle='#2563EB';ctx.font='bold 10px Arial';ctx.textAlign='center';
+  ctx.fillStyle='#C9971F';ctx.font='bold 10px Arial';ctx.textAlign='center';
   ctx.fillText('BaniPay',size/2,size/2+4);
 }
 
@@ -246,14 +246,14 @@ function renderBrouillons() {
   }
   list.innerHTML = drafts.map(d => `
     <div class="card">
-      <div class="card-ico" style="background:#F1F5F9">📋</div>
+      <div class="card-ico" style="background:#EAE4DA">📋</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(d.client || 'Sans client')}</div>
         <div class="card-ref">${d.lignes?.length || 0} ligne(s) · Sauvegardé ${formatDate(d.savedAt)}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <button onclick="restoreDraft('${d.id}')" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">Restaurer</button>
-        <button onclick="deleteDraft('${d.id}')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">Supprimer</button>
+        <button onclick="restoreDraft('${d.id}')" style="background:#E9F4F3;color:#C9971F;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">Restaurer</button>
+        <button onclick="deleteDraft('${d.id}')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">Supprimer</button>
       </div>
     </div>`).join('');
 }
@@ -383,10 +383,10 @@ function renderArchive() {
     card.className = 'card';
     card.style.margin = '0 20px 10px';
     card.innerHTML = '<div style="display:flex;align-items:center;gap:12px">' +
-      '<div style="width:40px;height:40px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:20px">' + (d.icon||'\u{1F4C4}') + '</div>' +
+      '<div style="width:40px;height:40px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center;font-size:20px">' + (d.icon||'\u{1F4C4}') + '</div>' +
       '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + escapeHTML(d.nom) + '</div>' +
-      '<div style="font-size:11px;color:#94A3B8">' + d.type + ' · ' + (d.date||'') + '</div></div>' +
-      '<button data-id="' + d.id + '" class="del-archive-btn" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">\u{1F5D1}\uFE0F</button>' +
+      '<div style="font-size:11px;color:#9C9186">' + d.type + ' · ' + (d.date||'') + '</div></div>' +
+      '<button data-id="' + d.id + '" class="del-archive-btn" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">\u{1F5D1}\uFE0F</button>' +
     '</div>';
     card.querySelector('.del-archive-btn').onclick = function() { supprimerDocArchive(this.dataset.id); };
     return card.outerHTML;
@@ -477,15 +477,15 @@ function renderReleves() {
   list.innerHTML = releves.map(function(r) {
     return '<div class="card" style="margin:0 20px 10px">' +
       '<div style="display:flex;align-items:center;gap:12px">' +
-        '<div style="width:44px;height:44px;border-radius:12px;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:#EEF3E4;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
         '<div style="flex:1">' +
           '<div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(r.mois)] || r.mois) + ' ' + r.annee + '</div>' +
-          '<div style="font-size:11px;color:#64748B">' + escapeHTML(r.banque || '') + '</div>' +
-          '<div style="font-size:10px;color:#94A3B8;margin-top:2px">' + (r.nom_fichier || '') + ' · ' + (r.taille || '') + '</div>' +
+          '<div style="font-size:11px;color:#6B5F54">' + escapeHTML(r.banque || '') + '</div>' +
+          '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + (r.nom_fichier || '') + ' · ' + (r.taille || '') + '</div>' +
         '</div>' +
         '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
-          '<span style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:' + (r.vu_par_comptable ? '#ECFDF5' : '#FFFBEB') + ';color:' + (r.vu_par_comptable ? '#059669' : '#D97706') + '">' + (r.vu_par_comptable ? '✓ Vu' : '⏳ En attente') + '</span>' +
-          '<button onclick="supprimerReleve(\'' + r.id + '\')" style="background:#FEF2F2;color:#EF4444;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
+          '<span style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:' + (r.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (r.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (r.vu_par_comptable ? '✓ Vu' : '⏳ En attente') + '</span>' +
+          '<button onclick="supprimerReleve(\'' + r.id + '\')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -551,12 +551,12 @@ async function inviterComptable() {
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;box-sizing:border-box';
   box.innerHTML =
-    '<div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>' +
+    '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 20px"></div>' +
     '<div style="font-size:17px;font-weight:700;margin-bottom:6px">🤝 Inviter mon comptable</div>' +
-    '<div style="font-size:13px;color:#64748B;margin-bottom:16px">Saisissez l\'email de votre comptable. Il recevra une notification dans BaniPay.</div>' +
+    '<div style="font-size:13px;color:#6B5F54;margin-bottom:16px">Saisissez l\'email de votre comptable. Il recevra une notification dans BaniPay.</div>' +
     '<input id="inv-cpt-email-input" class="f-inp" type="email" placeholder="comptable@cabinet.ma" style="margin-bottom:12px">' +
-    '<button id="btn-send-inv-cpt" style="width:100%;padding:13px;background:#4338CA;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✉️ Envoyer l\'invitation</button>' +
-    '<button id="btn-close-inv-cpt-modal" style="width:100%;padding:11px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
+    '<button id="btn-send-inv-cpt" style="width:100%;padding:13px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✉️ Envoyer l\'invitation</button>' +
+    '<button id="btn-close-inv-cpt-modal" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
     '<div id="inv-cpt-feedback" style="font-size:12px;text-align:center;margin-top:10px;min-height:16px"></div>';
 
   overlay.appendChild(box);
@@ -568,7 +568,7 @@ async function inviterComptable() {
     const emailCpt = (document.getElementById('inv-cpt-email-input')?.value || '').trim().toLowerCase();
     const feedback = document.getElementById('inv-cpt-feedback');
     if (!emailCpt || !emailCpt.includes('@')) {
-      feedback.style.color = '#EF4444';
+      feedback.style.color = '#B23A2E';
       feedback.textContent = 'Email invalide';
       return;
     }
@@ -576,7 +576,7 @@ async function inviterComptable() {
     const uid = sb.user?.id;
     const emailEnt = sb.user?.email;
     const profil = STATE.profil || {};
-    feedback.style.color = '#4338CA';
+    feedback.style.color = '#1F6F72';
     feedback.textContent = '⏳ Envoi en cours...';
 
     try {
@@ -626,13 +626,13 @@ async function inviterComptable() {
         })
       });
 
-      feedback.style.color = '#059669';
+      feedback.style.color = '#6E8F4E';
       feedback.textContent = '✅ Invitation envoyée ! Le comptable sera notifié à sa prochaine connexion.';
 
       setTimeout(function() { overlay.remove(); }, 2000);
 
     } catch(e) {
-      feedback.style.color = '#EF4444';
+      feedback.style.color = '#B23A2E';
       feedback.textContent = 'Erreur: ' + e.message;
     }
   };
@@ -657,10 +657,10 @@ async function renderMonComptable() {
 
     if (!invs.length) {
       container.innerHTML =
-        '<div style="text-align:center;padding:20px;background:#F8FAFC;border-radius:14px">' +
+        '<div style="text-align:center;padding:20px;background:#F1EEE8;border-radius:14px">' +
           '<div style="font-size:32px;margin-bottom:10px">👤</div>' +
-          '<div style="font-size:14px;font-weight:600;color:#64748B;margin-bottom:12px">Aucun comptable lié</div>' +
-          '<button onclick="inviterComptable()" style="padding:11px 24px;background:#4338CA;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🤝 Inviter mon comptable</button>' +
+          '<div style="font-size:14px;font-weight:600;color:#6B5F54;margin-bottom:12px">Aucun comptable lié</div>' +
+          '<button onclick="inviterComptable()" style="padding:11px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🤝 Inviter mon comptable</button>' +
         '</div>';
       return;
     }
@@ -681,7 +681,7 @@ async function renderMonComptable() {
     } catch(eCpt) {}
 
     container.innerHTML =
-      '<div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px">' +
+      '<div style="background:linear-gradient(135deg,#241F1B,#1F6F72);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px">' +
         '<div style="display:flex;align-items:center;gap:12px">' +
           '<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">' +
             (nomAffiche[0] || 'C').toUpperCase() +
@@ -694,12 +694,12 @@ async function renderMonComptable() {
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px">' +
-        '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#EEF2FF;color:#4338CA;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer</button>' +
-        '<button onclick="revoquerComptable(\'' + inv.id + '\')" style="flex:1;padding:10px;background:#FEF2F2;color:#EF4444;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🚫 Révoquer</button>' +
+        '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer</button>' +
+        '<button onclick="revoquerComptable(\'' + inv.id + '\')" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🚫 Révoquer</button>' +
       '</div>';
 
   } catch(e) {
-    container.innerHTML = '<div style="color:#EF4444;font-size:12px">Erreur chargement</div>';
+    container.innerHTML = '<div style="color:#B23A2E;font-size:12px">Erreur chargement</div>';
   }
 }
 
