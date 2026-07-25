@@ -27,22 +27,22 @@ function renderFactureList() {
     return;
   }
   const icons = { attente:'🧱', retard:'⚠️', payee:'✅', envoyee:'📤' };
-  const bgs   = { attente:'#FFFBEB', retard:'#FEF2F2', payee:'#ECFDF5', envoyee:'#EFF6FF' };
+  const bgs   = { attente:'#F7EFDC', retard:'#F5E4E1', payee:'#EEF3E4', envoyee:'#E9F4F3' };
   list.innerHTML = data.map(f => {
     const recu = Number(f.montant_recu || 0);
     const pct = f.ttc > 0 ? Math.round(recu / f.ttc * 100) : 0;
     return `
     <div class="card" onclick="openDetail(${f.id})">
-      <div class="card-ico" style="background:${bgs[f.statut]||'#F1F5F9'}">${icons[f.statut]||'📄'}</div>
+      <div class="card-ico" style="background:${bgs[f.statut]||'#EAE4DA'}">${icons[f.statut]||'📄'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(f.client)}</div>
         <div class="card-ref">${f.ref} · ${f.date_emission||''}</div>
-        ${recu > 0 && f.statut !== 'payee' ? `<div style="margin-top:4px;height:3px;background:#E2E8F0;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#059669;border-radius:2px"></div></div>` : ''}
+        ${recu > 0 && f.statut !== 'payee' ? `<div style="margin-top:4px;height:3px;background:#E3DCCF;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#6E8F4E;border-radius:2px"></div></div>` : ''}
       </div>
       <div class="card-end">
         <div class="card-amt">${fmt(f.ttc)} ${f.devise||'MAD'}</div>
         <div class="badge b-${f.statut}">${badgeF(f.statut)}</div>
-        <button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#F3E8FF;color:#9333EA;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>
+        <button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>
       </div>
     </div>`;
   }).join('');
@@ -155,11 +155,11 @@ function filtrerProduits() {
   picker.innerHTML = filtered.length ? filtered.map(p => `
     <div class="produit-picker-item" onclick="ajouterDepuisCatalogue(${p.id})">
       <div>
-        <div style="font-size:13px;font-weight:600;color:#0F172A">${p.nom}</div>
-        <div style="font-size:11px;color:#94A3B8">${p.unite||'u'} · ${fmt(p.prix_ht)} MAD HT</div>
+        <div style="font-size:13px;font-weight:600;color:#2A2420">${p.nom}</div>
+        <div style="font-size:11px;color:#9C9186">${p.unite||'u'} · ${fmt(p.prix_ht)} MAD HT</div>
       </div>
-      <div style="color:#2563EB;font-size:22px;font-weight:300">＋</div>
-    </div>`).join('') : '<div style="text-align:center;padding:20px;color:#94A3B8">Aucun article</div>';
+      <div style="color:#C9971F;font-size:22px;font-weight:300">＋</div>
+    </div>`).join('') : '<div style="text-align:center;padding:20px;color:#9C9186">Aucun article</div>';
 }
 
 function ajouterDepuisCatalogue(id) {
@@ -251,7 +251,7 @@ function renderDetail() {
     <div class="d-ligne">
       <div>
         <div style="font-size:13px;font-weight:500">${l.desc}</div>
-        <div style="font-size:11px;color:#94A3B8">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div>
+        <div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div>
       </div>
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
     </div>`).join('');
@@ -261,9 +261,9 @@ function renderDetail() {
   if (totEl) totEl.innerHTML = `
     <div class="d-tot-row"><span>Sous-total HT</span><span>${fmt(f.ht)} ${dv}</span></div>
     <div class="d-tot-row"><span>TVA 20%</span><span>${fmt(f.tva)} ${dv}</span></div>
-    ${recu > 0 ? `<div class="d-tot-row"><span>Déjà reçu</span><span style="color:#059669">-${fmt(recu)} ${dv}</span></div>` : ''}
+    ${recu > 0 ? `<div class="d-tot-row"><span>Déjà reçu</span><span style="color:#6E8F4E">-${fmt(recu)} ${dv}</span></div>` : ''}
     <div class="d-tot-row main"><span>Total TTC</span><span>${fmt(f.ttc)} ${dv}</span></div>
-    ${restant > 0 && recu > 0 ? `<div class="d-tot-row" style="color:#EF4444"><span>Solde restant</span><span>${fmt(restant)} ${dv}</span></div>` : ''}`;
+    ${restant > 0 && recu > 0 ? `<div class="d-tot-row" style="color:#B23A2E"><span>Solde restant</span><span>${fmt(restant)} ${dv}</span></div>` : ''}`;
 
   // Actions
   // Note
@@ -282,29 +282,29 @@ function renderDetail() {
   if (!actEl) return;
   const actions = [];
   // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
-  actions.push(`<button class="action-item" style="color:#4338CA;border-left-color:#4338CA" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#EEF2FF">📨</div>Envoyer</button>`);
+  actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
   if (f.statut !== 'payee') {
-    actions.push(`<button class="action-item success" onclick="marquerPayee(${f.id})"><div class="action-ico" style="background:#ECFDF5">✅</div>Marquer payée</button>`);
-    actions.push(`<button class="action-item" onclick="ouvrirPaiementPartiel(${f.id})"><div class="action-ico" style="background:#EFF6FF">💰</div>Enregistrer un paiement</button>`);
+    actions.push(`<button class="action-item success" onclick="marquerPayee(${f.id})"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer payée</button>`);
+    actions.push(`<button class="action-item" onclick="ouvrirPaiementPartiel(${f.id})"><div class="action-ico" style="background:#E9F4F3">💰</div>Enregistrer un paiement</button>`);
     if (['attente','envoyee'].includes(f.statut))
-      actions.push(`<button class="action-item" style="color:#D97706;border-left-color:#D97706" onclick="marquerRetard(${f.id})"><div class="action-ico" style="background:#FFFBEB">⚠️</div>Marquer en retard</button>`);
+      actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="marquerRetard(${f.id})"><div class="action-ico" style="background:#F7EFDC">⚠️</div>Marquer en retard</button>`);
   }
   // PDF actions
-  actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#EFF6FF">👁️</div>Aperçu PDF</button>`);
-  actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#EFF6FF">💾</div>Enregistrer PDF</button>`);
+  actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#E9F4F3">👁️</div>Aperçu PDF</button>`);
+  actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#E9F4F3">💾</div>Enregistrer PDF</button>`);
   // FIX: bouton "Partager la facture" retiré — redondant avec "Envoyer"
   // (déjà en premier dans cette liste), qui couvre WhatsApp/Email/Lien/BaniPay.
   // "Relance WhatsApp" est conservé : usage distinct (relance d'impayé avec
   // message de rappel), pas un simple partage initial.
-  actions.push(`<button class="action-item whatsapp" onclick="relancerWhatsApp(${f.id})"><div class="action-ico" style="background:#DCFCE7">📱</div>Relance WhatsApp</button>`);
+  actions.push(`<button class="action-item whatsapp" onclick="relancerWhatsApp(${f.id})"><div class="action-ico" style="background:#EEF3E4">📱</div>Relance WhatsApp</button>`);
   // Avoir depuis cette facture
-  actions.push(`<button class="action-item" style="color:#9333EA;border-left-color:#9333EA" onclick="creerAvoirDepuisFacture(${f.id})"><div class="action-ico" style="background:#F3E8FF">↩️</div>Créer un avoir</button>`);
+  actions.push(`<button class="action-item" style="color:#7C5CA6;border-left-color:#7C5CA6" onclick="creerAvoirDepuisFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">↩️</div>Créer un avoir</button>`);
   // Paiements
-  actions.push(`<button class="action-item" onclick="ouvrirAcomptes(${f.id})"><div class="action-ico" style="background:#ECFDF5">💰</div>Versements & acomptes</button>`);
-  actions.push(`<button class="action-item" onclick="genRecuPaiement(${f.id})"><div class="action-ico" style="background:#ECFDF5">🧾</div>Reçu de paiement</button>`);
+  actions.push(`<button class="action-item" onclick="ouvrirAcomptes(${f.id})"><div class="action-ico" style="background:#EEF3E4">💰</div>Versements & acomptes</button>`);
+  actions.push(`<button class="action-item" onclick="genRecuPaiement(${f.id})"><div class="action-ico" style="background:#EEF3E4">🧾</div>Reçu de paiement</button>`);
   // Autres
-  actions.push(`<button class="action-item" onclick="dupliquerFacture(${f.id})"><div class="action-ico" style="background:#F3E8FF">📋</div>Dupliquer</button>`);
-  actions.push(`<button class="action-item danger" onclick="supprimerFacture(${f.id})"><div class="action-ico" style="background:#FEF2F2">🗑️</div>Supprimer</button>`);
+  actions.push(`<button class="action-item" onclick="dupliquerFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
+  actions.push(`<button class="action-item danger" onclick="supprimerFacture(${f.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
   actEl.innerHTML = actions.join('');
 }
 
@@ -381,23 +381,23 @@ function genRecuPaiement(id) {
   const p = STATE.profil;
   const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Reçu ${f.ref}<\/title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:420px;margin:40px auto;padding:20px}
-.card{border:1px solid #E2E8F0;border-radius:16px;overflow:hidden}
-.header{background:#059669;color:#fff;padding:24px;text-align:center}
+.card{border:1px solid #E3DCCF;border-radius:16px;overflow:hidden}
+.header{background:#6E8F4E;color:#fff;padding:24px;text-align:center}
 .body{padding:20px}
-.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1F5F9;font-size:14px}
-.total{display:flex;justify-content:space-between;padding:14px 0;font-size:20px;font-weight:700;color:#059669}
-.btn{display:block;width:100%;background:#059669;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA;font-size:14px}
+.total{display:flex;justify-content:space-between;padding:14px 0;font-size:20px;font-weight:700;color:#6E8F4E}
+.btn{display:block;width:100%;background:#6E8F4E;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px}
 @media print{.btn{display:none}}<\/style><\/head><body>
 <div class="card">
   <div class="header"><div style="font-size:40px;margin-bottom:8px">✅</div><h2>Reçu de paiement</h2><div style="opacity:0.8;margin-top:4px">${f.ref}</div></div>
   <div class="body">
-    <div class="row"><span style="color:#64748B">Client</span><strong>${f.client}</strong></div>
-    <div class="row"><span style="color:#64748B">Date</span><span>${new Date().toLocaleDateString('fr-MA')}</span></div>
-    <div class="row"><span style="color:#64748B">Mode</span><span>${f.paiement||'Virement'}</span></div>
-    <div class="row"><span style="color:#64748B">Référence</span><span>${f.ref}</span></div>
-    ${f.chantier ? `<div class="row"><span style="color:#64748B">Projet</span><span>${f.chantier}</span></div>` : ''}
+    <div class="row"><span style="color:#6B5F54">Client</span><strong>${f.client}</strong></div>
+    <div class="row"><span style="color:#6B5F54">Date</span><span>${new Date().toLocaleDateString('fr-MA')}</span></div>
+    <div class="row"><span style="color:#6B5F54">Mode</span><span>${f.paiement||'Virement'}</span></div>
+    <div class="row"><span style="color:#6B5F54">Référence</span><span>${f.ref}</span></div>
+    ${f.chantier ? `<div class="row"><span style="color:#6B5F54">Projet</span><span>${f.chantier}</span></div>` : ''}
     <div class="total"><span>Montant reçu</span><span>${fmt(f.ttc)} ${f.devise||'MAD'}</span></div>
-    <div style="font-size:11px;color:#94A3B8;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #F1F5F9">
+    <div style="font-size:11px;color:#9C9186;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #EAE4DA">
       ${p.raison||''} · ${p.tel||''} · ${p.email||''}
     </div>
   </div>
@@ -593,7 +593,7 @@ function buildPDFHTML(f) {
   const dv = f.devise||'MAD';
   const legalParts = [p.rc?'RC: '+p.rc:null,p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:null,p.ice?'ICE: '+p.ice:null].filter(Boolean).join(' · ');
   const lignesHTML = (f.lignes||[]).map((l,i) =>
-    '<tr style="background:' + (i%2===0?'#F8FAFC':'#fff') + '"><td style="padding:8px 12px;font-size:12px">' + escapeHTML(l.desc||'') + '<\/td><td style="padding:8px 12px;text-align:center;font-size:12px">' + l.qte + ' ' + (l.unite||'') + '<\/td><td style="padding:8px 12px;text-align:right;font-size:12px">' + fmt(l.pu) + '<\/td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">' + fmt(l.qte*l.pu) + '<\/td><\/tr>'
+    '<tr style="background:' + (i%2===0?'#F1EEE8':'#fff') + '"><td style="padding:8px 12px;font-size:12px">' + escapeHTML(l.desc||'') + '<\/td><td style="padding:8px 12px;text-align:center;font-size:12px">' + l.qte + ' ' + (l.unite||'') + '<\/td><td style="padding:8px 12px;text-align:right;font-size:12px">' + fmt(l.pu) + '<\/td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">' + fmt(l.qte*l.pu) + '<\/td><\/tr>'
   ).join('');
   return exportPDFString(f);
 }
@@ -603,13 +603,13 @@ function exportPDFString(factureOrId) {
   if (!f) return '';
   // Use genDocPDF but capture the HTML instead of opening viewer
   const p = STATE.profil;
-  const accent = p.couleur_accent || '#2563EB';
+  const accent = p.couleur_accent || '#C9971F';
   const dv = f.devise||'MAD';
   const recu = Number(f.montant_recu||0);
   const restant = Math.max(0, Number(f.ttc)-recu);
   const legalParts=[p.rc?'RC: '+p.rc:null,p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:null,p.ice?'ICE: '+p.ice:null,p.patente?'Patente: '+p.patente:null].filter(Boolean).join(' · ');
-  const lignesHTML=(f.lignes||[]).map((l,i)=>`<tr style="background:${i%2===0?'#F8FAFC':'#fff'}"><td style="padding:8px 12px;font-size:12px">${escapeHTML(l.desc||'')}<\/td><td style="padding:8px 12px;text-align:center;font-size:12px">${l.qte} ${l.unite||''}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px">${fmt(l.pu)} ${dv}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}<\/td><\/tr>`).join('');
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${f.ref}<\/title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#0F172A;font-size:12px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}<\/style><\/head><body><div style="background:#0F172A;padding:20px 28px;display:flex;justify-content:space-between"><div><div style="font-size:16px;font-weight:700;color:#fff">${escapeHTML(p.raison||'Mon Entreprise')}<\/div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px">${p.tel||''} · ${p.email||''}<\/div><\/div><div style="text-align:right"><div style="background:${accent};color:#fff;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700">FACTURE<\/div><div style="color:#fff;font-size:12px;margin-top:6px">${f.ref}<\/div><div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:2px">Date: ${f.date_emission||''}<\/div><\/div><\/div><div style="background:#F8FAFC;padding:6px 28px;text-align:center;font-size:9px;color:#64748B;border-bottom:1px solid #E2E8F0">${legalParts}<\/div><div style="display:flex;gap:10px;padding:12px 28px"><div style="flex:1;border:1px solid #E2E8F0;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Facturé à<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(f.client)}<\/div>${f.chantier?`<div style="font-size:11px;color:#64748B;margin-top:3px">Projet: ${escapeHTML(f.chantier)}<\/div>`:''}<\/div><div style="flex:1;border:1px solid #E2E8F0;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Émetteur<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(p.raison||'')}<\/div>${p.rc?`<div style="font-size:11px;color:#64748B;margin-top:3px">RC: ${p.rc}<\/div>`:''}<\/div><\/div><div style="padding:0 28px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#0F172A"><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:left">Désignation<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:center">Qté<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">P.U. HT<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">Total HT<\/th><\/tr><\/thead><tbody>${lignesHTML}<\/tbody><\/table><\/div><div style="padding:10px 28px;display:flex;justify-content:flex-end"><div style="width:250px;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #F1F5F9;color:#64748B"><span>HT<\/span><span>${fmt(f.ht)} ${dv}<\/span><\/div><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #F1F5F9;color:#64748B"><span>TVA 20%<\/span><span>${fmt(f.tva)} ${dv}<\/span><\/div>${recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;color:#059669"><span>Déjà reçu<\/span><span>-${fmt(recu)} ${dv}<\/span><\/div>`:''}<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#0F172A"><span style="font-size:12px;font-weight:700;color:#fff">TOTAL TTC<\/span><span style="font-size:14px;font-weight:700;color:#60A5FA">${fmt(f.ttc)} ${dv}<\/span><\/div>${restant>0&&recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;color:#EF4444;font-size:11px"><span>Solde restant<\/span><span>${fmt(restant)} ${dv}<\/span><\/div>`:''}<\/div><\/div><div style="padding:3px 28px 10px;font-size:10px;color:#64748B;font-style:italic">Arrêté à la somme de ${fmt(f.ttc)} ${dv==='MAD'?'dirhams':dv} TTC.<\/div>${f.note?`<div style="margin:0 28px 10px;background:#FFFBEB;border-left:3px solid #D97706;padding:10px;font-size:11px;color:#92400E">📌 ${escapeHTML(f.note)}<\/div>`:''}<div style="background:#0F172A;padding:12px 28px;margin-top:16px;text-align:center"><div style="font-size:11px;font-weight:700;color:#fff">Bani<span style="color:#60A5FA">Pay<\/span><\/div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px">${legalParts}<\/div><\/div><\/body><\/html>`;
+  const lignesHTML=(f.lignes||[]).map((l,i)=>`<tr style="background:${i%2===0?'#F1EEE8':'#fff'}"><td style="padding:8px 12px;font-size:12px">${escapeHTML(l.desc||'')}<\/td><td style="padding:8px 12px;text-align:center;font-size:12px">${l.qte} ${l.unite||''}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px">${fmt(l.pu)} ${dv}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}<\/td><\/tr>`).join('');
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${f.ref}<\/title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#2A2420;font-size:12px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}<\/style><\/head><body><div style="background:#2A2420;padding:20px 28px;display:flex;justify-content:space-between"><div><div style="font-size:16px;font-weight:700;color:#fff">${escapeHTML(p.raison||'Mon Entreprise')}<\/div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px">${p.tel||''} · ${p.email||''}<\/div><\/div><div style="text-align:right"><div style="background:${accent};color:#fff;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700">FACTURE<\/div><div style="color:#fff;font-size:12px;margin-top:6px">${f.ref}<\/div><div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:2px">Date: ${f.date_emission||''}<\/div><\/div><\/div><div style="background:#F1EEE8;padding:6px 28px;text-align:center;font-size:9px;color:#6B5F54;border-bottom:1px solid #E3DCCF">${legalParts}<\/div><div style="display:flex;gap:10px;padding:12px 28px"><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Facturé à<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(f.client)}<\/div>${f.chantier?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">Projet: ${escapeHTML(f.chantier)}<\/div>`:''}<\/div><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Émetteur<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(p.raison||'')}<\/div>${p.rc?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">RC: ${p.rc}<\/div>`:''}<\/div><\/div><div style="padding:0 28px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#2A2420"><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:left">Désignation<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:center">Qté<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">P.U. HT<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">Total HT<\/th><\/tr><\/thead><tbody>${lignesHTML}<\/tbody><\/table><\/div><div style="padding:10px 28px;display:flex;justify-content:flex-end"><div style="width:250px;border:1px solid #E3DCCF;border-radius:8px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>HT<\/span><span>${fmt(f.ht)} ${dv}<\/span><\/div><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>TVA 20%<\/span><span>${fmt(f.tva)} ${dv}<\/span><\/div>${recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;color:#6E8F4E"><span>Déjà reçu<\/span><span>-${fmt(recu)} ${dv}<\/span><\/div>`:''}<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#2A2420"><span style="font-size:12px;font-weight:700;color:#fff">TOTAL TTC<\/span><span style="font-size:14px;font-weight:700;color:#6FB3B5">${fmt(f.ttc)} ${dv}<\/span><\/div>${restant>0&&recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;color:#B23A2E;font-size:11px"><span>Solde restant<\/span><span>${fmt(restant)} ${dv}<\/span><\/div>`:''}<\/div><\/div><div style="padding:3px 28px 10px;font-size:10px;color:#6B5F54;font-style:italic">Arrêté à la somme de ${fmt(f.ttc)} ${dv==='MAD'?'dirhams':dv} TTC.<\/div>${f.note?`<div style="margin:0 28px 10px;background:#F7EFDC;border-left:3px solid #B8860B;padding:10px;font-size:11px;color:#7A5A0E">📌 ${escapeHTML(f.note)}<\/div>`:''}<div style="background:#2A2420;padding:12px 28px;margin-top:16px;text-align:center"><div style="font-size:11px;font-weight:700;color:#fff">Bani<span style="color:#6FB3B5">Pay<\/span><\/div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px">${legalParts}<\/div><\/div><\/body><\/html>`;
 }
 
 function calculerSoldeFacture(factureId) {
@@ -686,12 +686,12 @@ async function renderAcomptes(factureId) {
     const icons = { acompte:'💰', paiement:'💳', solde:'✅' };
     liste.innerHTML = pays.map(p => `
       <div class="card">
-        <div class="card-ico" style="background:#ECFDF5">${icons[p.type] || '💰'}</div>
+        <div class="card-ico" style="background:#EEF3E4">${icons[p.type] || '💰'}</div>
         <div class="card-body">
           <div class="card-name">${fmt(p.montant)} MAD</div>
           <div class="card-ref">${p.mode || ''} · ${formatDate(p.date)} ${p.reference ? '· Réf: '+escapeHTML(p.reference) : ''}</div>
         </div>
-        <div class="badge" style="background:#ECFDF5;color:#059669">${p.type || 'paiement'}</div>
+        <div class="badge" style="background:#EEF3E4;color:#6E8F4E">${p.type || 'paiement'}</div>
       </div>`).join('');
   } catch(e) { liste.innerHTML = '<div class="empty"><div>Erreur de chargement</div></div>'; }
 }
@@ -720,14 +720,14 @@ async function renderHistoriquePaiements(factureId) {
     }
     liste.innerHTML = pays.map(p => `
       <div class="card">
-        <div class="card-ico" style="background:#ECFDF5">💰</div>
+        <div class="card-ico" style="background:#EEF3E4">💰</div>
         <div class="card-body">
           <div class="card-name">${fmt(p.montant)} MAD</div>
           <div class="card-ref">${formatDate(p.date)} · ${p.mode || 'virement'}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <div class="badge" style="background:#ECFDF5;color:#059669">${p.type || 'paiement'}</div>
-          <button onclick="supprimerPaiement(${p.id},'${factureId}')" style="font-size:11px;color:#EF4444;background:none;border:none;cursor:pointer">🗑️</button>
+          <div class="badge" style="background:#EEF3E4;color:#6E8F4E">${p.type || 'paiement'}</div>
+          <button onclick="supprimerPaiement(${p.id},'${factureId}')" style="font-size:11px;color:#B23A2E;background:none;border:none;cursor:pointer">🗑️</button>
         </div>
       </div>`).join('');
   } catch(e) { liste.innerHTML = '<div class="empty"><div>Erreur de chargement</div></div>'; }
@@ -791,14 +791,14 @@ function filterRelances(filter, btn) {
     const jours = getDaysLate(f);
     return `
     <div class="card">
-      <div class="card-ico" style="background:${f.statut==='retard'?'#FEF2F2':'#FFFBEB'}">${f.statut==='retard'?'⚠️':'🧱'}</div>
+      <div class="card-ico" style="background:${f.statut==='retard'?'#F5E4E1':'#F7EFDC'}">${f.statut==='retard'?'⚠️':'🧱'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(f.client)}</div>
-        <div class="card-ref">${f.ref} ${jours > 0 ? '· <span style="color:#EF4444">'+jours+' jours de retard</span>' : '· '+formatDate(f.echeance)}</div>
+        <div class="card-ref">${f.ref} ${jours > 0 ? '· <span style="color:#B23A2E">'+jours+' jours de retard</span>' : '· '+formatDate(f.echeance)}</div>
       </div>
       <div class="card-end">
-        <div style="font-size:13px;font-weight:700;color:#EF4444">${fmt(restant)} MAD</div>
-        <button onclick="relancerWhatsApp(${f.id})" style="font-size:11px;background:#DCFCE7;color:#16A34A;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:3px;font-family:inherit">📱 WhatsApp</button>
+        <div style="font-size:13px;font-weight:700;color:#B23A2E">${fmt(restant)} MAD</div>
+        <button onclick="relancerWhatsApp(${f.id})" style="font-size:11px;background:#EEF3E4;color:#55702E;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;margin-top:3px;font-family:inherit">📱 WhatsApp</button>
       </div>
     </div>`;
   }).join('');
