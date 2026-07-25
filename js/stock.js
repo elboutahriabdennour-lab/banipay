@@ -107,14 +107,14 @@ async function ouvrirHistoriqueStock(produitId) {
 
   const overlay = document.createElement('div');
   overlay.id = 'historique-stock-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F8FAFC;overflow-y:auto;font-family:inherit';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F1EEE8;overflow-y:auto;font-family:inherit';
   overlay.innerHTML =
-    '<div style="background:linear-gradient(135deg,#1E1B4B,#3730A3);padding:14px 20px;display:flex;align-items:center;gap:12px">' +
+    '<div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:14px 20px;display:flex;align-items:center;gap:12px">' +
       '<button class="close-hist-stock" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
       '<div><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(p.nom) + '</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.5)">Stock actuel : ' + (p.stock !== null && p.stock !== undefined ? p.stock : '—') + ' ' + (p.unite||'u') + '</div></div>' +
     '</div>' +
-    '<div id="historique-stock-list" style="padding:16px 20px"><div style="text-align:center;color:#94A3B8;padding:30px">⏳ Chargement...</div></div>';
+    '<div id="historique-stock-list" style="padding:16px 20px"><div style="text-align:center;color:#9C9186;padding:30px">⏳ Chargement...</div></div>';
 
   document.body.appendChild(overlay);
   overlay.querySelector('.close-hist-stock').onclick = function() { overlay.remove(); };
@@ -127,20 +127,20 @@ async function ouvrirHistoriqueStock(produitId) {
       return;
     }
     const typeIcons = { entree: '⬆️', sortie: '⬇️', ajustement: '⚖️' };
-    const typeColors = { entree: '#059669', sortie: '#EF4444', ajustement: '#D97706' };
+    const typeColors = { entree: '#6E8F4E', sortie: '#B23A2E', ajustement: '#B8860B' };
     const typeLabels = { entree: 'Entrée', sortie: 'Sortie', ajustement: 'Ajustement' };
     list.innerHTML = mouvements.map(function(m) {
-      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F1F5F9;align-items:flex-start">' +
-        '<div style="width:32px;height:32px;border-radius:8px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (typeIcons[m.type]||'📌') + '</div>' +
+      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #EAE4DA;align-items:flex-start">' +
+        '<div style="width:32px;height:32px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (typeIcons[m.type]||'📌') + '</div>' +
         '<div style="flex:1">' +
-          '<div style="font-size:13px;font-weight:600;color:' + (typeColors[m.type]||'#0F172A') + '">' + (typeLabels[m.type]||m.type) + ' — ' + m.quantite + ' ' + (p.unite||'u') + '</div>' +
-          (m.motif ? '<div style="font-size:12px;color:#64748B;margin-top:2px">' + escapeHTML(m.motif) + (m.reference ? ' · ' + escapeHTML(m.reference) : '') + '</div>' : '') +
-          '<div style="font-size:11px;color:#94A3B8;margin-top:3px">' + formatDateTime(m.created_at) + '</div>' +
+          '<div style="font-size:13px;font-weight:600;color:' + (typeColors[m.type]||'#2A2420') + '">' + (typeLabels[m.type]||m.type) + ' — ' + m.quantite + ' ' + (p.unite||'u') + '</div>' +
+          (m.motif ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + escapeHTML(m.motif) + (m.reference ? ' · ' + escapeHTML(m.reference) : '') + '</div>' : '') +
+          '<div style="font-size:11px;color:#9C9186;margin-top:3px">' + formatDateTime(m.created_at) + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
   } catch(e) {
     const list = document.getElementById('historique-stock-list');
-    if (list) list.innerHTML = '<div style="text-align:center;padding:30px;color:#EF4444">Erreur de chargement</div>';
+    if (list) list.innerHTML = '<div style="text-align:center;padding:30px;color:#B23A2E">Erreur de chargement</div>';
   }
 }
