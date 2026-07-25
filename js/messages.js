@@ -172,18 +172,18 @@ function renderConversations() {
     const lastMsg = c.dernier_message || 'Nouvelle conversation';
     const time = c.derniere_activite ? new Date(c.derniere_activite).toLocaleDateString('fr-FR', {day:'2-digit',month:'short'}) : '';
     const initiale = (name[0] || '?').toUpperCase();
-    const bgColors = ['#EEF2FF','#ECFDF5','#FEF3C7','#FEE2E2'];
-    const fgColors = ['#4F46E5','#059669','#D97706','#EF4444'];
+    const bgColors = ['#FBF0DA','#EEF3E4','#F0E2C0','#F5E4E1'];
+    const fgColors = ['#C9971F','#6E8F4E','#B8860B','#B23A2E'];
     const idx = name.charCodeAt(0) % 4;
 
-    return '<div class="conv-item" data-id="' + c.id + '" style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #F8FAFC;cursor:pointer;align-items:center">' +
+    return '<div class="conv-item" data-id="' + c.id + '" style="display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid #F1EEE8;cursor:pointer;align-items:center">' +
       '<div style="width:46px;height:46px;border-radius:50%;background:' + bgColors[idx] + ';color:' + fgColors[idx] + ';display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0">' + initiale + '</div>' +
       '<div style="flex:1;min-width:0">' +
         '<div style="display:flex;justify-content:space-between;align-items:center">' +
-          '<div style="font-size:14px;font-weight:700;color:#0F172A">' + escapeHTML(name) + '</div>' +
-          '<div style="font-size:11px;color:#94A3B8">' + time + '</div>' +
+          '<div style="font-size:14px;font-weight:700;color:#2A2420">' + escapeHTML(name) + '</div>' +
+          '<div style="font-size:11px;color:#9C9186">' + time + '</div>' +
         '</div>' +
-        '<div style="font-size:12px;color:#64748B;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHTML(lastMsg) + '</div>' +
+        '<div style="font-size:12px;color:#6B5F54;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHTML(lastMsg) + '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -255,7 +255,7 @@ function renderMessages() {
   const msgs = STATE.messagesConv || [];
 
   if (!msgs.length) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:#94A3B8"><div style="font-size:32px;margin-bottom:8px">👋</div><div style="font-size:13px">Commencez la conversation</div></div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#9C9186"><div style="font-size:32px;margin-bottom:8px">👋</div><div style="font-size:13px">Commencez la conversation</div></div>';
     return;
   }
 
@@ -269,7 +269,7 @@ function renderMessages() {
     let dateSep = '';
     if (dateStr !== lastDate) {
       lastDate = dateStr;
-      dateSep = '<div style="text-align:center;margin:12px 0"><span style="background:#F1F5F9;color:#64748B;font-size:11px;padding:4px 12px;border-radius:12px">' + dateStr + '</span></div>';
+      dateSep = '<div style="text-align:center;margin:12px 0"><span style="background:#EAE4DA;color:#6B5F54;font-size:11px;padding:4px 12px;border-radius:12px">' + dateStr + '</span></div>';
     }
 
     const pjHtml = m.pj_data && m.pj_nom
@@ -281,12 +281,12 @@ function renderMessages() {
     return dateSep +
       '<div style="display:flex;justify-content:' + (isMine ? 'flex-end' : 'flex-start') + ';margin-bottom:8px;padding:0 16px">' +
         '<div style="max-width:75%">' +
-          (isMine ? '' : '<div style="font-size:10px;color:#94A3B8;margin-bottom:3px">' + escapeHTML(m.expediteur_nom || '') + '</div>') +
-          '<div style="background:' + (isMine ? 'linear-gradient(135deg,#4F46E5,#3730A3)' : '#F1F5F9') + ';color:' + (isMine ? '#fff' : '#0F172A') + ';padding:10px 14px;border-radius:' + (isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:13px;line-height:1.5">' +
+          (isMine ? '' : '<div style="font-size:10px;color:#9C9186;margin-bottom:3px">' + escapeHTML(m.expediteur_nom || '') + '</div>') +
+          '<div style="background:' + (isMine ? 'linear-gradient(135deg,#C9971F,#A67A16)' : '#EAE4DA') + ';color:' + (isMine ? '#fff' : '#2A2420') + ';padding:10px 14px;border-radius:' + (isMine ? '18px 18px 4px 18px' : '18px 18px 18px 4px') + ';font-size:13px;line-height:1.5">' +
             escapeHTML(m.contenu || '') +
             pjHtml +
           '</div>' +
-          '<div style="font-size:10px;color:#94A3B8;margin-top:2px;text-align:' + (isMine ? 'right' : 'left') + '">' + timeStr + '</div>' +
+          '<div style="font-size:10px;color:#9C9186;margin-top:2px;text-align:' + (isMine ? 'right' : 'left') + '">' + timeStr + '</div>' +
         '</div>' +
       '</div>';
   }).join('');
@@ -384,8 +384,8 @@ function attacherFichierMsg(event) {
     if (old) old.remove();
     const preview = document.createElement('div');
     preview.id = 'msg-pj-preview';
-    preview.style.cssText = 'position:absolute;bottom:70px;left:16px;right:16px;background:#EEF2FF;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#4F46E5;font-weight:600;border:1px solid #C7D2FE';
-    preview.innerHTML = '📎 ' + escapeHTML(file.name) + '<button onclick="annulerPJMsg()" style="background:none;border:none;color:#EF4444;cursor:pointer;font-size:16px">×</button>';
+    preview.style.cssText = 'position:absolute;bottom:70px;left:16px;right:16px;background:#FBF0DA;border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#C9971F;font-weight:600;border:1px solid #E8D9AE';
+    preview.innerHTML = '📎 ' + escapeHTML(file.name) + '<button onclick="annulerPJMsg()" style="background:none;border:none;color:#B23A2E;cursor:pointer;font-size:16px">×</button>';
     document.getElementById('chat-input-zone').appendChild(preview);
   };
   reader.readAsDataURL(file);
