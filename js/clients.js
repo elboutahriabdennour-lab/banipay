@@ -8,40 +8,40 @@ function ouvrirScannerQR() {
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:80vh;overflow-y:auto';
   box.innerHTML = `
-    <div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px"></div>
-    <div style="font-size:16px;font-weight:700;color:#0F172A;margin-bottom:6px">➕ Ajouter un client</div>
-    <div style="font-size:12px;color:#64748B;margin-bottom:20px">Importez un client via son lien BaniPay, un QR code ou manuellement</div>
+    <div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 20px"></div>
+    <div style="font-size:16px;font-weight:700;color:#2A2420;margin-bottom:6px">➕ Ajouter un client</div>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:20px">Importez un client via son lien BaniPay, un QR code ou manuellement</div>
 
-    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">🔗 Via lien BaniPay</div>
-      <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil BaniPay...">
-      <button onclick="importerClientDepuisLien()" style="width:100%;margin-top:10px;padding:12px;background:#2563EB;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Importer</button>
+    <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">🔗 Via lien BaniPay</div>
+      <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #E3DCCF;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil BaniPay...">
+      <button onclick="importerClientDepuisLien()" style="width:100%;margin-top:10px;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Importer</button>
     </div>
 
-    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">📷 Scanner un QR code</div>
-      <label style="display:block;text-align:center;padding:20px;border:2px dashed #E2E8F0;border-radius:10px;cursor:pointer;color:#2563EB;font-size:13px;font-weight:600">
+    <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">📷 Scanner un QR code</div>
+      <label style="display:block;text-align:center;padding:20px;border:2px dashed #E3DCCF;border-radius:10px;cursor:pointer;color:#C9971F;font-size:13px;font-weight:600">
         📷 Ouvrir la caméra
         <input type="file" accept="image/*" capture="environment" style="display:none" onchange="importerClientDepuisQRImage(event)">
       </label>
-      <div style="font-size:10px;color:#94A3B8;text-align:center;margin-top:6px">Prend une photo du QR code profil BaniPay</div>
+      <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:6px">Prend une photo du QR code profil BaniPay</div>
     </div>
 
-    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">📥 Import en masse (CSV)</div>
-      <label style="display:block;text-align:center;padding:14px;border:2px dashed #C7D2FE;border-radius:10px;cursor:pointer;color:#4338CA;font-size:13px;font-weight:600;background:#EEF2FF">
+    <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">📥 Import en masse (CSV)</div>
+      <label style="display:block;text-align:center;padding:14px;border:2px dashed #E8D9AE;border-radius:10px;cursor:pointer;color:#1F6F72;font-size:13px;font-weight:600;background:#FBF0DA">
         📄 Choisir un fichier CSV
         <input type="file" accept=".csv" style="display:none" onchange="importerClientsCSV(event)">
       </label>
-      <button onclick="telechargerTemplateClientsCSV()" style="width:100%;margin-top:8px;padding:8px;background:none;color:#64748B;border:none;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">Télécharger un modèle vide</button>
+      <button onclick="telechargerTemplateClientsCSV()" style="width:100%;margin-top:8px;padding:8px;background:none;color:#6B5F54;border:none;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">Télécharger un modèle vide</button>
     </div>
 
-    <div style="background:#F8FAFC;border-radius:14px;padding:16px;margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#94A3B8;margin-bottom:10px">✏️ Saisie manuelle</div>
-      <button onclick="document.getElementById('scanner-overlay').remove();goScreen('nouveau-client',null)" style="width:100%;padding:12px;background:#F1F5F9;color:#0F172A;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">➕ Nouveau client manuellement</button>
+    <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">✏️ Saisie manuelle</div>
+      <button onclick="document.getElementById('scanner-overlay').remove();goScreen('nouveau-client',null)" style="width:100%;padding:12px;background:#EAE4DA;color:#2A2420;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">➕ Nouveau client manuellement</button>
     </div>
 
-    <button onclick="document.getElementById('scanner-overlay').remove()" style="width:100%;padding:12px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>
+    <button onclick="document.getElementById('scanner-overlay').remove()" style="width:100%;padding:12px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>
   `;
 
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
@@ -156,14 +156,14 @@ function renderClients() {
     const caTotal = STATE.factures.filter(f=>f.client===c.nom&&f.statut==='payee').reduce((s,f)=>s+Number(f.ttc),0);
     return `
     <div class="card" onclick="openDetailClient(${c.id})">
-      <div class="card-ico" style="background:#EFF6FF;font-weight:700;color:#2563EB;font-size:18px">${escapeHTML(c.nom).charAt(0).toUpperCase()}</div>
+      <div class="card-ico" style="background:#E9F4F3;font-weight:700;color:#C9971F;font-size:18px">${escapeHTML(c.nom).charAt(0).toUpperCase()}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(c.nom)}</div>
         <div class="card-ref">${c.tel||''} ${c.email?'· '+c.email:''}</div>
       </div>
       <div class="card-end">
-        <div style="font-size:12px;color:#059669;font-weight:600">${fmtInt(caTotal)} MAD</div>
-        <div style="font-size:10px;color:#94A3B8">${STATE.factures.filter(f=>f.client===c.nom).length} fact.</div>
+        <div style="font-size:12px;color:#6E8F4E;font-weight:600">${fmtInt(caTotal)} MAD</div>
+        <div style="font-size:10px;color:#9C9186">${STATE.factures.filter(f=>f.client===c.nom).length} fact.</div>
       </div>
     </div>`;
   }).join('');
@@ -221,17 +221,17 @@ function openDetailClient(id) {
   if (infosEl) infosEl.innerHTML =
     `<div class="p-card-title">Informations</div>` +
     fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('') +
-    `<div class="p-row"><span class="p-lbl">CA payé</span><span class="p-val" style="color:#059669;font-weight:700">${fmtInt(caTotal)} MAD</span></div>` +
+    `<div class="p-row"><span class="p-lbl">CA payé</span><span class="p-val" style="color:#6E8F4E;font-weight:700">${fmtInt(caTotal)} MAD</span></div>` +
     `<div class="p-row"><span class="p-lbl">Factures</span><span class="p-val">${nbFact}</span></div>`;
   const factEl = el('dc-factures');
   if (factEl) {
     const cFact = STATE.factures.filter(f=>f.client===c.nom);
     factEl.innerHTML = cFact.slice(0,5).map(f=>`
       <div class="card" onclick="openDetail(${f.id})" style="margin-bottom:8px">
-        <div class="card-ico" style="background:#EFF6FF">📄</div>
+        <div class="card-ico" style="background:#E9F4F3">📄</div>
         <div class="card-body"><div class="card-name">${f.ref}</div><div class="card-ref">${f.date_emission||''}</div></div>
         <div class="card-end"><div class="card-amt">${fmt(f.ttc)} MAD</div><div class="badge b-${f.statut}">${badgeF(f.statut)}</div></div>
-      </div>`).join('') || '<div style="color:#94A3B8;font-size:13px;padding:8px 0">Aucune facture</div>';
+      </div>`).join('') || '<div style="color:#9C9186;font-size:13px;padding:8px 0">Aucune facture</div>';
   }
   const lienSection = document.getElementById('dc-lien-section');
   const lienEl = document.getElementById('dc-lien-banipay');
@@ -384,8 +384,8 @@ function remplirFormulaireClient(p) {
     const inp = el(id);
     if (inp && fields[id]) {
       inp.value = fields[id];
-      inp.style.background = '#ECFDF5';
-      inp.style.borderColor = '#059669';
+      inp.style.background = '#EEF3E4';
+      inp.style.borderColor = '#6E8F4E';
       setTimeout(function() {
         inp.style.background = '';
         inp.style.borderColor = '';
@@ -440,7 +440,7 @@ async function importerClientVieLien() {
 
     if (document.getElementById('cl-lien-import')) {
       document.getElementById('cl-lien-import').value = '';
-      document.getElementById('cl-lien-import').style.background = '#ECFDF5';
+      document.getElementById('cl-lien-import').style.background = '#EEF3E4';
     }
     showToast('✅ Profil importé : ' + (p.raison || p.nom), 'success');
 
@@ -510,12 +510,12 @@ function renderPickerClients(liste) {
   const container = el('clients-picker-list');
   if (!container) return;
   if (!liste.length) {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:#94A3B8">Aucun client — créez-en un depuis l\'écran Clients</div>';
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">Aucun client — créez-en un depuis l\'écran Clients</div>';
     return;
   }
   container.innerHTML = liste.map(function(c) {
     return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + "'" + escapeHTML(c.nom||'').replace(/'/g,"\\'") + "'" + ')">' +
-      '<div class="card-ico" style="background:#EFF6FF;font-weight:700;color:#2563EB;font-size:16px">' + (c.nom||'?').charAt(0).toUpperCase() + '</div>' +
+      '<div class="card-ico" style="background:#E9F4F3;font-weight:700;color:#C9971F;font-size:16px">' + (c.nom||'?').charAt(0).toUpperCase() + '</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.tel||c.email||'') + '</div></div>' +
     '</div>';
   }).join('');
