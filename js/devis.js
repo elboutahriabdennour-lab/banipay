@@ -9,14 +9,14 @@ function renderDevisList() {
     return;
   }
   const icons = { envoye:'📤', accepte:'✅', refuse:'❌', converti:'🧾', expire:'⏰' };
-  const bgs   = { envoye:'#FFFBEB', accepte:'#ECFDF5', refuse:'#FEF2F2', converti:'#EFF6FF', expire:'#F1F5F9' };
+  const bgs   = { envoye:'#F7EFDC', accepte:'#EEF3E4', refuse:'#F5E4E1', converti:'#E9F4F3', expire:'#EAE4DA' };
   list.innerHTML = data.map(d => `
     <div class="card" onclick="openDetailDevis(${d.id})">
-      <div class="card-ico" style="background:${bgs[d.statut]||'#F1F5F9'}">${icons[d.statut]||'📝'}</div>
+      <div class="card-ico" style="background:${bgs[d.statut]||'#EAE4DA'}">${icons[d.statut]||'📝'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(d.client)}</div>
         <div class="card-ref">${d.ref} · ${d.date_emission||''} · ${d.validite||30}j</div>
-        ${d.statut==='accepte'?'<div style="display:inline-block;background:#ECFDF5;color:#059669;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">✅ Accepté</div>':d.statut==='refuse'?'<div style="display:inline-block;background:#FEF2F2;color:#DC2626;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">❌ Refusé</div>':''}
+        ${d.statut==='accepte'?'<div style="display:inline-block;background:#EEF3E4;color:#6E8F4E;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">✅ Accepté</div>':d.statut==='refuse'?'<div style="display:inline-block;background:#F5E4E1;color:#8E2E24;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">❌ Refusé</div>':''}
       </div>
       <div class="card-end">
         <div class="card-amt">${fmt(d.ttc)} ${d.devise||'MAD'}</div>
@@ -137,7 +137,7 @@ function renderDetailDevis() {
   const lignesEl = el('dv-lignes');
   if (lignesEl) lignesEl.innerHTML = (d.lignes||[]).map(l=>`
     <div class="d-ligne">
-      <div><div style="font-size:13px;font-weight:500">${l.desc}</div><div style="font-size:11px;color:#94A3B8">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div></div>
+      <div><div style="font-size:13px;font-weight:500">${l.desc}</div><div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div></div>
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
     </div>`).join('');
   const totEl = el('dv-totals');
@@ -150,29 +150,29 @@ function renderDetailDevis() {
   const actions = [];
 
   // Badge statut
-  const statutColors = { envoye:'#D97706', accepte:'#059669', refuse:'#DC2626', expire:'#94A3B8' };
+  const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#9C9186' };
   const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré' };
-  actions.push(`<div style="background:${statutColors[d.statut]||'#64748B'}20;border-left:3px solid ${statutColors[d.statut]||'#64748B'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#64748B'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
+  actions.push(`<div style="background:${statutColors[d.statut]||'#6B5F54'}20;border-left:3px solid ${statutColors[d.statut]||'#6B5F54'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#6B5F54'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
 
   // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
-  actions.push(`<button class="action-item" style="color:#4338CA;border-left-color:#4338CA" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#EEF2FF">📨</div>Envoyer</button>`);
+  actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
 
   // Actions selon statut
   if (d.statut === 'envoye') {
-    actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#ECFDF5">✅</div>Marquer accepté</button>`);
-    actions.push(`<button class="action-item danger" onclick="changerStatutDevis(${d.id},'refuse')"><div class="action-ico" style="background:#FEF2F2">❌</div>Marquer refusé</button>`);
+    actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>`);
+    actions.push(`<button class="action-item danger" onclick="changerStatutDevis(${d.id},'refuse')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusé</button>`);
   }
   if (d.statut === 'accepte') {
-    actions.push(`<button class="action-item" style="color:#2563EB;border-left-color:#2563EB" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#EFF6FF">🧾</div>Convertir en facture</button>`);
+    actions.push(`<button class="action-item" style="color:#C9971F;border-left-color:#C9971F" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#E9F4F3">🧾</div>Convertir en facture</button>`);
   }
 
   // Partage
   // FIX: boutons "Partager WhatsApp" / "Partager / Copier lien" retirés —
   // redondants avec le bouton "Envoyer" unifié (WhatsApp/Email/Lien/BaniPay)
   // déjà en premier dans cette liste d'actions.
-  actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#FFFBEB">📄</div>Voir PDF</button>`);
-  actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#F3E8FF">📋</div>Dupliquer</button>`);
-  actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#FEF2F2">🗑️</div>Supprimer</button>`);
+  actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#F7EFDC">📄</div>Voir PDF</button>`);
+  actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
+  actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
   actEl.innerHTML = actions.join('');
 }
 
@@ -323,7 +323,7 @@ function genBonCommandePDF() {
   if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
   const ht = STATE.lignesBC.reduce((s,l) => s + (l.qte||1)*(l.pu||0), 0);
   genDocPDF({
-    type: 'BON DE COMMANDE', ref: el('bc-ref')?.value, color: '#7C3AED',
+    type: 'BON DE COMMANDE', ref: el('bc-ref')?.value, color: '#7C5CA6',
     emetteur: STATE.profil || {},
     destinataire: { nom: fournisseur },
     date: el('bc-date')?.value,
@@ -373,7 +373,7 @@ function genBonLivraisonPDF() {
   const client = el('bl-client')?.value.trim();
   if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
   genDocPDF({
-    type: 'BON DE LIVRAISON', ref: el('bl-ref')?.value, color: '#059669',
+    type: 'BON DE LIVRAISON', ref: el('bl-ref')?.value, color: '#6E8F4E',
     emetteur: STATE.profil || {},
     destinataire: { nom: client },
     date: el('bl-date')?.value,
@@ -390,7 +390,7 @@ function exportDevisPDF(id) {
   const d = STATE.devis.find(x=>x.id===id); if(!d) return;
   const lignes = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
   genDocPDF({
-    type: 'DEVIS', ref: d.ref, color: '#D97706',
+    type: 'DEVIS', ref: d.ref, color: '#B8860B',
     emetteur: STATE.profil || {},
     destinataire: { nom: d.client, chantier: d.chantier },
     date: d.date_emission, validite: d.validite,
@@ -409,7 +409,7 @@ function previewDevisPDF() {
   if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
   const ht = STATE.lignesD.reduce((s,l) => s + l.qte*l.pu, 0);
   genDocPDF({
-    type: 'DEVIS', ref: el('d-ref')?.value, color: '#D97706',
+    type: 'DEVIS', ref: el('d-ref')?.value, color: '#B8860B',
     emetteur: STATE.profil || {},
     destinataire: { nom: client, chantier: el('d-chantier')?.value },
     date: el('d-date')?.value,
@@ -440,7 +440,7 @@ function previewAvoirPDF() {
   genDocPDF({
     type: 'AVOIR',
     ref: el('av-ref')?.value,
-    color: '#DC2626',
+    color: '#8E2E24',
     emetteur: STATE.profil || {},
     destinataire: { nom: client },
     date: el('av-date')?.value,
@@ -469,14 +469,14 @@ function renderAvoirList() {
     <div class="card" style="margin:0 20px 10px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-size:13px;font-weight:700;color:#DC2626">↩️ ${escapeHTML(a.ref||'')}</div>
-          <div style="font-size:12px;color:#0F172A;margin-top:2px">${escapeHTML(a.client||'')}</div>
-          <div style="font-size:11px;color:#64748B;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
-          ${a.facture_origine_ref?`<div style="font-size:10px;color:#94A3B8">Facture: ${a.facture_origine_ref}</div>`:''}
+          <div style="font-size:13px;font-weight:700;color:#8E2E24">↩️ ${escapeHTML(a.ref||'')}</div>
+          <div style="font-size:12px;color:#2A2420;margin-top:2px">${escapeHTML(a.client||'')}</div>
+          <div style="font-size:11px;color:#6B5F54;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
+          ${a.facture_origine_ref?`<div style="font-size:10px;color:#9C9186">Facture: ${a.facture_origine_ref}</div>`:''}
         </div>
         <div style="text-align:right">
-          <div style="font-size:14px;font-weight:700;color:#DC2626">-${fmt(a.ttc||0)} MAD</div>
-          <button onclick="exportAvoirPDF('${a.id}')" style="background:#FEF2F2;color:#DC2626;border:none;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;margin-top:4px">📄 PDF</button>
+          <div style="font-size:14px;font-weight:700;color:#8E2E24">-${fmt(a.ttc||0)} MAD</div>
+          <button onclick="exportAvoirPDF('${a.id}')" style="background:#F5E4E1;color:#8E2E24;border:none;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;margin-top:4px">📄 PDF</button>
         </div>
       </div>
     </div>
@@ -495,7 +495,7 @@ function exportAvoirPDF(id) {
   genDocPDF({
     type: 'AVOIR',
     ref: a.ref,
-    color: '#DC2626',
+    color: '#8E2E24',
     emetteur: STATE.profil || {},
     destinataire: { nom: a.client || '' },
     date: a.date_emission,
@@ -576,8 +576,8 @@ async function traiterActionDocument(docId, type, action, signatureData) {
   document.body.innerHTML = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
       <div style="font-size:48px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
-      <h2 style="color:#0F172A;margin-bottom:8px">${action === 'accepter' ? 'Acceptation' : 'Refus'} de ${isFacture ? 'la facture' : 'devis'}</h2>
-      <p style="color:#64748B;margin-bottom:24px">Chargement...</p>
+      <h2 style="color:#2A2420;margin-bottom:8px">${action === 'accepter' ? 'Acceptation' : 'Refus'} de ${isFacture ? 'la facture' : 'devis'}</h2>
+      <p style="color:#6B5F54;margin-bottom:24px">Chargement...</p>
     </div>
   `;
 
@@ -599,13 +599,13 @@ async function traiterActionDocument(docId, type, action, signatureData) {
       document.body.innerHTML = `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
           <div style="font-size:64px;margin-bottom:16px">${statutActuel === valeurAcceptee ? '✅' : '❌'}</div>
-          <h2 style="color:#0F172A;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
-          <div style="background:${statutActuel === valeurAcceptee ? '#ECFDF5' : '#FEF2F2'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-            <div style="font-size:13px;color:#64748B">Référence : <strong>${d.ref}</strong></div>
-            <div style="font-size:13px;color:#64748B;margin-top:4px">Client : <strong>${d.client}</strong></div>
+          <h2 style="color:#2A2420;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
+          <div style="background:${statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+            <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
+            <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
           </div>
-          <p style="color:#64748B;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
-          <div style="margin-top:24px;font-size:11px;color:#94A3B8">Propulsé par <strong style="color:#2563EB">BaniPay</strong></div>
+          <p style="color:#6B5F54;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
+          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
         </div>
       `;
       return;
@@ -635,18 +635,18 @@ async function traiterActionDocument(docId, type, action, signatureData) {
     document.body.innerHTML = `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
         <div style="font-size:64px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
-        <h2 style="color:#0F172A;margin-bottom:8px">${isFacture ? 'Facture' : 'Devis'} ${action === 'accepter' ? 'acceptée' : 'refusée'} !</h2>
-        <div style="background:${action === 'accepter' ? '#ECFDF5' : '#FEF2F2'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-          <div style="font-size:13px;color:#64748B">Référence : <strong>${d.ref}</strong></div>
-          <div style="font-size:13px;color:#64748B;margin-top:4px">Client : <strong>${d.client}</strong></div>
-          <div style="font-size:13px;color:#64748B;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
+        <h2 style="color:#2A2420;margin-bottom:8px">${isFacture ? 'Facture' : 'Devis'} ${action === 'accepter' ? 'acceptée' : 'refusée'} !</h2>
+        <div style="background:${action === 'accepter' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
+          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
+          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
         </div>
-        <p style="color:#64748B;font-size:13px">${action === 'accepter' ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.' : 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\u2019entreprise.'}</p>
-        <div style="margin-top:24px;font-size:11px;color:#94A3B8">Propulsé par <strong style="color:#2563EB">BaniPay</strong></div>
+        <p style="color:#6B5F54;font-size:13px">${action === 'accepter' ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.' : 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\u2019entreprise.'}</p>
+        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
       </div>
     `;
   } catch(e) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#EF4444">Erreur: ' + e.message + '</div>';
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
   }
 }
 
