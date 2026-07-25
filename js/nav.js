@@ -78,19 +78,19 @@ async function renderNotifScreen() {
   let html = '';
 
   if (invitationsCpt.length) {
-    html += '<div style="padding:10px 20px 4px;font-size:11px;font-weight:700;color:#4338CA;text-transform:uppercase">Invitations en attente</div>';
+    html += '<div style="padding:10px 20px 4px;font-size:11px;font-weight:700;color:#1F6F72;text-transform:uppercase">Invitations en attente</div>';
     html += invitationsCpt.map(function(inv) {
-      return '<div style="margin:8px 20px;background:#EEF2FF;border-radius:14px;padding:16px;border:1px solid #C7D2FE">' +
+      return '<div style="margin:8px 20px;background:#FBF0DA;border-radius:14px;padding:16px;border:1px solid #E8D9AE">' +
         '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">' +
           '<div style="font-size:24px">📊</div>' +
           '<div>' +
             '<div style="font-size:13px;font-weight:700">' + escapeHTML(inv.comptable_email||'') + '</div>' +
-            '<div style="font-size:11px;color:#4338CA">Souhaite accéder à vos documents</div>' +
+            '<div style="font-size:11px;color:#1F6F72">Souhaite accéder à vos documents</div>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;gap:8px">' +
-          '<button class="btn-accept-cpt-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
-          '<button class="btn-refuse-cpt-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#FEF2F2;color:#EF4444;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
+          '<button class="btn-accept-cpt-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
+          '<button class="btn-refuse-cpt-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -107,8 +107,8 @@ async function renderNotifScreen() {
         '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
         '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
         (isDoc ? '<div style="display:flex;gap:6px;margin-top:8px">' +
-          '<button class="btn-doc-accept" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
-          '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#FEF2F2;color:#EF4444;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
+          '<button class="btn-doc-accept" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#6E8F4E;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
+          '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
         '</div>' : '') +
         '</div></div>';
     }).join('');
