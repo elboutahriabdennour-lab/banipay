@@ -40,6 +40,13 @@ async function loadComptableApp() {
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
       ]);
 
+      // FIX: diagnostic — si tousControles revient systématiquement vide (0)
+      // alors qu'on sait avoir déjà écrit des lignes (voir la vérification
+      // de relecture dans sauvegarderControle), c'est la confirmation que
+      // le SELECT sur controles_factures est bloqué par RLS pour ce compte
+      // comptable — cause la plus probable du "l'app ne se souvient pas".
+      console.log('loadComptableApp: ' + (tousControles ? tousControles.length : 0) + ' ligne(s) de contrôle rechargée(s) depuis controles_factures.');
+
       CPT.entreprises.forEach(function(inv) {
         inv.profil = (profils || []).find(function(p) { return p.id === inv.entreprise_id; }) || {};
         inv._factures = (toutesFactures || []).filter(function(f) { return f.user_id === inv.entreprise_id; });
@@ -1435,6 +1442,28 @@ async function sauvegarderControle(factureId, data) {
         }
         return;
       }
+    }
+
+    // FIX: vérification de relecture — c'est LE test qui distingue "écriture
+    // bloquée" de "lecture bloquée" (RLS SELECT). Si l'écriture ci-dessus a
+    // réussi (aucune erreur renvoyée) mais que cette relecture immédiate ne
+    // retrouve pas la ligne, c'est que le SELECT est filtré par RLS pour le
+    // comptable — exactement le symptôme "l'app ne se souvient pas" : la
+    // ligne existe bel et bien en base, mais devient invisible dès qu'on la
+    // recharge (changement d'onglet, reconnexion...).
+    try {
+      const verifResp = await fetch(
+        SUPABASE_URL + '/rest/v1/controles_factures?facture_id=eq.' + encodeURIComponent(String(factureId)) +
+        '&entreprise_id=eq.' + encodeURIComponent(CPT.currentEntrepriseId) + '&select=facture_id',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+      );
+      const verifData = verifResp.ok ? await verifResp.json() : [];
+      if (!verifData || verifData.length === 0) {
+        console.error('sauvegarderControle: la ligne vient d\'être écrite mais est INVISIBLE en relecture — RLS SELECT bloque probablement le comptable sur controles_factures. Voir migration_phase6_rls_controles.sql (policy controles_factures_select).');
+        showToast('⚠️ Enregistré mais invisible à la relecture — RLS SELECT à corriger (voir console F12)', 'error');
+      }
+    } catch(eVerif) {
+      console.warn('sauvegarderControle: vérification de relecture impossible', eVerif);
     }
 
     // Update local state
