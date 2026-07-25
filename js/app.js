@@ -42,41 +42,41 @@ async function loadComptableData(userId) {
 }
 
 async function loadPortailClient(clientId) {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;color:#64748B">⏳ Chargement...</div>';
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#6B5F54">⏳ Chargement...</div>';
   // This would load client-specific data via a public token
   showToast('Portail client — fonctionnalité à venir');
 }
 
 async function loadPublicProfil(profilId) {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;color:#64748B">⏳ Chargement...</div>';
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#6B5F54">⏳ Chargement...</div>';
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/profils_entreprise?id_unique=eq.${profilId}&select=*`,
       {headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
     const d = await r.json();
     const p = d && d[0];
-    if (!p) { document.body.innerHTML='<div style="text-align:center;padding:60px 20px;font-family:Inter,sans-serif"><h2>Profil introuvable</h2></div>'; return; }
+    if (!p) { document.body.innerHTML='<div style="text-align:center;padding:60px 20px;font-family:Karla,sans-serif"><h2>Profil introuvable</h2></div>'; return; }
     document.body.innerHTML = `
-      <div style="font-family:Inter,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:20px">
-        <div style="background:#1E3A8A;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
+      <div style="font-family:Karla,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:20px">
+        <div style="background:#1F6F72;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
           ${p.logo?`<img src="${p.logo}" style="max-width:80px;max-height:50px;object-fit:contain;margin-bottom:12px;filter:brightness(0) invert(1)"><br>`:''}
           <div style="font-size:24px;font-weight:700;color:#fff">${p.raison||'—'}</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">${p.secteur||''} ${p.forme?'· '+p.forme:''}</div>
         </div>
-        <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #F1F5F9;margin-bottom:12px">
-          ${[['📍 Adresse',p.adresse+(p.ville?', '+p.ville:'')],['📞 Téléphone',p.tel],['✉️ Email',p.email],['🌐 Web',p.web]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1F5F9;font-size:13px"><span style="color:#94A3B8">${k}</span><span style="font-weight:500">${v}</span></div>`).join('')}
+        <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-bottom:12px">
+          ${[['📍 Adresse',p.adresse+(p.ville?', '+p.ville:'')],['📞 Téléphone',p.tel],['✉️ Email',p.email],['🌐 Web',p.web]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:500">${v}</span></div>`).join('')}
         </div>
-        <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #F1F5F9;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:10px">Identifiants légaux</div>
-          ${[['RC',p.rc],['IF',p.identifiant_fiscal],['ICE',p.ice],['Patente',p.patente],['CNSS',p.cnss]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1F5F9;font-size:13px"><span style="color:#94A3B8">${k}</span><span style="font-weight:600;font-family:monospace">${v}</span></div>`).join('')}
+        <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:10px">Identifiants légaux</div>
+          ${[['RC',p.rc],['IF',p.identifiant_fiscal],['ICE',p.ice],['Patente',p.patente],['CNSS',p.cnss]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:600;font-family:monospace">${v}</span></div>`).join('')}
         </div>
-        ${p.banque||p.rib?`<div style="background:#ECFDF5;border-radius:12px;padding:16px;border:1px solid #D1FAE5">
-          <div style="font-size:11px;font-weight:600;color:#059669;margin-bottom:8px">🏦 COORDONNÉES BANCAIRES</div>
+        ${p.banque||p.rib?`<div style="background:#EEF3E4;border-radius:12px;padding:16px;border:1px solid #DCE8C7">
+          <div style="font-size:11px;font-weight:600;color:#6E8F4E;margin-bottom:8px">🏦 COORDONNÉES BANCAIRES</div>
           ${p.banque?`<div style="font-size:13px;margin-bottom:4px">${p.banque}</div>`:''}
           ${p.rib?`<div style="font-size:12px;font-family:monospace;color:#064E3B">${p.rib}</div>`:''}
         </div>`:''}
-        <div style="text-align:center;margin-top:20px;font-size:11px;color:#94A3B8">Profil partagé via <strong>BaniPay</strong></div>
+        <div style="text-align:center;margin-top:20px;font-size:11px;color:#9C9186">Profil partagé via <strong>BaniPay</strong></div>
       </div>`;
-  } catch(e) { document.body.innerHTML='<div style="text-align:center;padding:60px;font-family:Inter,sans-serif;color:#EF4444">Erreur de chargement</div>'; }
+  } catch(e) { document.body.innerHTML='<div style="text-align:center;padding:60px;font-family:Karla,sans-serif;color:#B23A2E">Erreur de chargement</div>'; }
 }
 
 
@@ -104,26 +104,26 @@ async function afficherPageInvitation(email, entrepriseId) {
   } catch(e) {}
 
   document.body.innerHTML =
-    '<div style="font-family:Inter,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#0F172A,#1E3A8A);display:flex;align-items:center;justify-content:center;padding:20px">' +
+    '<div style="font-family:Karla,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#2A2420,#1F6F72);display:flex;align-items:center;justify-content:center;padding:20px">' +
     '<div style="background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:400px;text-align:center">' +
       '<div style="font-size:48px;margin-bottom:12px">🔐</div>' +
-      '<div style="font-size:22px;font-weight:800;color:#0F172A;margin-bottom:4px">Bani<span style="color:#2563EB">Pay</span></div>' +
-      '<div style="font-size:14px;color:#64748B;margin-bottom:24px">Invitation accès comptable</div>' +
-      '<div style="background:#EFF6FF;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
-        '<div style="font-size:12px;color:#94A3B8;margin-bottom:4px">Entreprise</div>' +
-        '<div style="font-size:16px;font-weight:700;color:#0F172A">' + escapeHTML(profil.raison || 'Entreprise') + '</div>' +
-        (profil.secteur ? '<div style="font-size:12px;color:#64748B;margin-top:2px">' + profil.secteur + '</div>' : '') +
+      '<div style="font-size:22px;font-weight:800;color:#2A2420;margin-bottom:4px">Bani<span style="color:#C9971F">Pay</span></div>' +
+      '<div style="font-size:14px;color:#6B5F54;margin-bottom:24px">Invitation accès comptable</div>' +
+      '<div style="background:#E9F4F3;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
+        '<div style="font-size:12px;color:#9C9186;margin-bottom:4px">Entreprise</div>' +
+        '<div style="font-size:16px;font-weight:700;color:#2A2420">' + escapeHTML(profil.raison || 'Entreprise') + '</div>' +
+        (profil.secteur ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + profil.secteur + '</div>' : '') +
       '</div>' +
-      '<div style="font-size:13px;color:#64748B;margin-bottom:24px">' +
+      '<div style="font-size:13px;color:#6B5F54;margin-bottom:24px">' +
         'Vous avez été invité(e) à accéder aux données comptables de cette entreprise en lecture seule.' +
       '</div>' +
-      '<button id="btn-acc" style="width:100%;padding:14px;background:#059669;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit">' +
+      '<button id="btn-acc" style="width:100%;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit">' +
         '\u2705 Accepter' +
       '</button>' +
-      '<button id="btn-ref" style="width:100%;padding:14px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
+      '<button id="btn-ref" style="width:100%;padding:14px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
         'Refuser' +
       '</button>' +
-      '<div style="margin-top:20px;font-size:11px;color:#94A3B8">Propulsé par <strong style="color:#2563EB">BaniPay</strong></div>' +
+      '<div style="margin-top:20px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>' +
     '</div></div>';
   setTimeout(function() {
     const btnA = document.getElementById('btn-accept-inv');
@@ -144,12 +144,12 @@ async function accepterInvitationEmail(emailEnc, entrepriseId) {
     document.body.innerHTML =
       '<div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px">' +
         '<div style="font-size:64px;margin-bottom:16px">✅</div>' +
-        '<h2 style="color:#059669;margin-bottom:8px">Invitation acceptée !</h2>' +
-        '<p style="color:#64748B;margin-bottom:24px">Connectez-vous à BaniPay pour accéder aux données.</p>' +
-        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#2563EB;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir BaniPay</a>' +
+        '<h2 style="color:#6E8F4E;margin-bottom:8px">Invitation acceptée !</h2>' +
+        '<p style="color:#6B5F54;margin-bottom:24px">Connectez-vous à BaniPay pour accéder aux données.</p>' +
+        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#C9971F;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir BaniPay</a>' +
       '</div>';
   } catch(e) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#EF4444">Erreur: ' + e.message + '</div>';
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#B23A2E">Erreur: ' + e.message + '</div>';
   }
 }
 
@@ -197,7 +197,7 @@ async function afficherDocumentPublic(docId) {
     }
 
     if (!doc) {
-      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#64748B"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Document introuvable</h2></div>';
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Document introuvable</h2></div>';
       return;
     }
 
@@ -214,7 +214,7 @@ async function afficherDocumentPublic(docId) {
     genDocPDF({
       type: isDevis ? 'DEVIS' : 'FACTURE',
       ref: doc.ref,
-      color: isDevis ? '#D97706' : '#2563EB',
+      color: isDevis ? '#B8860B' : '#C9971F',
       emetteur: profil,
       destinataire: { nom: doc.client, chantier: doc.chantier },
       date: doc.date_emission,
@@ -248,10 +248,10 @@ async function afficherDocumentPublic(docId) {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const btnBar = document.createElement('div');
-        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #E2E8F0;flex-shrink:0';
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #E3DCCF;flex-shrink:0';
         const bAcc = document.createElement('button');
         bAcc.textContent = isDevis ? '✅ Accepter le devis' : '✅ Accepter la facture';
-        bAcc.style.cssText = 'flex:1;padding:14px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+        bAcc.style.cssText = 'flex:1;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
         // FIX: si signature.js n'est pas déployé, ouvrirModalSignature n'existe
         // pas et le clic sur "Accepter" échouait silencieusement (erreur JS
         // invisible pour le client). On retombe sur l'acceptation directe.
@@ -264,7 +264,7 @@ async function afficherDocumentPublic(docId) {
         };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
-        bRef.style.cssText = 'flex:1;padding:14px;background:#DC2626;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+        bRef.style.cssText = 'flex:1;padding:14px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
         bRef.onclick = function() { traiterActionDocument(docId, typeDoc, 'refuser'); };
         btnBar.appendChild(bAcc);
         btnBar.appendChild(bRef);
@@ -278,7 +278,7 @@ async function afficherDocumentPublic(docId) {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const info = document.createElement('div');
-        info.style.cssText = 'background:' + (statutActuel === valeurAcceptee ? '#ECFDF5' : '#FEF2F2') + ';padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:' + (statutActuel === valeurAcceptee ? '#059669' : '#DC2626') + ';border-top:1px solid #E2E8F0;flex-shrink:0';
+        info.style.cssText = 'background:' + (statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1') + ';padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:' + (statutActuel === valeurAcceptee ? '#6E8F4E' : '#8E2E24') + ';border-top:1px solid #E3DCCF;flex-shrink:0';
         info.textContent = statutActuel === valeurAcceptee
           ? ('✅ ' + (isDevis ? 'Ce devis a été accepté' : 'Cette facture a été acceptée'))
           : ('❌ ' + (isDevis ? 'Ce devis a été refusé' : 'Cette facture a été refusée'));
@@ -288,7 +288,7 @@ async function afficherDocumentPublic(docId) {
 
   } catch(e) {
     console.error('afficherDocumentPublic:', e);
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#EF4444">Erreur: ' + e.message + '</div>';
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
   }
 }
 
@@ -510,13 +510,13 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
       '<div style="background:#fff;border-radius:20px;padding:28px;max-width:380px;width:100%;text-align:center">' +
         '<div style="font-size:48px;margin-bottom:16px">🤝</div>' +
         '<div style="font-size:18px;font-weight:700;margin-bottom:8px">Invitation comptable</div>' +
-        '<div style="font-size:14px;color:#64748B;margin-bottom:6px">' + escapeHTML(decodeURIComponent(nomCpt || emailCpt)) + '</div>' +
-        '<div style="font-size:13px;color:#64748B;margin-bottom:20px">vous invite à partager vos documents BaniPay</div>' +
-        '<div style="background:#EEF2FF;border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#4338CA">' +
+        '<div style="font-size:14px;color:#6B5F54;margin-bottom:6px">' + escapeHTML(decodeURIComponent(nomCpt || emailCpt)) + '</div>' +
+        '<div style="font-size:13px;color:#6B5F54;margin-bottom:20px">vous invite à partager vos documents BaniPay</div>' +
+        '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#1F6F72">' +
           'Le comptable pourra consulter vos factures, devis et documents en lecture seule.' +
         '</div>' +
-        '<button id="btn-accepter-inv-cpt" style="width:100%;padding:13px;background:#059669;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✅ Accepter</button>' +
-        '<button class="btn-close-inv" style="width:100%;padding:11px;background:#F1F5F9;color:#64748B;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Refuser</button>' +
+        '<button id="btn-accepter-inv-cpt" style="width:100%;padding:13px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✅ Accepter</button>' +
+        '<button class="btn-close-inv" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Refuser</button>' +
       '</div>';
 
     document.body.appendChild(overlay);
