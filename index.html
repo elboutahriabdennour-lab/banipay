@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1E3A8A">
+<meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
 <link rel="stylesheet" href="css/style.css">
@@ -24,8 +24,8 @@
       <!-- FIX: bouton redondant retiré — un seul mécanisme de retour reste
            (la pile flottante appendModeBanner(), présente sur tous les écrans,
            contrairement à ce bouton qui n'existait que sur le dashboard) -->
-      <span class="t-icon" onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer">💬<span id="msg-badge" style="position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center">!</span></span>
-      <span class="t-icon" onclick="goScreen('notifications',null)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#EF4444;border-radius:50%;font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center">0</span></span>
+      <span class="t-icon" onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer">💬<span id="msg-badge" style="position:absolute;top:-4px;right:-4px;background:#B23A2E;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center">!</span></span>
+      <span class="t-icon" onclick="goScreen('notifications',null)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#B23A2E;border-radius:50%;font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center">0</span></span>
       <span class="t-icon" onclick="goScreen('recherche',null)">🔍</span>
       <div class="t-avatar" id="user-avatar" onclick="goScreen('profil',null)">AB</div>
     </div>
@@ -40,10 +40,10 @@
       <div class="hero-box"><div class="hero-box-val r" id="stat-retard">0</div><div class="hero-box-lbl">En retard</div></div>
     </div>
   </div>
-  <div style="background:#1E3A8A;padding:0 20px 16px">
+  <div style="background:#1F6F72;padding:0 20px 16px">
     <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">Objectif mensuel</div>
     <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;overflow:hidden;margin-bottom:4px">
-      <div id="objectif-bar" style="height:100%;background:#34D399;border-radius:3px;width:0%;transition:width 0.8s"></div>
+      <div id="objectif-bar" style="height:100%;background:#9CBB7A;border-radius:3px;width:0%;transition:width 0.8s"></div>
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,0.5)" id="objectif-txt">Non d&#233;fini</div>
   </div>
@@ -52,19 +52,19 @@
   </div>
   <div class="sec-label">Actions rapides</div>
   <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
-    <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#EFF6FF">➕</div><div class="qa-lbl">Facture</div></div>
-    <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#FFFBEB">📝</div><div class="qa-lbl">Devis</div></div>
-    <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#ECFDF5">↩️</div><div class="qa-lbl">Avoir</div></div>
-    <div class="qa-item" onclick="loadAchats();goScreen('achats',null)"><div class="qa-ico" style="background:#FEF2F2">🛒</div><div class="qa-lbl">Achats</div></div>
-    <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#F1F5F9">📤</div><div class="qa-lbl">Export</div></div>
+    <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#E9F4F3">➕</div><div class="qa-lbl">Facture</div></div>
+    <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#F7EFDC">📝</div><div class="qa-lbl">Devis</div></div>
+    <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
+    <div class="qa-item" onclick="loadAchats();goScreen('achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
+    <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#EAE4DA">📤</div><div class="qa-lbl">Export</div></div>
   </div>
   <div style="height:8px"></div>
   <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
-    <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#EFF6FF">📊</div><div class="qa-lbl">Stats</div></div>
-    <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#ECFDF5">🧾</div><div class="qa-lbl">TVA</div></div>
-    <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#F3E8FF">👥</div><div class="qa-lbl">Clients</div></div>
-    <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#FFFBEB">📦</div><div class="qa-lbl">Catalogue</div></div>
-    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#EEF2FF">🔁</div><div class="qa-lbl">Récurrent</div></div>
+    <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E9F4F3">📊</div><div class="qa-lbl">Stats</div></div>
+    <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#EEF3E4">🧾</div><div class="qa-lbl">TVA</div></div>
+    <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#EDE6F0">👥</div><div class="qa-lbl">Clients</div></div>
+    <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
+    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
   </div>
   <div class="sec-header" style="margin-top:8px">
     <div class="sec-title">Mes factures</div>
@@ -88,7 +88,7 @@
 
 
 <!-- ===== MESSAGERIE (liste conversations) ===== -->
-<div class="screen" id="screen-messages" style="background:#F8FAFC">
+<div class="screen" id="screen-messages" style="background:#F1EEE8">
   <div class="topbar">
     <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
     <div class="topbar-right">
@@ -101,25 +101,25 @@
   </div>
   <div id="conv-list"></div>
   <div style="padding:12px 20px">
-    <button onclick="messagerAvecComptable()" style="width:100%;padding:12px;background:#4F46E5;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💬 Contacter mon comptable</button>
+    <button onclick="messagerAvecComptable()" style="width:100%;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💬 Contacter mon comptable</button>
   </div>
   <div class="pb"></div>
 </div>
 
 <!-- ===== CHAT (conversation) ===== -->
-<div class="screen" id="screen-chat" style="background:#F8FAFC;flex-direction:column">
-  <div style="background:linear-gradient(135deg,#1E1B4B,#3730A3);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+<div class="screen" id="screen-chat" style="background:#F1EEE8;flex-direction:column">
+  <div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
     <button onclick="desaronnerRealtime();goScreen('messages',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
     <div id="chat-nom" style="font-size:15px;font-weight:700;color:#fff;flex:1">Conversation</div>
     <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700" id="chat-avatar">?</div>
   </div>
   <div id="messages-container" style="padding:16px 0;padding-bottom:100px;min-height:400px"></div>
-  <div id="chat-input-zone" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E2E8F0;padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:100">
-    <label style="width:40px;height:40px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px">
+  <div id="chat-input-zone" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E3DCCF;padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:100">
+    <label style="width:40px;height:40px;border-radius:50%;background:#FBF0DA;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px">
       📎<input type="file" accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="attacherFichierMsg(event)">
     </label>
-    <input id="msg-input" style="flex:1;padding:10px 14px;border:1.5px solid #E2E8F0;border-radius:24px;font-size:14px;font-family:inherit;outline:none" placeholder="Votre message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMessage();}">
-    <button onclick="envoyerMessage()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#4F46E5,#3730A3);color:#fff;border:none;font-size:18px;cursor:pointer;flex-shrink:0">➤</button>
+    <input id="msg-input" style="flex:1;padding:10px 14px;border:1.5px solid #E3DCCF;border-radius:24px;font-size:14px;font-family:inherit;outline:none" placeholder="Votre message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMessage();}">
+    <button onclick="envoyerMessage()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9971F,#A67A16);color:#fff;border:none;font-size:18px;cursor:pointer;flex-shrink:0">➤</button>
   </div>
   <div style="height:80px"></div>
 </div>
@@ -178,15 +178,15 @@
 <!-- AVOIR LIST -->
 <div class="screen" id="screen-avoir-list">
   <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
-  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#DC2626;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#8E2E24;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
   <div id="avoir-list-items"></div><div class="pb"></div>
 </div>
 
 <!-- ABONNEMENTS (facturation récurrente) -->
 <div class="screen" id="screen-abonnements">
   <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
-  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#4338CA;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
-  <div style="padding:0 20px 12px;font-size:12px;color:#64748B">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#1F6F72;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
+  <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
   <div class="card-list" id="abonnements-list"></div>
   <div class="pb"></div>
 </div>
@@ -201,7 +201,7 @@
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="ab-client" class="f-inp" placeholder="Nom du client" list="client-datalist-ab" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('ab-client')" style="flex-shrink:0;padding:0 14px;background:#EFF6FF;color:#2563EB;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('ab-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
     <datalist id="client-datalist-ab"></datalist></div>
   <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="ab-chantier" class="f-inp" placeholder="Optionnel"></div>
@@ -254,14 +254,14 @@
   <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="hero" style="padding-bottom:20px"><div class="hero-lbl">Relevés bancaires</div><div class="hero-sub-txt">Partagés avec votre comptable</div></div>
   <div style="padding:16px 20px">
-    <div style="background:#ECFDF5;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid #A7F3D0">
-      <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:10px">📤 Ajouter un relevé</div>
+    <div style="background:#EEF3E4;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid #C9D9AE">
+      <div style="font-size:12px;font-weight:700;color:#6E8F4E;margin-bottom:10px">📤 Ajouter un relevé</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <select id="releve-mois" class="f-inp" style="flex:1"><option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option><option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option><option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option><option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option></select>
         <select id="releve-annee" class="f-inp" style="flex:1"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
       </div>
       <input id="releve-banque" class="f-inp" placeholder="Nom de la banque..." style="margin-bottom:10px">
-      <label style="display:block;background:#fff;border:2px dashed #A7F3D0;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#059669;font-weight:600">📎 Sélectionner le relevé<input type="file" id="releve-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadReleve(event)"></label>
+      <label style="display:block;background:#fff;border:2px dashed #C9D9AE;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#6E8F4E;font-weight:600">📎 Sélectionner le relevé<input type="file" id="releve-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadReleve(event)"></label>
     </div>
   </div>
   <div class="sec-label">Relevés uploadés</div>
@@ -279,18 +279,18 @@
     <button class="ftab" onclick="filtrerAchats('banipay',this)">BaniPay</button>
   </div>
   <div id="achats-list"></div>
-  <button class="fab" onclick="goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#EF4444,#DC2626)">+</button>
+  <button class="fab" onclick="goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
   <div class="pb"></div>
 </div>
 
 <!-- NOUVELLE ACHAT -->
 <div class="screen" id="screen-nouvelle-achat">
   <div class="form-header"><div class="back-btn" onclick="goScreen('achats',null)">←</div><div class="form-title">Nouvelle facture d'achat</div></div>
-  <div style="margin:12px 20px;background:#FEF2F2;border-radius:14px;padding:14px">
-    <div style="font-size:12px;font-weight:700;color:#EF4444;margin-bottom:8px">📲 Fournisseur sur BaniPay ?</div>
+  <div style="margin:12px 20px;background:#F5E4E1;border-radius:14px;padding:14px">
+    <div style="font-size:12px;font-weight:700;color:#B23A2E;margin-bottom:8px">📲 Fournisseur sur BaniPay ?</div>
     <div style="display:flex;gap:8px">
-      <input id="achat-fournisseur-lien" style="flex:1;padding:10px;border:1.5px solid #FECACA;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="Lien profil BaniPay...">
-      <button onclick="importerFournisseurBaniPay()" style="padding:10px 14px;background:#EF4444;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
+      <input id="achat-fournisseur-lien" style="flex:1;padding:10px;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="Lien profil BaniPay...">
+      <button onclick="importerFournisseurBaniPay()" style="padding:10px 14px;background:#B23A2E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
     </div>
   </div>
   <div class="form-section"><div class="form-label">Fournisseur *</div><input class="form-input" id="achat-fournisseur" placeholder="Nom du fournisseur"></div>
@@ -303,17 +303,17 @@
     <div style="flex:1;margin-bottom:14px"><div class="form-label">Montant HT</div><input class="form-input" id="achat-ht" type="number" placeholder="0.00" oninput="calcAchatTotaux()"></div>
     <div style="flex:1;margin-bottom:14px"><div class="form-label">TVA %</div><select class="form-input" id="achat-tva-taux" onchange="calcAchatTotaux()"><option value="20">20%</option><option value="14">14%</option><option value="10">10%</option><option value="7">7%</option><option value="0">0%</option></select></div>
   </div>
-  <div style="margin:0 20px 14px;background:#F8FAFC;border-radius:12px;padding:12px">
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:4px"><span>TVA</span><span id="achat-tva-display">0,00 MAD</span></div>
+  <div style="margin:0 20px 14px;background:#F1EEE8;border-radius:12px;padding:12px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:4px"><span>TVA</span><span id="achat-tva-display">0,00 MAD</span></div>
     <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>TTC</span><span id="achat-ttc-display">0,00 MAD</span></div>
   </div>
   <div class="form-section"><div class="form-label">Catégorie</div><select class="form-input" id="achat-categorie"><option value="materiel">Matériel</option><option value="services">Services</option><option value="fournitures">Fournitures</option><option value="transport">Transport</option><option value="autre">Autre</option></select></div>
   <div class="form-section"><div class="form-label">Statut</div><select class="form-input" id="achat-statut"><option value="attente">En attente</option><option value="payee">Payée</option></select></div>
   <div class="form-section"><div class="form-label">Note</div><textarea class="form-input" id="achat-note" rows="2" placeholder="Notes..."></textarea></div>
-  <div style="margin:0 20px 14px"><div class="form-label">Pièce jointe</div><label style="display:block;background:#F8FAFC;border:2px dashed #E2E8F0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#64748B">📷 Scanner ou importer<input type="file" id="achat-pj" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div id="achat-pj-preview" style="margin-top:8px"></div></div>
+  <div style="margin:0 20px 14px"><div class="form-label">Pièce jointe</div><label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">📷 Scanner ou importer<input type="file" id="achat-pj" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div id="achat-pj-preview" style="margin-top:8px"></div></div>
   <input type="hidden" id="achat-fournisseur-id" value=""><input type="hidden" id="achat-fournisseur-banipay" value="0">
-  <div style="padding:0 20px 20px"><button class="a-btn" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff">💾 Enregistrer</button></div>
+  <div style="padding:0 20px 20px"><button class="a-btn" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#B23A2E,#8E2E24);color:#fff">💾 Enregistrer</button></div>
   <div class="pb"></div>
 </div>
 
@@ -331,13 +331,13 @@
     <label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="f-client" class="f-inp" placeholder="Nom du client" list="client-datalist" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('f-client')" style="flex-shrink:0;padding:0 14px;background:#EFF6FF;color:#2563EB;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('f-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
     <datalist id="client-datalist"></datalist>
   </div>
   <div class="form-section">
     <div class="f-row">
-      <div><label class="f-lbl">N° Facture</label><input id="f-ref" class="f-inp" readonly style="background:#F1F5F9"></div>
+      <div><label class="f-lbl">N° Facture</label><input id="f-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
       <div><label class="f-lbl">Date</label><input id="f-date" class="f-inp" type="date"></div>
     </div>
   </div>
@@ -352,7 +352,7 @@
     <label class="f-lbl">Prestations</label>
     <div id="lignes-container"></div>
     <button class="add-ligne" onclick="openAddLigne()">＋ Ajouter une ligne</button>
-    <button class="add-ligne" onclick="openCatalogue()" style="margin-top:6px;color:#059669;border-color:#059669">📦 Depuis le catalogue</button>
+    <button class="add-ligne" onclick="openCatalogue()" style="margin-top:6px;color:#6E8F4E;border-color:#6E8F4E">📦 Depuis le catalogue</button>
   </div>
   <div class="total-recap">
     <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="total-ht">0 MAD</span></div>
@@ -397,13 +397,13 @@
       <div class="d-card-title">Prestations</div>
       <div id="detail-lignes"></div>
     </div>
-    <div id="detail-chantier" style="display:none;padding:8px 16px;font-size:12px;color:#64748B;background:#F8FAFC;border-radius:8px;margin-bottom:8px"></div>
-    <div id="detail-paiement-prog" style="display:none;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;border:1px solid #F1F5F9">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px">
+    <div id="detail-chantier" style="display:none;padding:8px 16px;font-size:12px;color:#6B5F54;background:#F1EEE8;border-radius:8px;margin-bottom:8px"></div>
+    <div id="detail-paiement-prog" style="display:none;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;border:1px solid #EAE4DA">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:6px">
         <span>Progression paiement</span><span id="detail-prog-pct">0%</span>
       </div>
-      <div style="height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden">
-        <div id="detail-prog-bar" style="height:100%;background:#059669;border-radius:4px;width:0%"></div>
+      <div style="height:8px;background:#E3DCCF;border-radius:4px;overflow:hidden">
+        <div id="detail-prog-bar" style="height:100%;background:#6E8F4E;border-radius:4px;width:0%"></div>
       </div>
     </div>
     <div class="d-card" id="detail-totals"></div>
@@ -444,12 +444,12 @@
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="d-client" class="f-inp" placeholder="Nom du client" list="client-datalist-devis" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('d-client')" style="flex-shrink:0;padding:0 14px;background:#EFF6FF;color:#2563EB;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('d-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
     <datalist id="client-datalist-devis"></datalist></div>
   <div class="form-section">
     <div class="f-row">
-      <div><label class="f-lbl">N° Devis</label><input id="d-ref" class="f-inp" readonly style="background:#F1F5F9"></div>
+      <div><label class="f-lbl">N° Devis</label><input id="d-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
       <div><label class="f-lbl">Date</label><input id="d-date" class="f-inp" type="date"></div>
     </div>
   </div>
@@ -502,11 +502,11 @@
     <button class="back-btn" onclick="goScreen('dashboard',null)">←</button>
     <div class="form-title">Facture Avoir</div>
   </div>
-  <div style="margin:14px 20px;background:#FEF2F2;border-radius:10px;padding:12px;border-left:3px solid #EF4444;font-size:12px;color:#EF4444">↩️ Avoir = annulation ou remboursement d'une facture existante</div>
+  <div style="margin:14px 20px;background:#F5E4E1;border-radius:10px;padding:12px;border-left:3px solid #B23A2E;font-size:12px;color:#B23A2E">↩️ Avoir = annulation ou remboursement d'une facture existante</div>
   <div class="form-section"><label class="f-lbl">Client</label><input id="av-client" class="f-inp" placeholder="Nom du client"></div>
   <div class="form-section">
     <div class="f-row">
-      <div><label class="f-lbl">N° Avoir</label><input id="av-ref" class="f-inp" readonly style="background:#F1F5F9"></div>
+      <div><label class="f-lbl">N° Avoir</label><input id="av-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
       <div><label class="f-lbl">Date</label><input id="av-date" class="f-inp" type="date"></div>
     </div>
   </div>
@@ -524,7 +524,7 @@
     <div class="tr-row"><span class="tr-lbl">Montant HT</span><span class="tr-val" id="av-total-ht">0 MAD</span></div>
     <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="av-total-tva">0 MAD</span></div>
     <div class="tr-sep"></div>
-    <div class="tr-row main"><span class="tr-lbl">Total Avoir TTC</span><span class="tr-val" id="av-total-ttc" style="color:#34D399">0 MAD</span></div>
+    <div class="tr-row main"><span class="tr-lbl">Total Avoir TTC</span><span class="tr-val" id="av-total-ttc" style="color:#9CBB7A">0 MAD</span></div>
   </div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderAvoir()">💾 Émettre</button>
@@ -548,7 +548,7 @@
       <span onclick="exporterProduitsCSV()" style="font-size:11px;font-weight:600;color:#fff;cursor:pointer;background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:14px">📥 Export CSV</span>
     </div>
   </div>
-  <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#94A3B8;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
+  <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#9C9186;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
   <div class="card-list" id="produits-list"></div>
   <div class="pb"></div>
 </div>
@@ -601,9 +601,9 @@
       </div>
       <div><label class="f-lbl">Co&#251;t achat</label><input id="p-cout" class="f-inp" type="number" oninput="calcPrixTTC()" placeholder="0.00"></div>
     </div>
-    <div style="font-size:12px;color:#059669;margin-top:4px;font-weight:600" id="p-marge"></div>
+    <div style="font-size:12px;color:#6E8F4E;margin-top:4px;font-weight:600" id="p-marge"></div>
   </div>
-  <div class="form-section"><label class="f-lbl">Prix TTC</label><input id="p-prix-ttc" class="f-inp" readonly style="background:#F1F5F9"></div>
+  <div class="form-section"><label class="f-lbl">Prix TTC</label><input id="p-prix-ttc" class="f-inp" readonly style="background:#EAE4DA"></div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderProduit()">💾 Sauvegarder</button>
     <button class="s-btn gray" onclick="goScreen('produits',null)">✕ Annuler</button>
@@ -625,44 +625,44 @@
     <div>
       <div class="p-nom-big" id="pv-nom">Mon Entreprise</div>
       <div class="p-id" id="pv-rc-label">RC — · IF — · ICE —</div>
-      <div class="p-badge" id="pv-badge" style="background:rgba(239,68,68,0.2);color:#F87171">⚠️ Profil incomplet</div>
+      <div class="p-badge" id="pv-badge" style="background:rgba(239,68,68,0.2);color:#C96F63">⚠️ Profil incomplet</div>
     </div>
   </div>
   <!-- QR -->
-  <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #F1F5F9;text-align:center">
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:12px">QR Code & Lien public</div>
+  <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #EAE4DA;text-align:center">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:12px">QR Code & Lien public</div>
     <div id="qr-canvas-container" style="display:flex;justify-content:center;margin:0 auto 10px"></div>
     <!-- FIX: cet élément était auparavant absent du HTML alors que renderProfil()
          essayait déjà de le remplir (setEl('pv-lien', ...)) — le lien affiché
          sous le QR ne correspondait donc jamais au vrai lien public encodé
          dans le QR code. -->
-    <div id="pv-lien" style="font-size:11px;color:#2563EB;margin-bottom:10px;word-break:break-all;background:#F8FAFC;padding:8px;border-radius:8px">—</div>
+    <div id="pv-lien" style="font-size:11px;color:#C9971F;margin-bottom:10px;word-break:break-all;background:#F1EEE8;padding:8px;border-radius:8px">—</div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button onclick="copierLienProfil()" style="background:#EFF6FF;color:#2563EB;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
-      <button onclick="partagerProfil()" style="background:#2563EB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+      <button onclick="copierLienProfil()" style="background:#E9F4F3;color:#C9971F;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfil()" style="background:#C9971F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     </div>
   </div>
   <div style="padding:0 16px" id="profil-view">
     <div class="p-card" id="pv-infos-card">
       <div class="p-card-title">Informations entreprise</div>
     </div>
-    <div id="pv-objectif" style="display:none;background:#EFF6FF;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#1D4ED8"></div>
+    <div id="pv-objectif" style="display:none;background:#E9F4F3;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#A67A16"></div>
     <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
-    <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#4F46E5">📁 Archive documents</button>
-    <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#059669">🏦 Relevés bancaires</button>
+    <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#C9971F">📁 Archive documents</button>
+    <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
     <!-- Section Mon Comptable -->
-    <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E2E8F0;overflow:hidden">
-      <div style="padding:12px 16px;background:#F8FAFC;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#64748B">Mon comptable</div>
+    <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
+      <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">Mon comptable</div>
       <div id="mon-comptable-section" style="padding:14px 16px">Chargement...</div>
     </div>
-    <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#059669">🏢 Annuaire BaniPay</button>
-    <button class="p-btn" onclick="goScreen('audit',null)" style="color:#64748B">📋 Journal d'activité</button>
+    <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#6E8F4E">🏢 Annuaire BaniPay</button>
+    <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
-    <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#9333EA">🔐 Lien accès comptable</button>
+    <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#7C5CA6">🔐 Lien accès comptable</button>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
   <div id="profil-edit" style="display:none;padding:0 16px">
-    <div style="font-size:13px;color:#64748B;margin:16px 0">Ces informations apparaissent sur vos factures PDF</div>
+    <div style="font-size:13px;color:#6B5F54;margin:16px 0">Ces informations apparaissent sur vos factures PDF</div>
     <label class="f-lbl">Raison sociale *</label><input id="pe-raison" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">Secteur</label>
     <select id="pe-secteur" class="f-inp" style="margin-bottom:10px">
@@ -693,23 +693,23 @@
     <label class="f-lbl">Conditions de paiement</label><input id="pe-conditions" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">🎨 Couleur d'accent des PDF (factures)</label>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
-      <input id="pe-couleur" type="color" value="#2563EB" style="width:52px;height:40px;border:1.5px solid #E2E8F0;border-radius:10px;padding:2px;cursor:pointer">
-      <div style="font-size:11px;color:#94A3B8">S'applique aux factures uniquement — devis/avoirs gardent leur code couleur habituel</div>
+      <input id="pe-couleur" type="color" value="#C9971F" style="width:52px;height:40px;border:1.5px solid #E3DCCF;border-radius:10px;padding:2px;cursor:pointer">
+      <div style="font-size:11px;color:#9C9186">S'applique aux factures uniquement — devis/avoirs gardent leur code couleur habituel</div>
     </div>
     <label class="f-lbl">🔐 Code comptable (6 chiffres)</label>
     <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px">
-    <div style="font-size:11px;color:#94A3B8;margin-bottom:16px">Partagez ce code avec votre comptable</div>
+    <div style="font-size:11px;color:#9C9186;margin-bottom:16px">Partagez ce code avec votre comptable</div>
     <div style="margin-bottom:12px">
       <div class="f-lbl">Logo entreprise</div>
       <div id="logo-preview-container" style="margin-bottom:8px"></div>
       <input type="file" id="logo-input" accept="image/*" style="display:none" onchange="uploadLogo(event)">
       <button onclick="document.getElementById('logo-input').click()" class="s-btn gray" style="width:100%;margin-bottom:6px">📷 Choisir un logo</button>
-      <button id="del-logo-btn" onclick="supprimerLogo()" class="s-btn" style="width:100%;background:#FEF2F2;color:#EF4444;display:none">🗑️ Supprimer le logo</button>
+      <button id="del-logo-btn" onclick="supprimerLogo()" class="s-btn" style="width:100%;background:#F5E4E1;color:#B23A2E;display:none">🗑️ Supprimer le logo</button>
     </div>
     <div style="margin-bottom:12px">
       <div class="f-lbl">✍️ Ma signature / cachet</div>
-      <div style="font-size:11px;color:#94A3B8;margin-bottom:8px">S'appose automatiquement sur vos documents, à côté de la signature du client une fois le document accepté</div>
-      <canvas id="pe-sig-canvas" style="width:100%;height:120px;background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:10px;touch-action:none;display:block;margin-bottom:8px"></canvas>
+      <div style="font-size:11px;color:#9C9186;margin-bottom:8px">S'appose automatiquement sur vos documents, à côté de la signature du client une fois le document accepté</div>
+      <canvas id="pe-sig-canvas" style="width:100%;height:120px;background:#F1EEE8;border:1.5px dashed #CDBEA0;border-radius:10px;touch-action:none;display:block;margin-bottom:8px"></canvas>
       <div style="display:flex;gap:8px">
         <button onclick="typeof effacerSignatureEntreprise==='function' && effacerSignatureEntreprise()" class="s-btn gray" style="flex:1">🔄 Effacer</button>
         <label class="s-btn gray" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">📷 Importer un cachet
@@ -754,11 +754,11 @@
         <label class="a-lbl">Mot de passe</label>
         <div style="position:relative">
           <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-login">👁️</button>
+          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9C9186;padding:0" id="eye-login">👁️</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
           <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer" onchange="toggleRememberMe()">
-          <label for="remember-me" style="font-size:13px;color:#64748B;cursor:pointer">Se souvenir de moi</label>
+          <label for="remember-me" style="font-size:13px;color:#6B5F54;cursor:pointer">Se souvenir de moi</label>
         </div>
         <div id="login-err" class="a-err"></div>
         <button class="a-btn a-btn-blue" onclick="doLogin()">Se connecter</button>
@@ -766,30 +766,30 @@
         <div class="a-link">Pas de compte ? <a onclick="switchTab('signup')">Créer un compte</a></div>
       </div>
       <div id="aw-signup" style="display:none">
-        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#94A3B8;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
         <div class="auth-title">Créer un compte</div>
 
         <!-- ÉTAPE 1: Choisir le type de compte EN PREMIER -->
         <div style="margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:10px;text-align:center">Je suis...</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:10px;text-align:center">Je suis...</div>
           <div style="display:flex;gap:8px">
-            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #4F46E5;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#EEF2FF">
+            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #C9971F;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#FBF0DA">
               <div style="font-size:28px;margin-bottom:6px">🏢</div>
-              <div style="font-size:13px;font-weight:700;color:#4F46E5">Entreprise</div>
-              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes factures</div>
+              <div style="font-size:13px;font-weight:700;color:#C9971F">Entreprise</div>
+              <div style="font-size:10px;color:#6B5F54;margin-top:3px">Gérer mes factures</div>
             </div>
-            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E2E8F0;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F8FAFC">
+            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E3DCCF;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F1EEE8">
               <div style="font-size:28px;margin-bottom:6px">📊</div>
-              <div style="font-size:13px;font-weight:700;color:#64748B">Comptable</div>
-              <div style="font-size:10px;color:#64748B;margin-top:3px">Gérer mes clients</div>
+              <div style="font-size:13px;font-weight:700;color:#6B5F54">Comptable</div>
+              <div style="font-size:10px;color:#6B5F54;margin-top:3px">Gérer mes clients</div>
             </div>
           </div>
           <input type="hidden" id="signup-role" value="entreprise">
         </div>
 
         <!-- Champ cabinet (comptable uniquement) -->
-        <div id="signup-comptable-fields" style="display:none;background:#EEF2FF;border-radius:12px;padding:12px;margin-bottom:12px">
-          <label class="a-lbl" style="color:#4F46E5">Cabinet comptable</label>
+        <div id="signup-comptable-fields" style="display:none;background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:12px">
+          <label class="a-lbl" style="color:#C9971F">Cabinet comptable</label>
           <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet (optionnel)">
         </div>
 
@@ -799,7 +799,7 @@
         <label class="a-lbl">Mot de passe</label>
         <div style="position:relative">
           <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#94A3B8;padding:0" id="eye-signup">👁️</button>
+          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9C9186;padding:0" id="eye-signup">👁️</button>
         </div>
         <div class="pwd-bar"><div id="pwd-bar" class="pwd-fill"></div></div>
         <div id="pwd-hint" class="pwd-hint"></div>
@@ -814,22 +814,22 @@
         <div style="text-align:center;margin-bottom:20px">
           <div style="font-size:48px;margin-bottom:12px">&#128231;</div>
           <div class="auth-title" style="margin-bottom:8px">V&#233;rifiez votre email</div>
-          <div style="font-size:13px;color:#64748B;line-height:1.5">Lien envoy&#233; &#224;</div>
-          <div style="font-size:14px;font-weight:600;color:#2563EB;margin:8px 0;word-break:break-all" id="confirm-email-display">&#8212;</div>
-          <div style="font-size:12px;color:#94A3B8">Cliquez le lien pour activer votre compte</div>
+          <div style="font-size:13px;color:#6B5F54;line-height:1.5">Lien envoy&#233; &#224;</div>
+          <div style="font-size:14px;font-weight:600;color:#C9971F;margin:8px 0;word-break:break-all" id="confirm-email-display">&#8212;</div>
+          <div style="font-size:12px;color:#9C9186">Cliquez le lien pour activer votre compte</div>
         </div>
-        <div style="background:#FFFBEB;border-left:3px solid #D97706;border-radius:8px;padding:12px;font-size:12px;color:#92400E;margin-bottom:16px">
+        <div style="background:#F7EFDC;border-left:3px solid #B8860B;border-radius:8px;padding:12px;font-size:12px;color:#7A5A0E;margin-bottom:16px">
           &#9888; V&#233;rifiez vos <strong>spams</strong> si vous ne trouvez pas l'email.
         </div>
         <button class="a-btn a-btn-blue" onclick="renvoyerConfirmation()">&#128228; Renvoyer l'email</button>
-        <button onclick="switchTab('login')" class="a-btn" style="background:#F1F5F9;color:#64748B;margin-top:8px">&#8592; Retour</button>
+        <button onclick="switchTab('login')" class="a-btn" style="background:#EAE4DA;color:#6B5F54;margin-top:8px">&#8592; Retour</button>
       </div>
 
       <div id="aw-comptable" style="display:none">
-        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#94A3B8;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
-        <div style="background:#ECFDF5;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
+        <div style="background:#EEF3E4;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:20px">
           <div style="font-size:28px">🔐</div>
-          <div><div style="font-size:14px;font-weight:600;color:#059669">Espace Comptable</div><div style="font-size:11px;color:#34D399">Lecture seule</div></div>
+          <div><div style="font-size:14px;font-weight:600;color:#6E8F4E">Espace Comptable</div><div style="font-size:11px;color:#9CBB7A">Lecture seule</div></div>
         </div>
         <label class="a-lbl">Code d'accès</label>
         <input id="comptable-code" class="a-inp" type="password" placeholder="123456" maxlength="6" style="letter-spacing:8px;font-size:22px;text-align:center">
@@ -863,7 +863,7 @@
   <div style="display:none" id="comptable-banque"></div>
   <div style="display:none" id="ds-refuse"></div>
   <div class="sec-label">Entreprise</div>
-  <div style="padding:0 20px;background:#fff;border-radius:12px;margin:0 20px;border:1px solid #F1F5F9" id="comptable-infos-content"></div>
+  <div style="padding:0 20px;background:#fff;border-radius:12px;margin:0 20px;border:1px solid #EAE4DA" id="comptable-infos-content"></div>
   <div class="sec-label">Factures</div>
   <div class="card-list" id="comptable-factures-list"></div>
   <div class="pb"></div>
@@ -961,10 +961,10 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">&#128176; Enregistrer un paiement</div>
-    <div style="background:#F8FAFC;padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#64748B">Total TTC</span><strong id="pp-total">0</strong></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#64748B">D&#233;j&#224; re&#231;u</span><strong id="pp-recu" style="color:#059669">0</strong></div>
-      <div style="display:flex;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:4px;margin-top:4px"><span style="color:#0F172A;font-weight:600">Reste &#224; payer</span><strong id="pp-restant" style="color:#EF4444">0</strong></div>
+    <div style="background:#F1EEE8;padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6B5F54">Total TTC</span><strong id="pp-total">0</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6B5F54">D&#233;j&#224; re&#231;u</span><strong id="pp-recu" style="color:#6E8F4E">0</strong></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid #E3DCCF;padding-top:4px;margin-top:4px"><span style="color:#2A2420;font-weight:600">Reste &#224; payer</span><strong id="pp-restant" style="color:#B23A2E">0</strong></div>
     </div>
     <label class="a-lbl">Montant re&#231;u</label>
     <input class="m-inp" id="pp-montant" type="number" placeholder="Ex: 1500.00" step="0.01">
@@ -988,9 +988,9 @@
     <div class="modal-handle"></div>
     <div class="modal-title" id="me-titre">Envoyer le document</div>
     <button class="m-btn" style="background:#25D366" onclick="envoyerVia('whatsapp')">📱 WhatsApp</button>
-    <button class="m-btn" style="background:#2563EB" onclick="envoyerVia('email')">✉️ Email</button>
-    <button class="m-btn" style="background:#64748B" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
-    <button class="m-btn" style="background:#4338CA" onclick="envoyerVia('banipay')">🅿️ Compte BaniPay</button>
+    <button class="m-btn" style="background:#C9971F" onclick="envoyerVia('email')">✉️ Email</button>
+    <button class="m-btn" style="background:#6B5F54" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
+    <button class="m-btn" style="background:#1F6F72" onclick="envoyerVia('banipay')">🅿️ Compte BaniPay</button>
     <div id="me-banipay-picker" style="display:none;margin-top:10px"></div>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
@@ -1001,11 +1001,11 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">✍️ Signez pour accepter</div>
-    <div style="font-size:12px;color:#64748B;margin-bottom:10px">Dessinez votre signature dans le cadre ci-dessous</div>
-    <canvas id="sig-canvas" style="width:100%;height:160px;background:#F8FAFC;border:1.5px dashed #CBD5E1;border-radius:10px;touch-action:none;display:block"></canvas>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Dessinez votre signature dans le cadre ci-dessous</div>
+    <canvas id="sig-canvas" style="width:100%;height:160px;background:#F1EEE8;border:1.5px dashed #CDBEA0;border-radius:10px;touch-action:none;display:block"></canvas>
     <div style="display:flex;gap:8px;margin-top:10px">
       <button class="m-btn-sec" style="flex:1;margin-top:0" onclick="effacerSignature()">🔄 Effacer</button>
-      <button class="m-btn" style="flex:1;margin-top:0;background:#059669" onclick="confirmerSignatureEtAccepter()">✅ Valider et accepter</button>
+      <button class="m-btn" style="flex:1;margin-top:0;background:#6E8F4E" onclick="confirmerSignatureEtAccepter()">✅ Valider et accepter</button>
     </div>
     <button class="m-btn-sec" onclick="annulerSignature()">Annuler</button>
   </div>
@@ -1016,8 +1016,8 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="as-titre">Ajuster le stock</div>
-    <div style="background:#F8FAFC;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:flex;justify-content:space-between">
-      <span style="color:#64748B">Stock actuel</span><strong id="as-stock-actuel">0</strong>
+    <div style="background:#F1EEE8;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:flex;justify-content:space-between">
+      <span style="color:#6B5F54">Stock actuel</span><strong id="as-stock-actuel">0</strong>
     </div>
     <label class="a-lbl">Type de mouvement</label>
     <select id="as-type" class="m-inp">
@@ -1043,7 +1043,7 @@
     </div>
   </div>
   <div class="sec-label">Historique des paiements</div>
-  <div style="padding:0 20px 10px;font-size:13px;color:#64748B" id="hp-facture-info"></div>
+  <div style="padding:0 20px 10px;font-size:13px;color:#6B5F54" id="hp-facture-info"></div>
   <div class="card-list" id="hp-liste"></div>
   <div style="padding:16px 20px">
     <button class="s-btn blue full" onclick="ouvrirPaiementPartiel(STATE.currentFacture?.id)">&#10133; Ajouter un paiement</button>
@@ -1121,10 +1121,10 @@
   </div>
   <div class="form-section">
     <div class="f-row">
-      <div><label class="f-lbl">Prix TTC</label><input id="mp-prix-ttc" class="f-inp" readonly style="background:#F1F5F9"></div>
+      <div><label class="f-lbl">Prix TTC</label><input id="mp-prix-ttc" class="f-inp" readonly style="background:#EAE4DA"></div>
       <div><label class="f-lbl">Co&#251;t d'achat</label><input id="mp-cout" class="f-inp" type="number" oninput="calcPrixTTCModif()"></div>
     </div>
-    <div style="font-size:12px;color:#059669;margin-top:4px;font-weight:600" id="mp-marge"></div>
+    <div style="font-size:12px;color:#6E8F4E;margin-top:4px;font-weight:600" id="mp-marge"></div>
   </div>
   <div class="form-section">
     <div class="f-row">
@@ -1175,7 +1175,7 @@
         <input id="param-prefix-dev" class="f-inp" placeholder="DEV" style="margin-bottom:10px">
         <label class="f-lbl">Num&#233;ro de d&#233;part</label>
         <input id="param-num-start" class="f-inp" type="number" placeholder="1" style="margin-bottom:10px">
-        <div style="font-size:12px;color:#94A3B8;margin-bottom:10px">
+        <div style="font-size:12px;color:#9C9186;margin-bottom:10px">
           Exemple : <strong id="param-preview">FAC-2026-0001</strong>
         </div>
       </div>
@@ -1250,9 +1250,9 @@
     <button class="back-btn" onclick="goScreen('detail')">&#8592;</button>
     <div class="form-title">Acomptes</div>
   </div>
-  <div style="padding:16px 20px;background:#EFF6FF;border-bottom:1px solid #BFDBFE">
-    <div style="font-size:13px;color:#1D4ED8;font-weight:600" id="ac-facture-ref">Facture</div>
-    <div style="font-size:12px;color:#64748B;margin-top:2px">Total : <strong id="ac-total">0 MAD</strong> | Payé : <strong id="ac-paye" style="color:#059669">0 MAD</strong> | Restant : <strong id="ac-restant" style="color:#EF4444">0 MAD</strong></div>
+  <div style="padding:16px 20px;background:#E9F4F3;border-bottom:1px solid #CFE3E2">
+    <div style="font-size:13px;color:#A67A16;font-weight:600" id="ac-facture-ref">Facture</div>
+    <div style="font-size:12px;color:#6B5F54;margin-top:2px">Total : <strong id="ac-total">0 MAD</strong> | Payé : <strong id="ac-paye" style="color:#6E8F4E">0 MAD</strong> | Restant : <strong id="ac-restant" style="color:#B23A2E">0 MAD</strong></div>
   </div>
   <div class="sec-label">Historique des versements</div>
   <div class="card-list" id="ac-liste"></div>
@@ -1349,7 +1349,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted)">Clients (<span id="clients-count">0</span>)</div>
       <div style="display:flex;gap:10px;align-items:center">
-        <span onclick="exporterClientsCSV()" style="font-size:11px;font-weight:500;color:#64748B;cursor:pointer">📥 Export CSV</span>
+        <span onclick="exporterClientsCSV()" style="font-size:11px;font-weight:500;color:#6B5F54;cursor:pointer">📥 Export CSV</span>
         <div onclick="goScreen('nouveau-client',null)" style="font-size:12px;font-weight:500;color:var(--orange);cursor:pointer">+ Ajouter</div>
       </div>
     </div>
@@ -1387,30 +1387,30 @@
 
   <!-- DETAIL CLIENT -->
   <div class="screen" id="screen-detail-client">
-    <div style="background:linear-gradient(135deg,#1E1B4B,#3730A3);padding:20px">
+    <div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:20px">
       <div style="display:flex;align-items:center;gap:10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px" onclick="goScreen('clients',null)">← Retour</div>
       <div style="font-size:22px;font-weight:700;color:#fff" id="dc-nom"></div>
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px" id="dc-meta"></div>
     </div>
     <div style="padding:16px">
-      <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1px solid #F1F5F9" id="dc-infos"></div>
+      <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1px solid #EAE4DA" id="dc-infos"></div>
       <!-- Lien BaniPay du client -->
-      <div id="dc-lien-section" style="display:none;background:#EEF2FF;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #C7D2FE">
-        <div style="font-size:11px;font-weight:700;color:#4F46E5;margin-bottom:6px">🔗 Profil BaniPay</div>
-        <div id="dc-lien-banipay" style="font-size:11px;color:#4F46E5;word-break:break-all;margin-bottom:8px"></div>
+      <div id="dc-lien-section" style="display:none;background:#FBF0DA;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #E8D9AE">
+        <div style="font-size:11px;font-weight:700;color:#C9971F;margin-bottom:6px">🔗 Profil BaniPay</div>
+        <div id="dc-lien-banipay" style="font-size:11px;color:#C9971F;word-break:break-all;margin-bottom:8px"></div>
         <div style="display:flex;gap:8px">
-          <button id="dc-btn-copier-lien" style="flex:1;padding:7px;background:#fff;color:#4F46E5;border:1px solid #C7D2FE;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
-          <button id="dc-btn-partager-lien" style="flex:1;padding:7px;background:#4F46E5;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+          <button id="dc-btn-copier-lien" style="flex:1;padding:7px;background:#fff;color:#C9971F;border:1px solid #E8D9AE;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+          <button id="dc-btn-partager-lien" style="flex:1;padding:7px;background:#C9971F;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
         </div>
       </div>
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin-bottom:10px">Factures</div>
       <div id="dc-factures"></div>
-      <button onclick="ouvrirMsgClient()" style="display:flex;align-items:center;gap:12px;background:#EEF2FF;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #C7D2FE;font-size:14px;font-weight:600;color:#4F46E5;font-family:inherit;width:100%;margin-bottom:8px">💬 Envoyer un message</button>
-    <button onclick="goScreen('nouvelle',null);setTimeout(()=>{const el=document.getElementById('f-client');if(el)el.value=window._clientNom||'';},100)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #F1F5F9;font-size:14px;font-weight:500;color:#2563EB;font-family:inherit;width:100%;text-align:left;margin-top:12px">
-        <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center">➕</div>Nouvelle facture pour ce client
+      <button onclick="ouvrirMsgClient()" style="display:flex;align-items:center;gap:12px;background:#FBF0DA;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #E8D9AE;font-size:14px;font-weight:600;color:#C9971F;font-family:inherit;width:100%;margin-bottom:8px">💬 Envoyer un message</button>
+    <button onclick="goScreen('nouvelle',null);setTimeout(()=>{const el=document.getElementById('f-client');if(el)el.value=window._clientNom||'';},100)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#C9971F;font-family:inherit;width:100%;text-align:left;margin-top:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center">➕</div>Nouvelle facture pour ce client
       </button>
-      <button onclick="supprimerClient(window._currentClientId)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #F1F5F9;font-size:14px;font-weight:500;color:#EF4444;font-family:inherit;width:100%;text-align:left;margin-top:8px">
-        <div style="width:36px;height:36px;border-radius:10px;background:#FEF2F2;display:flex;align-items:center;justify-content:center">🗑️</div>Supprimer le client
+      <button onclick="supprimerClient(window._currentClientId)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#B23A2E;font-family:inherit;width:100%;text-align:left;margin-top:8px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#F5E4E1;display:flex;align-items:center;justify-content:center">🗑️</div>Supprimer le client
       </button>
     </div>
     <div style="height:30px"></div>
@@ -1424,9 +1424,9 @@
     </div>
     <div style="padding:0 20px">
       <div style="font-size:13px;color:var(--ink-muted);padding:12px 0 16px">Récapitulatif mensuel pour votre déclaration TVA</div>
-      <div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #F1F5F9">
+      <div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #EAE4DA">
         <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#0F172A"><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th><th style="padding:10px 12px;font-size:11px;color:#34D399;text-align:right">TVA 20%</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th></tr></thead>
+          <thead><tr style="background:#2A2420"><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th><th style="padding:10px 12px;font-size:11px;color:#9CBB7A;text-align:right">TVA 20%</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th></tr></thead>
           <tbody id="tva-body"></tbody>
         </table>
       </div>
@@ -1459,7 +1459,7 @@
   <div class="form-section"><label class="f-lbl">Fournisseur *</label><input id="bc-fournisseur" class="f-inp" placeholder="Nom du fournisseur"></div>
   <div class="form-section">
     <div class="f-row">
-      <div><label class="f-lbl">N&#176; BC</label><input id="bc-ref" class="f-inp" readonly style="background:#F1F5F9"></div>
+      <div><label class="f-lbl">N&#176; BC</label><input id="bc-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
       <div><label class="f-lbl">Date BC</label><input id="bc-date" class="f-inp" type="date"></div>
     </div>
   </div>
@@ -1497,7 +1497,7 @@
   <div class="form-section"><label class="f-lbl">Client *</label><input id="bl-client" class="f-inp" placeholder="Nom du client" list="client-datalist"></div>
   <div class="form-section">
     <div class="f-row">
-      <div><label class="f-lbl">N&#176; BL</label><input id="bl-ref" class="f-inp" readonly style="background:#F1F5F9"></div>
+      <div><label class="f-lbl">N&#176; BL</label><input id="bl-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
       <div><label class="f-lbl">Date</label><input id="bl-date" class="f-inp" type="date"></div>
     </div>
   </div>
@@ -1540,23 +1540,23 @@
 </div>
 
 <!-- ===== DASHBOARD COMPTABLE FULL ===== -->
-<div class="screen" id="screen-comptable" style="background:#F8FAFC;flex-direction:column">
+<div class="screen" id="screen-comptable" style="background:#F1EEE8;flex-direction:column">
   <!-- Header violet -->
-  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:16px 20px 12px;flex-shrink:0">
+  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:16px 20px 12px;flex-shrink:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <!-- Logo -->
-      <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Bani<span style="color:#818CF8">Pay</span></div>
+      <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Bani<span style="color:#E0AE5C">Pay</span></div>
       <!-- Droite: actions -->
       <div style="display:flex;align-items:center;gap:6px">
         <!-- Messages -->
         <div onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px">
           💬
-          <span id="cpt-msg-badge" style="position:absolute;top:-2px;right:-2px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center">!</span>
+          <span id="cpt-msg-badge" style="position:absolute;top:-2px;right:-2px;background:#B23A2E;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center">!</span>
         </div>
         <!-- Notifications -->
         <div onclick="switchCptNav('notifs')" style="position:relative;cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px">
           🔔
-          <span id="cpt-notif-badge" style="position:absolute;top:-2px;right:-2px;background:#EF4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center"></span>
+          <span id="cpt-notif-badge" style="position:absolute;top:-2px;right:-2px;background:#B23A2E;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center"></span>
         </div>
         <!-- Mon espace -->
         <div onclick="basculerModeEntreprise()" style="cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px" title="Mes factures & devis">
@@ -1573,7 +1573,7 @@
     </div>
     <!-- Navigation onglets -->
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
-      <button id="cpt-nav-dashboard" onclick="switchCptNav('dashboard')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.9);color:#4338CA">📊 Vue globale</button>
+      <button id="cpt-nav-dashboard" onclick="switchCptNav('dashboard')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.9);color:#1F6F72">📊 Vue globale</button>
       <button id="cpt-nav-entreprises" onclick="switchCptNav('entreprises')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🏢 Entreprises</button>
       <button id="cpt-nav-traiter" onclick="switchCptNav('traiter')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📥 À traiter</button>
       <button id="cpt-nav-historique" onclick="switchCptNav('historique')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📋 Historique</button>
@@ -1586,8 +1586,8 @@
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-cpt-entreprise" style="background:#F8FAFC">
-  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+<div class="screen" id="screen-cpt-entreprise" style="background:#F1EEE8">
+  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
     <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:700;color:#fff" id="cpt-ent-nom">Entreprise</div>
@@ -1597,20 +1597,20 @@
   </div>
   <div id="cpt-ent-kpis"></div>
   <!-- Onglets -->
-  <div style="display:flex;gap:6px;padding:10px 16px;background:#fff;border-bottom:1px solid #F1F5F9;overflow-x:auto;position:sticky;top:52px;z-index:9">
-    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#4338CA;color:#fff">🧾 Factures</button>
-    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📝 Devis</button>
-    <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">📊 TVA</button>
-    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">ℹ️ Infos</button>
-    <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1F5F9;color:#64748B">🏦 Relevés</button>
+  <div style="display:flex;gap:6px;padding:10px 16px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto;position:sticky;top:52px;z-index:9">
+    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#1F6F72;color:#fff">🧾 Factures</button>
+    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📝 Devis</button>
+    <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 TVA</button>
+    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">ℹ️ Infos</button>
+    <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🏦 Relevés</button>
   </div>
   <div id="cpt-ent-content"></div>
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-comptable-profil" style="background:#F8FAFC">
+<div class="screen" id="screen-comptable-profil" style="background:#F1EEE8">
   <!-- Header -->
-  <div style="background:linear-gradient(135deg,#1E1B4B,#4338CA);padding:0 0 30px">
+  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:0 0 30px">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px">
       <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
       <div style="font-size:14px;font-weight:700;color:#fff">Mon profil</div>
@@ -1627,33 +1627,33 @@
 
   <!-- QR Code + Lien -->
   <div style="margin:-20px 20px 16px;background:#fff;border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
-    <div style="font-size:12px;font-weight:700;color:#4338CA;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Mon lien profil</div>
+    <div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Mon lien profil</div>
     <div id="cpt-qr-container" style="display:flex;justify-content:center;margin-bottom:14px"></div>
-    <div id="cpt-lien-display" style="font-size:11px;color:#64748B;background:#F8FAFC;padding:8px;border-radius:8px;word-break:break-all;margin-bottom:12px"></div>
+    <div id="cpt-lien-display" style="font-size:11px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px;word-break:break-all;margin-bottom:12px"></div>
     <div style="display:flex;gap:8px">
-      <button onclick="copierLienComptable()" style="flex:1;padding:10px;background:#EEF2FF;color:#4338CA;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
-      <button onclick="partagerProfilComptable()" style="flex:1;padding:10px;background:#4338CA;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+      <button onclick="copierLienComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfilComptable()" style="flex:1;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     </div>
   </div>
 
   <!-- Inviter une entreprise -->
-  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E2E8F0">
-    <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:12px">📧 Inviter une entreprise</div>
-    <div style="font-size:12px;color:#64748B;margin-bottom:10px">Saisissez l'email de l'entreprise — elle recevra un lien pour accepter l'accès</div>
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
+    <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:12px">📧 Inviter une entreprise</div>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Saisissez l'email de l'entreprise — elle recevra un lien pour accepter l'accès</div>
     <input id="cpt-invite-email" class="f-inp" type="email" placeholder="email@entreprise.ma" style="margin-bottom:10px">
-    <button onclick="envoyerInvitationDepuisProfil()" style="width:100%;padding:11px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Envoyer l'invitation</button>
+    <button onclick="envoyerInvitationDepuisProfil()" style="width:100%;padding:11px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Envoyer l'invitation</button>
   </div>
 
   <!-- Mes infos -->
-  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E2E8F0">
-    <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:12px">⚙️ Mes informations</div>
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
+    <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:12px">⚙️ Mes informations</div>
     <div id="cpt-profil-infos"></div>
-    <button onclick="ouvrirEditionComptable()" style="width:100%;margin-top:12px;padding:10px;background:#F1F5F9;color:#64748B;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">✏️ Modifier</button>
+    <button onclick="ouvrirEditionComptable()" style="width:100%;margin-top:12px;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">✏️ Modifier</button>
   </div>
 
   <!-- Actions -->
   <div style="margin:0 20px 20px;display:flex;flex-direction:column;gap:8px">
-    <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#FEF2F2;color:#EF4444;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
+    <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
   </div>
   <div class="pb"></div>
 </div>
