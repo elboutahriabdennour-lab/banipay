@@ -20,7 +20,7 @@ function initSignatureCanvas() {
   canvas.height = rect.height * ratio;
   ctx.scale(ratio, ratio);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#0F172A';
+  ctx.strokeStyle = '#2A2420';
   ctx.lineWidth = 2.2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -99,7 +99,7 @@ function initSignatureEntrepriseCanvas() {
   canvas.height = rect.height * ratio;
   ctx.scale(ratio, ratio);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#0F172A';
+  ctx.strokeStyle = '#2A2420';
   ctx.lineWidth = 2.2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
