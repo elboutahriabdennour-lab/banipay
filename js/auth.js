@@ -76,19 +76,19 @@ function selectRole(role) {
   if (!entBtn || !cptBtn) return;
 
   if (role === 'entreprise') {
-    entBtn.style.border = '2px solid #2563EB';
-    entBtn.style.background = '#EFF6FF';
+    entBtn.style.border = '2px solid #C9971F';
+    entBtn.style.background = '#E9F4F3';
     entBtn.style.transform = 'scale(1.02)';
-    cptBtn.style.border = '2px solid #E2E8F0';
-    cptBtn.style.background = '#F8FAFC';
+    cptBtn.style.border = '2px solid #E3DCCF';
+    cptBtn.style.background = '#F1EEE8';
     cptBtn.style.transform = 'scale(1)';
     if (cptFields) cptFields.style.display = 'none';
   } else {
-    cptBtn.style.border = '2px solid #9333EA';
-    cptBtn.style.background = '#F3E8FF';
+    cptBtn.style.border = '2px solid #7C5CA6';
+    cptBtn.style.background = '#EDE6F0';
     cptBtn.style.transform = 'scale(1.02)';
-    entBtn.style.border = '2px solid #E2E8F0';
-    entBtn.style.background = '#F8FAFC';
+    entBtn.style.border = '2px solid #E3DCCF';
+    entBtn.style.background = '#F1EEE8';
     entBtn.style.transform = 'scale(1)';
     if (cptFields) cptFields.style.display = 'block';
   }
