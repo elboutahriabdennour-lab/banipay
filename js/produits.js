@@ -20,23 +20,23 @@ function renderProduits() {
     const suiviStock = p.stock !== null && p.stock !== undefined;
     const enAlerte = suiviStock && p.seuil_alerte != null && Number(p.stock) <= Number(p.seuil_alerte);
     const rupture = suiviStock && Number(p.stock) <= 0;
-    const stockColor = rupture ? '#EF4444' : enAlerte ? '#D97706' : '#059669';
+    const stockColor = rupture ? '#B23A2E' : enAlerte ? '#B8860B' : '#6E8F4E';
     return `
     <div class="card">
-      <div class="card-ico" style="background:#EFF6FF">${catIcons[p.categorie]||'📦'}</div>
+      <div class="card-ico" style="background:#E9F4F3">${catIcons[p.categorie]||'📦'}</div>
       <div class="card-body">
         <div class="card-name">${p.nom}</div>
         <div class="card-ref">${p.unite||'u'} · ${p.description||''}</div>
-        ${enAlerte && !rupture ? '<div style="font-size:10px;color:#D97706;font-weight:600;margin-top:2px">⚠️ Stock bas (seuil: '+p.seuil_alerte+')</div>' : ''}
+        ${enAlerte && !rupture ? '<div style="font-size:10px;color:#B8860B;font-weight:600;margin-top:2px">⚠️ Stock bas (seuil: '+p.seuil_alerte+')</div>' : ''}
       </div>
       <div class="card-end">
         <div class="card-amt">${fmt(p.prix_ht)} MAD HT</div>
         ${suiviStock ? `<div style="font-size:10px;color:${stockColor};font-weight:600">${p.stock} en stock</div>` : ''}
         <div style="display:flex;gap:4px;margin-top:2px">
-          <button onclick="modifierProduit(${p.id})" style="font-size:11px;background:#EFF6FF;color:#2563EB;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">✏️</button>
-          ${suiviStock ? `<button onclick="ouvrirAjustementStock(${p.id})" style="font-size:11px;background:#F0FDF4;color:#059669;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">⚖️</button>
-          <button onclick="ouvrirHistoriqueStock(${p.id})" style="font-size:11px;background:#F8FAFC;color:#64748B;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">📦</button>` : ''}
-          <button onclick="supprimerProduit(${p.id})" style="font-size:11px;background:#FEF2F2;color:#EF4444;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">🗑️</button>
+          <button onclick="modifierProduit(${p.id})" style="font-size:11px;background:#E9F4F3;color:#C9971F;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">✏️</button>
+          ${suiviStock ? `<button onclick="ouvrirAjustementStock(${p.id})" style="font-size:11px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">⚖️</button>
+          <button onclick="ouvrirHistoriqueStock(${p.id})" style="font-size:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">📦</button>` : ''}
+          <button onclick="supprimerProduit(${p.id})" style="font-size:11px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">🗑️</button>
         </div>
       </div>
     </div>`;
@@ -316,18 +316,18 @@ function afficherPickerClientsBaniPay() {
   const clientsBP = (STATE.clients || []).filter(c => c.reference_id);
   picker.style.display = 'block';
   if (!clientsBP.length) {
-    picker.innerHTML = '<div style="font-size:12px;color:#94A3B8;padding:10px;text-align:center">Aucun client avec compte BaniPay lié. Importez-le via son lien de profil dans la fiche client.</div>';
+    picker.innerHTML = '<div style="font-size:12px;color:#9C9186;padding:10px;text-align:center">Aucun client avec compte BaniPay lié. Importez-le via son lien de profil dans la fiche client.</div>';
     return;
   }
   picker.innerHTML = clientsBP.map(c =>
-    '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteBaniPay(\'' + c.reference_id + '\',\'' + escapeHTML(c.nom||'').replace(/'/g,"\\'") + '\')">' +
-      '<div class="card-ico" style="background:#EEF2FF">🅿️</div>' +
+    '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteBaniPay(\'' + c.reference_id + '\',\'' + escapeHTML(c.nom||'').replace(/'/g,"\\'") + '\',\'' + (c.email||'').replace(/'/g,"\\'") + '\')">' +
+      '<div class="card-ico" style="background:#FBF0DA">🅿️</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.email||'') + '</div></div>' +
     '</div>'
   ).join('');
 }
 
-async function envoyerVersCompteBaniPay(destinataireId, destinataireNom) {
+async function envoyerVersCompteBaniPay(destinataireId, destinataireNom, destinataireEmail) {
   const ctx = window._envoiCourant;
   if (!ctx) return;
   const { type, id, doc } = ctx;
@@ -342,6 +342,10 @@ async function envoyerVersCompteBaniPay(destinataireId, destinataireNom) {
       },
       body: JSON.stringify({
         user_id: destinataireId,
+        // FIX: destinataire_email manquant — sans ce champ, genNotifications()
+        // (qui filtre justement sur destinataire_email) ne trouvait jamais
+        // cette notification côté client, qui semblait donc "ne rien recevoir".
+        destinataire_email: destinataireEmail ? destinataireEmail.toLowerCase() : null,
         type: type === 'facture' ? 'facture_recue' : 'devis_recu',
         titre: (type === 'facture' ? 'Nouvelle facture' : 'Nouveau devis') + ' — ' + (p.raison || sb.user?.email),
         corps: (p.raison || sb.user?.email) + ' vous a envoyé ' + (type === 'facture' ? 'la facture' : 'le devis') + ' ' + doc.ref + ' (' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + ').',
