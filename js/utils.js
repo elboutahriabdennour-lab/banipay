@@ -133,21 +133,21 @@ function isValidICE(v) { return /^\d{15}$/.test(v); }
 function getStatusBadge(type, statut) {
   const config = {
     facture: {
-      payee:    { bg:'#ECFDF5', color:'#059669', label:'Payée' },
-      envoyee:  { bg:'#FFFBEB', color:'#D97706', label:'Envoyée' },
-      attente:  { bg:'#FFFBEB', color:'#D97706', label:'En attente' },
-      retard:   { bg:'#FEF2F2', color:'#EF4444', label:'En retard' },
-      brouillon:{ bg:'#F1F5F9', color:'#64748B', label:'Brouillon' },
+      payee:    { bg:'#EEF3E4', color:'#6E8F4E', label:'Payée' },
+      envoyee:  { bg:'#F7EFDC', color:'#B8860B', label:'Envoyée' },
+      attente:  { bg:'#F7EFDC', color:'#B8860B', label:'En attente' },
+      retard:   { bg:'#F5E4E1', color:'#B23A2E', label:'En retard' },
+      brouillon:{ bg:'#EAE4DA', color:'#6B5F54', label:'Brouillon' },
     },
     devis: {
-      envoye:   { bg:'#FFFBEB', color:'#D97706', label:'Envoyé' },
-      accepte:  { bg:'#ECFDF5', color:'#059669', label:'Accepté' },
-      refuse:   { bg:'#FEF2F2', color:'#EF4444', label:'Refusé' },
-      converti: { bg:'#EFF6FF', color:'#2563EB', label:'→ Facture' },
-      expire:   { bg:'#F1F5F9', color:'#64748B', label:'Expiré' },
+      envoye:   { bg:'#F7EFDC', color:'#B8860B', label:'Envoyé' },
+      accepte:  { bg:'#EEF3E4', color:'#6E8F4E', label:'Accepté' },
+      refuse:   { bg:'#F5E4E1', color:'#B23A2E', label:'Refusé' },
+      converti: { bg:'#E9F4F3', color:'#C9971F', label:'→ Facture' },
+      expire:   { bg:'#EAE4DA', color:'#6B5F54', label:'Expiré' },
     }
   };
-  const cfg = config[type]?.[statut] || { bg:'#F1F5F9', color:'#64748B', label: statut };
+  const cfg = config[type]?.[statut] || { bg:'#EAE4DA', color:'#6B5F54', label: statut };
   return `<span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;text-transform:uppercase;background:${cfg.bg};color:${cfg.color}">${cfg.label}</span>`;
 }
 
@@ -218,7 +218,7 @@ async function logAudit(typeDoc, docId, action, details) {
 async function renderJournalAudit() {
   const list = el('audit-list');
   if (!list) return;
-  list.innerHTML = '<div style="text-align:center;padding:30px;color:#94A3B8">⏳ Chargement...</div>';
+  list.innerHTML = '<div style="text-align:center;padding:30px;color:#9C9186">⏳ Chargement...</div>';
   try {
     const uid = sb.user?.id;
     const logs = await sb.get('audit_log', 'user_id=eq.' + uid + '&order=created_at.desc&limit=100');
@@ -230,17 +230,17 @@ async function renderJournalAudit() {
     const actionLabels = { creation:'Création', modification:'Modification', suppression:'Suppression', acceptation:'Acceptation', refus:'Refus', paiement:'Paiement' };
     const typeLabels = { facture:'Facture', devis:'Devis', client:'Client', produit:'Article' };
     list.innerHTML = logs.map(function(l) {
-      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F1F5F9;align-items:flex-start">' +
-        '<div style="width:32px;height:32px;border-radius:8px;background:#F8FAFC;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
+      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #EAE4DA;align-items:flex-start">' +
+        '<div style="width:32px;height:32px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
         '<div style="flex:1">' +
           '<div style="font-size:13px;font-weight:600">' + (typeLabels[l.type_doc] || l.type_doc) + ' — ' + (actionLabels[l.action] || l.action) + '</div>' +
-          (l.details ? '<div style="font-size:12px;color:#64748B;margin-top:2px">' + escapeHTML(l.details) + '</div>' : '') +
-          '<div style="font-size:11px;color:#94A3B8;margin-top:3px">' + formatDateTime(l.created_at) + '</div>' +
+          (l.details ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + escapeHTML(l.details) + '</div>' : '') +
+          '<div style="font-size:11px;color:#9C9186;margin-top:3px">' + formatDateTime(l.created_at) + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
   } catch(e) {
-    list.innerHTML = '<div style="text-align:center;padding:30px;color:#EF4444">Erreur de chargement</div>';
+    list.innerHTML = '<div style="text-align:center;padding:30px;color:#B23A2E">Erreur de chargement</div>';
   }
 }
 
