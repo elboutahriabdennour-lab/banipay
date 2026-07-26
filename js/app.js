@@ -242,25 +242,41 @@ async function afficherDocumentPublic(docId) {
     const valeurRefusee = isDevis ? 'refuse' : 'refusee';
     const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
 
-    // Boutons Accepter/Refuser — pour les devis ET les factures en attente
+    // Boutons Accepter/Refuser/Attente — pour les devis ET les factures non
+    // encore définitivement traités (l'état "en attente" ne bloque rien)
     if (!dejaTraite) {
+      if (statutActuel === 'en_attente') {
+        setTimeout(function() {
+          const screen = document.getElementById('pdf-fullscreen');
+          if (!screen) return;
+          const info = document.createElement('div');
+          info.style.cssText = 'background:#F7EFDC;padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#B8860B;border-top:1px solid #E3DCCF;flex-shrink:0';
+          info.textContent = '⏳ Vous avez mis ce document en attente — vous pouvez accepter ou refuser à tout moment';
+          screen.appendChild(info);
+        }, 480);
+      }
       setTimeout(function() {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const btnBar = document.createElement('div');
-        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #E3DCCF;flex-shrink:0';
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:6px;border-top:2px solid #E3DCCF;flex-shrink:0';
         const bAcc = document.createElement('button');
-        bAcc.textContent = isDevis ? '✅ Accepter le devis' : '✅ Accepter la facture';
-        bAcc.style.cssText = 'flex:1;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+        bAcc.textContent = '✅ Accepter';
+        bAcc.style.cssText = 'flex:1;padding:12px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
         // Accepter vaut signature électronique automatique — plus besoin de
         // faire dessiner quoi que ce soit au client, un tampon horodaté est
         // généré automatiquement (voir traiterActionDocument).
         bAcc.onclick = function() { traiterActionDocument(docId, typeDoc, 'accepter'); };
+        const bAtt = document.createElement('button');
+        bAtt.textContent = '⏳ Attente';
+        bAtt.style.cssText = 'flex:1;padding:12px 4px;background:#B8860B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+        bAtt.onclick = function() { traiterActionDocument(docId, typeDoc, 'attente'); };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
-        bRef.style.cssText = 'flex:1;padding:14px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+        bRef.style.cssText = 'flex:1;padding:12px 4px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
         bRef.onclick = function() { traiterActionDocument(docId, typeDoc, 'refuser'); };
         btnBar.appendChild(bAcc);
+        btnBar.appendChild(bAtt);
         btnBar.appendChild(bRef);
         screen.appendChild(btnBar);
       }, 500);
