@@ -49,27 +49,27 @@ function renderAchats() {
   }
 
   const catIcons = { materiel:'🔧', services:'💼', fournitures:'📦', transport:'🚛', immobilier:'🏠', autre:'📄' };
-  const statutBg = { payee:'#ECFDF5', attente:'#FFFBEB' };
-  const statutColor = { payee:'#059669', attente:'#D97706' };
+  const statutBg = { payee:'#EEF3E4', attente:'#F7EFDC' };
+  const statutColor = { payee:'#55702E', attente:'#B8860B' };
   const statutLabel = { payee:'Payée', attente:'En attente' };
 
   list.innerHTML = achats.map(function(a) {
     return '<div class="card" onclick="ouvrirDetailAchat(\'' + a.id + '\')">' +
-      '<div class="card-ico" style="background:#FEF2F2;font-size:20px">' + (catIcons[a.categorie] || '📄') + '</div>' +
+      '<div class="card-ico" style="background:#F5E4E1;font-size:20px">' + (catIcons[a.categorie] || '📄') + '</div>' +
       '<div class="card-body">' +
-        '<div class="card-name">' + escapeHTML(a.fournisseur || '—') + (a.fournisseur_banipay ? ' <span style="font-size:9px;background:#EFF6FF;color:#2563EB;padding:1px 5px;border-radius:4px;font-weight:600">BP</span>' : '') + '</div>' +
+        '<div class="card-name">' + escapeHTML(a.fournisseur || '—') + (a.fournisseur_banipay ? ' <span style="font-size:9px;background:#E9F4F3;color:#1F6F72;padding:1px 5px;border-radius:4px;font-weight:600">BP</span>' : (a.origine === 'auto_acceptation' ? ' <span style="font-size:9px;background:#EEF3E4;color:#55702E;padding:1px 5px;border-radius:4px;font-weight:600">AUTO</span>' : '')) + '</div>' +
         '<div class="card-ref">' + (a.ref_fournisseur || '') + ' · ' + (a.date_achat || '') + '</div>' +
       '</div>' +
       '<div class="card-end">' +
-        '<div class="card-amount" style="color:#EF4444">' + fmt(a.ttc || 0) + '</div>' +
-        '<div style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + (statutBg[a.statut] || '#F1F5F9') + ';color:' + (statutColor[a.statut] || '#64748B') + ';font-weight:600;margin-top:4px">' + (statutLabel[a.statut] || a.statut || '') + '</div>' +
+        '<div class="card-amount" style="color:#B23A2E">' + fmt(a.ttc || 0) + '</div>' +
+        '<div style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-weight:600;margin-top:4px">' + (statutLabel[a.statut] || a.statut || '') + '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 }
 
 // ============================================================
-// IMPORT FOURNISSEUR BANIPAY
+// IMPORT FOURNISSEUR BANIPAY (profil)
 // ============================================================
 
 async function importerFournisseurBaniPay() {
@@ -80,6 +80,13 @@ async function importerFournisseurBaniPay() {
 
   try {
     const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
+
+    // CAS 0: Lien direct vers une FACTURE (?doc=xxx) — import complet de la facture
+    const docId = url.searchParams.get('doc');
+    if (docId) {
+      await importerAchatDepuisFactureId(docId);
+      return;
+    }
 
     // CAS 1: Lien profil entreprise (?profil=xxx ou ?portail=xxx)
     const profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
@@ -98,10 +105,6 @@ async function importerFournisseurBaniPay() {
     // CAS 2: Lien profil comptable (?comptable=CPT-xxxx)
     const comptableId = url.searchParams.get('comptable');
     if (comptableId) {
-      // Extract UUID from CPT-xxxxxxxx
-      const uid = comptableId.replace('CPT-', '').toLowerCase();
-      // Search in auth users by partial id - use profils if comptable has one
-      // Or just fill in the email from the invitation
       const invResp = await fetch(
         SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + sb.user?.id + '&statut=eq.acceptee&limit=1',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
@@ -127,11 +130,233 @@ async function importerFournisseurBaniPay() {
 function remplirFournisseur(nom, id, isBaniPay) {
   if (el('achat-fournisseur')) {
     el('achat-fournisseur').value = nom;
-    el('achat-fournisseur').style.background = '#ECFDF5';
+    el('achat-fournisseur').style.background = '#EEF3E4';
   }
   if (el('achat-fournisseur-id')) el('achat-fournisseur-id').value = id || '';
   if (el('achat-fournisseur-banipay')) el('achat-fournisseur-banipay').value = isBaniPay ? '1' : '0';
   if (el('achat-fournisseur-lien')) el('achat-fournisseur-lien').value = '';
+}
+
+// ============================================================
+// IMPORT D'ACHAT DEPUIS UNE FACTURE REÇUE (lien ?doc=, QR, ou auto)
+// ============================================================
+// NOUVEAU: trois façons d'ajouter un achat — saisie manuelle (déjà existante
+// ci-dessus), lien d'une facture reçue, scan du QR code d'une facture. Et le
+// cas idéal : enregistrement 100% automatique à l'acceptation (voir plus bas).
+
+// Récupère une facture publique (par id) via la clé anon, comme le fait déjà
+// la page de consultation publique — ne dépend d'aucun droit RLS particulier
+// puisque c'est la même lecture que celle utilisée pour afficher un devis/
+// une facture reçue par lien.
+async function _fetchFacturePublique(factureId) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + factureId + '&select=*', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  const data = await r.json();
+  return data && data[0];
+}
+
+async function _fetchProfilPublic(userId) {
+  const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + userId + '&select=*', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  const data = await r.json();
+  return (data && data[0]) || {};
+}
+
+// Pré-remplit le formulaire "Nouvelle achat" à partir d'une facture reçue,
+// identifiée par son id (extrait d'un lien ?doc=xxx ou d'un QR code scanné).
+async function importerAchatDepuisFactureId(factureId) {
+  showToast('⏳ Chargement de la facture...');
+  try {
+    const f = await _fetchFacturePublique(factureId);
+    if (!f) { showToast('Facture introuvable', 'error'); return; }
+    const emetteur = await _fetchProfilPublic(f.user_id);
+
+    remplirFournisseur(emetteur.raison || f.client_raison || 'Fournisseur', f.user_id, true);
+    el('achat-ref') && (el('achat-ref').value = f.ref || '');
+    el('achat-date') && (el('achat-date').value = f.date_emission || today());
+    el('achat-echeance') && (el('achat-echeance').value = f.echeance || '');
+    el('achat-ht') && (el('achat-ht').value = f.ht || '');
+    el('achat-tva-taux') && (el('achat-tva-taux').value = f.ht > 0 ? Math.round((f.tva / f.ht) * 100) : 20);
+    calcAchatTotaux();
+    window._achatFactureLieeId = factureId;
+    showToast('✅ Facture ' + (f.ref || '') + ' importée — vérifiez puis enregistrez', 'success');
+    goScreen('nouvelle-achat');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+// Import via collage direct d'un lien de facture (bouton dédié dans le
+// formulaire "Nouvelle achat", distinct du champ "lien fournisseur" existant)
+async function importerAchatDepuisLienFacture() {
+  const lien = (el('achat-lien-facture')?.value || '').trim();
+  if (!lien) { showToast('Collez le lien de la facture reçue', 'error'); return; }
+  let factureId = null;
+  try {
+    const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
+    factureId = url.searchParams.get('doc');
+  } catch(e) {
+    const m = lien.match(/doc=([^&]+)/);
+    factureId = m ? m[1] : null;
+  }
+  if (!factureId) { showToast('Lien invalide — copiez le lien complet de la facture', 'error'); return; }
+  el('achat-lien-facture') && (el('achat-lien-facture').value = '');
+  await importerAchatDepuisFactureId(factureId);
+}
+
+// ============================================================
+// SCAN QR CODE RÉEL (jsQR, chargé à la demande depuis un CDN)
+// ============================================================
+
+let _jsQRPromise = null;
+function _chargerJsQR() {
+  if (window.jsQR) return Promise.resolve();
+  if (_jsQRPromise) return _jsQRPromise;
+  _jsQRPromise = new Promise(function(resolve, reject) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return _jsQRPromise;
+}
+
+// Ouvre la caméra et scanne en continu jusqu'à détecter un QR code BaniPay
+// (lien contenant ?doc=... ou ?profil=...), puis importe automatiquement.
+async function scannerQRAchat() {
+  showToast('⏳ Ouverture de la caméra...');
+  try {
+    await _chargerJsQR();
+  } catch(e) {
+    showToast('Impossible de charger le lecteur QR (connexion ?)', 'error');
+    return;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'qr-scan-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#000;display:flex;flex-direction:column';
+  overlay.innerHTML =
+    '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.6)">' +
+      '<button id="qr-scan-close" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Fermer</button>' +
+      '<div style="color:#fff;font-size:13px;font-weight:600">Visez le QR code de la facture</div>' +
+    '</div>' +
+    '<video id="qr-scan-video" style="flex:1;width:100%;object-fit:cover" playsinline autoplay muted></video>' +
+    '<canvas id="qr-scan-canvas" style="display:none"></canvas>';
+  document.body.appendChild(overlay);
+
+  const video = document.getElementById('qr-scan-video');
+  const canvas = document.getElementById('qr-scan-canvas');
+  const ctx = canvas.getContext('2d');
+  let stream = null;
+  let scanning = true;
+
+  function arreter() {
+    scanning = false;
+    if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
+    overlay.remove();
+  }
+  document.getElementById('qr-scan-close').onclick = arreter;
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = stream;
+  } catch(e) {
+    showToast('Accès caméra refusé ou indisponible', 'error');
+    overlay.remove();
+    return;
+  }
+
+  function boucleScan() {
+    if (!scanning) return;
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = window.jsQR(imageData.data, imageData.width, imageData.height);
+      if (code && code.data) {
+        arreter();
+        traiterLienScanne(code.data);
+        return;
+      }
+    }
+    requestAnimationFrame(boucleScan);
+  }
+  requestAnimationFrame(boucleScan);
+}
+
+async function traiterLienScanne(texte) {
+  let factureId = null, profilId = null;
+  try {
+    const url = new URL(texte);
+    factureId = url.searchParams.get('doc');
+    profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
+  } catch(e) {
+    const m = texte.match(/doc=([^&]+)/);
+    factureId = m ? m[1] : null;
+  }
+  if (factureId) {
+    await importerAchatDepuisFactureId(factureId);
+  } else if (profilId) {
+    el('achat-fournisseur-lien') && (el('achat-fournisseur-lien').value = texte);
+    await importerFournisseurBaniPay();
+    goScreen('nouvelle-achat');
+  } else {
+    showToast('QR code non reconnu par BaniPay', 'error');
+  }
+}
+
+// ============================================================
+// ENREGISTREMENT 100% AUTOMATIQUE À L'ACCEPTATION
+// ============================================================
+// Le cas idéal demandé : quand le fournisseur émet une facture via BaniPay
+// et que le client l'accepte (depuis ses propres notifications, donc avec sa
+// session authentifiée), l'achat s'enregistre tout seul, sans aucune saisie.
+async function enregistrerAchatDepuisFactureAcceptee(factureId) {
+  const uid = sb.user?.id;
+  if (!uid) return;
+  try {
+    // Éviter les doublons si la notification est traitée deux fois
+    const existant = (STATE.achats || []).find(function(a) { return a.facture_source_id === String(factureId); });
+    if (existant) return;
+
+    const f = await _fetchFacturePublique(factureId);
+    if (!f) return;
+    const emetteur = await _fetchProfilPublic(f.user_id);
+
+    const achat = {
+      user_id: uid,
+      fournisseur: emetteur.raison || 'Fournisseur BaniPay',
+      fournisseur_id: f.user_id,
+      fournisseur_banipay: true,
+      ref_fournisseur: f.ref || '',
+      date_achat: f.date_emission || today(),
+      echeance: f.echeance || null,
+      ht: f.ht || 0,
+      tva: f.tva || 0,
+      tva_taux: f.ht > 0 ? Math.round((f.tva / f.ht) * 100) : 20,
+      ttc: f.ttc || 0,
+      categorie: 'autre',
+      statut: 'attente',
+      note: 'Enregistré automatiquement à l\'acceptation de la facture ' + (f.ref || ''),
+      facture_source_id: String(factureId),
+      origine: 'auto_acceptation',
+      created_at: new Date().toISOString()
+    };
+
+    const result = await sb.post('factures_achat', achat);
+    if (result) {
+      STATE.achats.unshift(result[0] || achat);
+      renderAchats();
+      showToast('🛒 Achat ' + (f.ref || '') + ' enregistré automatiquement', 'success');
+      if (typeof logAudit === 'function') logAudit('achat', (result[0]||achat).id, 'creation', 'Auto — ' + achat.fournisseur + ' — ' + fmt(achat.ttc) + ' MAD');
+    }
+  } catch(e) {
+    console.warn('enregistrerAchatDepuisFactureAcceptee:', e);
+  }
 }
 
 // ============================================================
@@ -162,12 +387,25 @@ function previewAchatPJ(event) {
   reader.onload = function(e) {
     const isImage = file.type.startsWith('image/');
     preview.innerHTML = isImage
-      ? '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #E2E8F0">'
-      : '<div style="background:#F8FAFC;border-radius:10px;padding:10px;font-size:12px;color:#64748B;border:1px solid #E2E8F0">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>';
+      ? '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #E3DCCF">'
+      : '<div style="background:#F1EEE8;border-radius:10px;padding:10px;font-size:12px;color:#6B5F54;border:1px solid #E3DCCF">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>';
     STATE._achatPJData = e.target.result;
     STATE._achatPJNom = file.name;
   };
   reader.readAsDataURL(file);
+}
+
+// ============================================================
+// LIER À UN ARTICLE DU CATALOGUE (alimente le stock automatiquement)
+// ============================================================
+
+function renderAchatProduitPicker() {
+  const sel = el('achat-produit-lie');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Aucun (achat non lié au stock)</option>' +
+    (STATE.produits || []).map(function(p) {
+      return '<option value="' + p.id + '">' + escapeHTML(p.nom) + (p.stock != null ? ' (stock: ' + p.stock + ')' : '') + '</option>';
+    }).join('');
 }
 
 // ============================================================
@@ -182,6 +420,9 @@ async function sauvegarderAchat() {
   const taux = parseFloat(el('achat-tva-taux')?.value || 20) / 100;
   const tva = ht * taux;
   const ttc = ht + tva;
+
+  const produitLieId = el('achat-produit-lie')?.value || '';
+  const quantiteStock = parseFloat(el('achat-quantite-stock')?.value || 0) || 0;
 
   const achat = {
     user_id: sb.user?.id,
@@ -200,6 +441,7 @@ async function sauvegarderAchat() {
     note: el('achat-note')?.value || '',
     pj_data: STATE._achatPJData || null,
     pj_nom: STATE._achatPJNom || null,
+    facture_source_id: window._achatFactureLieeId || null,
     created_at: new Date().toISOString()
   };
 
@@ -210,6 +452,15 @@ async function sauvegarderAchat() {
       STATE.achats.unshift(result[0] || achat);
       STATE._achatPJData = null;
       STATE._achatPJNom = null;
+      window._achatFactureLieeId = null;
+
+      // NOUVEAU: si l'achat est lié à un article du catalogue avec une
+      // quantité, on alimente le stock automatiquement (entrée).
+      if (produitLieId && quantiteStock > 0 && typeof enregistrerEntreeStock === 'function') {
+        const coutUnitaire = quantiteStock > 0 ? (ht / quantiteStock) : 0;
+        await enregistrerEntreeStock(parseInt(produitLieId), quantiteStock, coutUnitaire, 'Achat ' + (achat.ref_fournisseur || fournisseur));
+      }
+
       showToast('\u2705 Facture d\'achat enregistrée !', 'success');
       goScreen('achats', null);
       renderAchats();
@@ -231,92 +482,84 @@ function ouvrirDetailAchat(id) {
 
   const overlay = document.createElement('div');
   overlay.id = 'achat-detail-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F8FAFC;overflow-y:auto;font-family:inherit';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F1EEE8;overflow-y:auto;font-family:inherit';
 
   overlay.innerHTML =
-    '<div style="background:linear-gradient(135deg,#EF4444,#DC2626);padding:14px 20px;display:flex;align-items:center;gap:12px">' +
+    '<div style="background:linear-gradient(135deg,#B23A2E,#8E2E24);padding:14px 20px;display:flex;align-items:center;gap:12px">' +
       '<button onclick="document.getElementById(\'achat-detail-overlay\').remove()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
       '<div><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(a.fournisseur || '') + '</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.6)">' + (a.ref_fournisseur || '') + '</div></div>' +
       (a.fournisseur_banipay ? '<span style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:600">BaniPay</span>' : '') +
     '</div>' +
 
-    '<div style="margin:16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E2E8F0">' +
+    '<div style="margin:16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:12px">' +
-        '<div><div style="font-size:11px;color:#94A3B8">Date</div><div style="font-size:13px;font-weight:600">' + (a.date_achat || '—') + '</div></div>' +
-        '<div style="text-align:right"><div style="font-size:11px;color:#94A3B8">Total TTC</div><div style="font-size:18px;font-weight:800;color:#EF4444">' + fmt(a.ttc || 0) + ' MAD</div></div>' +
+        '<div><div style="font-size:11px;color:#9C9186">Date</div><div style="font-size:13px;font-weight:600">' + (a.date_achat || '—') + '</div></div>' +
+        '<div style="text-align:right"><div style="font-size:11px;color:#9C9186">Total TTC</div><div style="font-size:18px;font-weight:800;color:#B23A2E">' + fmt(a.ttc || 0) + ' MAD</div></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">' +
-        '<div style="background:#F8FAFC;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#94A3B8">HT</div><div style="font-size:12px;font-weight:700">' + fmt(a.ht || 0) + '</div></div>' +
-        '<div style="background:#F3E8FF;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#9333EA">TVA ' + (a.tva_taux || 20) + '%</div><div style="font-size:12px;font-weight:700;color:#9333EA">' + fmt(a.tva || 0) + '</div></div>' +
-        '<div style="background:' + (a.statut === 'payee' ? '#ECFDF5' : '#FFFBEB') + ';border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:' + (a.statut === 'payee' ? '#059669' : '#D97706') + '">' + (a.statut === 'payee' ? 'Payée' : 'En attente') + '</div></div>' +
+        '<div style="background:#F1EEE8;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#9C9186">HT</div><div style="font-size:12px;font-weight:700">' + fmt(a.ht || 0) + '</div></div>' +
+        '<div style="background:#EDE6F0;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#7C5CA6">TVA ' + (a.tva_taux || 20) + '%</div><div style="font-size:12px;font-weight:700;color:#7C5CA6">' + fmt(a.tva || 0) + '</div></div>' +
+        '<div style="background:' + (a.statut === 'payee' ? '#EEF3E4' : '#F7EFDC') + ';border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:' + (a.statut === 'payee' ? '#55702E' : '#B8860B') + '">' + (a.statut === 'payee' ? 'Payée' : 'En attente') + '</div></div>' +
       '</div>' +
-      '<div style="font-size:12px;color:#64748B">Catégorie: ' + (catLabels[a.categorie] || a.categorie || '—') + '</div>' +
-      (a.note ? '<div style="margin-top:8px;font-size:12px;color:#64748B;background:#F8FAFC;padding:8px;border-radius:8px">📝 ' + escapeHTML(a.note) + '</div>' : '') +
+      '<div style="font-size:12px;color:#6B5F54">Catégorie: ' + (catLabels[a.categorie] || a.categorie || '—') + '</div>' +
+      (a.note ? '<div style="margin-top:8px;font-size:12px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px">📝 ' + escapeHTML(a.note) + '</div>' : '') +
     '</div>' +
 
-    // Fiche fournisseur BaniPay
     (a.fournisseur_banipay && a.fournisseur_id ?
-      '<div style="margin:0 16px 16px;background:#EFF6FF;border-radius:16px;padding:16px;border:1px solid #BFDBFE;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
-        '<div style="font-size:12px;font-weight:700;color:#2563EB;margin-bottom:8px">🔗 Fournisseur sur BaniPay</div>' +
+      '<div style="margin:0 16px 16px;background:#E9F4F3;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
+        '<div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:8px">🔗 Fournisseur sur BaniPay</div>' +
         '<div style="font-size:13px;font-weight:600">' + escapeHTML(a.fournisseur || '') + '</div>' +
-        '<div style="font-size:11px;color:#64748B;margin-top:4px">Appuyez pour voir la fiche</div>' +
+        '<div style="font-size:11px;color:#6B5F54;margin-top:4px">Appuyez pour voir la fiche</div>' +
       '</div>' : '') +
 
-    // Pièce jointe
     (a.pj_data ?
       '<div style="margin:0 16px 16px">' +
-        '<div style="font-size:12px;font-weight:700;color:#0F172A;margin-bottom:8px">📎 Pièce jointe</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#2A2420;margin-bottom:8px">📎 Pièce jointe</div>' +
         (a.pj_data.startsWith('data:image') ?
-          '<img src="' + a.pj_data + '" style="max-width:100%;border-radius:12px;border:1px solid #E2E8F0">' :
-          '<div style="background:#F8FAFC;padding:12px;border-radius:10px;font-size:12px;color:#64748B">📄 ' + (a.pj_nom || 'Fichier') + '</div>') +
+          '<img src="' + a.pj_data + '" style="max-width:100%;border-radius:12px;border:1px solid #E3DCCF">' :
+          '<div style="background:#F1EEE8;padding:12px;border-radius:10px;font-size:12px;color:#6B5F54">📄 ' + (a.pj_nom || 'Fichier') + '</div>') +
       '</div>' : '') +
 
     '<div style="padding:0 16px 20px;display:flex;gap:8px">' +
-      '<button onclick="marquerAchatPaye(\'' + a.id + '\')" style="flex:1;padding:12px;background:' + (a.statut === 'payee' ? '#F1F5F9' : '#059669') + ';color:' + (a.statut === 'payee' ? '#64748B' : '#fff') + ';border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">' + (a.statut === 'payee' ? '✓ Payée' : '✅ Marquer payée') + '</button>' +
-      '<button onclick="supprimerAchat(\'' + a.id + '\')" style="padding:12px 16px;background:#FEF2F2;color:#EF4444;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">🗑️</button>' +
+      '<button onclick="marquerAchatPaye(\'' + a.id + '\')" style="flex:1;padding:12px;background:' + (a.statut === 'payee' ? '#EAE4DA' : '#55702E') + ';color:' + (a.statut === 'payee' ? '#6B5F54' : '#fff') + ';border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">' + (a.statut === 'payee' ? '✓ Payée' : '✅ Marquer payée') + '</button>' +
+      '<button onclick="supprimerAchat(\'' + a.id + '\')" style="padding:12px 16px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">🗑️</button>' +
     '</div>';
 
   document.body.appendChild(overlay);
 }
 
 async function voirFicheFournisseur(fournisseurId) {
-  // Charger le profil du fournisseur BaniPay
   try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + fournisseurId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const data = await r.json();
-    const p = data && data[0];
-    if (!p) { showToast('Profil introuvable', 'error'); return; }
+    const p = await _fetchProfilPublic(fournisseurId);
+    if (!p || !p.raison) { showToast('Profil introuvable', 'error'); return; }
 
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;overflow-y:auto;font-family:inherit';
 
     overlay.innerHTML =
-      '<div style="background:#0F172A;padding:14px 20px;display:flex;align-items:center;gap:12px">' +
+      '<div style="background:#2A2420;padding:14px 20px;display:flex;align-items:center;gap:12px">' +
         '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
         '<div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(p.raison || '') + '</div>' +
-        '<span style="margin-left:auto;background:#2563EB;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">BaniPay</span>' +
+        '<span style="margin-left:auto;background:#1F6F72;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">BaniPay</span>' +
       '</div>' +
 
       '<div style="padding:16px">' +
-        // Logo
         (p.logo ? '<div style="text-align:center;margin-bottom:16px"><img src="' + p.logo + '" style="max-width:120px;max-height:60px;object-fit:contain"></div>' : '') +
 
-        '<div style="background:#F8FAFC;border-radius:16px;padding:16px;margin-bottom:12px">' +
+        '<div style="background:#F1EEE8;border-radius:16px;padding:16px;margin-bottom:12px">' +
           [['🏢 Raison sociale', p.raison], ['⚙️ Secteur', p.secteur], ['📍 Adresse', p.adresse ? p.adresse + (p.ville ? ', ' + p.ville : '') : null],
            ['📞 Tél', p.tel], ['✉️ Email', p.email], ['🔢 ICE', p.ice], ['📋 RC', p.rc], ['💼 IF', p.identifiant_fiscal]]
           .filter(function(x) { return x[1]; })
           .map(function(x) {
-            return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1F5F9;font-size:12px">' +
-              '<span style="color:#64748B">' + x[0] + '</span>' +
+            return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #E3DCCF;font-size:12px">' +
+              '<span style="color:#6B5F54">' + x[0] + '</span>' +
               '<span style="font-weight:600;text-align:right;max-width:60%">' + escapeHTML(String(x[1])) + '</span>' +
             '</div>';
           }).join('') +
         '</div>' +
 
-        '<button onclick="window.open(\'' + window.location.origin + window.location.pathname + '?profil=' + (p.id_unique || '') + '\',\'_blank\')" style="width:100%;padding:12px;background:#2563EB;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Voir profil public</button>' +
+        '<button onclick="window.open(\'' + window.location.origin + window.location.pathname + '?profil=' + (p.id_unique || '') + '\',\'_blank\')" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Voir profil public</button>' +
       '</div>';
 
     document.body.appendChild(overlay);
