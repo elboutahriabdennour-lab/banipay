@@ -15,9 +15,14 @@ function initSignatureCanvas() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const rect = canvas.getBoundingClientRect();
+  // FIX: si le modal vient tout juste de s'afficher, getBoundingClientRect()
+  // peut renvoyer 0x0 (mise en page pas encore calculée) — repli sur une
+  // taille fixe raisonnable plutôt qu'un canvas inutilisable de 0 pixel.
+  const largeur = rect.width > 0 ? rect.width : 300;
+  const hauteur = rect.height > 0 ? rect.height : 160;
   const ratio = window.devicePixelRatio || 1;
-  canvas.width = rect.width * ratio;
-  canvas.height = rect.height * ratio;
+  canvas.width = largeur * ratio;
+  canvas.height = hauteur * ratio;
   ctx.scale(ratio, ratio);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.strokeStyle = '#2A2420';
@@ -71,6 +76,19 @@ async function confirmerSignatureEtAccepter() {
   const dataUrl = canvas.toDataURL('image/png');
   el('modal-signature')?.classList.remove('active');
   await traiterActionDocument(ctx.docId, ctx.type, 'accepter', dataUrl);
+  window._signatureCtx = null;
+}
+
+// FIX: la signature était un passage obligé pour accepter — si le client ne
+// dessinait rien (canvas mal compris sur mobile, hésitation...), il restait
+// bloqué sur la fenêtre sans jamais pouvoir valider, ce qui ressemblait à un
+// bouton "Accepter" complètement cassé. La signature reste proposée mais
+// devient sautable : accepter ne doit jamais dépendre d'elle.
+async function accepterSansSignature() {
+  const ctx = window._signatureCtx;
+  if (!ctx) return;
+  el('modal-signature')?.classList.remove('active');
+  await traiterActionDocument(ctx.docId, ctx.type, 'accepter');
   window._signatureCtx = null;
 }
 
