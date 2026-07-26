@@ -442,7 +442,7 @@ function renderCptFactures() {
           '</div>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-voir-facture" data-facid="' + fac.id + '" title="Visualiser la facture" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #CFE3E2;background:#E9F4F3;color:#1F6F72;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
+          '<button class="btn-voir-facture" onclick="voirFactureComptable(\'' + fac.id + '\')" title="Visualiser la facture" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #CFE3E2;background:#E9F4F3;color:#1F6F72;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
@@ -460,16 +460,6 @@ function renderCptFactures() {
       const row = e.target.closest('.fac-row-click');
       if (row) {
         const facId = row.dataset.fid;
-        const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
-        if (fac) {
-          ouvrirPDFComptable(fac, CPT.currentProfil || {});
-          setTimeout(function() { attacherControlsToViewer(facId); }, 300);
-        }
-        return;
-      }
-      const btnVoir = e.target.closest('.btn-voir-facture');
-      if (btnVoir) {
-        const facId = btnVoir.dataset.facid;
         const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
         if (fac) {
           ouvrirPDFComptable(fac, CPT.currentProfil || {});
@@ -1862,6 +1852,20 @@ async function refuserInvitationComptable(invId) {
 // ============================================================
 // PDF FACTURE VUE COMPTABLE
 // ============================================================
+
+// Fonction dédiée, appelée directement en onclick (pas de délégation) —
+// pour écarter tout souci lié à l'écouteur délégué (garde-fou de liaison,
+// ordre des vérifications, etc.) qui a déjà posé des problèmes ailleurs.
+function voirFactureComptable(facId) {
+  const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
+  if (!fac) {
+    console.error('voirFactureComptable: facture introuvable pour id=', facId, '— CPT.currentFactures contient', (CPT.currentFactures||[]).length, 'élément(s)');
+    showToast('❌ Facture introuvable (id: ' + facId + ')', 'error');
+    return;
+  }
+  ouvrirPDFComptable(fac, CPT.currentProfil || {});
+  setTimeout(function() { attacherControlsToViewer(facId); }, 300);
+}
 
 function ouvrirPDFComptable(fac, profil) {
   const lignes = typeof fac.lignes === 'string' ? JSON.parse(fac.lignes || '[]') : (fac.lignes || []);
