@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785091401">
+<link rel="stylesheet" href="css/style.css?v=1785091753">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,24 +124,24 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785091401"></script>
-  <script src="js/utils.js?v=1785091401"></script>
-  <script src="js/auth.js?v=1785091401"></script>
-  <script src="js/nav.js?v=1785091401"></script>
-  <script src="js/factures.js?v=1785091401"></script>
-  <script src="js/devis.js?v=1785091401"></script>
-  <script src="js/clients.js?v=1785091401"></script>
-  <script src="js/produits.js?v=1785091401"></script>
-  <script src="js/pdf.js?v=1785091401"></script>
-  <script src="js/stats.js?v=1785091401"></script>
-  <script src="js/profil.js?v=1785091401"></script>
-  <script src="js/comptable.js?v=1785091401"></script>
-  <script src="js/messages.js?v=1785091401"></script>
-<script src="js/achats.js?v=1785091401"></script>
-<script src="js/stock.js?v=1785091401"></script>
-<script src="js/abonnements.js?v=1785091401"></script>
-<script src="js/signature.js?v=1785091401"></script>
-<script src="js/app.js?v=1785091401"></script>
+<script src="js/config.js?v=1785091753"></script>
+  <script src="js/utils.js?v=1785091753"></script>
+  <script src="js/auth.js?v=1785091753"></script>
+  <script src="js/nav.js?v=1785091753"></script>
+  <script src="js/factures.js?v=1785091753"></script>
+  <script src="js/devis.js?v=1785091753"></script>
+  <script src="js/clients.js?v=1785091753"></script>
+  <script src="js/produits.js?v=1785091753"></script>
+  <script src="js/pdf.js?v=1785091753"></script>
+  <script src="js/stats.js?v=1785091753"></script>
+  <script src="js/profil.js?v=1785091753"></script>
+  <script src="js/comptable.js?v=1785091753"></script>
+  <script src="js/messages.js?v=1785091753"></script>
+<script src="js/achats.js?v=1785091753"></script>
+<script src="js/stock.js?v=1785091753"></script>
+<script src="js/abonnements.js?v=1785091753"></script>
+<script src="js/signature.js?v=1785091753"></script>
+<script src="js/app.js?v=1785091753"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -1548,6 +1548,9 @@
   </div>
   <div class="sec-label">Alertes</div>
   <div style="padding:0 20px" id="notif-list"></div>
+  <div style="padding:12px 20px">
+    <button onclick="typeof genNotifications==='function' && genNotifications().then(function(){afficherDiagnostic('Diagnostic notifications', window._dernierDiagNotifications || ['Aucune donnée — clique une première fois puis reclique.']);})" style="width:100%;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Diagnostic de chargement</button>
+  </div>
   <div class="pb"></div>
 </div>
 
