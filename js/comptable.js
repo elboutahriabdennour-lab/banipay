@@ -1857,14 +1857,28 @@ async function refuserInvitationComptable(invId) {
 // pour écarter tout souci lié à l'écouteur délégué (garde-fou de liaison,
 // ordre des vérifications, etc.) qui a déjà posé des problèmes ailleurs.
 function voirFactureComptable(facId) {
-  const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
-  if (!fac) {
-    console.error('voirFactureComptable: facture introuvable pour id=', facId, '— CPT.currentFactures contient', (CPT.currentFactures||[]).length, 'élément(s)');
-    showToast('❌ Facture introuvable (id: ' + facId + ')', 'error');
-    return;
+  try {
+    const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
+    if (!fac) {
+      afficherDiagnosticComptable([
+        '❌ Facture introuvable',
+        'id demandé : ' + facId,
+        'CPT.currentFactures contient ' + (CPT.currentFactures||[]).length + ' élément(s)',
+        'ids disponibles : ' + (CPT.currentFactures||[]).map(function(f){return f.id;}).join(', ')
+      ]);
+      return;
+    }
+    ouvrirPDFComptable(fac, CPT.currentProfil || {});
+    setTimeout(function() { attacherControlsToViewer(facId); }, 300);
+  } catch(e) {
+    console.error('voirFactureComptable: exception', e);
+    afficherDiagnosticComptable([
+      '❌ Erreur lors de l\'ouverture de la facture',
+      'id : ' + facId,
+      'Message : ' + e.message,
+      e.stack ? e.stack.split('\n').slice(0,4).join('\n') : ''
+    ]);
   }
-  ouvrirPDFComptable(fac, CPT.currentProfil || {});
-  setTimeout(function() { attacherControlsToViewer(facId); }, 300);
 }
 
 function ouvrirPDFComptable(fac, profil) {
