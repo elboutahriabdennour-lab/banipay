@@ -115,13 +115,14 @@ async function renderNotifScreen() {
       const isDoc = n.type === 'facture_recue' || n.type === 'devis_recu';
       let meta = {};
       try { meta = JSON.parse((n.raw && n.raw.meta) || '{}'); } catch(e3) {}
-      return '<div class="notif-item' + (n.lue ? '' : ' notif-unread') + '">' +
+      return '<div class="notif-item' + (n.lue ? '' : ' notif-unread') + (isDoc ? ' notif-doc-view' : '') + '" ' + (isDoc ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="cursor:pointer"' : '') + '>' +
         '<div class="notif-ico">' + (typeIco[n.type] || '🔔') + '</div>' +
         '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
         '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
-        (isDoc ? '<div style="display:flex;gap:6px;margin-top:8px">' +
-          '<button class="btn-doc-accept" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#6E8F4E;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
-          '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
+        (isDoc ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir le document</div><div style="display:flex;gap:6px;margin-top:8px">' +
+          '<button class="btn-doc-accept" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#6E8F4E;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
+          '<button class="btn-doc-attente" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F7EFDC;color:#B8860B;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">⏳ Attente</button>' +
+          '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
         '</div>' : '') +
         '</div></div>';
     }).join('');
@@ -203,19 +204,24 @@ async function renderNotifScreen() {
       return;
     }
 
-    // Nouveau: accepter/refuser une facture/devis reçu via BaniPay directement depuis la notification
+    // Accepter / Mettre en attente / Refuser une facture/devis reçu via
+    // BaniPay directement depuis la notification — vérifié EN PREMIER, car
+    // ces boutons sont imbriqués dans la zone cliquable "voir le document"
+    // (sinon le clic sur un bouton déclencherait aussi l'ouverture du PDF).
     const btnDA = e.target.closest('.btn-doc-accept');
+    const btnDAtt = e.target.closest('.btn-doc-attente');
     const btnDR = e.target.closest('.btn-doc-refuse');
-    if (btnDA || btnDR) {
-      const target = btnDA || btnDR;
+    if (btnDA || btnDAtt || btnDR) {
+      const target = btnDA || btnDAtt || btnDR;
       const t = target.dataset.type;
       const docId = target.dataset.docid;
       const nid = target.dataset.nid;
       if (!t || !docId) return;
       const table = t === 'devis' ? 'devis' : 'factures';
       const champ = t === 'devis' ? 'statut' : 'reponse_client';
-      const valeur = btnDA ? (t === 'devis' ? 'accepte' : 'acceptee') : (t === 'devis' ? 'refuse' : 'refusee');
+      const valeur = btnDA ? (t === 'devis' ? 'accepte' : 'acceptee') : btnDAtt ? 'en_attente' : (t === 'devis' ? 'refuse' : 'refusee');
       const patchBody = {}; patchBody[champ] = valeur;
+      if (btnDA) patchBody.signature_data = 'TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
       try {
         // FIX: cette action modifie un devis/facture qui appartient à une
         // AUTRE entreprise (l'émetteur) — utiliser la session du destinataire
@@ -228,7 +234,9 @@ async function renderNotifScreen() {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(patchBody)
         });
-        if (nid) {
+        if (nid && !btnDAtt) {
+          // On ne marque "lu" qu'en cas de décision définitive — la mise en
+          // attente laisse la notification active pour y revenir facilement.
           await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
             method: 'POST',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
@@ -241,14 +249,103 @@ async function renderNotifScreen() {
         if (btnDA && t === 'facture' && typeof enregistrerAchatDepuisFactureAcceptee === 'function') {
           await enregistrerAchatDepuisFactureAcceptee(docId);
         }
-        showToast(btnDA ? '✅ Accepté' : '❌ Refusé', 'success');
+        showToast(btnDA ? '✅ Accepté' : btnDAtt ? '⏳ Mis en attente' : '❌ Refusé', 'success');
         await genNotifications();
         renderNotifScreen();
       } catch(e4) {
         showToast('Erreur: ' + e4.message, 'error');
       }
+      return;
+    }
+
+    // Toucher la notification elle-même (hors boutons, vérifié après) ouvre le PDF
+    const notifDoc = e.target.closest('.notif-doc-view');
+    if (notifDoc) {
+      const t = notifDoc.dataset.type;
+      const docId = notifDoc.dataset.docid;
+      if (t && docId && typeof voirDocumentDepuisNotification === 'function') {
+        voirDocumentDepuisNotification(t, docId);
+      }
+      return;
     }
   });
+}
+
+// Ouvre le PDF d'un devis/facture reçu directement depuis sa notification,
+// avec les mêmes boutons Accepter/Attente/Refuser que le lien public.
+async function voirDocumentDepuisNotification(type, docId) {
+  if (!type || !docId) return;
+  showToast('⏳ Chargement du document...');
+  try {
+    const table = type === 'devis' ? 'devis' : 'factures';
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    const doc = data && data[0];
+    if (!doc) { showToast('Document introuvable', 'error'); return; }
+
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + doc.user_id + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const profils = await rp.json();
+    const emetteur = (profils && profils[0]) || {};
+    const isDevis = type === 'devis';
+    const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes || '[]') : (doc.lignes || []);
+
+    genDocPDF({
+      type: isDevis ? 'DEVIS' : 'FACTURE',
+      ref: doc.ref,
+      color: isDevis ? '#B8860B' : (emetteur.couleur_accent || '#C9971F'),
+      emetteur: emetteur,
+      destinataire: { nom: doc.client, chantier: doc.chantier },
+      date: doc.date_emission,
+      echeance: doc.echeance,
+      validite: doc.validite,
+      paiement: doc.paiement || '',
+      statut: doc.statut,
+      lignes: lignes,
+      note: doc.note || '',
+      ht: doc.ht, tva: doc.tva, ttc: doc.ttc,
+      devise: doc.devise || 'MAD',
+      montant_recu: doc.montant_recu || 0,
+      signatureClient: doc.signature_data || null,
+      doc_id: docId,
+    });
+
+    const champ = isDevis ? 'statut' : 'reponse_client';
+    const valeurActuelle = doc[champ];
+    const valAcceptee = isDevis ? 'accepte' : 'acceptee';
+    const valRefusee = isDevis ? 'refuse' : 'refusee';
+    const dejaTraite = valeurActuelle === valAcceptee || valeurActuelle === valRefusee;
+
+    if (!dejaTraite) {
+      setTimeout(function() {
+        const screen = document.getElementById('pdf-fullscreen');
+        if (!screen) return;
+        const btnBar = document.createElement('div');
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:6px;border-top:2px solid #E3DCCF;flex-shrink:0';
+        const bAcc = document.createElement('button');
+        bAcc.textContent = '✅ Accepter';
+        bAcc.style.cssText = 'flex:1;padding:12px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+        bAcc.onclick = function() { traiterActionDocument(docId, type, 'accepter'); };
+        const bAtt = document.createElement('button');
+        bAtt.textContent = '⏳ Attente';
+        bAtt.style.cssText = 'flex:1;padding:12px 4px;background:#B8860B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+        bAtt.onclick = function() { traiterActionDocument(docId, type, 'attente'); };
+        const bRef = document.createElement('button');
+        bRef.textContent = '❌ Refuser';
+        bRef.style.cssText = 'flex:1;padding:12px 4px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+        bRef.onclick = function() { traiterActionDocument(docId, type, 'refuser'); };
+        btnBar.appendChild(bAcc);
+        btnBar.appendChild(bAtt);
+        btnBar.appendChild(bRef);
+        screen.appendChild(btnBar);
+      }, 400);
+    }
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
 }
 
 
