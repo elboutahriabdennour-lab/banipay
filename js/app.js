@@ -540,25 +540,21 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
           body: JSON.stringify({ statut: 'acceptee', entreprise_id: entrepriseId })
         });
 
-        // Notifier le comptable — clé anonyme (notification cross-compte,
-        // même correctif que produits.js/envoyerVersCompteBaniPay)
-        await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+        // Notifier le comptable via la fonction RPC SECURITY DEFINER —
+        // élimine toute dépendance à une policy RLS sur cette table.
+        await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
           method: 'POST',
           headers: {
             'apikey': SUPABASE_KEY,
             'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            user_id: entrepriseId, // on stocke pour retrouver le comptable via email
-            // FIX: destinataire_email manquant — le comptable ne voyait jamais
-            // cette notification, chargerNotificationsComptable() filtrant dessus.
-            destinataire_email: emailCpt ? emailCpt.toLowerCase() : null,
-            type: 'invitation_acceptee',
-            titre: 'Invitation acceptée',
-            corps: (sb.user.user_metadata?.nom || sb.user.email) + ' a accepté votre invitation comptable.',
-            lue: false
+            p_user_id: entrepriseId, // on stocke pour retrouver le comptable via email
+            p_destinataire_email: emailCpt || '',
+            p_type: 'invitation_acceptee',
+            p_titre: 'Invitation acceptée',
+            p_corps: (sb.user.user_metadata?.nom || sb.user.email) + ' a accepté votre invitation comptable.'
           })
         });
 
