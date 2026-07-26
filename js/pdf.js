@@ -1,337 +1,662 @@
-// BANIPAY — pdf.js
+// BANIPAY — devis.js
 
-
-function exportPDF(id) {
-  const f = STATE.factures.find(x=>x.id===id); if(!f) return;
-  const profil = STATE.profil || {};
-  const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : (f.lignes||[]);
-  // Lien public de la facture
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
-  genDocPDF({
-    type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#C9971F',
-    emetteur: profil,
-    destinataire:{nom:f.client,chantier:f.chantier,ice:f.client_ice,tel:f.client_tel,adresse:f.client_adresse},
-    date:f.date_emission, echeance:f.echeance,
-    paiement:f.paiement, statut:f.statut,
-    lignes: lignes, note:f.note,
-    ht:f.ht, tva:f.tva, ttc:f.ttc,
-    devise:f.devise||'MAD',
-    montant_recu:f.montant_recu,
-    showStamp: f.statut==='payee',
-    devis_ref: f.devis_ref||'',
-    bl_ref: f.bl_ref||'',
-    doc_id: id,
-    doc_url: docUrl,
-    signatureClient: f.signature_data || null,
-  });
-}
-
-function previewPDF() {
-  const client = el('f-client')?.value.trim();
-  if(!client){showToast('Remplissez le formulaire','error');return;}
-  const ht=STATE.lignesF.reduce((s,l)=>s+l.qte*l.pu,0);
-  genDocPDF({
-    type:'FACTURE', ref:el('f-ref')?.value, color: (STATE.profil||{}).couleur_accent || '#C9971F',
-    emetteur: STATE.profil||{},
-    destinataire:{nom:client,chantier:el('f-chantier')?.value},
-    date:el('f-date')?.value,
-    echeance:el('f-echeance')?.value,
-    paiement:el('f-paiement')?.value,
-    lignes:STATE.lignesF,
-    ht, tva:ht*0.2, ttc:ht*1.2,
-    devise:STATE.deviseF||'MAD',
-    note:el('f-note')?.value||'',
-    devis_ref: STATE.currentFacture?.devis_ref||'',
-    bl_ref: STATE.currentFacture?.bl_ref||'',
-    doc_id: STATE.currentFacture?.id||'',
-  });
-}
-
-
-
-function genDocPDF(opts) {
-  const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false} = opts;
-  // La signature de l'entreprise est automatiquement reprise depuis son profil
-  // (paramètres > Ma signature/cachet) — inutile de la repasser à chaque appel.
-  const signatureEmetteur = opts.signatureEmetteur || (p && p.signature_entreprise) || null;
-  const signatureClient = opts.signatureClient || null;
-  const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
-  const colorHeader = isAvoir?'#8E2E24':isDevis?'#B8860B':isBC?'#7C5CA6':isBL?'#6E8F4E':(color||'#C9971F');
-  const paye = Number(montant_recu)||0;
-  const restant = Math.max(0, ttc - paye);
-
-  // Lien public de la facture
-  const docUrl = opts.doc_url || (doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '');
-
-  // QR Code (encodé en SVG via une API simple)
-  const qrUrl = docUrl ? 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&color=1E3A8A&bgcolor=ffffff&data=' + encodeURIComponent(docUrl) : '';
-
-  const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
-    const total = (Number(l.qte)||0) * (Number(l.pu)||0);
-    return `<tr style="background:${i%2===0?'#F1EEE8':'#fff'}">
-      <td style="padding:7px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
-      <td style="padding:5px 8px;text-align:center;font-size:10px">${l.qte||1} ${l.unite||''}</td>
-      ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
-    </tr>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-<title>${type} ${ref}<\/title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Karla',Arial,sans-serif;color:#2A2420;font-size:11px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm;display:flex;flex-direction:column}
-@media print{
-  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;width:210mm;margin:0}
-  .no-print{display:none}
-  @page{margin:0;size:A4 portrait}
-}
-@media screen{body{box-shadow:0 0 20px rgba(0,0,0,0.1);margin:20px auto}}
-.header{background:#2A2420;padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start}
-.h-logo{max-width:80px;max-height:40px;object-fit:contain;margin-bottom:5px;display:block}
-.h-company{font-family:'Baloo 2',Arial,sans-serif;font-size:15px;font-weight:700;color:#fff}
-.h-right{text-align:right}
-.h-doc-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;background:${colorHeader};padding:3px 10px;border-radius:4px;display:inline-block;margin-bottom:6px}
-.h-ref{font-size:11px;font-weight:700;color:#fff}
-.h-meta{font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;line-height:1.7}
-.stripe{background:${colorHeader};height:3px}
-.blocs{display:flex;gap:8px;padding:8px 24px}
-.bloc{flex:1;border-radius:6px;overflow:hidden;border:1px solid #E3DCCF}
-.bloc-hd{padding:5px 8px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:${colorHeader};color:#fff}
-.bloc-bd{padding:7px 8px;background:#fff}
-.bloc-bd .main{font-size:11px;font-weight:700;margin-bottom:1px}
-.bloc-bd .line{font-size:9px;color:#6B5F54;margin-top:1px}
-.table-section{padding:0 24px}
-table{width:100%;border-collapse:collapse}
-thead tr{background:#2A2420}
-thead th{padding:5px 8px;font-size:9px;font-weight:700;color:#fff;text-align:left}
-thead th:nth-child(2){text-align:center}
-thead th:nth-child(3),thead th:nth-child(4){text-align:right}
-tbody td{border-bottom:1px solid #EAE4DA}
-.totaux{padding:6px 24px;display:flex;justify-content:flex-end}
-.totaux-box{width:250px;border:1px solid #E3DCCF;border-radius:6px;overflow:hidden}
-.tot-row{display:flex;justify-content:space-between;padding:6px 8px;font-size:10px;border-bottom:1px solid #EAE4DA;color:#6B5F54}
-.tot-main{display:flex;justify-content:space-between;padding:7px 8px;background:#2A2420}
-.tot-main-lbl{font-size:11px;font-weight:700;color:#fff}
-.tot-main-val{font-size:12px;font-weight:700;color:${colorHeader}}
-.arrete{padding:2px 24px 6px;font-size:10px;color:#6B5F54;font-style:italic}
-.bank-box{margin:5px 24px;background:#EEF3E4;border-radius:6px;padding:7px 10px;font-size:9px;color:#6E8F4E;border:1px solid #C9D9AE}
-.refs-box{margin:4px 24px;background:#E9F4F3;border-radius:6px;padding:5px 10px;font-size:9px;color:#A67A16;display:flex;gap:16px}
-.sig-zone{display:flex;gap:8px;padding:5px 24px;margin-bottom:5px}
-.sig-item{flex:1;border:1px dashed #CDBEA0;border-radius:6px;padding:10px;min-height:60px}
-.sig-lbl{font-size:8px;font-weight:600;color:#9C9186;text-transform:uppercase;margin-bottom:2px}
-.footer{display:flex;justify-content:space-between;align-items:center;padding:6px 24px;margin-top:auto;border-top:1px solid #E3DCCF}
-.footer-brand{font-family:'Baloo 2',Arial,sans-serif;font-size:9px;font-weight:700;color:#1F6F72}
-.footer-brand span{color:#C9971F}
-.footer-center{font-size:7px;color:#9C9186;text-align:center;flex:1;padding:0 8px;line-height:1.5}
-.footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.footer-page{font-size:8px;color:#9C9186}
-<\/style><\/head><body>
-<div style="display:flex;flex-direction:column;flex:1">
-
-<div class="header">
-  <div>
-    ${p.logo?`<img src="${p.logo}" class="h-logo" alt="logo">`:''}
-    <div class="h-company">${escapeHTML(p.raison||'Mon Entreprise')}</div>
-  </div>
-  <div class="h-right">
-    <div class="h-doc-label">${type}</div>
-    <div class="h-ref">${ref}</div>
-    <div class="h-meta">
-      Date : ${date||'—'}<br>
-      ${echeance?'Échéance : '+echeance+'<br>':''}
-      ${validite?'Validité : '+validite+' jours<br>':''}
-      Paiement : ${paiement||'—'}
-    </div>
-  </div>
-</div>
-<div class="stripe"></div>
-<div style="height:12px"></div>
-
-${(devis_ref||bl_ref)?`<div class="refs-box">
-  ${devis_ref?`<span>📝 Devis réf. : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
-  ${bl_ref?`<span>📦 BL réf. : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
-</div>`:''}
-
-<div class="blocs">
-  <div class="bloc">
-    <div class="bloc-hd">${isAvoir?'Avoir pour':isDevis?'Destinataire':'Facturé à'}</div>
-    <div class="bloc-bd">
-      <div class="main">${escapeHTML(destinataire.nom||'—')}</div>
-      ${destinataire.chantier?`<div class="line">📋 Projet : ${escapeHTML(destinataire.chantier)}</div>`:''}
-      ${destinataire.adresse?`<div class="line">📍 ${escapeHTML(destinataire.adresse||'')}</div>`:''}
-      ${destinataire.ice?`<div class="line">ICE : ${destinataire.ice}</div>`:''}
-      ${destinataire.tel?`<div class="line">📞 ${destinataire.tel}</div>`:''}
-    </div>
-  </div>
-  <div class="bloc">
-    <div class="bloc-hd">Émetteur</div>
-    <div class="bloc-bd">
-      <div class="main">${escapeHTML(p.raison||'—')}</div>
-      ${p.adresse?`<div class="line">📍 ${escapeHTML(p.adresse||'')}${p.ville?', '+p.ville:''}</div>`:''}
-      ${p.email?`<div class="line">✉️ ${p.email}</div>`:''}
-      ${p.tel?`<div class="line">📞 ${p.tel}</div>`:''}
-    </div>
-  </div>
-</div>
-<div style="height:12px"></div>
-<div class="table-section">
-<table>
-<thead><tr>
-  <th style="width:44%">Désignation</th>
-  <th style="width:10%;text-align:center">Qté</th>
-  ${showPrices?`<th style="width:22%;text-align:right">P.U. HT (${devise})</th><th style="width:24%;text-align:right">Total HT (${devise})</th>`:''}
-</tr></thead>
-<tbody>${lignesHtml}</tbody>
-</table>
-</div>
-
-${showPrices?`
-<div class="totaux"><div class="totaux-box">
-  <div class="tot-row"><span>Sous-total HT</span><span style="font-weight:600;color:#2A2420">${fmt(ht)} ${devise}</span></div>
-  <div class="tot-row" style="background:#F7EFDC"><span>TVA (20%)</span><span style="font-weight:600;color:#2A2420">${fmt(tva)} ${devise}</span></div>
-  ${paye>0?`<div class="tot-row" style="background:#EEF3E4"><span>Déjà reçu</span><span style="font-weight:600;color:#6E8F4E">- ${fmt(paye)} ${devise}</span></div>`:''}
-  <div class="tot-main"><span class="tot-main-lbl">TOTAL TTC</span><span class="tot-main-val">${fmt(ttc)} ${devise}</span></div>
-  ${paye>0&&restant>0?`<div class="tot-row" style="background:#F5E4E1"><span style="font-weight:700;color:#B23A2E">Reste à payer</span><span style="font-weight:700;color:#B23A2E">${fmt(restant)} ${devise}</span></div>`:''}
-</div></div>
-<div style="height:6px"></div>
-<div class="arrete">Arrêté à la somme de <strong>${ttcEnLettres(ttc)}</strong>. Juridiction : Maroc.</div>
-`:''}
-
-${note?`<div style="margin:4px 24px;background:#F7EFDC;border-left:3px solid #B8860B;border-radius:0 6px 6px 0;padding:5px 8px;font-size:9px;color:#7A5A0E"><strong>Note :</strong> ${escapeHTML(note)}</div>`:''}
-${motif?`<div style="margin:6px 28px;background:#F5E4E1;border-left:3px solid #B23A2E;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#7A2E24"><strong>Motif :</strong> ${escapeHTML(motif)}</div>`:''}
-
-${(p.banque||p.rib)?`<div class="bank-box">
-  🏦 Coordonnées bancaires — ${p.banque||''}${p.rib?' · RIB/IBAN : <strong>'+p.rib+'</strong>':''}
-  ${p.conditions?'<br>⏱️ Conditions : '+p.conditions:''}
-</div>`:`${p.conditions?`<div class="bank-box" style="background:#E9F4F3;border-color:#CFE3E2;color:#A67A16">⏱️ Conditions de paiement : ${p.conditions}</div>`:''}`}
-
-<div style="flex:1;min-height:20px"></div>
-<div class="sig-zone">
-  <div class="sig-item"><div class="sig-lbl">Cachet & Signature émetteur</div>${signatureEmetteur?`<img src="${signatureEmetteur}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
-  <div class="sig-item"><div class="sig-lbl">Bon pour accord — Client</div>${signatureClient?`<img src="${signatureClient}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
-</div>
-
-<div style="flex:1"></div>
-
-<div class="footer">
-  <div class="footer-brand">Bani<span>Pay</span></div>
-  <div class="footer-center">
-    ${[p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Pat: '+p.patente:'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}
-    ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+p.ville:''):''}
-  </div>
-  <div class="footer-right" style="text-align:right">
-    ${(badge_lettre||badge_tva)?`<div style="display:flex;gap:4px;justify-content:flex-end;margin-bottom:4px">
-      ${badge_lettre?'<span style="background:#6E8F4E;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px">L</span>':''}
-      ${badge_tva?'<span style="background:#7C5CA6;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px">T</span>':''}
-    </div>`:''}
-    ${qrUrl?`<img src="${qrUrl}" style="width:40px;height:40px;display:block;margin-bottom:2px">`:''}
-    ${docUrl?`<div style="font-size:7px;color:#9C9186;max-width:80px;word-break:break-all">${docUrl.replace('https://','')}</div>`:''}
-    <div class="footer-page">Page 1/1</div>
-  </div>
-</div>
-
-</div>
-<\/body><\/html>`;
-
-  ouvrirPDFViewer(html, ref);
-}
-
-
-function ouvrirPDFViewer(htmlContent, ref) {
-  const ancien = document.getElementById('pdf-fullscreen');
-  if (ancien) ancien.remove();
-
-  const screen = document.createElement('div');
-  screen.id = 'pdf-fullscreen';
-  screen.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column';
-
-  const bar = document.createElement('div');
-  bar.style.cssText = 'background:#1F6F72;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0';
-
-  const btnBack = document.createElement('button');
-  btnBack.textContent = '← Retour';
-  btnBack.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  btnBack.onclick = function() {
-    const f = document.getElementById('pdf-frame');
-    if (f && f.src && f.src.startsWith('blob:')) URL.revokeObjectURL(f.src);
-    screen.remove();
-  };
-
-  const title = document.createElement('span');
-  title.textContent = ref;
-  title.style.cssText = 'color:#fff;font-size:13px;font-weight:600;flex:1;text-align:center';
-
-  const btnDl = document.createElement('button');
-  btnDl.textContent = '💾 Télécharger';
-  btnDl.style.cssText = 'background:#6E8F4E;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
-  btnDl.onclick = function() {
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = ref + '.html';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
-  };
-
-  const btnShare = document.createElement('button');
-  btnShare.textContent = '📤';
-  btnShare.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer';
-  btnShare.onclick = async function() {
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    const file = new File([blob], ref + '.html', { type: 'text/html' });
-    if (navigator.share) {
-      try {
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: ref, files: [file] }); return;
-        }
-        await navigator.share({ title: ref, text: 'Facture ' + ref }); return;
-      } catch(e) { if (e.name === 'AbortError') return; }
-    }
-    btnDl.click();
-  };
-
-  bar.appendChild(btnBack);
-  bar.appendChild(title);
-  bar.appendChild(btnShare);
-  bar.appendChild(btnDl);
-
-  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-  const blobUrl = URL.createObjectURL(blob);
-
-  const frame = document.createElement('iframe');
-  frame.id = 'pdf-frame';
-  frame.src = blobUrl;
-  frame.style.cssText = 'flex:1;width:100%;border:none;background:#fff';
-
-  screen.appendChild(bar);
-  screen.appendChild(frame);
-  document.body.appendChild(screen);
-}
-
-function ttcEnLettres(montant) {
-  if (!montant || isNaN(montant)) return 'zéro dirham';
-  const n = Math.round(Number(montant) * 100);
-  const dirhams = Math.floor(n / 100);
-  const centimes = n % 100;
-  const units = ['','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'];
-  const tens = ['','','vingt','trente','quarante','cinquante','soixante','soixante','quatre-vingt','quatre-vingt'];
-  function conv(n) {
-    if (n === 0) return '';
-    if (n < 20) return units[n];
-    if (n < 100) {
-      const t = Math.floor(n/10), u = n%10;
-      if (t === 7 || t === 9) return tens[t] + (u===1&&t===7?'-et-':'-') + units[10+u];
-      return tens[t] + (u===1&&t!==8?'-et-':u?'-':'') + (u?units[u]:'');
-    }
-    if (n < 1000) {
-      const c = Math.floor(n/100), r = n%100;
-      return (c===1?'cent':units[c]+'-cent') + (r?(c===1?'-':'')+conv(r):'');
-    }
-    const m = Math.floor(n/1000), r = n%1000;
-    return (m===1?'mille':conv(m)+'-mille') + (r?'-'+conv(r):'');
+function renderDevisList() {
+  const list = el('devis-list');
+  if (!list) return;
+  let data = STATE.filterD === 'tous' ? STATE.devis : STATE.devis.filter(d => d.statut === STATE.filterD);
+  if (!data.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">Aucun devis</div></div>`;
+    return;
   }
-  const d = conv(dirhams) || 'zéro';
-  return d + ' dirham' + (dirhams>1?'s':'') + (centimes?' et '+conv(centimes)+' centime'+(centimes>1?'s':''):'');
+  const icons = { envoye:'📤', accepte:'✅', refuse:'❌', converti:'🧾', expire:'⏰' };
+  const bgs   = { envoye:'#F7EFDC', accepte:'#EEF3E4', refuse:'#F5E4E1', converti:'#E9F4F3', expire:'#EAE4DA' };
+  list.innerHTML = data.map(d => `
+    <div class="card" onclick="openDetailDevis(${d.id})">
+      <div class="card-ico" style="background:${bgs[d.statut]||'#EAE4DA'}">${icons[d.statut]||'📝'}</div>
+      <div class="card-body">
+        <div class="card-name">${escapeHTML(d.client)}</div>
+        <div class="card-ref">${d.ref} · ${d.date_emission||''} · ${d.validite||30}j</div>
+        ${d.statut==='accepte'?'<div style="display:inline-block;background:#EEF3E4;color:#6E8F4E;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">✅ Accepté</div>':d.statut==='refuse'?'<div style="display:inline-block;background:#F5E4E1;color:#8E2E24;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">❌ Refusé</div>':''}
+      </div>
+      <div class="card-end">
+        <div class="card-amt">${fmt(d.ttc)} ${d.devise||'MAD'}</div>
+        <div class="badge b-${d.statut}">${badgeDV(d.statut)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterDevis(f, btn) {
+  STATE.filterD = f;
+  document.querySelectorAll('#screen-devis-list .ftab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderDevisList();
+}
+
+function initNouveauDevis(prefill) {
+  // Populate client suggestions
+  const _dl2 = document.getElementById('client-datalist-devis');
+  if (_dl2 && STATE.clients) {
+    _dl2.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
+  }
+  STATE.lignesD = prefill?.lignes ? [...prefill.lignes] : [];
+  STATE.deviseD = prefill?.devise || 'MAD';
+  el('d-client') && (el('d-client').value = prefill?.client || '');
+  el('d-chantier') && (el('d-chantier').value = prefill?.chantier || '');
+  el('d-date') && (el('d-date').value = prefill?.date_emission || today());
+  el('d-ref') && (el('d-ref').value = prefill?.ref || getRef('DEV', STATE.devis));
+  el('d-validite') && (el('d-validite').value = prefill?.validite || '30');
+  el('d-note') && (el('d-note').value = prefill?.note || '');
+  updateClientDatalist();
+  renderLignesD();
+}
+
+function renderLignesD() {
+  const c = el('d-lignes-container');
+  if (!c) return;
+  c.innerHTML = STATE.lignesD.map((l,i) => `
+    <div class="ligne-item">
+      <div class="ligne-body">
+        <div class="ligne-desc">${l.desc}</div>
+        <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseD}</div>
+      </div>
+      <div class="ligne-amt">${fmt(l.qte*l.pu)} ${STATE.deviseD}</div>
+      <button class="ligne-del" onclick="supprimerLigneD(${i})">×</button>
+    </div>`).join('');
+  updateTotauxD();
+}
+
+function supprimerLigneD(i) { STATE.lignesD.splice(i,1); renderLignesD(); }
+
+function updateTotauxD() {
+  const ht = STATE.lignesD.reduce((s,l) => s+l.qte*l.pu, 0);
+  setEl('d-total-ht', fmt(ht)+' '+STATE.deviseD);
+  setEl('d-total-tva', fmt(ht*0.2)+' '+STATE.deviseD);
+  setEl('d-total-ttc', fmt(ht*1.2)+' '+STATE.deviseD);
+}
+
+function openAddLigneDevis() {
+  el('mld-desc') && (el('mld-desc').value = '');
+  el('mld-qte') && (el('mld-qte').value = '1');
+  el('mld-pu') && (el('mld-pu').value = '');
+  el('mld-unite') && (el('mld-unite').value = 'u');
+  el('modal-ligne-d')?.classList.add('active');
+  setTimeout(() => el('mld-desc')?.focus(), 100);
+}
+
+function confirmerLigneDevis() {
+  const desc = el('mld-desc')?.value.trim();
+  const qte = parseFloat(el('mld-qte')?.value.replace(',','.'))||1;
+  const pu = parseFloat(el('mld-pu')?.value.replace(',','.'))||0;
+  const unite = el('mld-unite')?.value||'u';
+  if (!desc) { showToast('Entrez une description', 'error'); return; }
+  if (pu <= 0) { showToast('Entrez un prix unitaire', 'error'); return; }
+  STATE.lignesD.push({desc,qte,pu,unite});
+  closeAllModals();
+  renderLignesD();
+}
+
+async function sauvegarderDevis() {
+  const client = el('d-client')?.value.trim();
+  if (!client) { showToast('Entrez le nom du client', 'error'); return; }
+  if (!STATE.lignesD.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
+  const ht = STATE.lignesD.reduce((s,l)=>s+l.qte*l.pu,0);
+  showToast('⏳ Sauvegarde...');
+  try {
+    const r = await sb.post('devis', {
+      user_id: sb.user.id,
+      ref: el('d-ref')?.value,
+      client, chantier: el('d-chantier')?.value.trim(),
+      date_emission: el('d-date')?.value,
+      validite: parseInt(el('d-validite')?.value)||30,
+      note: el('d-note')?.value.trim(),
+      statut: 'envoye', ht, tva:ht*0.2, ttc:ht*1.2,
+      lignes: STATE.lignesD, devise: STATE.deviseD,
+    });
+    if (r && r.length > 0) { STATE.devis.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
+    autoAddClient(client);
+    showToast('✅ Devis enregistré !', 'success');
+    logAudit('devis', r[0].id, 'creation', (r[0].ref || '') + ' — ' + client + ' — ' + fmt(r[0].ttc) + ' MAD');
+    setTimeout(()=>goScreen('devis-list'), 800);
+  } catch(e) { showToast('❌ '+e.message, 'error'); }
+}
+
+function openDetailDevis(id) {
+  STATE.currentDevis = STATE.devis.find(d => d.id === id);
+  if (!STATE.currentDevis) return;
+  renderDetailDevis();
+  goScreen('detail-devis');
+}
+
+function renderDetailDevis() {
+  const d = STATE.currentDevis;
+  if (!d) return;
+  const dv = d.devise||'MAD';
+  setEl('dv-client', d.client);
+  setEl('dv-amount', fmt(d.ttc)+' '+dv+' TTC');
+  setEl('dv-ref', `${d.ref} · ${d.date_emission||''} · Validité: ${d.validite||30}j`);
+  const lignesEl = el('dv-lignes');
+  if (lignesEl) lignesEl.innerHTML = (d.lignes||[]).map(l=>`
+    <div class="d-ligne">
+      <div><div style="font-size:13px;font-weight:500">${l.desc}</div><div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div></div>
+      <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
+    </div>`).join('');
+  const totEl = el('dv-totals');
+  if (totEl) totEl.innerHTML = `
+    <div class="d-tot-row"><span>HT</span><span>${fmt(d.ht)} ${dv}</span></div>
+    <div class="d-tot-row"><span>TVA 20%</span><span>${fmt(d.tva)} ${dv}</span></div>
+    <div class="d-tot-row main"><span>Total TTC</span><span>${fmt(d.ttc)} ${dv}</span></div>`;
+  const actEl = el('dv-actions');
+  if (!actEl) return;
+  const actions = [];
+
+  // Badge statut
+  const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#9C9186' };
+  const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré' };
+  actions.push(`<div style="background:${statutColors[d.statut]||'#6B5F54'}20;border-left:3px solid ${statutColors[d.statut]||'#6B5F54'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#6B5F54'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
+
+  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
+  actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
+
+  // Actions selon statut
+  if (d.statut === 'envoye') {
+    actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>`);
+    actions.push(`<button class="action-item danger" onclick="changerStatutDevis(${d.id},'refuse')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusé</button>`);
+  }
+  if (d.statut === 'accepte') {
+    actions.push(`<button class="action-item" style="color:#C9971F;border-left-color:#C9971F" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#E9F4F3">🧾</div>Convertir en facture</button>`);
+  }
+
+  // Partage
+  // FIX: boutons "Partager WhatsApp" / "Partager / Copier lien" retirés —
+  // redondants avec le bouton "Envoyer" unifié (WhatsApp/Email/Lien/BaniPay)
+  // déjà en premier dans cette liste d'actions.
+  actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#F7EFDC">📄</div>Voir PDF</button>`);
+  actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
+  actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
+  actEl.innerHTML = actions.join('');
+}
+
+async function changerStatutDevis(id, statut) {
+  await sb.patch('devis', `id=eq.${id}&user_id=eq.${sb.user.id}`, {statut});
+  const d = STATE.devis.find(x=>x.id===id); if(d) d.statut=statut;
+  STATE.currentDevis = d; renderDetailDevis();
+  showToast('Statut mis à jour');
+}
+
+async function convertirEnFacture(id) {
+  const d = STATE.devis.find(x=>x.id===id); if(!d) return;
+  showToast('⏳ Conversion...');
+  try {
+    const ht = d.ht; const ref = getRef('FAC', STATE.factures);
+    const r = await sb.post('factures', {
+      user_id: sb.user.id, ref, client: d.client, chantier: d.chantier,
+      date_emission: today(), paiement: 'virement', statut: 'envoyee',
+      lignes: d.lignes, ht, tva: ht*0.2, ttc: ht*1.2, devis_ref: d.ref,
+      devise: d.devise||'MAD', montant_recu: 0
+    });
+    if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
+    await sb.patch('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`,{statut:'converti',facture_ref:ref});
+    d.statut='converti'; d.facture_ref=ref;
+    showToast('🎉 Facture '+ref+' créée !','success');
+    setTimeout(()=>goScreen('dashboard'),1200);
+  } catch(e){showToast('❌ '+e.message,'error');}
+}
+
+async function supprimerDevis(id) {
+  if (!confirm('Supprimer ce devis ?')) return;
+  const d = STATE.devis.find(x=>x.id===id);
+  await sb.del('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`);
+  STATE.devis = STATE.devis.filter(x=>x.id!==id);
+  showToast('Supprimé'); goScreen('devis-list');
+  logAudit('devis', id, 'suppression', d?.ref || '');
+}
+
+function dupliquerDevis(id) {
+  const d = STATE.devis.find(x=>x.id===id); if(!d) return;
+  initNouveauDevis({...d, ref:getRef('DEV',STATE.devis), statut:'envoye', date_emission:today()});
+  goScreen('nouveau-devis');
+  showToast('📋 Devis dupliqué');
+}
+
+// ============================================================
+// AVOIR
+// ============================================================
+
+function initAvoir() {
+  el('av-client') && (el('av-client').value = '');
+  el('av-montant') && (el('av-montant').value = '');
+  el('av-date') && (el('av-date').value = today());
+  el('av-ref') && (el('av-ref').value = getRef('AV', STATE.avoirs));
+  const sel = el('av-facture-origine');
+  if (sel) {
+    sel.innerHTML = '<option value="">Sélectionner...</option>' +
+      STATE.factures.map(f=>`<option value="${f.id}">${f.ref} — ${f.client} — ${fmt(f.ttc)} MAD</option>`).join('');
+    sel.onchange = function() {
+      const f = STATE.factures.find(x=>String(x.id)===this.value);
+      if(f){el('av-client').value=f.client;el('av-montant').value=Number(f.ht).toFixed(2);updateAvoirTotal();}
+    };
+  }
+  updateAvoirTotal();
+}
+
+function updateAvoirTotal() {
+  const ht = parseFloat(el('av-montant')?.value)||0;
+  setEl('av-total-ht',fmt(ht)+' MAD');
+  setEl('av-total-tva',fmt(ht*0.2)+' MAD');
+  setEl('av-total-ttc',fmt(ht*1.2)+' MAD');
+}
+
+async function sauvegarderAvoir() {
+  const client = el('av-client')?.value.trim();
+  const ht = parseFloat(el('av-montant')?.value)||0;
+  if(!client||ht<=0){showToast('Remplissez tous les champs','error');return;}
+  showToast('⏳ Émission...');
+  try {
+    const r = await sb.post('avoirs',{
+      user_id:sb.user.id, ref:el('av-ref')?.value,
+      client, ht, tva:ht*0.2, ttc:ht*1.2,
+      date_emission:el('av-date')?.value,
+      motif:el('av-motif')?.value,
+      facture_origine_ref:STATE.factures.find(f=>String(f.id)===el('av-facture-origine')?.value)?.ref||''
+    });
+    STATE.avoirs.unshift(r[0]);
+    // L'avoir est un document distinct - ne pas modifier la facture d'origine
+    // Lier l'avoir à la facture d'origine pour référence uniquement
+    const factureId = el('av-facture-origine')?.value;
+    if (factureId) {
+      const f = STATE.factures.find(x => String(x.id) === factureId);
+      if (f && el('av-motif')?.value === 'annulation') {
+        // Annulation totale : marquer la facture comme annulée (pas payée)
+        await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + sb.user.id, { statut: 'annulee' });
+        f.statut = 'annulee';
+      }
+    }
+    showToast('✅ Avoir émis !', 'success');
+    // Aller vers la liste des avoirs
+    setTimeout(() => goScreen('avoir-list'), 800);
+  } catch(e){showToast('❌ '+e.message,'error');}
+}
+
+// ============================================================
+// BON DE COMMANDE
+// ============================================================
+
+function initBonCommande(prefill) {
+  STATE.lignesBC = prefill?.lignes||[];
+  el('bc-fournisseur')&&(el('bc-fournisseur').value=prefill?.fournisseur||'');
+  el('bc-ref')&&(el('bc-ref').value=getRef('BC',[]));
+  el('bc-date')&&(el('bc-date').value=today());
+  el('bc-livraison')&&(el('bc-livraison').value='');
+  el('bc-note')&&(el('bc-note').value='');
+  renderLignesBC();
+}
+
+function renderLignesBC() {
+  const c=el('bc-lignes'); if(!c) return;
+  c.innerHTML=STATE.lignesBC.map((l,i)=>`
+    <div class="ligne-item">
+      <div class="ligne-body"><div class="ligne-desc">${l.desc}</div><div class="ligne-meta">${l.qte} × ${fmt(l.pu)} MAD</div></div>
+      <div class="ligne-amt">${fmt(l.qte*l.pu)} MAD</div>
+      <button class="ligne-del" onclick="STATE.lignesBC.splice(${i},1);renderLignesBC()">×</button>
+    </div>`).join('');
+  const ht=STATE.lignesBC.reduce((s,l)=>s+l.qte*l.pu,0);
+  setEl('bc-ht',fmt(ht)+' MAD'); setEl('bc-tva',fmt(ht*0.2)+' MAD'); setEl('bc-ttc',fmt(ht*1.2)+' MAD');
+}
+
+function openAddLigneBC() {
+  el('ml-desc')&&(el('ml-desc').value='');
+  el('ml-qte')&&(el('ml-qte').value='1');
+  el('ml-pu')&&(el('ml-pu').value='');
+  el('modal-ligne-bc')?.classList.add('active');
+  setTimeout(()=>el('ml-desc')?.focus(),100);
+}
+
+function confirmerLigneBC() {
+  const desc=el('mlbc-desc')?.value.trim(), qte=parseFloat(el('mlbc-qte')?.value.replace(',','.'))||1, pu=parseFloat(el('mlbc-pu')?.value.replace(',','.'))||0;
+  if(!desc||pu<=0){showToast('Remplissez tous les champs','error');return;}
+  STATE.lignesBC.push({desc,qte,pu});
+  closeAllModals(); renderLignesBC();
+}
+
+function genBonCommandePDF() {
+  const fournisseur = el('bc-fournisseur')?.value.trim();
+  if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
+  const ht = STATE.lignesBC.reduce((s,l) => s + (l.qte||1)*(l.pu||0), 0);
+  genDocPDF({
+    type: 'BON DE COMMANDE', ref: el('bc-ref')?.value, color: '#7C5CA6',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: fournisseur },
+    date: el('bc-date')?.value,
+    paiement: '',
+    lignes: STATE.lignesBC,
+    note: el('bc-note')?.value || '',
+    ht, tva: ht*0.2, ttc: ht*1.2,
+    devise: 'MAD',
+    bl_ref: el('bc-livraison')?.value ? 'Livraison prévue: ' + el('bc-livraison').value : '',
+    showPrices: true,
+  });
+}
+function initBonLivraison() {
+  STATE.lignesBL=[];
+  el('bl-client')&&(el('bl-client').value='');
+  el('bl-ref')&&(el('bl-ref').value=getRef('BL',[]));
+  el('bl-date')&&(el('bl-date').value=today());
+  el('bl-facture-ref')&&(el('bl-facture-ref').value='');
+  renderLignesBL();
+}
+
+function renderLignesBL() {
+  const c=el('bl-lignes'); if(!c) return;
+  c.innerHTML=STATE.lignesBL.map((l,i)=>`
+    <div class="ligne-item">
+      <div class="ligne-body"><div class="ligne-desc">${l.desc}</div><div class="ligne-meta">Qté: ${l.qte} ${l.unite||'u'}</div></div>
+      <div class="ligne-amt">${l.qte} ${l.unite||'u'}</div>
+      <button class="ligne-del" onclick="STATE.lignesBL.splice(${i},1);renderLignesBL()">×</button>
+    </div>`).join('');
+}
+
+function openAddLigneBL() {
+  el('mlbl-desc')&&(el('mlbl-desc').value='');
+  el('mlbl-qte')&&(el('mlbl-qte').value='1');
+  el('modal-ligne-bl')?.classList.add('active');
+  setTimeout(()=>el('mlbl-desc')?.focus(),100);
+}
+
+function confirmerLigneBL() {
+  const desc=el('mlbl-desc')?.value.trim(),qte=parseFloat(el('mlbl-qte')?.value.replace(',','.'))||1;
+  if(!desc){showToast('Entrez une description','error');return;}
+  STATE.lignesBL.push({desc,qte,unite:'u'});
+  closeAllModals();renderLignesBL();
+}
+
+function genBonLivraisonPDF() {
+  const client = el('bl-client')?.value.trim();
+  if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
+  genDocPDF({
+    type: 'BON DE LIVRAISON', ref: el('bl-ref')?.value, color: '#6E8F4E',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: client },
+    date: el('bl-date')?.value,
+    paiement: '',
+    lignes: STATE.lignesBL.map(l => ({ desc: l.desc||l.designation||'', qte: l.qte||1, pu: 0, unite: l.unite||'u' })),
+    note: '',
+    ht: 0, tva: 0, ttc: 0,
+    devise: 'MAD',
+    showPrices: false,
+    devis_ref: el('bl-facture-ref')?.value ? 'Facture réf: ' + el('bl-facture-ref').value : '',
+  });
+}
+function exportDevisPDF(id) {
+  const d = STATE.devis.find(x=>x.id===id); if(!d) return;
+  const lignes = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
+  genDocPDF({
+    type: 'DEVIS', ref: d.ref, color: '#B8860B',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: d.client, chantier: d.chantier },
+    date: d.date_emission, validite: d.validite,
+    paiement: '',
+    lignes: lignes, note: d.note||'',
+    ht: d.ht, tva: d.tva, ttc: d.ttc,
+    devise: d.devise || 'MAD',
+    doc_id: id,
+    doc_url: window.location.origin + window.location.pathname + '?doc=' + id,
+    signatureClient: d.signature_data || null,
+  });
+}
+
+function previewDevisPDF() {
+  const client = el('d-client')?.value.trim();
+  if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
+  const ht = STATE.lignesD.reduce((s,l) => s + l.qte*l.pu, 0);
+  genDocPDF({
+    type: 'DEVIS', ref: el('d-ref')?.value, color: '#B8860B',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: client, chantier: el('d-chantier')?.value },
+    date: el('d-date')?.value,
+    validite: el('d-validite')?.value,
+    paiement: '',
+    lignes: STATE.lignesD,
+    note: el('d-note')?.value || '',
+    ht, tva: ht*0.2, ttc: ht*1.2,
+    devise: STATE.deviseF || 'MAD',
+    doc_id: STATE.currentDevis?.id || '',
+    doc_url: STATE.currentDevis?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentDevis.id) : '',
+  });
+}
+function previewAvoirPDF() {
+  const client = el('av-client')?.value.trim();
+  if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
+  const ht = parseFloat(el('av-montant')?.value) || 0;
+  // Trouver la facture d'origine
+  const factureId = el('av-facture-origine')?.value;
+  const factureOrig = factureId ? STATE.factures.find(x => String(x.id) === factureId) : null;
+  const motifLabels = {
+    'annulation': 'Annulation totale de facture',
+    'remboursement': 'Remboursement partiel',
+    'correction': "Correction d'erreur",
+    'retour': 'Retour marchandise'
+  };
+  const motif = el('av-motif')?.value || 'annulation';
+  genDocPDF({
+    type: 'AVOIR',
+    ref: el('av-ref')?.value,
+    color: '#8E2E24',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: client },
+    date: el('av-date')?.value,
+    motif: motifLabels[motif] || motif,
+    devis_ref: factureOrig ? 'Facture annulée: ' + factureOrig.ref : '',
+    lignes: [{ desc: motifLabels[motif] || 'Avoir', qte: 1, pu: ht, unite: 'Fft', tva: 20 }],
+    ht, tva: ht*0.2, ttc: ht*1.2,
+    devise: STATE.deviseF || 'MAD',
+    showStamp: false,
+  });
+}
+
+// ============================================================
+// LISTE DES AVOIRS
+// ============================================================
+
+function renderAvoirList() {
+  const list = el('avoir-list-items');
+  if (!list) return;
+  const avoirs = STATE.avoirs || [];
+  if (!avoirs.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">↩️</div><div class="empty-title">Aucun avoir</div><div>Créez un avoir depuis le formulaire</div></div>';
+    return;
+  }
+  list.innerHTML = avoirs.map(a => `
+    <div class="card" style="margin:0 20px 10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#8E2E24">↩️ ${escapeHTML(a.ref||'')}</div>
+          <div style="font-size:12px;color:#2A2420;margin-top:2px">${escapeHTML(a.client||'')}</div>
+          <div style="font-size:11px;color:#6B5F54;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
+          ${a.facture_origine_ref?`<div style="font-size:10px;color:#9C9186">Facture: ${a.facture_origine_ref}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:700;color:#8E2E24">-${fmt(a.ttc||0)} MAD</div>
+          <button onclick="exportAvoirPDF('${a.id}')" style="background:#F5E4E1;color:#8E2E24;border:none;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;margin-top:4px">📄 PDF</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function exportAvoirPDF(id) {
+  const a = STATE.avoirs.find(x => x.id === id);
+  if (!a) return;
+  const motifLabels = {
+    'annulation': 'Annulation totale de facture',
+    'remboursement': 'Remboursement partiel',
+    'correction': "Correction d'erreur",
+    'retour': 'Retour marchandise'
+  };
+  genDocPDF({
+    type: 'AVOIR',
+    ref: a.ref,
+    color: '#8E2E24',
+    emetteur: STATE.profil || {},
+    destinataire: { nom: a.client || '' },
+    date: a.date_emission,
+    motif: motifLabels[a.motif] || a.motif || '',
+    devis_ref: a.facture_origine_ref ? 'Facture: ' + a.facture_origine_ref : '',
+    lignes: [{ desc: motifLabels[a.motif] || 'Avoir', qte: 1, pu: a.ht || 0, unite: 'Fft', tva: 20 }],
+    ht: a.ht, tva: a.tva, ttc: a.ttc,
+    devise: 'MAD',
+  });
+}
+
+
+
+// ============================================================
+// PARTAGE DEVIS WHATSAPP
+// ============================================================
+
+function partagerDevisWhatsApp(id) {
+  const d = STATE.devis.find(x => x.id === id);
+  if (!d) return;
+  const p = STATE.profil || {};
+  // Lien vers le DEVIS (pas la facture) avec paramètre type=devis
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&type=devis';
+  const validiteDate = d.date_emission ? (() => {
+    const dt = new Date(d.date_emission);
+    dt.setDate(dt.getDate() + (d.validite || 30));
+    return dt.toLocaleDateString('fr-FR');
+  })() : '';
+
+  const msg = encodeURIComponent(
+    'Bonjour ' + (d.client||'') + ',\n\n' +
+    'Veuillez trouver notre devis *' + d.ref + '*' + (d.chantier ? ' pour ' + d.chantier : '') + '.\n\n' +
+    '• Montant TTC : *' + fmt(d.ttc) + ' MAD*\n' +
+    (validiteDate ? '• Valide jusqu\'au : ' + validiteDate + '\n' : '') +
+    '\n📎 Consulter et répondre :\n' + docUrl + '\n\n' +
+    'Cordialement,\n' +
+    (p.raison||'') +
+    (p.tel ? '\n📞 ' + p.tel : '')
+  );
+  window.open('https://wa.me/?text=' + msg, '_blank');
+}
+
+async function partagerDevisNatif(id) {
+  const d = STATE.devis.find(x => x.id === id);
+  if (!d) return;
+  const p = STATE.profil || {};
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
+  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter';
+
+  const texte = 'Devis ' + d.ref + ' - ' + (d.client||'') + '\n' +
+    'Montant: ' + fmt(d.ttc) + ' MAD TTC\n\n' +
+    'Voir: ' + docUrl + '\n' +
+    'Accepter: ' + acceptUrl;
+
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Devis ' + d.ref, text: texte }); return; }
+    catch(e) { if (e.name === 'AbortError') return; }
+  }
+  navigator.clipboard?.writeText(texte).then(() => showToast('✅ Lien copié !', 'success'));
+}
+
+// ============================================================
+// ACCEPTER / REFUSER — DEVIS ET FACTURES (via lien public)
+// ============================================================
+
+// Fonction générique : gère à la fois les devis (champ `statut`) et les
+// factures (champ `reponse_client`, car les factures n'avaient pas de
+// champ de réponse client dédié avant).
+async function traiterActionDocument(docId, type, action, signatureData) {
+  const isFacture = type === 'facture';
+  const table = isFacture ? 'factures' : 'devis';
+  const champ = isFacture ? 'reponse_client' : 'statut';
+  const valeurAcceptee = isFacture ? 'acceptee' : 'accepte';
+  const valeurRefusee = isFacture ? 'refusee' : 'refuse';
+  const libelleDoc = isFacture ? 'facture' : 'devis';
+
+  // Afficher une page de confirmation propre
+  document.body.innerHTML = `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
+      <h2 style="color:#2A2420;margin-bottom:8px">${action === 'accepter' ? 'Acceptation' : 'Refus'} de ${isFacture ? 'la facture' : 'devis'}</h2>
+      <p style="color:#6B5F54;margin-bottom:24px">Chargement...</p>
+    </div>
+  `;
+
+  try {
+    // Charger le document
+    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    const d = data && data[0];
+    if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">' + (isFacture ? 'Facture' : 'Devis') + ' introuvable</div>'; return; }
+
+    // FIX: un document déjà accepté ou refusé ne doit plus jamais changer
+    // d'état — que ce soit via un lien réutilisé (ancien message WhatsApp/
+    // email), un double-clic, ou un rechargement de page.
+    const statutActuel = d[champ];
+    const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
+    if (dejaTraite) {
+      document.body.innerHTML = `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+          <div style="font-size:64px;margin-bottom:16px">${statutActuel === valeurAcceptee ? '✅' : '❌'}</div>
+          <h2 style="color:#2A2420;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
+          <div style="background:${statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+            <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
+            <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
+          </div>
+          <p style="color:#6B5F54;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
+          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
+        </div>
+      `;
+      return;
+    }
+
+    // Mettre à jour le statut / la réponse client
+    const nouvelleValeur = action === 'accepter' ? valeurAcceptee : valeurRefusee;
+    const patchBody = { notif_lue: false };
+    patchBody[champ] = nouvelleValeur;
+    if (action === 'accepter') {
+      // L'acceptation vaut signature électronique — si le client a dessiné
+      // une signature (canal facultatif, encore utilisable ailleurs), on la
+      // garde ; sinon un tampon horodaté est généré automatiquement, sans
+      // aucune action requise du client.
+      patchBody.signature_data = signatureData || ('TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }));
+    }
+
+    await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(patchBody)
+    });
+
+    // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
+    try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : 'refus', d.ref || ''); } catch(eAudit) {}
+
+    // Page de confirmation
+    document.body.innerHTML = `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
+        <h2 style="color:#2A2420;margin-bottom:8px">${isFacture ? 'Facture' : 'Devis'} ${action === 'accepter' ? 'acceptée' : 'refusée'} !</h2>
+        <div style="background:${action === 'accepter' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
+          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
+          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
+        </div>
+        <p style="color:#6B5F54;font-size:13px">${action === 'accepter' ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.' : 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\u2019entreprise.'}</p>
+        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
+      </div>
+    `;
+  } catch(e) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
+  }
+}
+
+// Alias de compatibilité pour les anciens liens ?devis=ID&action=...
+async function traiterActionDevis(devisId, action) {
+  return traiterActionDocument(devisId, 'devis', action);
 }
