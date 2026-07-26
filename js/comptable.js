@@ -1737,9 +1737,11 @@ async function chargerNotificationsComptable() {
     );
     const invitations = await resp.json() || [];
 
+    // FIX: même correctif que nav.js/genNotifications — user_id sur ces
+    // lignes ne correspond pas toujours au comptable qui les lit.
     const respN = await fetch(
       SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&lue=eq.false&order=created_at.desc&limit=20',
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
     );
     const notifs = await respN.json() || [];
 
