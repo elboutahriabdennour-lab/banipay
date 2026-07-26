@@ -615,7 +615,13 @@ async function traiterActionDocument(docId, type, action, signatureData) {
     const nouvelleValeur = action === 'accepter' ? valeurAcceptee : valeurRefusee;
     const patchBody = { notif_lue: false };
     patchBody[champ] = nouvelleValeur;
-    if (action === 'accepter' && signatureData) patchBody.signature_data = signatureData;
+    if (action === 'accepter') {
+      // L'acceptation vaut signature électronique — si le client a dessiné
+      // une signature (canal facultatif, encore utilisable ailleurs), on la
+      // garde ; sinon un tampon horodaté est généré automatiquement, sans
+      // aucune action requise du client.
+      patchBody.signature_data = signatureData || ('TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }));
+    }
 
     await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
       method: 'PATCH',
