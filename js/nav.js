@@ -216,6 +216,12 @@ async function renderNotifScreen() {
             body: JSON.stringify({ lue: true })
           });
         }
+        // FIX/NOUVEAU: quand une FACTURE reçue via compte BaniPay est
+        // acceptée, elle s'enregistre automatiquement côté achats du client
+        // — plus besoin de la ressaisir manuellement.
+        if (btnDA && t === 'facture' && typeof enregistrerAchatDepuisFactureAcceptee === 'function') {
+          await enregistrerAchatDepuisFactureAcceptee(docId);
+        }
         showToast(btnDA ? '✅ Accepté' : '❌ Refusé', 'success');
         await genNotifications();
         renderNotifScreen();
@@ -253,7 +259,7 @@ function goScreen(name) {
     'archive': renderArchive,
     'annuaire': filtrerAnnuaire,
     'achats': renderAchats,
-    'nouvelle-achat': function() { calcAchatTotaux(); },
+    'nouvelle-achat': function() { calcAchatTotaux(); if (typeof renderAchatProduitPicker === 'function') renderAchatProduitPicker(); },
     'avoir-list': renderAvoirList,
     'abonnements': typeof renderAbonnements === 'function' ? renderAbonnements : function() { showToast('Module abonnements non installé', 'error'); goScreen('dashboard'); },
     'nouvel-abonnement': typeof initNouvelAbonnement === 'function' ? initNouvelAbonnement : function() { showToast('Module abonnements non installé', 'error'); goScreen('dashboard'); },
