@@ -334,32 +334,29 @@ async function envoyerVersCompteBaniPay(destinataireId, destinataireNom, destina
   const p = STATE.profil || {};
 
   try {
-    // FIX: cette notification est créée POUR UN AUTRE compte (destinataireId)
-    // — utiliser la session de l'expéditeur (sb.token) se heurte presque
-    // certainement à la RLS ("on ne peut insérer que pour soi-même"). On
-    // utilise la clé anonyme, comme pour les autres écritures cross-compte
-    // déjà corrigées. Et surtout : on vérifie enfin le résultat — avant,
-    // le message "Envoyé !" s'affichait même si l'insertion avait échoué.
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+    // FIX: utilise la fonction RPC SECURITY DEFINER (contourne complètement
+    // la RLS, y compris pour le rôle anon) au lieu d'un accès direct à la
+    // table — approche identique à celle qui a fini par résoudre le
+    // lettrage/TVA.
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        user_id: destinataireId,
-        destinataire_email: destinataireEmail ? destinataireEmail.toLowerCase() : null,
-        type: type === 'facture' ? 'facture_recue' : 'devis_recu',
-        titre: (type === 'facture' ? 'Nouvelle facture' : 'Nouveau devis') + ' — ' + (p.raison || sb.user?.email),
-        corps: (p.raison || sb.user?.email) + ' vous a envoyé ' + (type === 'facture' ? 'la facture' : 'le devis') + ' ' + doc.ref + ' (' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + ').',
-        meta: JSON.stringify({ doc_type: type, doc_id: id, emetteur_id: sb.user?.id, emetteur_raison: p.raison || '' }),
-        lue: false
+        p_user_id: destinataireId,
+        p_destinataire_email: destinataireEmail || '',
+        p_type: type === 'facture' ? 'facture_recue' : 'devis_recu',
+        p_titre: (type === 'facture' ? 'Nouvelle facture' : 'Nouveau devis') + ' — ' + (p.raison || sb.user?.email),
+        p_corps: (p.raison || sb.user?.email) + ' vous a envoyé ' + (type === 'facture' ? 'la facture' : 'le devis') + ' ' + doc.ref + ' (' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + ').',
+        p_meta: JSON.stringify({ doc_type: type, doc_id: id, emetteur_id: sb.user?.id, emetteur_raison: p.raison || '' })
       })
     });
     if (!resp.ok) {
       const errText = await resp.text().catch(function() { return ''; });
       console.error('envoyerVersCompteBaniPay: échec envoi notification', resp.status, errText);
-      showToast('❌ Échec de l\'envoi (notification non créée) : ' + resp.status, 'error');
+      showToast('❌ Échec de l\'envoi : ' + (errText || resp.status), 'error');
       return;
     }
     showToast('✅ Envoyé à ' + destinataireNom + ' sur BaniPay !', 'success');
