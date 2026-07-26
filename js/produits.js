@@ -356,12 +356,16 @@ async function envoyerVersCompteBaniPay(destinataireId, destinataireNom, destina
     if (!resp.ok) {
       const errText = await resp.text().catch(function() { return ''; });
       console.error('envoyerVersCompteBaniPay: échec envoi notification', resp.status, errText);
-      showToast('❌ Échec de l\'envoi : ' + (errText || resp.status), 'error');
+      afficherDiagnostic('Échec envoi notification BaniPay', [
+        'Destinataire : ' + destinataireNom + ' (' + destinataireEmail + ')',
+        'HTTP ' + resp.status,
+        errText || '(pas de détail renvoyé par le serveur)'
+      ]);
       return;
     }
     showToast('✅ Envoyé à ' + destinataireNom + ' sur BaniPay !', 'success');
     closeAllModals();
   } catch(e) {
-    showToast('❌ ' + e.message, 'error');
+    afficherDiagnostic('Erreur envoi notification BaniPay', ['Exception JS : ' + e.message]);
   }
 }
