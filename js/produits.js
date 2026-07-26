@@ -334,17 +334,20 @@ async function envoyerVersCompteBaniPay(destinataireId, destinataireNom, destina
   const p = STATE.profil || {};
 
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+    // FIX: cette notification est créée POUR UN AUTRE compte (destinataireId)
+    // — utiliser la session de l'expéditeur (sb.token) se heurte presque
+    // certainement à la RLS ("on ne peut insérer que pour soi-même"). On
+    // utilise la clé anonyme, comme pour les autres écritures cross-compte
+    // déjà corrigées. Et surtout : on vérifie enfin le résultat — avant,
+    // le message "Envoyé !" s'affichait même si l'insertion avait échoué.
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token,
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
         'Content-Type': 'application/json', 'Prefer': 'return=minimal'
       },
       body: JSON.stringify({
         user_id: destinataireId,
-        // FIX: destinataire_email manquant — sans ce champ, genNotifications()
-        // (qui filtre justement sur destinataire_email) ne trouvait jamais
-        // cette notification côté client, qui semblait donc "ne rien recevoir".
         destinataire_email: destinataireEmail ? destinataireEmail.toLowerCase() : null,
         type: type === 'facture' ? 'facture_recue' : 'devis_recu',
         titre: (type === 'facture' ? 'Nouvelle facture' : 'Nouveau devis') + ' — ' + (p.raison || sb.user?.email),
@@ -353,6 +356,12 @@ async function envoyerVersCompteBaniPay(destinataireId, destinataireNom, destina
         lue: false
       })
     });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(function() { return ''; });
+      console.error('envoyerVersCompteBaniPay: échec envoi notification', resp.status, errText);
+      showToast('❌ Échec de l\'envoi (notification non créée) : ' + resp.status, 'error');
+      return;
+    }
     showToast('✅ Envoyé à ' + destinataireNom + ' sur BaniPay !', 'success');
     closeAllModals();
   } catch(e) {
