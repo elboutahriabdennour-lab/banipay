@@ -609,11 +609,13 @@ async function inviterComptable() {
 
       // 3. Notifier via notifications_app si comptable a un compte
       // On utilise une approche différente: stocker la notification avec l'email cible
+      // FIX: clé anonyme — notification cross-compte, même correctif que
+      // produits.js/envoyerVersCompteBaniPay.
       await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + sb.token,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
