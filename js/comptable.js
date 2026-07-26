@@ -1193,21 +1193,19 @@ async function declarerTVAMois(mois) {
     const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
     const destinataireEmail = inv?.entreprise_email || '';
 
-    await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+    await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        user_id: CPT.currentEntrepriseId,
-        destinataire_email: destinataireEmail ? destinataireEmail.toLowerCase() : null,
-        type: 'tva_declaree',
-        titre: 'TVA vérifiée — ' + mois,
-        corps: 'Votre comptable ' + nom + ' a vérifié la TVA de ' + mois + '. TVA collectée : ' + fmt(tvaTotale) + ' MAD sur ' + facsMois.length + ' facture(s).',
-        lue: false
+        p_user_id: CPT.currentEntrepriseId,
+        p_destinataire_email: destinataireEmail || '',
+        p_type: 'tva_declaree',
+        p_titre: 'TVA vérifiée — ' + mois,
+        p_corps: 'Votre comptable ' + nom + ' a vérifié la TVA de ' + mois + '. TVA collectée : ' + fmt(tvaTotale) + ' MAD sur ' + facsMois.length + ' facture(s).'
       })
     });
 
@@ -1258,22 +1256,19 @@ async function ajouterRemarque(factureId) {
       const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
       const destinataireEmail = inv?.entreprise_email || '';
 
-      await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+      await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          user_id: CPT.currentEntrepriseId,
-          destinataire_email: destinataireEmail ? destinataireEmail.toLowerCase() : null,
-          type: 'remarque_comptable',
-          titre: 'Remarque comptable',
-          corps: 'Votre comptable a ajouté une remarque sur la facture ' + (fac?.ref || ''),
-          facture_id: factureId,
-          lue: false
+          p_user_id: CPT.currentEntrepriseId,
+          p_destinataire_email: destinataireEmail || '',
+          p_type: 'remarque_comptable',
+          p_titre: 'Remarque comptable',
+          p_corps: 'Votre comptable a ajouté une remarque sur la facture ' + (fac?.ref || '')
         })
       });
       ajouterHistorique('Remarque ajoutée — ', factureId);
@@ -1668,22 +1663,20 @@ async function envoyerInvitationDepuisProfil() {
       })
     });
 
-    await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+    await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        user_id: sb.user?.id,
-        destinataire_email: emailEnt,
-        type: 'invitation_comptable',
-        titre: 'Invitation de votre comptable',
-        corps: nomCpt + ' souhaite accéder à vos documents BaniPay en tant que comptable.',
-        meta: JSON.stringify({ comptable_email: emailCpt, nom_comptable: nomCpt }),
-        lue: false
+        p_user_id: sb.user?.id,
+        p_destinataire_email: emailEnt,
+        p_type: 'invitation_comptable',
+        p_titre: 'Invitation de votre comptable',
+        p_corps: nomCpt + ' souhaite accéder à vos documents BaniPay en tant que comptable.',
+        p_meta: JSON.stringify({ comptable_email: emailCpt, nom_comptable: nomCpt })
       })
     });
 
@@ -1737,13 +1730,13 @@ async function chargerNotificationsComptable() {
     );
     const invitations = await resp.json() || [];
 
-    // FIX: même correctif que nav.js/genNotifications — user_id sur ces
-    // lignes ne correspond pas toujours au comptable qui les lit.
-    const respN = await fetch(
-      SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&lue=eq.false&order=created_at.desc&limit=20',
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-    );
-    const notifs = await respN.json() || [];
+    // FIX: fonction RPC SECURITY DEFINER — même correctif que nav.js.
+    const respN = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: email })
+    });
+    const notifs = respN.ok ? ((await respN.json()) || []) : [];
 
     CPT.invitationsEnAttente = invitations;
     CPT.notifications = notifs;
