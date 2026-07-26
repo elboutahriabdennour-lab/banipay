@@ -252,16 +252,10 @@ async function afficherDocumentPublic(docId) {
         const bAcc = document.createElement('button');
         bAcc.textContent = isDevis ? '✅ Accepter le devis' : '✅ Accepter la facture';
         bAcc.style.cssText = 'flex:1;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
-        // FIX: si signature.js n'est pas déployé, ouvrirModalSignature n'existe
-        // pas et le clic sur "Accepter" échouait silencieusement (erreur JS
-        // invisible pour le client). On retombe sur l'acceptation directe.
-        bAcc.onclick = function() {
-          if (typeof ouvrirModalSignature === 'function') {
-            ouvrirModalSignature(docId, typeDoc);
-          } else {
-            traiterActionDocument(docId, typeDoc, 'accepter');
-          }
-        };
+        // Accepter vaut signature électronique automatique — plus besoin de
+        // faire dessiner quoi que ce soit au client, un tampon horodaté est
+        // généré automatiquement (voir traiterActionDocument).
+        bAcc.onclick = function() { traiterActionDocument(docId, typeDoc, 'accepter'); };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
         bRef.style.cssText = 'flex:1;padding:14px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
