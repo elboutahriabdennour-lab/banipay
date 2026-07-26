@@ -293,27 +293,23 @@ function appliquerFiltreCpt(type, val) {
 }
 
 function creerFiltreCpt() {
-  const div = document.createElement('div');
-  div.style.cssText = 'padding:10px 16px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #EAE4DA;background:#fff';
+  // FIX: cette fonction construisait les boutons via DOM + btn.onclick, puis
+  // renvoyait div.outerHTML — qui NE SÉRIALISE PAS les gestionnaires de clic
+  // attachés en JS (onclick assigné en propriété, pas en attribut HTML).
+  // Résultat : ces boutons de filtre étaient inertes une fois réinjectés via
+  // innerHTML. Réécrit en HTML pur avec data-attributes, géré par le même
+  // écouteur délégué que L/T dans renderCptFactures().
   const btns = [
-    { label: '☐ Non lettrées', key: 'lettrage', val: false, bg: '#F7EFDC', color: '#B8860B' },
-    { label: '☐ TVA non vérifiée', key: 'tva', val: false, bg: '#EDE6F0', color: '#7C5CA6' },
-    { label: '📝 Avec remarque', key: 'remarque', val: true, bg: '#F5E4E1', color: '#B23A2E' },
+    { label: '☐ Non lettrées', key: 'lettrage', val: 'false', bg: '#F7EFDC', color: '#B8860B' },
+    { label: '☐ TVA non vérifiée', key: 'tva', val: 'false', bg: '#EDE6F0', color: '#7C5CA6' },
+    { label: '📝 Avec remarque', key: 'remarque', val: 'true', bg: '#F5E4E1', color: '#B23A2E' },
   ];
-  btns.forEach(function(b) {
-    const btn = document.createElement('button');
-    const active = (b.val === false ? CPT.filtres[b.key] === false : CPT.filtres[b.key]);
-    btn.textContent = b.label;
-    btn.style.cssText = 'padding:5px 10px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (active ? b.bg : '#EAE4DA') + ';color:' + (active ? b.color : '#6B5F54');
-    btn.onclick = function() { appliquerFiltreCpt(b.key, b.val); };
-    div.appendChild(btn);
-  });
-  const btnAll = document.createElement('button');
-  btnAll.textContent = 'Tous';
-  btnAll.style.cssText = 'padding:5px 10px;border:none;border-radius:16px;font-size:11px;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#6B5F54';
-  btnAll.onclick = function() { CPT.filtres = {lettrage:null,tva:null,statut:null,remarque:null}; renderCptFactures(); };
-  div.appendChild(btnAll);
-  return div.outerHTML;
+  const boutonsHtml = btns.map(function(b) {
+    const active = (b.val === 'false' ? CPT.filtres[b.key] === false : CPT.filtres[b.key]);
+    return '<button class="btn-filtre-cpt" data-key="' + b.key + '" data-val="' + b.val + '" style="padding:5px 10px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (active ? b.bg : '#EAE4DA') + ';color:' + (active ? b.color : '#6B5F54') + '">' + b.label + '</button>';
+  }).join('');
+  const boutonTous = '<button class="btn-filtre-cpt-tous" style="padding:5px 10px;border:none;border-radius:16px;font-size:11px;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#6B5F54">Tous</button>';
+  return '<div style="padding:10px 16px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #EAE4DA;background:#fff">' + boutonsHtml + boutonTous + '</div>';
 }
 
 // FIX: le conteneur des factures comptable est persistant entre les rendus
@@ -391,6 +387,10 @@ function renderCptFactures() {
       if (btnL) { toggleLettrageRapide(btnL.dataset.facid, btnL); return; }
       const btnT = e.target.closest('.btn-tva');
       if (btnT) { toggleTVARapide(btnT.dataset.facid, btnT); return; }
+      const btnFiltre = e.target.closest('.btn-filtre-cpt');
+      if (btnFiltre) { appliquerFiltreCpt(btnFiltre.dataset.key, btnFiltre.dataset.val === 'true'); return; }
+      const btnTous = e.target.closest('.btn-filtre-cpt-tous');
+      if (btnTous) { CPT.filtres = {lettrage:null,tva:null,statut:null,remarque:null}; renderCptFactures(); return; }
     });
   }
 }
