@@ -204,15 +204,21 @@ async function renderNotifScreen() {
       const valeur = btnDA ? (t === 'devis' ? 'accepte' : 'acceptee') : (t === 'devis' ? 'refuse' : 'refusee');
       const patchBody = {}; patchBody[champ] = valeur;
       try {
+        // FIX: cette action modifie un devis/facture qui appartient à une
+        // AUTRE entreprise (l'émetteur) — utiliser la session du destinataire
+        // (sb.token) se heurte presque certainement à la RLS ("seul le
+        // propriétaire peut modifier"). Le lien public (?doc=...) utilise
+        // déjà la clé anonyme pour cette même action et fonctionne — on
+        // aligne ce chemin dessus plutôt que d'utiliser sb.token.
         await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
           method: 'PATCH',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify(patchBody)
         });
         if (nid) {
           await fetch(SUPABASE_URL + '/rest/v1/notifications_app?id=eq.' + nid, {
             method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ lue: true })
           });
         }
