@@ -1489,7 +1489,15 @@ async function sauvegarderControle(factureId, data) {
       if (resp.status === 404) {
         showToast('⛔ Fonction RPC introuvable — exécute migration_phase8_rpc_controles.sql', 'error');
       } else {
-        showToast('❌ Erreur: ' + (errText || resp.status), 'error');
+        // FIX: panneau persistant et copiable plutôt qu'un toast qui
+        // disparaît en 2 secondes — pour pouvoir transmettre l'erreur SQL
+        // exacte telle quelle si le problème persiste.
+        afficherDiagnosticComptable([
+          '❌ Échec de l\'enregistrement du contrôle (lettrage/TVA)',
+          'Facture : ' + factureId + ' · Champ : ' + champ + ' · Valeur : ' + valeur,
+          'HTTP ' + resp.status,
+          errText || '(pas de détail renvoyé par le serveur)'
+        ]);
       }
       return;
     }
