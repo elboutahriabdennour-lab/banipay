@@ -270,6 +270,7 @@ function renderParametres() {
   el('param-delai') && (el('param-delai').value = p.delai_paiement || '30');
   el('param-mode-paiement') && (el('param-mode-paiement').value = p.mode_paiement_defaut || 'virement');
   el('param-tva-defaut') && (el('param-tva-defaut').value = p.tva_defaut || '20');
+  el('param-methode-stock') && (el('param-methode-stock').value = p.methode_stock || 'CMUP');
   updateParamPreview();
 }
 
@@ -290,6 +291,7 @@ async function sauvegarderParametres() {
     delai_paiement: parseInt(el('param-delai')?.value) || 30,
     mode_paiement_defaut: el('param-mode-paiement')?.value || 'virement',
     tva_defaut: parseInt(el('param-tva-defaut')?.value) || 20,
+    methode_stock: el('param-methode-stock')?.value || 'CMUP',
   };
   showToast('⏳ Sauvegarde...');
   try {
