@@ -30,13 +30,30 @@ async function loadComptableApp() {
         return;
       }
 
-      // Charger profils + factures en parallèle
-      const [profils, toutesFactures] = await Promise.all([
-        fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=in.(' + ids.join(',') + ')&select=*',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
-        fetch(SUPABASE_URL + '/rest/v1/factures?user_id=in.(' + ids.join(',') + ')&select=*&order=created_at.desc',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
-      ]);
+      // FIX: lecture des factures via RPC (contourne la RLS) — l'ancien
+      // fetch direct utilisait la session du comptable pour lire des lignes
+      // appartenant à une AUTRE entreprise, ce qui était presque certainement
+      // bloqué par la RLS et renvoyait une liste vide (d'où l'impression de
+      // ne "rien pouvoir ouvrir" : il n'y avait simplement rien à afficher).
+      const profils = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=in.(' + ids.join(',') + ')&select=*',
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); });
+
+      let toutesFactures = [];
+      for (const eid of ids) {
+        try {
+          const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_factures_entreprise', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ p_entreprise_id: eid })
+          });
+          if (r.ok) {
+            toutesFactures = toutesFactures.concat((await r.json()) || []);
+          } else {
+            console.warn('get_factures_entreprise a échoué pour', eid, r.status, await r.text().catch(function(){return '';}));
+          }
+        } catch(eRpc) { console.warn('get_factures_entreprise erreur:', eRpc); }
+      }
+      console.log('loadComptableApp: ' + toutesFactures.length + ' facture(s) rechargée(s) (via RPC).');
 
       // FIX: lecture des contrôles via la fonction RPC (contourne la RLS,
       // qui bloquait probablement le SELECT direct pour le comptable) —
@@ -212,14 +229,16 @@ async function ouvrirEntreprise(entrepriseId) {
   CPT.currentDevis = [];
   CPT.currentControles = inv._controles || {};
 
-  // Load devis
+  // Load devis — via RPC pour contourner la RLS cross-compte
   try {
-    const devis = await fetch(
-      SUPABASE_URL + '/rest/v1/devis?user_id=eq.' + entrepriseId + '&order=created_at.desc&select=*',
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
-    ).then(function(r) { return r.json(); });
-    CPT.currentDevis = devis || [];
-  } catch(e) {}
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_devis_entreprise', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_entreprise_id: entrepriseId })
+    });
+    CPT.currentDevis = r.ok ? ((await r.json()) || []) : [];
+    if (!r.ok) console.warn('get_devis_entreprise a échoué', r.status, await r.text().catch(function(){return '';}));
+  } catch(e) { CPT.currentDevis = []; }
 
   renderFicheEntreprise();
   goScreen('cpt-entreprise');
