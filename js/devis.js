@@ -570,13 +570,16 @@ async function traiterActionDocument(docId, type, action, signatureData) {
   const champ = isFacture ? 'reponse_client' : 'statut';
   const valeurAcceptee = isFacture ? 'acceptee' : 'accepte';
   const valeurRefusee = isFacture ? 'refusee' : 'refuse';
+  const valeurAttente = 'en_attente';
   const libelleDoc = isFacture ? 'facture' : 'devis';
+  const libelleAction = action === 'accepter' ? 'Acceptation' : action === 'refuser' ? 'Refus' : 'Mise en attente';
+  const iconAction = action === 'accepter' ? '✅' : action === 'refuser' ? '❌' : '⏳';
 
   // Afficher une page de confirmation propre
   document.body.innerHTML = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
-      <div style="font-size:48px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
-      <h2 style="color:#2A2420;margin-bottom:8px">${action === 'accepter' ? 'Acceptation' : 'Refus'} de ${isFacture ? 'la facture' : 'devis'}</h2>
+      <div style="font-size:48px;margin-bottom:16px">${iconAction}</div>
+      <h2 style="color:#2A2420;margin-bottom:8px">${libelleAction} ${isFacture ? 'de la facture' : 'du devis'}</h2>
       <p style="color:#6B5F54;margin-bottom:24px">Chargement...</p>
     </div>
   `;
@@ -592,7 +595,8 @@ async function traiterActionDocument(docId, type, action, signatureData) {
 
     // FIX: un document déjà accepté ou refusé ne doit plus jamais changer
     // d'état — que ce soit via un lien réutilisé (ancien message WhatsApp/
-    // email), un double-clic, ou un rechargement de page.
+    // email), un double-clic, ou un rechargement de page. "En attente" ne
+    // verrouille rien : le client peut toujours accepter/refuser après.
     const statutActuel = d[champ];
     const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
     if (dejaTraite) {
@@ -612,7 +616,7 @@ async function traiterActionDocument(docId, type, action, signatureData) {
     }
 
     // Mettre à jour le statut / la réponse client
-    const nouvelleValeur = action === 'accepter' ? valeurAcceptee : valeurRefusee;
+    const nouvelleValeur = action === 'accepter' ? valeurAcceptee : action === 'refuser' ? valeurRefusee : valeurAttente;
     const patchBody = { notif_lue: false };
     patchBody[champ] = nouvelleValeur;
     if (action === 'accepter') {
@@ -635,19 +639,29 @@ async function traiterActionDocument(docId, type, action, signatureData) {
     });
 
     // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
-    try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : 'refus', d.ref || ''); } catch(eAudit) {}
+    try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : action === 'refuser' ? 'refus' : 'mise en attente', d.ref || ''); } catch(eAudit) {}
 
     // Page de confirmation
+    const messageFinal = action === 'accepter'
+      ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.'
+      : action === 'refuser'
+      ? 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\u2019entreprise.'
+      : 'Vous pourrez accepter ou refuser ce document \u00e0 tout moment via ce m\u00eame lien.';
+    const titreFinal = action === 'accepter' ? (isFacture ? 'Facture acceptée' : 'Devis accepté') + ' !'
+      : action === 'refuser' ? (isFacture ? 'Facture refusée' : 'Devis refusé') + ' !'
+      : 'Mis en attente';
+    const bg = action === 'accepter' ? '#EEF3E4' : action === 'refuser' ? '#F5E4E1' : '#F7EFDC';
+
     document.body.innerHTML = `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
-        <div style="font-size:64px;margin-bottom:16px">${action === 'accepter' ? '✅' : '❌'}</div>
-        <h2 style="color:#2A2420;margin-bottom:8px">${isFacture ? 'Facture' : 'Devis'} ${action === 'accepter' ? 'acceptée' : 'refusée'} !</h2>
-        <div style="background:${action === 'accepter' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+        <div style="font-size:64px;margin-bottom:16px">${iconAction}</div>
+        <h2 style="color:#2A2420;margin-bottom:8px">${titreFinal}</h2>
+        <div style="background:${bg};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
           <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
           <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
           <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
         </div>
-        <p style="color:#6B5F54;font-size:13px">${action === 'accepter' ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.' : 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\u2019entreprise.'}</p>
+        <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>
         <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
       </div>
     `;
