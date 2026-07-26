@@ -423,13 +423,14 @@ function renderCptFactures() {
     creerFiltreCpt() +
     '<div style="display:grid;grid-template-columns:1fr 36px 36px;padding:8px 16px;background:#F1EEE8;border-bottom:1px solid #EAE4DA">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Facture</div>' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Voir</div>' +
       '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
       '<div style="font-size:11px;font-weight:800;color:#7C5CA6;text-align:center">T</div>' +
     '</div>' +
     (f.length ? f.map(function(fac) {
       const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id); }) || {};
       const remarques = (CPT.currentRemarques || []).filter(function(r) { return String(r.facture_id) === String(fac.id) && r.statut === 'ouverte'; });
-      return '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+      return '<div style="display:grid;grid-template-columns:1fr 40px 44px 44px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
         '<div class="fac-row-click" data-fid="' + fac.id + '" style="cursor:pointer">' +
           '<div style="font-size:12px;font-weight:700">' + escapeHTML(fac.ref || '') + '</div>' +
           '<div style="font-size:11px;color:#6B5F54">' + escapeHTML(fac.client || '') + ' · ' + fmt(fac.ttc || 0) + ' MAD</div>' +
@@ -439,6 +440,9 @@ function renderCptFactures() {
             '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.lettre ? '#6E8F4E' : '#E3DCCF') + ';color:' + (ctrl.lettre ? '#fff' : '#9C9186') + '">L</span>' +
             '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#9C9186') + '">T</span>' +
           '</div>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:center">' +
+          '<button class="btn-voir-facture" data-facid="' + fac.id + '" title="Visualiser la facture" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #CFE3E2;background:#E9F4F3;color:#1F6F72;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
@@ -456,6 +460,16 @@ function renderCptFactures() {
       const row = e.target.closest('.fac-row-click');
       if (row) {
         const facId = row.dataset.fid;
+        const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
+        if (fac) {
+          ouvrirPDFComptable(fac, CPT.currentProfil || {});
+          setTimeout(function() { attacherControlsToViewer(facId); }, 300);
+        }
+        return;
+      }
+      const btnVoir = e.target.closest('.btn-voir-facture');
+      if (btnVoir) {
+        const facId = btnVoir.dataset.facid;
         const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
         if (fac) {
           ouvrirPDFComptable(fac, CPT.currentProfil || {});
