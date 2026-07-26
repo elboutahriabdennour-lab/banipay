@@ -540,12 +540,13 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
           body: JSON.stringify({ statut: 'acceptee', entreprise_id: entrepriseId })
         });
 
-        // Notifier le comptable
+        // Notifier le comptable — clé anonyme (notification cross-compte,
+        // même correctif que produits.js/envoyerVersCompteBaniPay)
         await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
           method: 'POST',
           headers: {
             'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + sb.token,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal'
           },
