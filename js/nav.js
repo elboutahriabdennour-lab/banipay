@@ -15,9 +15,15 @@ async function genNotifications() {
 
   if (email) {
     try {
+      // FIX: user_id sur notifications_app n'est pas toujours l'id du
+      // destinataire (parfois celui de l'expéditeur, selon l'endroit du
+      // code qui insère) — le vrai identifiant du destinataire, c'est
+      // destinataire_email. Lire avec sb.token se heurte à la RLS chaque
+      // fois que user_id ne correspond pas à l'utilisateur connecté ; la
+      // clé anonyme contourne ça, comme pour les écritures déjà corrigées.
       const resp = await fetch(
         SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&lue=eq.false&order=created_at.desc&limit=10',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
       );
       const notifs = await resp.json() || [];
       notifs.forEach(function(n) {
