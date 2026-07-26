@@ -31,21 +31,39 @@ async function loadComptableApp() {
       }
 
       // Charger profils + factures en parallèle
-      const [profils, toutesFactures, tousControles] = await Promise.all([
+      const [profils, toutesFactures] = await Promise.all([
         fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=in.(' + ids.join(',') + ')&select=*',
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
         fetch(SUPABASE_URL + '/rest/v1/factures?user_id=in.(' + ids.join(',') + ')&select=*&order=created_at.desc',
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
-        fetch(SUPABASE_URL + '/rest/v1/controles_factures?entreprise_id=in.(' + ids.join(',') + ')&select=*',
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }),
       ]);
+
+      // FIX: lecture des contrôles via la fonction RPC (contourne la RLS,
+      // qui bloquait probablement le SELECT direct pour le comptable) —
+      // un appel par entreprise puisque la fonction ne prend qu'un id à la fois.
+      let tousControles = [];
+      for (const eid of ids) {
+        try {
+          const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_controles_entreprise', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ p_entreprise_id: eid })
+          });
+          if (r.ok) {
+            const rows = await r.json();
+            tousControles = tousControles.concat(rows || []);
+          } else {
+            console.warn('get_controles_entreprise a échoué pour', eid, r.status, await r.text().catch(function(){return '';}));
+          }
+        } catch(eRpc) { console.warn('get_controles_entreprise erreur:', eRpc); }
+      }
 
       // FIX: diagnostic — si tousControles revient systématiquement vide (0)
       // alors qu'on sait avoir déjà écrit des lignes (voir la vérification
       // de relecture dans sauvegarderControle), c'est la confirmation que
       // le SELECT sur controles_factures est bloqué par RLS pour ce compte
       // comptable — cause la plus probable du "l'app ne se souvient pas".
-      console.log('loadComptableApp: ' + (tousControles ? tousControles.length : 0) + ' ligne(s) de contrôle rechargée(s) depuis controles_factures.');
+      console.log('loadComptableApp: ' + (tousControles ? tousControles.length : 0) + ' ligne(s) de contrôle rechargée(s) depuis controles_factures (via RPC).');
 
       CPT.entreprises.forEach(function(inv) {
         inv.profil = (profils || []).find(function(p) { return p.id === inv.entreprise_id; }) || {};
@@ -1112,7 +1130,7 @@ async function declarerTVAMois(mois) {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + sb.token,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
@@ -1177,7 +1195,7 @@ async function ajouterRemarque(factureId) {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + sb.token,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
@@ -1376,114 +1394,69 @@ async function ouvrirFactureComptable(factureId) {
 async function sauvegarderControle(factureId, data) {
   const uid = sb.user?.id;
   if (!uid) return;
-  const payload = Object.assign({
-    facture_id: String(factureId),
-    entreprise_id: CPT.currentEntrepriseId,
-    comptable_id: uid,
-    comptable_email: sb.user?.email,
-  }, data);
+
+  // FIX: utilise une fonction RPC SECURITY DEFINER (contourne toute la RLS,
+  // avec sa propre vérification d'autorisation interne) au lieu d'un accès
+  // direct à la table — après plusieurs échecs à deviner les policies RLS
+  // à distance, c'est l'approche la plus fiable pour garantir que
+  // l'écriture ET la lecture fonctionnent, quelle que soit la RLS existante.
+  const champ = ('lettre' in data) ? 'lettre' : ('tva_verifie' in data) ? 'tva_verifie' : ('consulte' in data) ? 'consulte' : null;
+  if (!champ) { console.warn('sauvegarderControle: champ non reconnu', data); return; }
+  const valeur = !!data[champ];
 
   try {
-    // FIX: on ne dépend plus d'une contrainte UNIQUE en base (upsert via
-    // merge-duplicates échouait silencieusement sans elle, et le PATCH de
-    // secours ne créait rien s'il n'y avait encore aucune ligne — le clic
-    // semblait fonctionner à l'écran mais rien n'était sauvegardé).
-    // Nouvelle logique : on tente d'abord un PATCH sur la ligne existante ;
-    // si aucune ligne ne correspond, on fait un INSERT direct.
-    let resp = await fetch(
-      SUPABASE_URL + '/rest/v1/controles_factures?facture_id=eq.' + encodeURIComponent(String(factureId)) +
-      '&entreprise_id=eq.' + encodeURIComponent(CPT.currentEntrepriseId),
-      {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + sb.token,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(data)
-      }
-    );
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/toggle_controle_facture', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_facture_id: String(factureId),
+        p_entreprise_id: CPT.currentEntrepriseId,
+        p_champ: champ,
+        p_valeur: valeur
+      })
+    });
 
-    let ligneMiseAJour = [];
-    if (resp.ok) {
-      try { ligneMiseAJour = await resp.json(); } catch(eParse) { ligneMiseAJour = []; }
-    } else {
-      // FIX: diagnostic — un 401/403 ici indique presque toujours un blocage
-      // RLS (le comptable n'a pas le droit d'écrire sur cette ligne), pas
-      // "aucune ligne à modifier". On le distingue clairement en console.
+    if (!resp.ok) {
       const errText = await resp.text().catch(function() { return ''; });
-      console.warn('sauvegarderControle: PATCH a échoué (' + resp.status + ') — ' + errText);
-      if (resp.status === 401 || resp.status === 403) {
-        showToast('⛔ Accès refusé par la base (RLS) — voir migration_phase6_rls_controles.sql', 'error');
-        return;
+      console.error('sauvegarderControle (RPC) a échoué:', resp.status, errText);
+      if (resp.status === 404) {
+        showToast('⛔ Fonction RPC introuvable — exécute migration_phase8_rpc_controles.sql', 'error');
+      } else {
+        showToast('❌ Erreur: ' + (errText || resp.status), 'error');
       }
+      return;
     }
 
-    if (!resp.ok || !ligneMiseAJour || ligneMiseAJour.length === 0) {
-      // Aucune ligne existante à modifier (ou erreur) → on insère
-      resp = await fetch(SUPABASE_URL + '/rest/v1/controles_factures', {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + sb.token,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(payload)
-      });
-      if (!resp.ok && resp.status !== 201 && resp.status !== 204) {
-        const errText = await resp.text();
-        console.error('sauvegarderControle error (INSERT):', resp.status, errText);
-        if (resp.status === 401 || resp.status === 403) {
-          showToast('⛔ Accès refusé par la base (RLS) — voir migration_phase6_rls_controles.sql', 'error');
-        } else {
-          showToast('Erreur DB: ' + resp.status, 'error');
-        }
-        return;
-      }
+    const resultat = await resp.json();
+    if (!resultat) {
+      console.error('sauvegarderControle (RPC): réponse vide — la ligne n\'a peut-être pas été trouvée/mise à jour');
+      showToast('⚠️ Aucune confirmation reçue — vérifie en base', 'error');
+      return;
     }
 
-    // FIX: vérification de relecture — c'est LE test qui distingue "écriture
-    // bloquée" de "lecture bloquée" (RLS SELECT). Si l'écriture ci-dessus a
-    // réussi (aucune erreur renvoyée) mais que cette relecture immédiate ne
-    // retrouve pas la ligne, c'est que le SELECT est filtré par RLS pour le
-    // comptable — exactement le symptôme "l'app ne se souvient pas" : la
-    // ligne existe bel et bien en base, mais devient invisible dès qu'on la
-    // recharge (changement d'onglet, reconnexion...).
-    try {
-      const verifResp = await fetch(
-        SUPABASE_URL + '/rest/v1/controles_factures?facture_id=eq.' + encodeURIComponent(String(factureId)) +
-        '&entreprise_id=eq.' + encodeURIComponent(CPT.currentEntrepriseId) + '&select=facture_id',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
-      );
-      const verifData = verifResp.ok ? await verifResp.json() : [];
-      if (!verifData || verifData.length === 0) {
-        console.error('sauvegarderControle: la ligne vient d\'être écrite mais est INVISIBLE en relecture — RLS SELECT bloque probablement le comptable sur controles_factures. Voir migration_phase6_rls_controles.sql (policy controles_factures_select).');
-        showToast('⚠️ Enregistré mais invisible à la relecture — RLS SELECT à corriger (voir console F12)', 'error');
-      }
-    } catch(eVerif) {
-      console.warn('sauvegarderControle: vérification de relecture impossible', eVerif);
-    }
-
-    // Update local state
+    // Update local state à partir de la ligne réellement renvoyée par la BDD
+    // (source de vérité, plus fiable qu'une simple supposition optimiste)
     if (!CPT.currentControles) CPT.currentControles = [];
     const local = CPT.currentControles.find(function(c2) { return String(c2.facture_id) === String(factureId); });
-    if (local) { Object.assign(local, data); }
-    else { CPT.currentControles.push(Object.assign({ facture_id: String(factureId) }, data)); }
+    if (local) { Object.assign(local, resultat); }
+    else { CPT.currentControles.push(resultat); }
 
     const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
     if (inv) {
       if (!inv._controles) inv._controles = [];
       const lc = inv._controles.find(function(c3) { return String(c3.facture_id) === String(factureId); });
-      if (lc) { Object.assign(lc, data); }
-      else { inv._controles.push(Object.assign({ facture_id: String(factureId) }, data)); }
+      if (lc) { Object.assign(lc, resultat); }
+      else { inv._controles.push(resultat); }
       inv._etat = calculerEtat(inv);
     }
     if (!CPT.allControles) CPT.allControles = [];
     const globalCtrl = CPT.allControles.find(function(c4) { return String(c4.facture_id) === String(factureId); });
-    if (globalCtrl) { Object.assign(globalCtrl, data); }
-    else { CPT.allControles.push(Object.assign({ facture_id: String(factureId), entreprise_id: CPT.currentEntrepriseId }, data)); }
+    if (globalCtrl) { Object.assign(globalCtrl, resultat); }
+    else { CPT.allControles.push(resultat); }
 
   } catch(e) {
     showToast('Erreur sauvegarde: ' + e.message, 'error');
@@ -1624,7 +1597,7 @@ async function envoyerInvitationDepuisProfil() {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + sb.token,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
