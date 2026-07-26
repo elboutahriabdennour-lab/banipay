@@ -24,11 +24,19 @@ async function genNotifications() {
         body: JSON.stringify({ p_email: email })
       });
       const notifs = resp.ok ? ((await resp.json()) || []) : [];
-      if (!resp.ok) console.warn('get_mes_notifications a échoué', resp.status, await resp.text().catch(function(){return '';}));
+      if (!resp.ok) {
+        const errText = await resp.text().catch(function(){return '';});
+        console.warn('get_mes_notifications a échoué', resp.status, errText);
+        window._dernierDiagNotifications = ['Email : ' + email, 'HTTP ' + resp.status, errText || '(pas de détail)'];
+      } else {
+        window._dernierDiagNotifications = ['Email : ' + email, '✅ ' + notifs.length + ' notification(s) non lue(s) trouvée(s)'];
+      }
       notifs.forEach(function(n) {
         STATE.notifications.push({ type: 'info', icon: n.type === 'invitation_comptable' ? '🤝' : '🔔', title: n.titre || '', body: n.corps || '', id: n.id, raw: n });
       });
-    } catch(e2) {}
+    } catch(e2) {
+      window._dernierDiagNotifications = ['Email : ' + email, 'Exception JS : ' + e2.message];
+    }
   }
 
   const badge = document.getElementById('notif-badge');
