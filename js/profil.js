@@ -607,26 +607,22 @@ async function inviterComptable() {
         body: JSON.stringify({ p_email: emailCpt })
       }).catch(function() { return { ok: false }; });
 
-      // 3. Notifier via notifications_app si comptable a un compte
-      // On utilise une approche différente: stocker la notification avec l'email cible
-      // FIX: clé anonyme — notification cross-compte, même correctif que
-      // produits.js/envoyerVersCompteBaniPay.
-      await fetch(SUPABASE_URL + '/rest/v1/notifications_app', {
+      // 3. Notifier via la fonction RPC SECURITY DEFINER — élimine toute
+      // dépendance à une policy RLS sur notifications_app.
+      await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          user_id: uid, // sera lu par le comptable via son email
-          destinataire_email: emailCpt,
-          type: 'invitation_comptable',
-          titre: 'Invitation de ' + (profil.raison || emailEnt),
-          corps: (profil.raison || emailEnt) + ' vous invite à accéder à ses documents BaniPay.',
-          meta: JSON.stringify({ entreprise_id: uid, entreprise_email: emailEnt, comptable_email: emailCpt }),
-          lue: false
+          p_user_id: uid, // sera lu par le comptable via son email
+          p_destinataire_email: emailCpt,
+          p_type: 'invitation_comptable',
+          p_titre: 'Invitation de ' + (profil.raison || emailEnt),
+          p_corps: (profil.raison || emailEnt) + ' vous invite à accéder à ses documents BaniPay.',
+          p_meta: JSON.stringify({ entreprise_id: uid, entreprise_email: emailEnt, comptable_email: emailCpt })
         })
       });
 
