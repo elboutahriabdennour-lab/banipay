@@ -15,17 +15,16 @@ async function genNotifications() {
 
   if (email) {
     try {
-      // FIX: user_id sur notifications_app n'est pas toujours l'id du
-      // destinataire (parfois celui de l'expéditeur, selon l'endroit du
-      // code qui insère) — le vrai identifiant du destinataire, c'est
-      // destinataire_email. Lire avec sb.token se heurte à la RLS chaque
-      // fois que user_id ne correspond pas à l'utilisateur connecté ; la
-      // clé anonyme contourne ça, comme pour les écritures déjà corrigées.
-      const resp = await fetch(
-        SUPABASE_URL + '/rest/v1/notifications_app?destinataire_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&lue=eq.false&order=created_at.desc&limit=10',
-        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
-      );
-      const notifs = await resp.json() || [];
+      // FIX: fonction RPC SECURITY DEFINER — élimine toute dépendance à une
+      // policy RLS (authenticated ou anon) sur notifications_app, qui
+      // s'est révélée peu fiable des deux côtés.
+      const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: email })
+      });
+      const notifs = resp.ok ? ((await resp.json()) || []) : [];
+      if (!resp.ok) console.warn('get_mes_notifications a échoué', resp.status, await resp.text().catch(function(){return '';}));
       notifs.forEach(function(n) {
         STATE.notifications.push({ type: 'info', icon: n.type === 'invitation_comptable' ? '🤝' : '🔔', title: n.titre || '', body: n.corps || '', id: n.id, raw: n });
       });
@@ -222,10 +221,10 @@ async function renderNotifScreen() {
           body: JSON.stringify(patchBody)
         });
         if (nid) {
-          await fetch(SUPABASE_URL + '/rest/v1/notifications_app?id=eq.' + nid, {
-            method: 'PATCH',
+          await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
+            method: 'POST',
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lue: true })
+            body: JSON.stringify({ p_id: nid })
           });
         }
         // FIX/NOUVEAU: quand une FACTURE reçue via compte BaniPay est
