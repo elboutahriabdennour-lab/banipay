@@ -274,7 +274,14 @@ async function renderNotifScreen() {
 // Ouvre le PDF d'un devis/facture reçu directement depuis sa notification,
 // avec les mêmes boutons Accepter/Attente/Refuser que le lien public.
 async function voirDocumentDepuisNotification(type, docId) {
-  if (!type || !docId) return;
+  if (!type || !docId) {
+    afficherDiagnostic('Impossible d\'ouvrir la notification', [
+      'type reçu : "' + type + '"',
+      'docId reçu : "' + docId + '"',
+      '→ Un des deux est vide : le champ "meta" de la notification ne contient probablement pas doc_type/doc_id (notification créée avant ce correctif, ou d\'un type sans document associé comme une invitation ou une remarque).'
+    ]);
+    return;
+  }
   showToast('⏳ Chargement du document...');
   try {
     const table = type === 'devis' ? 'devis' : 'factures';
@@ -283,7 +290,7 @@ async function voirDocumentDepuisNotification(type, docId) {
     });
     const data = await r.json();
     const doc = data && data[0];
-    if (!doc) { showToast('Document introuvable', 'error'); return; }
+    if (!doc) { afficherDiagnostic('Document introuvable', ['table : ' + table, 'docId : ' + docId, '→ Aucune ligne trouvée avec cet id dans ' + table]); return; }
 
     const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + doc.user_id + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -344,7 +351,12 @@ async function voirDocumentDepuisNotification(type, docId) {
       }, 400);
     }
   } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
+    console.error('voirDocumentDepuisNotification: exception', e);
+    afficherDiagnostic('Erreur lors de l\'ouverture du document', [
+      'type : ' + type + ' · docId : ' + docId,
+      'Message : ' + e.message,
+      e.stack ? e.stack.split('\n').slice(0,4).join('\n') : ''
+    ]);
   }
 }
 
