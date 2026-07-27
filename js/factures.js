@@ -262,12 +262,17 @@ function renderDetail() {
 
   // Totaux
   const totEl = el('detail-totals');
+  // NOUVEAU: avoirs déjà émis contre cette facture (liés par référence)
+  const avoirsLies = (STATE.avoirs || []).filter(function(a) { return a.facture_origine_ref === f.ref; });
+  const totalAvoirs = avoirsLies.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
   if (totEl) totEl.innerHTML = `
     <div class="d-tot-row"><span>Sous-total HT</span><span>${fmt(f.ht)} ${dv}</span></div>
     <div class="d-tot-row"><span>TVA 20%</span><span>${fmt(f.tva)} ${dv}</span></div>
     ${recu > 0 ? `<div class="d-tot-row"><span>Déjà reçu</span><span style="color:#6E8F4E">-${fmt(recu)} ${dv}</span></div>` : ''}
     <div class="d-tot-row main"><span>Total TTC</span><span>${fmt(f.ttc)} ${dv}</span></div>
-    ${restant > 0 && recu > 0 ? `<div class="d-tot-row" style="color:#B23A2E"><span>Solde restant</span><span>${fmt(restant)} ${dv}</span></div>` : ''}`;
+    ${restant > 0 && recu > 0 ? `<div class="d-tot-row" style="color:#B23A2E"><span>Solde restant</span><span>${fmt(restant)} ${dv}</span></div>` : ''}
+    ${totalAvoirs > 0 ? `<div class="d-tot-row" style="color:#7C5CA6"><span>Avoir(s) émis (${avoirsLies.length})</span><span>-${fmt(totalAvoirs)} ${dv}</span></div>
+    <div class="d-tot-row" style="font-weight:700"><span>Net après avoir</span><span>${fmt(Math.max(0, f.ttc - totalAvoirs))} ${dv}</span></div>` : ''}`;
 
   // Actions
   // Note
