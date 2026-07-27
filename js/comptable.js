@@ -331,6 +331,49 @@ async function ouvrirEntreprise(entrepriseId) {
   goScreen('cpt-entreprise');
 }
 
+// ============================================================
+// SÉLECTEUR RAPIDE D'ENTREPRISE (nom + logo, depuis la fiche entreprise)
+// ============================================================
+function toggleEntrepriseDropdownCpt(event) {
+  if (event) event.stopPropagation();
+  const existant = document.getElementById('entreprise-dropdown-cpt');
+  if (existant) { existant.remove(); document.removeEventListener('click', _fermerEntrepriseDropdownCptSiExterieur, true); return; }
+
+  const panel = document.createElement('div');
+  panel.id = 'entreprise-dropdown-cpt';
+  panel.style.cssText = 'position:fixed;top:66px;left:12px;right:12px;max-width:380px;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(42,36,32,0.3);z-index:9999;max-height:60vh;overflow-y:auto;border:1px solid #E3DCCF';
+
+  panel.innerHTML = (CPT.entreprises || []).map(function(inv) {
+    const p = inv.profil || {};
+    const nom = p.raison || inv.entreprise_email || 'Entreprise';
+    const actif = inv.entreprise_id === CPT.currentEntrepriseId;
+    return '<div class="item-entreprise-dropdown" data-eid="' + inv.entreprise_id + '" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid #F1EEE8;background:' + (actif ? '#E9F4F3' : '#fff') + '">' +
+      (p.logo ? '<img src="' + p.logo + '" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0">' : '<div style="width:32px;height:32px;border-radius:8px;background:#EAE4DA;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#6B5F54;flex-shrink:0">' + (nom[0]||'?').toUpperCase() + '</div>') +
+      '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#2A2420;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHTML(nom) + '</div><div style="font-size:10px;color:#9C9186">' + etatLabel(inv._etat) + '</div></div>' +
+      (actif ? '<span style="color:#1F6F72;font-size:14px">✓</span>' : '') +
+    '</div>';
+  }).join('');
+
+  document.body.appendChild(panel);
+  panel.addEventListener('click', function(e) {
+    const item = e.target.closest('.item-entreprise-dropdown');
+    if (item) {
+      panel.remove();
+      document.removeEventListener('click', _fermerEntrepriseDropdownCptSiExterieur, true);
+      ouvrirEntreprise(item.dataset.eid);
+    }
+  });
+  setTimeout(function() { document.addEventListener('click', _fermerEntrepriseDropdownCptSiExterieur, true); }, 50);
+}
+
+function _fermerEntrepriseDropdownCptSiExterieur(e) {
+  const panel = document.getElementById('entreprise-dropdown-cpt');
+  if (panel && !panel.contains(e.target)) {
+    panel.remove();
+    document.removeEventListener('click', _fermerEntrepriseDropdownCptSiExterieur, true);
+  }
+}
+
 function renderFicheEntreprise() {
   const p = CPT.currentProfil || {};
   const f = CPT.currentFactures || [];
@@ -338,7 +381,12 @@ function renderFicheEntreprise() {
   const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
   const etat = inv ? inv._etat : 'vert';
 
-  setEl('cpt-ent-nom', p.raison || inv?.entreprise_email || 'Entreprise');
+  el('cpt-ent-nom') && (el('cpt-ent-nom').innerHTML = escapeHTML(p.raison || inv?.entreprise_email || 'Entreprise') + ' <span style="font-size:10px;opacity:0.6">▾</span>');
+  const logoEl = el('cpt-ent-logo');
+  if (logoEl) {
+    if (p.logo) { logoEl.src = p.logo; logoEl.style.display = 'block'; }
+    else logoEl.style.display = 'none';
+  }
   setEl('cpt-ent-sub', (p.secteur || '') + (p.ville ? ' · ' + p.ville : ''));
 
   const total = f.length;
@@ -394,7 +442,7 @@ function renderFicheEntreprise() {
 
 function cptEntTab(tab) {
   CPT.currentTab = tab;
-  ['factures', 'devis', 'achats', 'avoirs', 'infos', 'releves'].forEach(function(t) {
+  ['factures', 'devis', 'achats', 'avoirs', 'extraction', 'infos', 'releves'].forEach(function(t) {
     const btn = el('cpt-tab-' + t);
     if (btn) {
       btn.style.background = t === tab ? '#1F6F72' : '#EAE4DA';
@@ -405,6 +453,7 @@ function cptEntTab(tab) {
   else if (tab === 'devis') renderCptDevis();
   else if (tab === 'achats') renderCptAchats();
   else if (tab === 'avoirs') renderCptTVA();
+  else if (tab === 'extraction') renderCptExtraction();
   else if (tab === 'infos') renderCptInfos();
   else if (tab === 'releves') renderCptReleves();
 }
@@ -415,6 +464,25 @@ CPT.filtres = { lettrage: null, tva: null, statut: null };
 function appliquerFiltreCpt(type, val) {
   CPT.filtres[type] = CPT.filtres[type] === val ? null : val;
   renderCptFactures();
+}
+
+// NOUVEAU: barre de recherche texte réutilisable (client/fournisseur)
+function creerFiltreRechercheCpt(cle, valeurActuelle, placeholder, fonctionRerender) {
+  return '<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #EAE4DA">' +
+    '<input value="' + escapeHTML(valeurActuelle || '') + '" oninput="CPT.filtres[\'' + cle + '\']=this.value;' + fonctionRerender + '()" placeholder="' + placeholder + '" style="width:100%;padding:8px 12px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;color:#2A2420;background:#F1EEE8;box-sizing:border-box">' +
+  '</div>';
+}
+
+// NOUVEAU: filtre par statut réutilisable (chips horizontaux)
+function creerFiltreStatutCpt(cle, valeurs, labels, fonctionRerender) {
+  const actuel = CPT.filtres[cle] || '';
+  return '<div style="display:flex;gap:6px;padding:8px 16px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto">' +
+    [''].concat(valeurs).map(function(v) {
+      const label = v === '' ? 'Tous' : (labels[v] || v);
+      const actif = actuel === v;
+      return '<button onclick="CPT.filtres[\'' + cle + '\']=\'' + v + '\';' + fonctionRerender + '()" style="padding:5px 12px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (actif ? '#1F6F72' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#6B5F54') + '">' + label + '</button>';
+    }).join('') +
+  '</div>';
 }
 
 // NOUVEAU: filtre par mois réutilisable (Factures, Achats) — construit la
@@ -465,6 +533,15 @@ function renderCptFactures() {
   if (CPT.filtres.moisFactures) {
     f = f.filter(function(fac) { return (fac.date_emission || '').substring(0, 7) === CPT.filtres.moisFactures; });
   }
+  // NOUVEAU: recherche par client
+  if (CPT.filtres.rechercheClient) {
+    const q = CPT.filtres.rechercheClient.toLowerCase();
+    f = f.filter(function(fac) { return (fac.client || '').toLowerCase().includes(q); });
+  }
+  // NOUVEAU: filtre par statut
+  if (CPT.filtres.statutFacture) {
+    f = f.filter(function(fac) { return fac.statut === CPT.filtres.statutFacture; });
+  }
 
   if (CPT.filtres.lettrage === false) {
     const lettres = (CPT.currentControles || []).filter(function(c) { return c.lettre; }).map(function(c) { return c.facture_id; });
@@ -494,6 +571,8 @@ function renderCptFactures() {
     '</div>' +
     '<div style="padding:6px 16px;background:#EEF3E4;font-size:10px;color:#55702E;border-bottom:1px solid #E3DCCF">dont ' + fmt(caPaye) + ' MAD encaissé(s)</div>' +
     creerFiltreMoisCpt('moisFactures', CPT.currentFactures, 'date_emission') +
+    creerFiltreRechercheCpt('rechercheClient', CPT.filtres.rechercheClient, 'Rechercher un client...', 'renderCptFactures') +
+    creerFiltreStatutCpt('statutFacture', ['envoyee','attente','payee','retard','annulee'], { envoyee:'Envoyée', attente:'En attente', payee:'Payée', retard:'En retard', annulee:'Annulée' }, 'renderCptFactures') +
     creerFiltreCpt() +
     '<div style="display:grid;grid-template-columns:1fr 36px 36px;padding:8px 16px;background:#F1EEE8;border-bottom:1px solid #EAE4DA">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Facture</div>' +
@@ -605,6 +684,11 @@ function renderCptAchats() {
   if (CPT.filtres.statutAchat) {
     achats = achats.filter(function(a) { return a.statut === CPT.filtres.statutAchat; });
   }
+  // NOUVEAU: recherche par fournisseur
+  if (CPT.filtres.rechercheFournisseur) {
+    const q = CPT.filtres.rechercheFournisseur.toLowerCase();
+    achats = achats.filter(function(a) { return (a.fournisseur || '').toLowerCase().includes(q); });
+  }
 
   const statutBg = { payee: '#EEF3E4', attente: '#F7EFDC' };
   const statutColor = { payee: '#55702E', attente: '#B8860B' };
@@ -625,6 +709,7 @@ function renderCptAchats() {
     list.innerHTML =
       '<div style="padding:12px 16px;background:#F5E4E1"><span style="font-size:12px;color:#8E2E24;font-weight:600">Total achats : 0 MAD</span></div>' +
       creerFiltreMoisCpt('moisAchats', CPT.currentAchats, 'date_achat') +
+      creerFiltreRechercheCpt('rechercheFournisseur', CPT.filtres.rechercheFournisseur, 'Rechercher un fournisseur...', 'renderCptAchats') +
       filtreStatutHtml +
       '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-title">Aucun achat' + (CPT.filtres.moisAchats || CPT.filtres.statutAchat ? ' pour ce filtre' : '') + '</div></div>';
     return;
@@ -637,6 +722,7 @@ function renderCptAchats() {
     '</div>' +
     '<div style="padding:6px 16px;background:#F5E4E1;font-size:10px;color:#8E2E24;border-bottom:1px solid #E0B6AC">dont TVA déductible : ' + fmt(totalTvaAchats) + ' MAD</div>' +
     creerFiltreMoisCpt('moisAchats', CPT.currentAchats, 'date_achat') +
+    creerFiltreRechercheCpt('rechercheFournisseur', CPT.filtres.rechercheFournisseur, 'Rechercher un fournisseur...', 'renderCptAchats') +
     filtreStatutHtml +
     '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1EEE8">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Achat</div>' +
@@ -791,6 +877,100 @@ function renderCptTVA() {
       '</div>' +
     '<button onclick="typeof exporterEcrituresComptables===\'function\' && exporterEcrituresComptables(CPT.currentFactures, CPT.currentAchats, CPT.currentPaiements, CPT.currentProfil)" style="width:100%;margin-top:8px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (plan comptable marocain)</button>' +
   '</div>';
+}
+
+// ============================================================
+// EXTRACTION CSV (basée sur les filtres déjà en place)
+// ============================================================
+CPT.extraction = { type: 'factures', mois: '', statut: '' };
+
+function renderCptExtraction() {
+  const list = el('cpt-ent-content');
+  if (!list) return;
+  const ex = CPT.extraction;
+  const source = ex.type === 'factures' ? (CPT.currentFactures||[]) : ex.type === 'achats' ? (CPT.currentAchats||[]) : (CPT.currentDevis||[]);
+  const champDate = ex.type === 'achats' ? 'date_achat' : 'date_emission';
+  const moisDisponibles = Array.from(new Set(source.map(function(d) { return (d[champDate]||'').substring(0,7); }).filter(Boolean))).sort().reverse();
+
+  list.innerHTML = '<div style="padding:16px">' +
+    '<div style="font-size:13px;font-weight:700;margin-bottom:12px">📤 Extraction CSV</div>' +
+
+    '<div class="f-lbl">Type de document</div>' +
+    '<div style="display:flex;gap:6px;margin-bottom:12px">' +
+      [['factures','Ventes'],['achats','Achats'],['devis','Devis']].map(function(t) {
+        const actif = ex.type === t[0];
+        return '<button onclick="CPT.extraction.type=\'' + t[0] + '\';renderCptExtraction()" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (actif?'#1F6F72':'#EAE4DA') + ';color:' + (actif?'#fff':'#6B5F54') + '">' + t[1] + '</button>';
+      }).join('') +
+    '</div>' +
+
+    '<div class="f-lbl">Mois</div>' +
+    '<select onchange="CPT.extraction.mois=this.value;renderCptExtraction()" style="width:100%;padding:8px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;background:#F1EEE8;margin-bottom:12px">' +
+      '<option value="">Tous les mois</option>' +
+      moisDisponibles.map(function(m) { return '<option value="' + m + '"' + (m===ex.mois?' selected':'') + '>' + m + '</option>'; }).join('') +
+    '</select>' +
+
+    (ex.type !== 'devis' ? (
+      '<div class="f-lbl">Statut</div>' +
+      '<select onchange="CPT.extraction.statut=this.value;renderCptExtraction()" style="width:100%;padding:8px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;background:#F1EEE8;margin-bottom:12px">' +
+        '<option value="">Tous les statuts</option>' +
+        (ex.type === 'factures'
+          ? ['envoyee','attente','payee','retard','annulee'].map(function(s){return '<option value="'+s+'"'+(s===ex.statut?' selected':'')+'>'+({envoyee:'Envoyée',attente:'En attente',payee:'Payée',retard:'En retard',annulee:'Annulée'}[s])+'</option>';}).join('')
+          : ['attente','payee'].map(function(s){return '<option value="'+s+'"'+(s===ex.statut?' selected':'')+'>'+({attente:'En attente',payee:'Payée'}[s])+'</option>';}).join('')
+        ) +
+      '</select>'
+    ) : '') +
+
+    '<div style="background:#F1EEE8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#6B5F54">' + calculerApercuExtractionCpt() + ' ligne(s) correspondent à ce filtre</div>' +
+
+    '<button onclick="extraireCSVCpt()" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Extraire le CSV</button>' +
+  '</div>';
+}
+
+function _filtrerExtractionCpt() {
+  const ex = CPT.extraction;
+  const source = ex.type === 'factures' ? (CPT.currentFactures||[]) : ex.type === 'achats' ? (CPT.currentAchats||[]) : (CPT.currentDevis||[]);
+  const champDate = ex.type === 'achats' ? 'date_achat' : 'date_emission';
+  return source.filter(function(d) {
+    if (ex.mois && (d[champDate]||'').substring(0,7) !== ex.mois) return false;
+    if (ex.statut && d.statut !== ex.statut) return false;
+    return true;
+  });
+}
+
+function calculerApercuExtractionCpt() {
+  return _filtrerExtractionCpt().length;
+}
+
+function extraireCSVCpt() {
+  const ex = CPT.extraction;
+  const lignes = _filtrerExtractionCpt();
+  if (!lignes.length) { showToast('Aucune ligne à extraire', 'error'); return; }
+
+  let headers, rows;
+  if (ex.type === 'factures') {
+    headers = ['Référence','Client','Date','Échéance','HT','TVA','TTC','Statut'];
+    rows = lignes.map(function(f) { return [f.ref, f.client, f.date_emission, f.echeance||'', (f.ht||0).toFixed(2), (f.tva||0).toFixed(2), (f.ttc||0).toFixed(2), f.statut]; });
+  } else if (ex.type === 'achats') {
+    headers = ['Fournisseur','Référence','Date','HT','TVA','TTC','Statut'];
+    rows = lignes.map(function(a) { return [a.fournisseur, a.ref_fournisseur||'', a.date_achat, (a.ht||0).toFixed(2), (a.tva||0).toFixed(2), (a.ttc||0).toFixed(2), a.statut]; });
+  } else {
+    headers = ['Référence','Client','Date','Validité','HT','TVA','TTC','Statut'];
+    rows = lignes.map(function(d) { return [d.ref, d.client, d.date_emission, d.validite||'', (d.ht||0).toFixed(2), (d.tva||0).toFixed(2), (d.ttc||0).toFixed(2), d.statut]; });
+  }
+
+  const csv = [headers].concat(rows).map(function(r) {
+    return r.map(function(v) { return '"' + String(v==null?'':v).replace(/"/g,'""') + '"'; }).join(',');
+  }).join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const nomEnt = (CPT.currentProfil?.raison || 'entreprise').replace(/\s+/g,'_');
+  a.download = ex.type + '_' + nomEnt + (ex.mois ? '_'+ex.mois : '') + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+  showToast('✅ CSV extrait (' + lignes.length + ' ligne(s))', 'success');
 }
 
 function renderCptInfos() {
