@@ -330,6 +330,30 @@ function afficherDiagnostic(titre, lignes) {
   document.body.appendChild(overlay);
 }
 
+// Télécharge un fichier stocké en base64 (data URL) — utilisé pour les
+// relevés bancaires, pièces jointes d'achats, etc.
+function telechargerFichierBase64(dataUrl, nomSouhaite) {
+  try {
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    // Déduire une extension raisonnable si le nom n'en a pas déjà une
+    let nom = nomSouhaite || 'fichier';
+    if (!/\.[a-zA-Z0-9]+$/.test(nom)) {
+      const m = dataUrl.match(/^data:([^;]+);/);
+      const mime = m ? m[1] : '';
+      const ext = mime.includes('pdf') ? '.pdf' : mime.includes('png') ? '.png' : mime.includes('jpeg') ? '.jpg' : '';
+      nom += ext;
+    }
+    a.download = nom;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('✅ Téléchargement lancé', 'success');
+  } catch(e) {
+    showToast('Erreur téléchargement: ' + e.message, 'error');
+  }
+}
+
 // ============================================================
 // BROUILLONS
 // ============================================================
