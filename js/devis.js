@@ -95,6 +95,16 @@ function confirmerLigneDevis() {
   renderLignesD();
 }
 
+// NOUVEAU: liste des BC disponibles à lier à ce devis
+function remplirPickerBCPourDevis() {
+  const sel = el('d-bc-lie');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Aucun</option>' +
+    (STATE.bonsCommande || []).map(function(bc) {
+      return '<option value="' + bc.id + '">' + escapeHTML(bc.ref||'') + ' — ' + escapeHTML(bc.fournisseur||'') + '</option>';
+    }).join('');
+}
+
 async function sauvegarderDevis() {
   const client = el('d-client')?.value.trim();
   if (!client) { showToast('Entrez le nom du client', 'error'); return; }
@@ -109,6 +119,7 @@ async function sauvegarderDevis() {
       date_emission: el('d-date')?.value,
       validite: parseInt(el('d-validite')?.value)||30,
       note: el('d-note')?.value.trim(),
+      bc_id: el('d-bc-lie')?.value ? parseInt(el('d-bc-lie').value) : null,
       statut: 'envoye', ht, tva:ht*0.2, ttc:ht*1.2,
       lignes: STATE.lignesD, devise: STATE.deviseD,
     });
@@ -192,6 +203,7 @@ async function convertirEnFacture(id) {
       user_id: sb.user.id, ref, client: d.client, chantier: d.chantier,
       date_emission: today(), paiement: 'virement', statut: 'envoyee',
       lignes: d.lignes, ht, tva: ht*0.2, ttc: ht*1.2, devis_ref: d.ref,
+      bc_id: d.bc_id || null,
       devise: d.devise||'MAD', montant_recu: 0
     });
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
@@ -281,9 +293,92 @@ async function sauvegarderAvoir() {
 // BON DE COMMANDE
 // ============================================================
 
+// ============================================================
+// SÉLECTION FOURNISSEUR POUR LE BON DE COMMANDE
+// (existant dans l'historique / lien BaniPay / recherche annuaire)
+// ============================================================
+
+function ouvrirPickerFournisseurBC() {
+  el('search-fournisseur-bc') && (el('search-fournisseur-bc').value = '');
+  afficherFournisseursHistoriqueBC();
+  el('modal-fournisseur-bc')?.classList.add('active');
+  setTimeout(function() { el('search-fournisseur-bc')?.focus(); }, 100);
+}
+
+function afficherFournisseursHistoriqueBC(filtreTexte) {
+  const noms = Array.from(new Set((STATE.achats || []).map(function(a) { return a.fournisseur; }).filter(Boolean)));
+  const q = (filtreTexte || '').toLowerCase();
+  const filtres = q ? noms.filter(function(n) { return n.toLowerCase().includes(q); }) : noms;
+  const list = el('fournisseur-bc-picker-list');
+  if (!list) return;
+  list.innerHTML = (filtres.length ? filtres.map(function(n) {
+    return '<div class="card" onclick="choisirFournisseurBC(' + "'" + n.replace(/'/g,"\\'") + "'" + ',null)"><div class="card-ico" style="background:#EDE6F0">🏢</div><div class="card-body"><div class="card-name">' + escapeHTML(n) + '</div><div class="card-ref">Déjà utilisé</div></div></div>';
+  }).join('') : '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucun fournisseur dans l\'historique</div>');
+}
+
+let _timeoutRechercheFournisseurBC = null;
+function rechercherFournisseurBC() {
+  const q = el('search-fournisseur-bc')?.value || '';
+  afficherFournisseursHistoriqueBC(q);
+  clearTimeout(_timeoutRechercheFournisseurBC);
+  if (q.length < 2) return;
+  // Recherche dans l'annuaire BaniPay (profils_entreprise) après une courte
+  // pause, pour ne pas spammer une requête à chaque frappe.
+  _timeoutRechercheFournisseurBC = setTimeout(async function() {
+    try {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?raison=ilike.*' + encodeURIComponent(q) + '*&select=id,raison,secteur,ville&limit=10', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+      });
+      const resultats = r.ok ? ((await r.json()) || []) : [];
+      const list = el('fournisseur-bc-picker-list');
+      if (!list) return;
+      if (resultats.length) {
+        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur BaniPay</div>' +
+          resultats.map(function(p) {
+            return '<div class="card" onclick="choisirFournisseurBC(' + "'" + (p.raison||'').replace(/'/g,"\\'") + "'" + ',\'' + p.id + '\')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div></div></div>';
+          }).join('');
+      }
+    } catch(e) {}
+  }, 400);
+}
+
+function choisirFournisseurBC(nom, id) {
+  el('bc-fournisseur') && (el('bc-fournisseur').value = nom);
+  el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = id || '');
+  closeAllModals();
+}
+
+async function importerFournisseurBCDepuisLien() {
+  const lien = (el('bc-fournisseur-lien')?.value || '').trim();
+  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+  try {
+    const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
+    const profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
+    if (!profilId) { showToast('Lien non reconnu', 'error'); return; }
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    const data = await r.json();
+    const p = data && data[0];
+    if (!p) { showToast('Profil introuvable', 'error'); return; }
+    el('bc-fournisseur') && (el('bc-fournisseur').value = p.raison || '');
+    el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = p.id || '');
+    el('bc-fournisseur-lien') && (el('bc-fournisseur-lien').value = '');
+    showToast('✅ Fournisseur importé : ' + p.raison, 'success');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+function rechercherFournisseurBCAnnuaire() {
+  ouvrirPickerFournisseurBC();
+  setTimeout(function() { el('search-fournisseur-bc')?.focus(); }, 150);
+}
+
 function initBonCommande(prefill) {
   STATE.lignesBC = prefill?.lignes||[];
   el('bc-fournisseur')&&(el('bc-fournisseur').value=prefill?.fournisseur||'');
+  el('bc-fournisseur-id')&&(el('bc-fournisseur-id').value='');
   el('bc-ref')&&(el('bc-ref').value=getRef('BC',STATE.bonsCommande||[]));
   el('bc-date')&&(el('bc-date').value=today());
   el('bc-livraison')&&(el('bc-livraison').value='');
@@ -304,11 +399,11 @@ function renderLignesBC() {
 }
 
 function openAddLigneBC() {
-  el('ml-desc')&&(el('ml-desc').value='');
-  el('ml-qte')&&(el('ml-qte').value='1');
-  el('ml-pu')&&(el('ml-pu').value='');
+  el('mlbc-desc')&&(el('mlbc-desc').value='');
+  el('mlbc-qte')&&(el('mlbc-qte').value='1');
+  el('mlbc-pu')&&(el('mlbc-pu').value='');
   el('modal-ligne-bc')?.classList.add('active');
-  setTimeout(()=>el('ml-desc')?.focus(),100);
+  setTimeout(()=>el('mlbc-desc')?.focus(),100);
 }
 
 function confirmerLigneBC() {
@@ -346,6 +441,7 @@ async function sauvegarderBonCommande() {
     user_id: sb.user?.id,
     ref: el('bc-ref')?.value,
     fournisseur: fournisseur,
+    fournisseur_id: el('bc-fournisseur-id')?.value || null,
     date_commande: el('bc-date')?.value || today(),
     livraison_prevue: el('bc-livraison')?.value || null,
     lignes: STATE.lignesBC,
@@ -421,6 +517,7 @@ function voirBonCommande(id) {
   if (!bc) return;
   STATE.lignesBC = bc.lignes || [];
   el('bc-fournisseur') && (el('bc-fournisseur').value = bc.fournisseur || '');
+  el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = bc.fournisseur_id || '');
   el('bc-ref') && (el('bc-ref').value = bc.ref || '');
   el('bc-date') && (el('bc-date').value = bc.date_commande || '');
   el('bc-livraison') && (el('bc-livraison').value = bc.livraison_prevue || '');
@@ -483,9 +580,28 @@ function confirmerLigneBL() {
   closeAllModals();renderLignesBL();
 }
 
-function genBonLivraisonPDF(refFactureLiee) {
+function genBonLivraisonPDF(refFactureLiee, blIdPourQR) {
   const client = el('bl-client')?.value.trim();
   if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
+
+  // NOUVEAU: le BL doit afficher le devis ET le BC liés (via la facture),
+  // plus son propre QR (pour qu'on puisse le retrouver/vérifier).
+  const refsQR = [];
+  const factureLiee = window._blFactureId ? (STATE.factures || []).find(function(f) { return f.id === window._blFactureId; }) : null;
+  if (factureLiee) {
+    if (factureLiee.devis_ref) {
+      const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === factureLiee.devis_ref; });
+      refsQR.push({ icon: '📝', label: 'Devis', ref: factureLiee.devis_ref, url: devisTrouve ? (window.location.origin + window.location.pathname + '?doc=' + devisTrouve.id + '&type=devis') : '' });
+    }
+    if (factureLiee.bc_id) {
+      const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === factureLiee.bc_id; });
+      if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: window.location.origin + window.location.pathname + '?bc=' + bcTrouve.id });
+    }
+  }
+  if (blIdPourQR) {
+    refsQR.push({ icon: '📦', label: 'Ce bon de livraison', ref: el('bl-ref')?.value, url: window.location.origin + window.location.pathname + '?bl=' + blIdPourQR });
+  }
+
   genDocPDF({
     type: 'BON DE LIVRAISON', ref: el('bl-ref')?.value, color: '#6E8F4E',
     emetteur: STATE.profil || {},
@@ -497,7 +613,8 @@ function genBonLivraisonPDF(refFactureLiee) {
     ht: 0, tva: 0, ttc: 0,
     devise: 'MAD',
     showPrices: false,
-    devis_ref: refFactureLiee ? 'Facture réf: ' + refFactureLiee : '',
+    devis_ref: (!refsQR.length && refFactureLiee) ? 'Facture réf: ' + refFactureLiee : '',
+    refsQR: refsQR,
   });
 }
 
@@ -526,7 +643,7 @@ async function sauvegarderBonLivraison() {
       STATE.bonsLivraison = STATE.bonsLivraison || [];
       STATE.bonsLivraison.unshift(result[0] || bl);
       showToast('✅ Bon de livraison enregistré' + (factureLiee ? ' et lié à ' + factureLiee.ref : ''), 'success');
-      genBonLivraisonPDF(factureLiee ? factureLiee.ref : '');
+      genBonLivraisonPDF(factureLiee ? factureLiee.ref : '', (result[0]||bl).id);
       goScreen('bons-livraison-list', null);
     }
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
@@ -567,7 +684,7 @@ function voirBonLivraison(id) {
   renderPickerFactureBL();
   renderLignesBL();
   const facture = bl.facture_id ? (STATE.factures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
-  genBonLivraisonPDF(facture ? facture.ref : '');
+  genBonLivraisonPDF(facture ? facture.ref : '', bl.id);
 }
 
 // NOUVEAU: création directe depuis une facture — pré-remplit client +
@@ -592,6 +709,7 @@ function creerBonLivraisonDepuisFacture(factureId) {
 function exportDevisPDF(id) {
   const d = STATE.devis.find(x=>x.id===id); if(!d) return;
   const lignes = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
+  const bc = d.bc_id ? (STATE.bonsCommande || []).find(function(b) { return b.id === d.bc_id; }) : null;
   genDocPDF({
     type: 'DEVIS', ref: d.ref, color: '#B8860B',
     emetteur: STATE.profil || {},
@@ -604,6 +722,7 @@ function exportDevisPDF(id) {
     doc_id: id,
     doc_url: window.location.origin + window.location.pathname + '?doc=' + id,
     signatureClient: d.signature_data || null,
+    refsQR: bc ? [{ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: window.location.origin + window.location.pathname + '?bc=' + bc.id }] : [],
   });
 }
 
