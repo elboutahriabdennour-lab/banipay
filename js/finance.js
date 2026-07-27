@@ -52,5 +52,86 @@ function renderPositionFinanciere() {
         '<div style="font-size:18px;font-weight:800;color:#A67A16">' + fmt(valeurStock) + ' MAD</div>' +
       '</div>' : '') +
 
-    '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans BaniPay — ne remplace pas un état de trésorerie comptable complet.</div>';
+    '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans BaniPay — ne remplace pas un état de trésorerie comptable complet.</div>' +
+    '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>';
+}
+
+// ============================================================
+// EXPORT COMPTABLE STRUCTURÉ — Plan Comptable Général Marocain (CGNC)
+// ============================================================
+// Génère un fichier d'écritures comptables (Date, Journal, Compte, Libellé,
+// Débit, Crédit, Pièce) importable dans N'IMPORTE QUEL logiciel comptable
+// (Sage, Odoo, Ciel, WinBiz...) — pas d'API propriétaire à maintenir, pas
+// de pari sur quel logiciel choisir.
+//
+// Comptes utilisés (CGNC) :
+//   3421 Clients            4411 Fournisseurs
+//   7111 Ventes de biens/services produits (au Maroc)
+//   6111 Achats de marchandises
+//   4455 État, TVA facturée (collectée)
+//   3455 État, TVA récupérable (déductible)
+//   5141 Banques
+
+const COMPTES_CGNC = {
+  clients: '3421',
+  fournisseurs: '4411',
+  ventes: '7111',
+  achats: '6111',
+  tvaCollectee: '4455',
+  tvaDeductible: '3455',
+  banque: '5141',
+};
+
+function exporterEcrituresComptables(factures, achats, paiements, profil) {
+  const lignes = [];
+  const raison = (profil && profil.raison) || 'Entreprise';
+
+  (factures || []).forEach(function(f) {
+    if (!f.date_emission) return;
+    const ht = Number(f.ht) || 0;
+    const tva = Number(f.tva) || 0;
+    const ttc = Number(f.ttc) || 0;
+    const libelle = 'Facture ' + (f.ref || '') + ' — ' + (f.client || '');
+    lignes.push([f.date_emission, 'VE', COMPTES_CGNC.clients, 'Clients', libelle, f.ref || '', ttc.toFixed(2), '']);
+    lignes.push([f.date_emission, 'VE', COMPTES_CGNC.ventes, 'Ventes de biens et services produits', libelle, f.ref || '', '', ht.toFixed(2)]);
+    if (tva > 0) lignes.push([f.date_emission, 'VE', COMPTES_CGNC.tvaCollectee, 'État, TVA facturée', libelle, f.ref || '', '', tva.toFixed(2)]);
+  });
+
+  (achats || []).forEach(function(a) {
+    if (!a.date_achat) return;
+    const ht = Number(a.ht) || 0;
+    const tva = Number(a.tva) || 0;
+    const ttc = Number(a.ttc) || 0;
+    const libelle = 'Achat ' + (a.ref_fournisseur || '') + ' — ' + (a.fournisseur || '');
+    lignes.push([a.date_achat, 'AC', COMPTES_CGNC.achats, 'Achats de marchandises', libelle, a.ref_fournisseur || '', ht.toFixed(2), '']);
+    if (tva > 0) lignes.push([a.date_achat, 'AC', COMPTES_CGNC.tvaDeductible, 'État, TVA récupérable', libelle, a.ref_fournisseur || '', tva.toFixed(2), '']);
+    lignes.push([a.date_achat, 'AC', COMPTES_CGNC.fournisseurs, 'Fournisseurs', libelle, a.ref_fournisseur || '', '', ttc.toFixed(2)]);
+  });
+
+  (paiements || []).forEach(function(p) {
+    if (!p.date) return;
+    const montant = Number(p.montant) || 0;
+    const facture = (factures || []).find(function(f) { return f.id === p.facture_id; });
+    const libelle = 'Règlement client — ' + (facture ? facture.ref : ('facture #' + p.facture_id));
+    lignes.push([p.date, 'BQ', COMPTES_CGNC.banque, 'Banques', libelle, facture ? facture.ref : '', montant.toFixed(2), '']);
+    lignes.push([p.date, 'BQ', COMPTES_CGNC.clients, 'Clients', libelle, facture ? facture.ref : '', '', montant.toFixed(2)]);
+  });
+
+  if (!lignes.length) { showToast('Aucune écriture à exporter', 'error'); return; }
+
+  lignes.sort(function(a, b) { return (a[0] || '').localeCompare(b[0] || ''); });
+
+  const headers = ['Date', 'Journal', 'N° Compte', 'Libellé Compte', 'Libellé Écriture', 'Référence Pièce', 'Débit', 'Crédit'];
+  const csv = [headers].concat(lignes).map(function(r) {
+    return r.map(function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ecritures_comptables_' + raison.replace(/\s+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+  showToast('✅ Export comptable téléchargé (' + lignes.length + ' lignes)', 'success');
 }
