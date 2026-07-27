@@ -1,6 +1,24 @@
 // BANIPAY — pdf.js
 
 
+// NOUVEAU: construit les références croisées d'une facture — devis, bon de
+// commande et bon de livraison liés, chacun avec un QR vers le document.
+function construireRefsQRFacture(f) {
+  const refsQR = [];
+  const base = window.location.origin + window.location.pathname;
+  if (f.devis_ref) {
+    const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === f.devis_ref; });
+    refsQR.push({ icon: '📝', label: 'Devis', ref: f.devis_ref, url: devisTrouve ? base + '?doc=' + devisTrouve.id + '&type=devis' : '' });
+  }
+  if (f.bc_id) {
+    const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === f.bc_id; });
+    if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: base + '?bc=' + bcTrouve.id });
+  }
+  const blTrouve = (STATE.bonsLivraison || []).find(function(bl) { return bl.facture_id === f.id; });
+  if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id });
+  return refsQR;
+}
+
 function exportPDF(id) {
   const f = STATE.factures.find(x=>x.id===id); if(!f) return;
   const profil = STATE.profil || {};
@@ -18,11 +36,10 @@ function exportPDF(id) {
     devise:f.devise||'MAD',
     montant_recu:f.montant_recu,
     showStamp: f.statut==='payee',
-    devis_ref: f.devis_ref||'',
-    bl_ref: f.bl_ref||'',
     doc_id: id,
     doc_url: docUrl,
     signatureClient: f.signature_data || null,
+    refsQR: construireRefsQRFacture(f),
   });
 }
 
@@ -50,7 +67,7 @@ function previewPDF() {
 
 
 function genDocPDF(opts) {
-  const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false} = opts;
+  const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false,refsQR=[]} = opts;
   // La signature de l'entreprise est automatiquement reprise depuis son profil
   // (paramètres > Ma signature/cachet) — inutile de la repasser à chaque appel.
   const signatureEmetteur = opts.signatureEmetteur || (p && p.signature_entreprise) || null;
@@ -149,9 +166,14 @@ tbody td{border-bottom:1px solid #EAE4DA}
 <div class="stripe"></div>
 <div style="height:12px"></div>
 
-${(devis_ref||bl_ref)?`<div class="refs-box">
+${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wrap;align-items:center">
   ${devis_ref?`<span>📝 Devis réf. : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
   ${bl_ref?`<span>📦 BL réf. : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
+  ${refsQR.map(function(r) {
+    return '<span style="display:inline-flex;align-items:center;gap:6px">' + (r.icon||'🔗') + ' ' + r.label + ' réf. : <strong>' + escapeHTML(String(r.ref||'')) + '</strong>' +
+      (r.url ? '<img src="https://api.qrserver.com/v1/create-qr-code/?size=44x44&data=' + encodeURIComponent(r.url) + '" width="30" height="30" style="border-radius:3px;vertical-align:middle">' : '') +
+    '</span>';
+  }).join('')}
 </div>`:''}
 
 <div class="blocs">
