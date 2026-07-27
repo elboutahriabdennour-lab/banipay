@@ -13,6 +13,37 @@ async function genNotifications() {
     STATE.notifications.push({ type: 'success', icon: '✅', title: 'Devis ' + d.ref + ' accepté', body: 'Client: ' + d.client });
   });
 
+  // NOUVEAU: facture bientôt en retard (échéance dans les 3 prochains jours,
+  // pas encore payée) — pour agir avant que ça devienne un vrai retard.
+  const dansTroisJours = new Date();
+  dansTroisJours.setDate(dansTroisJours.getDate() + 3);
+  const aujourdHui = new Date();
+  (STATE.factures || []).filter(function(f) {
+    if (f.statut === 'payee' || f.statut === 'retard' || !f.echeance) return false;
+    const ech = new Date(f.echeance);
+    return ech >= aujourdHui && ech <= dansTroisJours;
+  }).forEach(function(f) {
+    STATE.notifications.push({ type: 'warning', icon: '⏰', title: 'Échéance proche — ' + f.ref, body: 'Client: ' + f.client + ' · Échéance le ' + f.echeance });
+  });
+
+  // NOUVEAU: stock bas (seuil d'alerte configuré et atteint)
+  (STATE.produits || []).filter(function(p) {
+    return p.stock != null && p.seuil_alerte != null && Number(p.stock) <= Number(p.seuil_alerte);
+  }).forEach(function(p) {
+    STATE.notifications.push({ type: 'warning', icon: '📦', title: 'Stock bas — ' + p.nom, body: (p.stock) + ' ' + (p.unite||'u') + ' restant(s) (seuil: ' + p.seuil_alerte + ')' });
+  });
+
+  // NOUVEAU: abonnement (facturation récurrente) à générer sous 3 jours
+  if (STATE.abonnements && STATE.abonnements.length) {
+    (STATE.abonnements || []).filter(function(a) {
+      if (a.statut !== 'actif' || !a.prochaine_date) return false;
+      const prochaine = new Date(a.prochaine_date);
+      return prochaine >= aujourdHui && prochaine <= dansTroisJours;
+    }).forEach(function(a) {
+      STATE.notifications.push({ type: 'info', icon: '🔁', title: 'Facturation récurrente proche — ' + a.client, body: 'Prochaine génération le ' + a.prochaine_date });
+    });
+  }
+
   if (email) {
     try {
       // FIX: fonction RPC SECURITY DEFINER — élimine toute dépendance à une
@@ -520,6 +551,7 @@ function goScreen(name) {
     'modifier-produit': function() {},
     'stats': function() { renderStats(); renderStatsDashboard(); verifierRappels(); },
     'tva': renderTVA,
+    'position-financiere': renderPositionFinanciere,
     'recherche': initRecherche,
     'notifications': renderNotifScreen,
     'audit': renderJournalAudit,
