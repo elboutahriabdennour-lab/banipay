@@ -417,6 +417,20 @@ function appliquerFiltreCpt(type, val) {
   renderCptFactures();
 }
 
+// NOUVEAU: filtre par mois réutilisable (Factures, Achats) — construit la
+// liste des mois réellement présents dans les données, pas une liste figée.
+function creerFiltreMoisCpt(cle, documents, champDate) {
+  const mois = Array.from(new Set((documents || []).map(function(d) { return (d[champDate] || '').substring(0, 7); }).filter(Boolean))).sort().reverse();
+  if (!mois.length) return '';
+  const actuel = CPT.filtres[cle] || '';
+  return '<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #EAE4DA">' +
+    '<select onchange="CPT.filtres[\'' + cle + '\']=this.value;' + (cle === 'moisFactures' ? 'renderCptFactures()' : 'renderCptAchats()') + '" style="width:100%;padding:8px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;color:#2A2420;background:#F1EEE8">' +
+      '<option value="">Tous les mois</option>' +
+      mois.map(function(m) { return '<option value="' + m + '"' + (m === actuel ? ' selected' : '') + '>' + m + '</option>'; }).join('') +
+    '</select>' +
+  '</div>';
+}
+
 function creerFiltreCpt() {
   // FIX: cette fonction construisait les boutons via DOM + btn.onclick, puis
   // renvoyait div.outerHTML — qui NE SÉRIALISE PAS les gestionnaires de clic
@@ -447,6 +461,11 @@ function renderCptFactures() {
   if (!list) return;
   let f = CPT.currentFactures || [];
 
+  // NOUVEAU: filtre par mois (période)
+  if (CPT.filtres.moisFactures) {
+    f = f.filter(function(fac) { return (fac.date_emission || '').substring(0, 7) === CPT.filtres.moisFactures; });
+  }
+
   if (CPT.filtres.lettrage === false) {
     const lettres = (CPT.currentControles || []).filter(function(c) { return c.lettre; }).map(function(c) { return c.facture_id; });
     f = f.filter(function(fac) { return !lettres.includes(String(fac.id)); });
@@ -464,7 +483,17 @@ function renderCptFactures() {
   const statutColor = { payee:'#6E8F4E', attente:'#B8860B', retard:'#B23A2E', brouillon:'#9C9186', envoyee:'#C9971F', annulee:'#9C9186' };
   const statutLabel = { payee:'Payée', attente:'En attente', retard:'En retard', brouillon:'Brouillon', envoyee:'Envoyée', annulee:'Annulée' };
 
+  // NOUVEAU: chiffre d'affaires (sur les factures affichées après filtre)
+  const caTotal = f.reduce(function(s, fac) { return s + (Number(fac.ttc) || 0); }, 0);
+  const caPaye = f.filter(function(fac) { return fac.statut === 'payee'; }).reduce(function(s, fac) { return s + (Number(fac.ttc) || 0); }, 0);
+
   list.innerHTML =
+    '<div style="padding:12px 16px;background:#EEF3E4;display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-size:12px;color:#55702E;font-weight:600">💰 Chiffre d\'affaires' + (CPT.filtres.moisFactures ? ' (' + CPT.filtres.moisFactures + ')' : '') + '</span>' +
+      '<span style="font-size:15px;font-weight:800;color:#55702E">' + fmt(caTotal) + ' MAD</span>' +
+    '</div>' +
+    '<div style="padding:6px 16px;background:#EEF3E4;font-size:10px;color:#55702E;border-bottom:1px solid #E3DCCF">dont ' + fmt(caPaye) + ' MAD encaissé(s)</div>' +
+    creerFiltreMoisCpt('moisFactures', CPT.currentFactures, 'date_emission') +
     creerFiltreCpt() +
     '<div style="display:grid;grid-template-columns:1fr 36px 36px;padding:8px 16px;background:#F1EEE8;border-bottom:1px solid #EAE4DA">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Facture</div>' +
@@ -567,23 +596,48 @@ async function toggleTVARapide(factureId, btn) {
 function renderCptAchats() {
   const list = el('cpt-ent-content');
   if (!list) return;
-  const achats = CPT.currentAchats || [];
+  let achats = CPT.currentAchats || [];
 
-  if (!achats.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-title">Aucun achat</div></div>';
-    return;
+  // NOUVEAU: filtre par mois + par statut
+  if (CPT.filtres.moisAchats) {
+    achats = achats.filter(function(a) { return (a.date_achat || '').substring(0, 7) === CPT.filtres.moisAchats; });
+  }
+  if (CPT.filtres.statutAchat) {
+    achats = achats.filter(function(a) { return a.statut === CPT.filtres.statutAchat; });
   }
 
   const statutBg = { payee: '#EEF3E4', attente: '#F7EFDC' };
   const statutColor = { payee: '#55702E', attente: '#B8860B' };
   const statutLabel = { payee: 'Payée', attente: 'En attente' };
   const totalAchats = achats.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
+  const totalTvaAchats = achats.reduce(function(s, a) { return s + (Number(a.tva) || 0); }, 0);
+
+  const filtreStatutHtml =
+    '<div style="display:flex;gap:6px;padding:8px 16px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto">' +
+      ['', 'attente', 'payee'].map(function(s) {
+        const label = s === '' ? 'Tous' : (statutLabel[s] || s);
+        const actif = (CPT.filtres.statutAchat || '') === s;
+        return '<button onclick="CPT.filtres.statutAchat=\'' + s + '\';renderCptAchats()" style="padding:5px 12px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (actif ? '#B23A2E' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#6B5F54') + '">' + label + '</button>';
+      }).join('') +
+    '</div>';
+
+  if (!achats.length) {
+    list.innerHTML =
+      '<div style="padding:12px 16px;background:#F5E4E1"><span style="font-size:12px;color:#8E2E24;font-weight:600">Total achats : 0 MAD</span></div>' +
+      creerFiltreMoisCpt('moisAchats', CPT.currentAchats, 'date_achat') +
+      filtreStatutHtml +
+      '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-title">Aucun achat' + (CPT.filtres.moisAchats || CPT.filtres.statutAchat ? ' pour ce filtre' : '') + '</div></div>';
+    return;
+  }
 
   list.innerHTML =
     '<div style="padding:12px 16px;background:#F5E4E1;display:flex;justify-content:space-between;align-items:center">' +
-      '<span style="font-size:12px;color:#8E2E24;font-weight:600">Total achats</span>' +
+      '<span style="font-size:12px;color:#8E2E24;font-weight:600">Total achats' + (CPT.filtres.moisAchats ? ' (' + CPT.filtres.moisAchats + ')' : '') + '</span>' +
       '<span style="font-size:15px;font-weight:800;color:#8E2E24">' + fmt(totalAchats) + ' MAD</span>' +
     '</div>' +
+    '<div style="padding:6px 16px;background:#F5E4E1;font-size:10px;color:#8E2E24;border-bottom:1px solid #E0B6AC">dont TVA déductible : ' + fmt(totalTvaAchats) + ' MAD</div>' +
+    creerFiltreMoisCpt('moisAchats', CPT.currentAchats, 'date_achat') +
+    filtreStatutHtml +
     '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1EEE8">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Achat</div>' +
       '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
@@ -1477,11 +1531,18 @@ async function renderCptReleves() {
   if (!list) return;
   list.innerHTML = '<div style="padding:20px;text-align:center;color:#9C9186">Chargement...</div>';
   try {
-    const resp = await fetch(
-      SUPABASE_URL + '/rest/v1/releves_bancaires?user_id=eq.' + CPT.currentEntrepriseId + '&order=annee.desc,mois.desc',
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
-    );
-    const releves = await resp.json() || [];
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_releves_entreprise', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_entreprise_id: CPT.currentEntrepriseId })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(function(){return '';});
+      afficherDiagnosticComptable(['❌ RPC get_releves_entreprise a échoué', 'HTTP ' + resp.status, errText]);
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:#B23A2E">Erreur de chargement (voir diagnostic)</div>';
+      return;
+    }
+    const releves = (await resp.json()) || [];
     const moisLabels = ['','Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
     if (!releves.length) {
       list.innerHTML = '<div class="empty"><div class="empty-ico">🏦</div><div class="empty-title">Aucun releve</div><div>Aucun releve partage</div></div>';
@@ -1490,29 +1551,47 @@ async function renderCptReleves() {
     list.innerHTML = '<div style="padding:16px">' +
       '<div style="font-size:14px;font-weight:700;margin-bottom:14px">🏦 Releves bancaires</div>' +
       releves.map(function(rv) {
-        return '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-bottom:10px;display:flex;align-items:center;gap:12px">' +
-          '<div style="width:44px;height:44px;border-radius:12px;background:#EEF3E4;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
-          '<div style="flex:1">' +
-            '<div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(rv.mois)] || rv.mois) + ' ' + rv.annee + '</div>' +
-            '<div style="font-size:11px;color:#6B5F54">' + escapeHTML(rv.banque || '') + '</div>' +
+        return '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-bottom:10px">' +
+          '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">' +
+            '<div style="width:44px;height:44px;border-radius:12px;background:#EEF3E4;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
+            '<div style="flex:1">' +
+              '<div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(rv.mois)] || rv.mois) + ' ' + rv.annee + '</div>' +
+              '<div style="font-size:11px;color:#6B5F54">' + escapeHTML(rv.banque || '') + '</div>' +
+            '</div>' +
+            '<span data-rid="' + rv.id + '" class="badge-releve" style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;cursor:pointer;background:' + (rv.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (rv.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (rv.vu_par_comptable ? 'Vu' : 'Marquer vu') + '</span>' +
           '</div>' +
-          '<span data-rid="' + rv.id + '" class="badge-releve" style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;cursor:pointer;background:' + (rv.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (rv.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (rv.vu_par_comptable ? 'Vu' : 'Marquer vu') + '</span>' +
+          '<button class="btn-telecharger-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📥 Télécharger</button>' +
         '</div>';
       }).join('') +
     '</div>';
+
+    window._releves_cpt_cache = releves;
+
     list.addEventListener('click', async function handler(ev) {
       const badge = ev.target.closest('.badge-releve');
-      if (!badge || badge.textContent === 'Vu') return;
-      const rid = badge.dataset.rid;
-      await fetch(SUPABASE_URL + '/rest/v1/releves_bancaires?id=eq.' + rid, {
-        method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vu_par_comptable: true })
-      });
-      badge.textContent = 'Vu';
-      badge.style.background = '#EEF3E4';
-      badge.style.color = '#6E8F4E';
-      showToast('Releve marque comme vu', 'success');
+      if (badge && badge.textContent !== 'Vu') {
+        const rid = badge.dataset.rid;
+        const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_releve_vu', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_releve_id: String(rid), p_entreprise_id: CPT.currentEntrepriseId })
+        });
+        if (r.ok) {
+          badge.textContent = 'Vu';
+          badge.style.background = '#EEF3E4';
+          badge.style.color = '#6E8F4E';
+          showToast('Releve marque comme vu', 'success');
+        } else {
+          showToast('Erreur : ' + r.status, 'error');
+        }
+        return;
+      }
+      const btnDl = ev.target.closest('.btn-telecharger-releve');
+      if (btnDl) {
+        const rv = (window._releves_cpt_cache || []).find(function(x) { return String(x.id) === String(btnDl.dataset.rid); });
+        if (rv && rv.data) telechargerFichierBase64(rv.data, rv.nom_fichier || ('releve_' + rv.mois + '_' + rv.annee));
+        else showToast('Fichier introuvable', 'error');
+      }
     });
   } catch(ex) {
     list.innerHTML = '<div style="text-align:center;padding:40px;color:#B23A2E">Erreur: ' + ex.message + '</div>';
