@@ -235,6 +235,46 @@ async function afficherDocumentPublic(docId) {
       doc_url: window.location.href,
     });
 
+    // NOUVEAU: si un bon de livraison est lié à cette facture, le client
+    // peut le consulter directement — c'est le lien réel qui manquait
+    // (auparavant juste un texte libre, jamais retrouvable depuis ici).
+    if (!isDevis) {
+      try {
+        const rBL = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_livraison_facture', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_facture_id: docId })
+        });
+        if (rBL.ok) {
+          const bls = (await rBL.json()) || [];
+          if (bls.length) {
+            const bl = bls[0];
+            setTimeout(function() {
+              const screen = document.getElementById('pdf-fullscreen');
+              if (!screen) return;
+              const banniereBL = document.createElement('div');
+              banniereBL.style.cssText = 'background:#EEF3E4;padding:10px 16px;text-align:center;flex-shrink:0';
+              banniereBL.innerHTML = '<button id="btn-voir-bl-public" style="background:#55702E;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📦 Voir le bon de livraison ' + escapeHTML(bl.ref||'') + '</button>';
+              screen.insertBefore(banniereBL, screen.firstChild);
+              document.getElementById('btn-voir-bl-public').onclick = function() {
+                genDocPDF({
+                  type: 'BON DE LIVRAISON', ref: bl.ref, color: '#6E8F4E',
+                  emetteur: profil,
+                  destinataire: { nom: bl.client },
+                  date: bl.date_livraison,
+                  paiement: '',
+                  lignes: (bl.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: 0, unite: l.unite||'u' }; }),
+                  note: '', ht: 0, tva: 0, ttc: 0, devise: 'MAD',
+                  showPrices: false,
+                  devis_ref: 'Facture réf: ' + doc.ref,
+                });
+              };
+            }, 450);
+          }
+        }
+      } catch(eBL) {}
+    }
+
     // Type générique + champ de statut à considérer selon devis/facture
     const typeDoc = isDevis ? 'devis' : 'facture';
     const statutActuel = isDevis ? doc.statut : doc.reponse_client;
@@ -363,6 +403,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       verifierRappels();
       await traiterInvitation(inviteToken);
       await loadAchats();
+      if (typeof loadBonsCommande === 'function') await loadBonsCommande();
+      if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
     await loadConversations();
       if (typeof loadAbonnements === 'function') await loadAbonnements();
       if (typeof verifierAbonnements === 'function') await verifierAbonnements();
@@ -411,6 +453,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         verifierChangementsDevis();
         verifierRappels();
         await loadAchats();
+      if (typeof loadBonsCommande === 'function') await loadBonsCommande();
+      if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
     await loadConversations();
         if (typeof loadAbonnements === 'function') await loadAbonnements();
         if (typeof verifierAbonnements === 'function') await verifierAbonnements();
