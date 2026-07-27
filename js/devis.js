@@ -284,7 +284,7 @@ async function sauvegarderAvoir() {
 function initBonCommande(prefill) {
   STATE.lignesBC = prefill?.lignes||[];
   el('bc-fournisseur')&&(el('bc-fournisseur').value=prefill?.fournisseur||'');
-  el('bc-ref')&&(el('bc-ref').value=getRef('BC',[]));
+  el('bc-ref')&&(el('bc-ref').value=getRef('BC',STATE.bonsCommande||[]));
   el('bc-date')&&(el('bc-date').value=today());
   el('bc-livraison')&&(el('bc-livraison').value='');
   el('bc-note')&&(el('bc-note').value='');
@@ -336,13 +336,100 @@ function genBonCommandePDF() {
     showPrices: true,
   });
 }
-function initBonLivraison() {
-  STATE.lignesBL=[];
-  el('bl-client')&&(el('bl-client').value='');
-  el('bl-ref')&&(el('bl-ref').value=getRef('BL',[]));
-  el('bl-date')&&(el('bl-date').value=today());
-  el('bl-facture-ref')&&(el('bl-facture-ref').value='');
+
+// NOUVEAU: enregistre le bon de commande en base (auparavant : PDF à la
+// volée, jamais sauvegardé — aucun historique, aucune liste possible).
+async function sauvegarderBonCommande() {
+  const fournisseur = el('bc-fournisseur')?.value.trim();
+  if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
+  const bc = {
+    user_id: sb.user?.id,
+    ref: el('bc-ref')?.value,
+    fournisseur: fournisseur,
+    date_commande: el('bc-date')?.value || today(),
+    livraison_prevue: el('bc-livraison')?.value || null,
+    lignes: STATE.lignesBC,
+    note: el('bc-note')?.value || '',
+    statut: 'brouillon'
+  };
+  try {
+    const result = await sb.post('bons_commande', bc);
+    if (result) {
+      STATE.bonsCommande = STATE.bonsCommande || [];
+      STATE.bonsCommande.unshift(result[0] || bc);
+      showToast('✅ Bon de commande enregistré', 'success');
+      genBonCommandePDF();
+      goScreen('bons-commande-list', null);
+    }
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
+
+async function loadBonsCommande() {
+  try {
+    STATE.bonsCommande = (await sb.get('bons_commande', 'user_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
+  } catch(e) { STATE.bonsCommande = []; }
+  renderBonsCommandeListe();
+}
+
+function renderBonsCommandeListe() {
+  const list = el('bons-commande-liste');
+  if (!list) return;
+  const bcs = STATE.bonsCommande || [];
+  if (!bcs.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucun bon de commande</div></div>';
+    return;
+  }
+  list.innerHTML = bcs.map(function(bc) {
+    const ht = (bc.lignes || []).reduce(function(s, l) { return s + (l.qte||1)*(l.pu||0); }, 0);
+    return '<div class="card" onclick="voirBonCommande(' + bc.id + ')">' +
+      '<div class="card-ico" style="background:#EDE6F0">📋</div>' +
+      '<div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div></div>' +
+      '<div class="card-end"><div class="card-amount">' + fmt(ht*1.2) + ' MAD</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+function voirBonCommande(id) {
+  const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
+  if (!bc) return;
+  STATE.lignesBC = bc.lignes || [];
+  el('bc-fournisseur') && (el('bc-fournisseur').value = bc.fournisseur || '');
+  el('bc-ref') && (el('bc-ref').value = bc.ref || '');
+  el('bc-date') && (el('bc-date').value = bc.date_commande || '');
+  el('bc-livraison') && (el('bc-livraison').value = bc.livraison_prevue || '');
+  el('bc-note') && (el('bc-note').value = bc.note || '');
+  renderLignesBC();
+  genBonCommandePDF();
+}
+
+function initBonLivraison(prefill) {
+  STATE.lignesBL = prefill?.lignes || [];
+  el('bl-client') && (el('bl-client').value = prefill?.client || '');
+  el('bl-ref') && (el('bl-ref').value = getRef('BL', STATE.bonsLivraison||[]));
+  el('bl-date') && (el('bl-date').value = today());
+  window._blFactureId = prefill?.facture_id || null;
+  renderPickerFactureBL();
   renderLignesBL();
+}
+
+// NOUVEAU: sélecteur de la facture liée (remplace le champ texte libre
+// "Facture réf" — c'est ce vrai lien qui permet au client de retrouver le
+// bon de livraison depuis sa facture).
+function renderPickerFactureBL() {
+  const sel = el('bl-facture-liee');
+  if (!sel) return;
+  const factures = (STATE.factures || []).slice(0, 100);
+  sel.innerHTML = '<option value="">Aucune (BL indépendant)</option>' +
+    factures.map(function(f) {
+      return '<option value="' + f.id + '"' + (window._blFactureId === f.id ? ' selected' : '') + '>' + escapeHTML(f.ref||'') + ' — ' + escapeHTML(f.client||'') + '</option>';
+    }).join('');
+}
+
+function surChangementFactureBL() {
+  const id = parseInt(el('bl-facture-liee')?.value || '');
+  window._blFactureId = id || null;
+  const f = (STATE.factures || []).find(function(x) { return x.id === id; });
+  if (f && el('bl-client') && !el('bl-client').value) el('bl-client').value = f.client || '';
 }
 
 function renderLignesBL() {
@@ -369,7 +456,7 @@ function confirmerLigneBL() {
   closeAllModals();renderLignesBL();
 }
 
-function genBonLivraisonPDF() {
+function genBonLivraisonPDF(refFactureLiee) {
   const client = el('bl-client')?.value.trim();
   if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
   genDocPDF({
@@ -383,9 +470,98 @@ function genBonLivraisonPDF() {
     ht: 0, tva: 0, ttc: 0,
     devise: 'MAD',
     showPrices: false,
-    devis_ref: el('bl-facture-ref')?.value ? 'Facture réf: ' + el('bl-facture-ref').value : '',
+    devis_ref: refFactureLiee ? 'Facture réf: ' + refFactureLiee : '',
   });
 }
+
+// NOUVEAU: enregistre le BL en base avec un vrai facture_id — c'est ce qui
+// permet au client de le retrouver depuis sa facture (voir
+// afficherDocumentPublic dans app.js).
+async function sauvegarderBonLivraison() {
+  const client = el('bl-client')?.value.trim();
+  if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
+  const factureId = window._blFactureId || null;
+  const factureLiee = factureId ? (STATE.factures || []).find(function(f) { return f.id === factureId; }) : null;
+
+  const bl = {
+    user_id: sb.user?.id,
+    ref: el('bl-ref')?.value,
+    client: client,
+    facture_id: factureId,
+    date_livraison: el('bl-date')?.value || today(),
+    lignes: STATE.lignesBL,
+    note: '',
+    statut: 'prepare'
+  };
+  try {
+    const result = await sb.post('bons_livraison', bl);
+    if (result) {
+      STATE.bonsLivraison = STATE.bonsLivraison || [];
+      STATE.bonsLivraison.unshift(result[0] || bl);
+      showToast('✅ Bon de livraison enregistré' + (factureLiee ? ' et lié à ' + factureLiee.ref : ''), 'success');
+      genBonLivraisonPDF(factureLiee ? factureLiee.ref : '');
+      goScreen('bons-livraison-list', null);
+    }
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
+
+async function loadBonsLivraison() {
+  try {
+    STATE.bonsLivraison = (await sb.get('bons_livraison', 'user_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
+  } catch(e) { STATE.bonsLivraison = []; }
+  renderBonsLivraisonListe();
+}
+
+function renderBonsLivraisonListe() {
+  const list = el('bons-livraison-liste');
+  if (!list) return;
+  const bls = STATE.bonsLivraison || [];
+  if (!bls.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">Aucun bon de livraison</div></div>';
+    return;
+  }
+  list.innerHTML = bls.map(function(bl) {
+    const facture = bl.facture_id ? (STATE.factures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
+    return '<div class="card" onclick="voirBonLivraison(' + bl.id + ')">' +
+      '<div class="card-ico" style="background:#EEF3E4">📦</div>' +
+      '<div class="card-body"><div class="card-name">' + escapeHTML(bl.client||'') + '</div><div class="card-ref">' + (bl.ref||'') + ' · ' + (bl.date_livraison||'') + (facture ? ' · 🔗 ' + escapeHTML(facture.ref) : '') + '</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+function voirBonLivraison(id) {
+  const bl = (STATE.bonsLivraison || []).find(function(x) { return x.id === id; });
+  if (!bl) return;
+  STATE.lignesBL = bl.lignes || [];
+  el('bl-client') && (el('bl-client').value = bl.client || '');
+  el('bl-ref') && (el('bl-ref').value = bl.ref || '');
+  el('bl-date') && (el('bl-date').value = bl.date_livraison || '');
+  window._blFactureId = bl.facture_id || null;
+  renderPickerFactureBL();
+  renderLignesBL();
+  const facture = bl.facture_id ? (STATE.factures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
+  genBonLivraisonPDF(facture ? facture.ref : '');
+}
+
+// NOUVEAU: création directe depuis une facture — pré-remplit client +
+// lignes + lie automatiquement le facture_id (le moyen le plus fiable
+// d'avoir une liaison correcte, sans ressaisie).
+function creerBonLivraisonDepuisFacture(factureId) {
+  const f = (STATE.factures || []).find(function(x) { return x.id === factureId; });
+  if (!f) return;
+  const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
+  // FIX: goScreen('bon-livraison') appelle initBonLivraison() SANS argument
+  // (remise à zéro) — on navigue donc D'ABORD, puis on applique le
+  // pré-remplissage APRÈS, sinon la navigation écraserait immédiatement ce
+  // qu'on vient de préparer.
+  goScreen('bon-livraison');
+  initBonLivraison({
+    client: f.client,
+    facture_id: f.id,
+    lignes: lignes.map(function(l) { return { desc: l.desc, qte: l.qte, unite: l.unite || 'u' }; })
+  });
+}
+
 function exportDevisPDF(id) {
   const d = STATE.devis.find(x=>x.id===id); if(!d) return;
   const lignes = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
