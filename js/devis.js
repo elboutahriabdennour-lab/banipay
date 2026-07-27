@@ -839,8 +839,21 @@ async function traiterActionDocument(docId, type, action, signatureData) {
         </div>
         <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>
         <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
+        <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect">4</span>s...</div>
       </div>
     `;
+    // NOUVEAU: retour automatique à l'accueil après 4 secondes, avec un
+    // petit compte à rebours visible plutôt qu'une redirection surprise.
+    let secondesRestantes = 4;
+    const intervalRedirect = setInterval(function() {
+      secondesRestantes--;
+      const span = document.getElementById('compte-redirect');
+      if (span) span.textContent = secondesRestantes;
+      if (secondesRestantes <= 0) {
+        clearInterval(intervalRedirect);
+        window.location.href = window.location.origin + window.location.pathname;
+      }
+    }, 1000);
   } catch(e) {
     document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
   }
