@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785092631">
+<link rel="stylesheet" href="css/style.css?v=1785138219">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -25,7 +25,7 @@
            (la pile flottante appendModeBanner(), présente sur tous les écrans,
            contrairement à ce bouton qui n'existait que sur le dashboard) -->
       <span class="t-icon" onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer">💬<span id="msg-badge" style="position:absolute;top:-4px;right:-4px;background:#B23A2E;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center">!</span></span>
-      <span class="t-icon" onclick="goScreen('notifications',null)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#B23A2E;border-radius:50%;font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center">0</span></span>
+      <span class="t-icon" onclick="toggleNotifDropdown(event)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#B23A2E;border-radius:50%;font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center">0</span></span>
       <span class="t-icon" onclick="goScreen('recherche',null)">🔍</span>
       <div class="t-avatar" id="user-avatar" onclick="goScreen('profil',null)">AB</div>
     </div>
@@ -124,24 +124,24 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785092631"></script>
-  <script src="js/utils.js?v=1785092631"></script>
-  <script src="js/auth.js?v=1785092631"></script>
-  <script src="js/nav.js?v=1785092631"></script>
-  <script src="js/factures.js?v=1785092631"></script>
-  <script src="js/devis.js?v=1785092631"></script>
-  <script src="js/clients.js?v=1785092631"></script>
-  <script src="js/produits.js?v=1785092631"></script>
-  <script src="js/pdf.js?v=1785092631"></script>
-  <script src="js/stats.js?v=1785092631"></script>
-  <script src="js/profil.js?v=1785092631"></script>
-  <script src="js/comptable.js?v=1785092631"></script>
-  <script src="js/messages.js?v=1785092631"></script>
-<script src="js/achats.js?v=1785092631"></script>
-<script src="js/stock.js?v=1785092631"></script>
-<script src="js/abonnements.js?v=1785092631"></script>
-<script src="js/signature.js?v=1785092631"></script>
-<script src="js/app.js?v=1785092631"></script>
+<script src="js/config.js?v=1785138219"></script>
+  <script src="js/utils.js?v=1785138219"></script>
+  <script src="js/auth.js?v=1785138219"></script>
+  <script src="js/nav.js?v=1785138219"></script>
+  <script src="js/factures.js?v=1785138219"></script>
+  <script src="js/devis.js?v=1785138219"></script>
+  <script src="js/clients.js?v=1785138219"></script>
+  <script src="js/produits.js?v=1785138219"></script>
+  <script src="js/pdf.js?v=1785138219"></script>
+  <script src="js/stats.js?v=1785138219"></script>
+  <script src="js/profil.js?v=1785138219"></script>
+  <script src="js/comptable.js?v=1785138219"></script>
+  <script src="js/messages.js?v=1785138219"></script>
+<script src="js/achats.js?v=1785138219"></script>
+<script src="js/stock.js?v=1785138219"></script>
+<script src="js/abonnements.js?v=1785138219"></script>
+<script src="js/signature.js?v=1785138219"></script>
+<script src="js/app.js?v=1785138219"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
