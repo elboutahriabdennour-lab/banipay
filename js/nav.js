@@ -111,11 +111,16 @@ function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
   const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝' };
   return allNotifs.map(function(n) {
-    const isDoc = n.type === 'facture_recue' || n.type === 'devis_recu';
+    // FIX: même bug que plus haut — n.type est toujours 'info' pour les
+    // notifications de la base, le vrai type est dans n.raw.type. Cette
+    // vérification étant toujours fausse, AUCUNE notification n'a jamais
+    // été traitée comme "document à ouvrir" : ni la classe cliquable, ni
+    // les boutons Accepter/Attente/Refuser ne s'affichaient jamais.
+    const isDoc = n.raw && (n.raw.type === 'facture_recue' || n.raw.type === 'devis_recu');
     let meta = {};
     try { meta = JSON.parse((n.raw && n.raw.meta) || '{}'); } catch(e3) {}
     return '<div class="notif-item' + (n.lue ? '' : ' notif-unread') + (isDoc ? ' notif-doc-view' : '') + '" ' + (isDoc ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="cursor:pointer"' : '') + '>' +
-      '<div class="notif-ico">' + (typeIco[n.type] || '🔔') + '</div>' +
+      '<div class="notif-ico">' + (typeIco[n.raw && n.raw.type] || n.icon || '🔔') + '</div>' +
       '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
       '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
       (isDoc ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir le document</div><div style="display:flex;gap:6px;margin-top:8px">' +
@@ -340,7 +345,14 @@ async function toggleNotifDropdown(event) {
   // Marquer comme lues les notifications purement informatives (sans
   // bouton d'action) — c'est ce qui empêchait le compteur de redescendre.
   const aMarquer = allNotifs.filter(function(n) {
-    return n.raw && n.id && n.type !== 'facture_recue' && n.type !== 'devis_recu';
+    // FIX: n.type vaut toujours 'info' pour les notifications venant de la
+    // base (c'est juste une catégorie d'affichage) — le vrai type stocké en
+    // base est dans n.raw.type. Vérifier n.type ici marquait TOUJOURS vrai,
+    // donc TOUTES les notifications étaient marquées lues et supprimées dès
+    // l'ouverture du panneau, y compris les devis/factures reçus qui ne
+    // doivent jamais être marqués avant une vraie décision (accepter/
+    // refuser/attente).
+    return n.raw && n.id && n.raw.type !== 'facture_recue' && n.raw.type !== 'devis_recu';
   });
   for (const n of aMarquer) {
     try {
