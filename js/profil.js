@@ -487,11 +487,18 @@ function renderReleves() {
         '</div>' +
         '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
           '<span style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:' + (r.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (r.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (r.vu_par_comptable ? '✓ Vu' : '⏳ En attente') + '</span>' +
+          '<button onclick="telechargerReleveEntreprise(\'' + r.id + '\')" style="background:#F1EEE8;color:#6B5F54;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">📥</button>' +
           '<button onclick="supprimerReleve(\'' + r.id + '\')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
         '</div>' +
       '</div>' +
     '</div>';
   }).join('');
+}
+
+function telechargerReleveEntreprise(releveId) {
+  const r = (STATE.releves || []).find(function(x) { return String(x.id) === String(releveId); });
+  if (!r || !r.data) { showToast('Fichier introuvable', 'error'); return; }
+  if (typeof telechargerFichierBase64 === 'function') telechargerFichierBase64(r.data, r.nom_fichier || 'releve');
 }
 
 async function uploadReleve(event) {
