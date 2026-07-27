@@ -2,6 +2,7 @@
 
 STATE.achats = STATE.achats || [];
 STATE.achatFiltreActuel = 'tous';
+STATE.lignesAchat = STATE.lignesAchat || [];
 
 // ============================================================
 // CHARGEMENT
@@ -177,9 +178,14 @@ async function importerAchatDepuisFactureId(factureId) {
     el('achat-ref') && (el('achat-ref').value = f.ref || '');
     el('achat-date') && (el('achat-date').value = f.date_emission || today());
     el('achat-echeance') && (el('achat-echeance').value = f.echeance || '');
-    el('achat-ht') && (el('achat-ht').value = f.ht || '');
     el('achat-tva-taux') && (el('achat-tva-taux').value = f.ht > 0 ? Math.round((f.tva / f.ht) * 100) : 20);
-    calcAchatTotaux();
+    // NOUVEAU: reprend les lignes telles quelles depuis la facture reçue —
+    // plus besoin de ressaisir chaque article, la ventilation est déjà là.
+    const lignesFacture = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
+    STATE.lignesAchat = lignesFacture.map(function(l) {
+      return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u', produit_id: null };
+    });
+    renderLignesAchat();
     window._achatFactureLieeId = factureId;
     showToast('✅ Facture ' + (f.ref || '') + ' importée — vérifiez puis enregistrez', 'success');
     goScreen('nouvelle-achat');
@@ -326,6 +332,7 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
     const f = await _fetchFacturePublique(factureId);
     if (!f) return;
     const emetteur = await _fetchProfilPublic(f.user_id);
+    const lignesFacture = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
 
     const achat = {
       user_id: uid,
@@ -341,6 +348,10 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
       ttc: f.ttc || 0,
       categorie: 'autre',
       statut: 'attente',
+      // NOUVEAU: reprend les lignes de la facture reçue telles quelles
+      // (non liées au catalogue — les deux entreprises ont des catalogues
+      // distincts, impossible de deviner une correspondance automatique).
+      lignes: lignesFacture.map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u', produit_id: null }; }),
       note: 'Enregistré automatiquement à l\'acceptation de la facture ' + (f.ref || ''),
       facture_source_id: String(factureId),
       origine: 'auto_acceptation',
@@ -363,8 +374,73 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
 // CALCUL TOTAUX
 // ============================================================
 
+// ============================================================
+// LIGNES D'ACHAT (désignation, quantité, prix, article lié)
+// ============================================================
+// NOUVEAU: un achat s'itemise maintenant en lignes, comme une facture/devis
+// — chaque ligne peut optionnellement être liée à un article du catalogue,
+// ce qui alimente automatiquement le stock à l'enregistrement.
+
+function renderLignesAchat() {
+  const c = el('achat-lignes-container');
+  if (!c) return;
+  c.innerHTML = STATE.lignesAchat.map(function(l, i) {
+    return '<div class="ligne-item">' +
+      '<div class="ligne-body"><div class="ligne-desc">' + escapeHTML(l.desc) + (l.produit_id ? ' <span style="color:#55702E;font-size:10px">📦</span>' : '') + '</div>' +
+      '<div class="ligne-meta">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div>' +
+      '<div class="ligne-amt">' + fmt(l.qte * l.pu) + ' MAD</div>' +
+      '<button class="ligne-del" onclick="STATE.lignesAchat.splice(' + i + ',1);renderLignesAchat()">×</button>' +
+    '</div>';
+  }).join('');
+  calcAchatTotaux();
+}
+
+function openAddLigneAchat() {
+  el('mla-desc') && (el('mla-desc').value = '');
+  el('mla-qte') && (el('mla-qte').value = '1');
+  el('mla-pu') && (el('mla-pu').value = '');
+  el('mla-unite') && (el('mla-unite').value = 'u');
+  window._ligneAchatProduitId = null;
+  el('modal-ligne-achat')?.classList.add('active');
+  setTimeout(function() { el('mla-desc')?.focus(); }, 100);
+}
+
+function confirmerLigneAchat() {
+  const desc = (el('mla-desc')?.value || '').trim();
+  const qte = parseFloat((el('mla-qte')?.value || '1').replace(',', '.')) || 1;
+  const pu = parseFloat((el('mla-pu')?.value || '0').replace(',', '.')) || 0;
+  const unite = el('mla-unite')?.value || 'u';
+  if (!desc) { showToast('Entrez une description', 'error'); return; }
+  if (pu <= 0) { showToast('Entrez un prix unitaire', 'error'); return; }
+  STATE.lignesAchat.push({ desc, qte, pu, unite, produit_id: window._ligneAchatProduitId || null });
+  window._ligneAchatProduitId = null;
+  closeAllModals();
+  renderLignesAchat();
+}
+
+// Choisir un article du catalogue pré-remplit la ligne ET la lie au stock
+function ouvrirCatalogueAchat() {
+  el('search-produit') && (el('search-produit').value = '');
+  window._catalogueModePourAchat = true;
+  filtrerProduits();
+  el('modal-produits')?.classList.add('active');
+}
+
+// Étend ajouterDepuisCatalogue (produits.js) pour aussi gérer le contexte achat
+function ajouterDepuisCatalogueAchatSiActif(produitId) {
+  if (!window._catalogueModePourAchat) return false;
+  window._catalogueModePourAchat = false;
+  const p = (STATE.produits || []).find(function(x) { return x.id === produitId; });
+  if (!p) return true;
+  STATE.lignesAchat.push({ desc: p.nom, qte: 1, pu: p.cout_moyen || p.prix_ht || 0, unite: p.unite || 'u', produit_id: p.id });
+  closeAllModals();
+  renderLignesAchat();
+  showToast('✅ ' + p.nom + ' ajouté (lié au stock)', 'success');
+  return true;
+}
+
 function calcAchatTotaux() {
-  const ht = parseFloat(el('achat-ht')?.value || 0) || 0;
+  const ht = (STATE.lignesAchat || []).reduce(function(s, l) { return s + (Number(l.qte)||0) * (Number(l.pu)||0); }, 0);
   const taux = parseFloat(el('achat-tva-taux')?.value || 20) / 100;
   const tva = ht * taux;
   const ttc = ht + tva;
@@ -399,14 +475,9 @@ function previewAchatPJ(event) {
 // LIER À UN ARTICLE DU CATALOGUE (alimente le stock automatiquement)
 // ============================================================
 
-function renderAchatProduitPicker() {
-  const sel = el('achat-produit-lie');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Aucun (achat non lié au stock)</option>' +
-    (STATE.produits || []).map(function(p) {
-      return '<option value="' + p.id + '">' + escapeHTML(p.nom) + (p.stock != null ? ' (stock: ' + p.stock + ')' : '') + '</option>';
-    }).join('');
-}
+// NOTE: renderAchatProduitPicker() a été retirée — remplacée par les lignes
+// itemisées, chacune pouvant être liée individuellement au catalogue via
+// ouvrirCatalogueAchat().
 
 // ============================================================
 // SAUVEGARDER ACHAT
@@ -415,14 +486,12 @@ function renderAchatProduitPicker() {
 async function sauvegarderAchat() {
   const fournisseur = (el('achat-fournisseur')?.value || '').trim();
   if (!fournisseur) { showToast('Saisissez le fournisseur', 'error'); return; }
+  if (!STATE.lignesAchat.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
 
-  const ht = parseFloat(el('achat-ht')?.value || 0) || 0;
+  const ht = STATE.lignesAchat.reduce(function(s, l) { return s + (Number(l.qte)||0) * (Number(l.pu)||0); }, 0);
   const taux = parseFloat(el('achat-tva-taux')?.value || 20) / 100;
   const tva = ht * taux;
   const ttc = ht + tva;
-
-  const produitLieId = el('achat-produit-lie')?.value || '';
-  const quantiteStock = parseFloat(el('achat-quantite-stock')?.value || 0) || 0;
 
   const achat = {
     user_id: sb.user?.id,
@@ -439,6 +508,7 @@ async function sauvegarderAchat() {
     categorie: el('achat-categorie')?.value || 'autre',
     statut: el('achat-statut')?.value || 'attente',
     note: el('achat-note')?.value || '',
+    lignes: STATE.lignesAchat,
     pj_data: STATE._achatPJData || null,
     pj_nom: STATE._achatPJNom || null,
     facture_source_id: window._achatFactureLieeId || null,
@@ -450,15 +520,21 @@ async function sauvegarderAchat() {
     const result = await sb.post('factures_achat', achat);
     if (result) {
       STATE.achats.unshift(result[0] || achat);
+      const lignesEnregistrees = STATE.lignesAchat.slice();
+      STATE.lignesAchat = [];
       STATE._achatPJData = null;
       STATE._achatPJNom = null;
       window._achatFactureLieeId = null;
 
-      // NOUVEAU: si l'achat est lié à un article du catalogue avec une
-      // quantité, on alimente le stock automatiquement (entrée).
-      if (produitLieId && quantiteStock > 0 && typeof enregistrerEntreeStock === 'function') {
-        const coutUnitaire = quantiteStock > 0 ? (ht / quantiteStock) : 0;
-        await enregistrerEntreeStock(parseInt(produitLieId), quantiteStock, coutUnitaire, 'Achat ' + (achat.ref_fournisseur || fournisseur));
+      // NOUVEAU: chaque ligne liée à un article du catalogue alimente le
+      // stock automatiquement (entrée), avec son propre coût unitaire —
+      // remplace l'ancien lien unique "un achat = un seul article".
+      if (typeof enregistrerEntreeStock === 'function') {
+        for (const l of lignesEnregistrees) {
+          if (l.produit_id && Number(l.qte) > 0) {
+            await enregistrerEntreeStock(l.produit_id, Number(l.qte), Number(l.pu) || 0, 'Achat ' + (achat.ref_fournisseur || fournisseur));
+          }
+        }
       }
 
       showToast('\u2705 Facture d\'achat enregistrée !', 'success');
@@ -505,6 +581,21 @@ function ouvrirDetailAchat(id) {
       '<div style="font-size:12px;color:#6B5F54">Catégorie: ' + (catLabels[a.categorie] || a.categorie || '—') + '</div>' +
       (a.note ? '<div style="margin-top:8px;font-size:12px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px">📝 ' + escapeHTML(a.note) + '</div>' : '') +
     '</div>' +
+
+    ((function() {
+      const lignes = typeof a.lignes === 'string' ? JSON.parse(a.lignes || '[]') : (a.lignes || []);
+      if (!lignes.length) return '';
+      return '<div style="margin:0 16px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">' +
+        '<div style="font-size:12px;font-weight:700;color:#2A2420;margin-bottom:10px">Détail des articles/prestations</div>' +
+        lignes.map(function(l) {
+          return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1EEE8">' +
+            '<div><div style="font-size:12px;font-weight:600">' + escapeHTML(l.desc||'') + (l.produit_id ? ' <span style="color:#55702E;font-size:10px">📦 stock</span>' : '') + '</div>' +
+            '<div style="font-size:11px;color:#9C9186">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div>' +
+            '<div style="font-size:12px;font-weight:700">' + fmt((Number(l.qte)||0)*(Number(l.pu)||0)) + ' MAD</div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    })()) +
 
     (a.fournisseur_banipay && a.fournisseur_id ?
       '<div style="margin:0 16px 16px;background:#E9F4F3;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
