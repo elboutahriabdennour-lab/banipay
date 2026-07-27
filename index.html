@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785181049">
+<link rel="stylesheet" href="css/style.css?v=1785183576">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,25 +124,25 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785181049"></script>
-  <script src="js/utils.js?v=1785181049"></script>
-  <script src="js/auth.js?v=1785181049"></script>
-  <script src="js/nav.js?v=1785181049"></script>
-  <script src="js/factures.js?v=1785181049"></script>
-  <script src="js/devis.js?v=1785181049"></script>
-  <script src="js/clients.js?v=1785181049"></script>
-  <script src="js/produits.js?v=1785181049"></script>
-  <script src="js/pdf.js?v=1785181049"></script>
-  <script src="js/stats.js?v=1785181049"></script>
-  <script src="js/profil.js?v=1785181049"></script>
-  <script src="js/comptable.js?v=1785181049"></script>
-  <script src="js/messages.js?v=1785181049"></script>
-<script src="js/achats.js?v=1785181049"></script>
-<script src="js/stock.js?v=1785181049"></script>
-<script src="js/finance.js?v=1785181049"></script>
-<script src="js/abonnements.js?v=1785181049"></script>
-<script src="js/signature.js?v=1785181049"></script>
-<script src="js/app.js?v=1785181049"></script>
+<script src="js/config.js?v=1785183576"></script>
+  <script src="js/utils.js?v=1785183576"></script>
+  <script src="js/auth.js?v=1785183576"></script>
+  <script src="js/nav.js?v=1785183576"></script>
+  <script src="js/factures.js?v=1785183576"></script>
+  <script src="js/devis.js?v=1785183576"></script>
+  <script src="js/clients.js?v=1785183576"></script>
+  <script src="js/produits.js?v=1785183576"></script>
+  <script src="js/pdf.js?v=1785183576"></script>
+  <script src="js/stats.js?v=1785183576"></script>
+  <script src="js/profil.js?v=1785183576"></script>
+  <script src="js/comptable.js?v=1785183576"></script>
+  <script src="js/messages.js?v=1785183576"></script>
+<script src="js/achats.js?v=1785183576"></script>
+<script src="js/stock.js?v=1785183576"></script>
+<script src="js/finance.js?v=1785183576"></script>
+<script src="js/abonnements.js?v=1785183576"></script>
+<script src="js/signature.js?v=1785183576"></script>
+<script src="js/app.js?v=1785183576"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -552,7 +552,7 @@
       <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-produit',null)">+ Ajouter</span>
     </div>
   </div>
-  <div id="valeur-stock-card" style="margin:12px 20px;background:#EEF3E4;border-radius:12px;padding:12px 16px;display:none;justify-content:space-between;align-items:center">
+  <div id="valeur-stock-card" onclick="goScreen('rapport-stock',null)" style="margin:12px 20px;background:#EEF3E4;border-radius:12px;padding:12px 16px;display:none;justify-content:space-between;align-items:center;cursor:pointer">
     <span style="font-size:12px;font-weight:600;color:#55702E">📦 Valeur totale du stock</span>
     <span id="valeur-stock-montant" style="font-size:16px;font-weight:800;color:#55702E">0 MAD</span>
   </div>
@@ -1299,6 +1299,7 @@
       <div class="p-card-title">&#128274; S&#233;curit&#233;</div>
       <div style="padding:14px 16px">
         <button class="p-btn blue" onclick="ouvrirModifMotDePasse()">&#128273; Changer le mot de passe</button>
+        <button class="p-btn" onclick="exporterToutesMesDonnees()">&#128190; Exporter toutes mes données</button>
         <button class="p-btn danger" onclick="confirmerSuppressionCompte()">&#128465;&#65039; Supprimer mon compte</button>
       </div>
     </div>
@@ -1507,6 +1508,19 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">💼 Position financière</div>
       <div id="position-financiere-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- RAPPORT DE STOCK -->
+  <div class="screen" id="screen-rapport-stock">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Bani<span>Pay</span></div>
+      <div class="back-btn" onclick="goScreen('produits',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">📦 Valorisation du stock</div>
+      <div id="rapport-stock-content"></div>
     </div>
     <div style="height:30px"></div>
   </div>
