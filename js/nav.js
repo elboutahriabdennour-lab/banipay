@@ -314,6 +314,7 @@ async function toggleNotifDropdown(event) {
   if (event) event.stopPropagation();
   const existant = document.getElementById('notif-dropdown');
   if (existant) { fermerNotifDropdown(); return; }
+  try {
 
   await genNotifications();
   const invitationsCpt = await chargerInvitationsComptableEnAttente();
@@ -356,6 +357,13 @@ async function toggleNotifDropdown(event) {
     const idsMarques = aMarquer.map(function(n) { return n.id; });
     STATE.notifications = STATE.notifications.filter(function(n) { return !idsMarques.includes(n.id); });
     mettreAJourBadgeNotif();
+  }
+  } catch(e) {
+    console.error('toggleNotifDropdown: exception', e);
+    afficherDiagnostic('Erreur ouverture du panneau notifications', [
+      'Message : ' + e.message,
+      e.stack ? e.stack.split('\n').slice(0,5).join('\n') : ''
+    ]);
   }
 }
 
