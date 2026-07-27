@@ -241,6 +241,14 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 /* SPACING */
 .pb{height:100px}
 
+/* NOTIFICATIONS */
+.notif-item{display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);align-items:flex-start}
+.notif-item.notif-unread{background:var(--safran-light)}
+.notif-ico{font-size:20px;flex-shrink:0;margin-top:2px}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:13px;font-weight:700;color:var(--ink)}
+.notif-msg{font-size:12px;color:var(--ink-soft);margin-top:2px;line-height:1.4}
+
 #screen-comptable.active{display:flex!important;flex-direction:column}
 .bottom-nav{display:none}
 
