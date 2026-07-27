@@ -554,6 +554,7 @@ function goScreen(name) {
     'stats': function() { renderStats(); renderStatsDashboard(); verifierRappels(); },
     'tva': renderTVA,
     'position-financiere': renderPositionFinanciere,
+    'rapport-stock': function() { if (typeof renderRapportStock === 'function') renderRapportStock(); },
     'recherche': initRecherche,
     'notifications': renderNotifScreen,
     'audit': renderJournalAudit,
