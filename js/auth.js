@@ -203,6 +203,8 @@ async function doLogin() {
       STATE.produits = []; STATE.avoirs = []; STATE.achats = []; STATE.abonnements = [];
       await loadAll();
       await loadAchats();
+      if (typeof loadBonsCommande === 'function') await loadBonsCommande();
+      if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
       if (typeof loadAbonnements === 'function') await loadAbonnements();
       if (typeof verifierAbonnements === 'function') await verifierAbonnements();
       // Crée un profil entreprise minimal si absent, pour apparaître
