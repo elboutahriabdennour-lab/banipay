@@ -332,6 +332,38 @@ async function doUpdatePassword() {
 
 async function updatePassword(newPwd) { return doUpdatePassword(); }
 
+// NOUVEAU: export RGPD — récupérer toutes ses données avant suppression
+// (la suppression existait déjà, l'export manquait).
+function exporterToutesMesDonnees() {
+  showToast('⏳ Préparation de l\'export...');
+  try {
+    const donnees = {
+      export_date: new Date().toISOString(),
+      profil: STATE.profil || {},
+      factures: STATE.factures || [],
+      devis: STATE.devis || [],
+      achats: STATE.achats || [],
+      clients: STATE.clients || [],
+      produits: STATE.produits || [],
+      avoirs: STATE.avoirs || [],
+      paiements: STATE.paiements || [],
+      bonsCommande: STATE.bonsCommande || [],
+      bonsLivraison: STATE.bonsLivraison || [],
+    };
+    const json = JSON.stringify(donnees, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'banipay_mes_donnees_' + new Date().toISOString().split('T')[0] + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+    showToast('✅ Export téléchargé', 'success');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 function confirmerSuppressionCompte() {
   if (!confirm('⚠️ Cette action est IRRÉVERSIBLE.\nToutes vos données seront supprimées.\n\nÊtes-vous sûr ?')) return;
   if (!confirm('Dernière confirmation : supprimer définitivement votre compte BaniPay ?')) return;
