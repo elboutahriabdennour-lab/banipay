@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785156261">
+<link rel="stylesheet" href="css/style.css?v=1785157457">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,25 +124,25 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785156261"></script>
-  <script src="js/utils.js?v=1785156261"></script>
-  <script src="js/auth.js?v=1785156261"></script>
-  <script src="js/nav.js?v=1785156261"></script>
-  <script src="js/factures.js?v=1785156261"></script>
-  <script src="js/devis.js?v=1785156261"></script>
-  <script src="js/clients.js?v=1785156261"></script>
-  <script src="js/produits.js?v=1785156261"></script>
-  <script src="js/pdf.js?v=1785156261"></script>
-  <script src="js/stats.js?v=1785156261"></script>
-  <script src="js/profil.js?v=1785156261"></script>
-  <script src="js/comptable.js?v=1785156261"></script>
-  <script src="js/messages.js?v=1785156261"></script>
-<script src="js/achats.js?v=1785156261"></script>
-<script src="js/stock.js?v=1785156261"></script>
-<script src="js/finance.js?v=1785156261"></script>
-<script src="js/abonnements.js?v=1785156261"></script>
-<script src="js/signature.js?v=1785156261"></script>
-<script src="js/app.js?v=1785156261"></script>
+<script src="js/config.js?v=1785157457"></script>
+  <script src="js/utils.js?v=1785157457"></script>
+  <script src="js/auth.js?v=1785157457"></script>
+  <script src="js/nav.js?v=1785157457"></script>
+  <script src="js/factures.js?v=1785157457"></script>
+  <script src="js/devis.js?v=1785157457"></script>
+  <script src="js/clients.js?v=1785157457"></script>
+  <script src="js/produits.js?v=1785157457"></script>
+  <script src="js/pdf.js?v=1785157457"></script>
+  <script src="js/stats.js?v=1785157457"></script>
+  <script src="js/profil.js?v=1785157457"></script>
+  <script src="js/comptable.js?v=1785157457"></script>
+  <script src="js/messages.js?v=1785157457"></script>
+<script src="js/achats.js?v=1785157457"></script>
+<script src="js/stock.js?v=1785157457"></script>
+<script src="js/finance.js?v=1785157457"></script>
+<script src="js/abonnements.js?v=1785157457"></script>
+<script src="js/signature.js?v=1785157457"></script>
+<script src="js/app.js?v=1785157457"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -280,7 +280,7 @@
     <button class="ftab" onclick="filtrerAchats('banipay',this)">BaniPay</button>
   </div>
   <div id="achats-list"></div>
-  <button class="fab" onclick="goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
+  <button class="fab" onclick="STATE.lignesAchat=[];window._achatFactureLieeId=null;goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
   <div class="pb"></div>
 </div>
 
@@ -303,8 +303,16 @@
     <div style="flex:1;margin-bottom:14px"><div class="form-label">Échéance</div><input class="form-input" id="achat-echeance" type="date"></div>
   </div>
   <div style="display:flex;gap:12px;padding:0 20px">
-    <div style="flex:1;margin-bottom:14px"><div class="form-label">Montant HT</div><input class="form-input" id="achat-ht" type="number" placeholder="0.00" oninput="calcAchatTotaux()"></div>
     <div style="flex:1;margin-bottom:14px"><div class="form-label">TVA %</div><select class="form-input" id="achat-tva-taux" onchange="calcAchatTotaux()"><option value="20">20%</option><option value="14">14%</option><option value="10">10%</option><option value="7">7%</option><option value="0">0%</option></select></div>
+  </div>
+  <div class="form-section">
+    <div class="form-label">Articles / prestations achetés</div>
+    <div id="achat-lignes-container"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="add-ligne" style="flex:1" onclick="openAddLigneAchat()">＋ Ligne manuelle</button>
+      <button class="add-ligne" style="flex:1;color:#55702E;border-color:#55702E" onclick="ouvrirCatalogueAchat()">📦 Depuis le catalogue</button>
+    </div>
+    <div style="font-size:11px;color:#9C9186;margin-top:6px">Une ligne liée au catalogue alimente automatiquement le stock à l'enregistrement.</div>
   </div>
   <div style="margin:0 20px 14px;background:#F1EEE8;border-radius:12px;padding:12px">
     <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
@@ -314,13 +322,8 @@
   <div class="form-section"><div class="form-label">Catégorie</div><select class="form-input" id="achat-categorie"><option value="materiel">Matériel</option><option value="services">Services</option><option value="fournitures">Fournitures</option><option value="transport">Transport</option><option value="autre">Autre</option></select></div>
   <div class="form-section"><div class="form-label">Statut</div><select class="form-input" id="achat-statut"><option value="attente">En attente</option><option value="payee">Payée</option></select></div>
   <div class="form-section"><div class="form-label">Note</div><textarea class="form-input" id="achat-note" rows="2" placeholder="Notes..."></textarea></div>
-  <div style="margin:0 20px 14px"><div class="form-label">Pièce jointe</div><label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">📷 Scanner ou importer<input type="file" id="achat-pj" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div id="achat-pj-preview" style="margin-top:8px"></div></div>
+  <div style="margin:0 20px 14px"><div class="form-label">Photo de la facture</div><label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">📷 Prendre en photo<input type="file" id="achat-pj" accept="image/*" capture="environment" style="display:none" onchange="previewAchatPJ(event)"></label><label style="display:block;margin-top:6px;text-align:center;font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Choisir depuis la galerie / un PDF<input type="file" id="achat-pj-galerie" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div id="achat-pj-preview" style="margin-top:8px"></div></div>
   <input type="hidden" id="achat-fournisseur-id" value=""><input type="hidden" id="achat-fournisseur-banipay" value="0">
-  <div class="form-section" style="background:#EEF3E4;border-radius:14px;padding:14px;margin:0 20px 14px">
-    <div class="form-label" style="color:#55702E">📦 Lier à un article du catalogue (alimente le stock)</div>
-    <select id="achat-produit-lie" class="form-input" onchange="renderAchatProduitPicker()" style="margin-bottom:8px"></select>
-    <input id="achat-quantite-stock" class="form-input" type="number" placeholder="Quantité reçue" step="0.01">
-  </div>
   <div style="padding:0 20px 20px"><button class="a-btn" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#B23A2E,#8E2E24);color:#fff">💾 Enregistrer</button></div>
   <div class="pb"></div>
 </div>
@@ -942,6 +945,27 @@
       <option value="kg">kg</option>
     </select>
     <button class="m-btn" onclick="confirmerLigneAB()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ligne-achat">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une ligne d'achat</div>
+    <input class="m-inp" id="mla-desc" placeholder="Description de l'article/prestation">
+    <input class="m-inp" id="mla-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mla-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <select class="m-inp" id="mla-unite">
+      <option value="u">Unité (u)</option>
+      <option value="h">Heure (h)</option>
+      <option value="j">Jour (j)</option>
+      <option value="Fft">Forfait (Fft)</option>
+      <option value="m2">m²</option>
+      <option value="ml">ml</option>
+      <option value="kg">kg</option>
+    </select>
+    <button class="m-btn" onclick="confirmerLigneAchat()">Ajouter</button>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
 </div>
