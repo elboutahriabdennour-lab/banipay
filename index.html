@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785183576">
+<link rel="stylesheet" href="css/style.css?v=1785186334">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,25 +124,25 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785183576"></script>
-  <script src="js/utils.js?v=1785183576"></script>
-  <script src="js/auth.js?v=1785183576"></script>
-  <script src="js/nav.js?v=1785183576"></script>
-  <script src="js/factures.js?v=1785183576"></script>
-  <script src="js/devis.js?v=1785183576"></script>
-  <script src="js/clients.js?v=1785183576"></script>
-  <script src="js/produits.js?v=1785183576"></script>
-  <script src="js/pdf.js?v=1785183576"></script>
-  <script src="js/stats.js?v=1785183576"></script>
-  <script src="js/profil.js?v=1785183576"></script>
-  <script src="js/comptable.js?v=1785183576"></script>
-  <script src="js/messages.js?v=1785183576"></script>
-<script src="js/achats.js?v=1785183576"></script>
-<script src="js/stock.js?v=1785183576"></script>
-<script src="js/finance.js?v=1785183576"></script>
-<script src="js/abonnements.js?v=1785183576"></script>
-<script src="js/signature.js?v=1785183576"></script>
-<script src="js/app.js?v=1785183576"></script>
+<script src="js/config.js?v=1785186334"></script>
+  <script src="js/utils.js?v=1785186334"></script>
+  <script src="js/auth.js?v=1785186334"></script>
+  <script src="js/nav.js?v=1785186334"></script>
+  <script src="js/factures.js?v=1785186334"></script>
+  <script src="js/devis.js?v=1785186334"></script>
+  <script src="js/clients.js?v=1785186334"></script>
+  <script src="js/produits.js?v=1785186334"></script>
+  <script src="js/pdf.js?v=1785186334"></script>
+  <script src="js/stats.js?v=1785186334"></script>
+  <script src="js/profil.js?v=1785186334"></script>
+  <script src="js/comptable.js?v=1785186334"></script>
+  <script src="js/messages.js?v=1785186334"></script>
+<script src="js/achats.js?v=1785186334"></script>
+<script src="js/stock.js?v=1785186334"></script>
+<script src="js/finance.js?v=1785186334"></script>
+<script src="js/abonnements.js?v=1785186334"></script>
+<script src="js/signature.js?v=1785186334"></script>
+<script src="js/app.js?v=1785186334"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -357,6 +357,7 @@
     <div class="f-row">
       <div><label class="f-lbl">Ech&#233;ance</label><input id="f-echeance" class="f-inp" type="date"></div>
       <div><label class="f-lbl">Note</label><input id="f-note" class="f-inp" placeholder="Note..."></div>
+      <div><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="f-bc-lie" class="f-inp"></select></div>
     </div>
   </div>
   <div class="form-section">
@@ -483,6 +484,7 @@
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="d-total-ttc">0 MAD</span></div>
   </div>
+  <div class="form-section"><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="d-bc-lie" class="f-inp"></select></div>
   <div class="form-section"><label class="f-lbl">Notes</label><input id="d-note" class="f-inp" placeholder="Conditions particulières..."></div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderDevis()">💾 Sauvegarder</button>
@@ -882,6 +884,30 @@
   <div class="sec-label">Factures</div>
   <div class="card-list" id="comptable-factures-list"></div>
   <div class="pb"></div>
+</div>
+
+<!-- MODAL RECHERCHE FOURNISSEUR BC (annuaire + historique) -->
+<div class="modal-overlay" id="modal-fournisseur-bc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👥 Choisir un fournisseur</div>
+    <input class="m-inp" id="search-fournisseur-bc" placeholder="Nom du fournisseur (2 lettres min. pour l'annuaire)..." oninput="rechercherFournisseurBC()">
+    <div id="fournisseur-bc-picker-list" style="max-height:350px;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL LIGNE BON DE COMMANDE (manquait — bouton "Ajouter un article" du BC ne faisait rien) -->
+<div class="modal-overlay" id="modal-ligne-bc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter un article</div>
+    <input class="m-inp" id="mlbc-desc" placeholder="Description de l'article">
+    <input class="m-inp" id="mlbc-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mlbc-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneBC()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
 </div>
 
 <!-- MODAL LIGNE -->
@@ -1561,7 +1587,23 @@
     <div class="form-title">Bon de commande</div>
   </div>
   <div style="height:14px"></div>
-  <div class="form-section"><label class="f-lbl">Fournisseur *</label><input id="bc-fournisseur" class="f-inp" placeholder="Nom du fournisseur"></div>
+  <div class="form-section">
+    <label class="f-lbl">Fournisseur *</label>
+    <div style="display:flex;gap:8px">
+      <input id="bc-fournisseur" class="f-inp" placeholder="Nom du fournisseur" list="bc-fournisseurs-datalist" style="flex:1">
+      <button type="button" onclick="ouvrirPickerFournisseurBC()" style="flex-shrink:0;padding:0 14px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+    <datalist id="bc-fournisseurs-datalist"></datalist>
+    <input type="hidden" id="bc-fournisseur-id" value="">
+    <div style="margin-top:8px;background:#F5E4E1;border-radius:12px;padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#8E2E24;margin-bottom:6px">📲 Fournisseur sur BaniPay ?</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="bc-fournisseur-lien" style="flex:1;padding:9px;border:1.5px solid #E0B6AC;border-radius:8px;font-size:12px;font-family:inherit;outline:none;background:#fff" placeholder="Lien du profil...">
+        <button onclick="importerFournisseurBCDepuisLien()" style="padding:9px 12px;background:#B23A2E;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
+      </div>
+      <button onclick="rechercherFournisseurBCAnnuaire()" style="width:100%;padding:9px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Chercher dans l'annuaire BaniPay</button>
+    </div>
+  </div>
   <div class="form-section">
     <div class="f-row">
       <div><label class="f-lbl">N&#176; BC</label><input id="bc-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
@@ -1584,7 +1626,7 @@
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="bc-ttc">0 MAD</span></div>
   </div>
-  <div class="form-section"><label class="f-lbl">Notes</label><input id="bc-note" class="f-inp" placeholder="Instructions de livraison..."></div>
+  <div class="form-section"><label class="f-lbl">Description de la demande (optionnel)</label><textarea id="bc-note" class="f-inp" rows="3" placeholder="Décrivez ce que vous voulez commander, des instructions de livraison, ou toute précision utile pour le fournisseur..."></textarea></div>
   <div style="padding:0 20px 8px"><button onclick="goScreen('bons-commande-list',null)" style="width:100%;padding:8px;background:none;color:#7C5CA6;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📋 Voir mes bons de commande</button></div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderBonCommande()">&#128190; Enregistrer + PDF</button>
