@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785157457">
+<link rel="stylesheet" href="css/style.css?v=1785178451">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,25 +124,25 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785157457"></script>
-  <script src="js/utils.js?v=1785157457"></script>
-  <script src="js/auth.js?v=1785157457"></script>
-  <script src="js/nav.js?v=1785157457"></script>
-  <script src="js/factures.js?v=1785157457"></script>
-  <script src="js/devis.js?v=1785157457"></script>
-  <script src="js/clients.js?v=1785157457"></script>
-  <script src="js/produits.js?v=1785157457"></script>
-  <script src="js/pdf.js?v=1785157457"></script>
-  <script src="js/stats.js?v=1785157457"></script>
-  <script src="js/profil.js?v=1785157457"></script>
-  <script src="js/comptable.js?v=1785157457"></script>
-  <script src="js/messages.js?v=1785157457"></script>
-<script src="js/achats.js?v=1785157457"></script>
-<script src="js/stock.js?v=1785157457"></script>
-<script src="js/finance.js?v=1785157457"></script>
-<script src="js/abonnements.js?v=1785157457"></script>
-<script src="js/signature.js?v=1785157457"></script>
-<script src="js/app.js?v=1785157457"></script>
+<script src="js/config.js?v=1785178451"></script>
+  <script src="js/utils.js?v=1785178451"></script>
+  <script src="js/auth.js?v=1785178451"></script>
+  <script src="js/nav.js?v=1785178451"></script>
+  <script src="js/factures.js?v=1785178451"></script>
+  <script src="js/devis.js?v=1785178451"></script>
+  <script src="js/clients.js?v=1785178451"></script>
+  <script src="js/produits.js?v=1785178451"></script>
+  <script src="js/pdf.js?v=1785178451"></script>
+  <script src="js/stats.js?v=1785178451"></script>
+  <script src="js/profil.js?v=1785178451"></script>
+  <script src="js/comptable.js?v=1785178451"></script>
+  <script src="js/messages.js?v=1785178451"></script>
+<script src="js/achats.js?v=1785178451"></script>
+<script src="js/stock.js?v=1785178451"></script>
+<script src="js/finance.js?v=1785178451"></script>
+<script src="js/abonnements.js?v=1785178451"></script>
+<script src="js/signature.js?v=1785178451"></script>
+<script src="js/app.js?v=1785178451"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -271,7 +271,7 @@
 
 <!-- ACHATS -->
 <div class="screen" id="screen-achats">
-  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
   <div style="display:flex;gap:8px;padding:12px 20px;overflow-x:auto">
     <button class="ftab active" onclick="filtrerAchats('tous',this)">Tous</button>
@@ -1279,6 +1279,14 @@
         <div style="font-size:11px;color:#9C9186;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
       </div>
     </div>
+    <!-- Documents BC/BL -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">📄 Bons de commande / livraison</div>
+      <div style="padding:14px 16px;display:flex;gap:8px">
+        <button onclick="goScreen('bons-commande-list',null)" style="flex:1;padding:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Bons de commande</button>
+        <button onclick="goScreen('bons-livraison-list',null)" style="flex:1;padding:10px;background:#EEF3E4;color:#55702E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📦 Bons de livraison</button>
+      </div>
+    </div>
     <!-- Affichage -->
     <div class="p-card" style="margin-bottom:14px">
       <div class="p-card-title">🎨 Affichage</div>
@@ -1503,6 +1511,20 @@
     <div style="height:30px"></div>
   </div>
 
+  <!-- RAPPROCHEMENT PAIEMENTS -->
+  <div class="screen" id="screen-rapprochement">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Bani<span>Pay</span></div>
+      <div class="back-btn" onclick="goScreen('position-financiere',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">🔗 Rapprochement paiements</div>
+      <div style="font-size:12px;color:#6B5F54;padding-bottom:12px">Cochez les factures que vous avez vérifiées sur votre relevé bancaire.</div>
+      <div id="rapprochement-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
   <!-- RECHERCHE -->
   <div class="screen" id="screen-recherche">
     <div class="app-header" style="padding-top:16px">
@@ -1549,10 +1571,22 @@
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="bc-ttc">0 MAD</span></div>
   </div>
   <div class="form-section"><label class="f-lbl">Notes</label><input id="bc-note" class="f-inp" placeholder="Instructions de livraison..."></div>
+  <div style="padding:0 20px 8px"><button onclick="goScreen('bons-commande-list',null)" style="width:100%;padding:8px;background:none;color:#7C5CA6;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📋 Voir mes bons de commande</button></div>
   <div class="send-row">
-    <button class="s-btn blue" onclick="genBonCommandePDF()">&#128196; G&#233;n&#233;rer PDF</button>
+    <button class="s-btn blue" onclick="sauvegarderBonCommande()">&#128190; Enregistrer + PDF</button>
     <button class="s-btn gray" onclick="goScreen('dashboard')">&#10005; Annuler</button>
   </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== LISTE BONS DE COMMANDE ===== -->
+<div class="screen" id="screen-bons-commande-list">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
+  </div>
+  <div class="sec-label">📋 Bons de commande</div>
+  <div class="card-list" id="bons-commande-liste"></div>
   <div class="pb"></div>
 </div>
 
@@ -1570,16 +1604,28 @@
       <div><label class="f-lbl">Date</label><input id="bl-date" class="f-inp" type="date"></div>
     </div>
   </div>
-  <div class="form-section"><label class="f-lbl">Facture li&#233;e (r&#233;f.)</label><input id="bl-facture-ref" class="f-inp" placeholder="Ex: FAC-2026-0001"></div>
+  <div class="form-section"><label class="f-lbl">Facture liée (optionnel)</label><select id="bl-facture-liee" class="f-inp" onchange="surChangementFactureBL()"></select></div>
   <div class="form-section">
-    <label class="f-lbl">Articles livr&#233;s</label>
+    <label class="f-lbl">Articles livrés</label>
     <div id="bl-lignes"></div>
     <button class="add-ligne" onclick="openAddLigneBL()">&#65291; Ajouter un article</button>
   </div>
+  <div style="padding:0 20px 8px"><button onclick="goScreen('bons-livraison-list',null)" style="width:100%;padding:8px;background:none;color:#55702E;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📦 Voir mes bons de livraison</button></div>
   <div class="send-row">
-    <button class="s-btn blue" onclick="genBonLivraisonPDF()">&#128196; G&#233;n&#233;rer PDF</button>
+    <button class="s-btn blue" onclick="sauvegarderBonLivraison()">&#128190; Enregistrer + PDF</button>
     <button class="s-btn gray" onclick="goScreen('dashboard')">&#10005; Annuler</button>
   </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== LISTE BONS DE LIVRAISON ===== -->
+<div class="screen" id="screen-bons-livraison-list">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
+  </div>
+  <div class="sec-label">📦 Bons de livraison</div>
+  <div class="card-list" id="bons-livraison-liste"></div>
   <div class="pb"></div>
 </div>
 
