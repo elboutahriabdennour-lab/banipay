@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785178451">
+<link rel="stylesheet" href="css/style.css?v=1785181049">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,25 +124,25 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785178451"></script>
-  <script src="js/utils.js?v=1785178451"></script>
-  <script src="js/auth.js?v=1785178451"></script>
-  <script src="js/nav.js?v=1785178451"></script>
-  <script src="js/factures.js?v=1785178451"></script>
-  <script src="js/devis.js?v=1785178451"></script>
-  <script src="js/clients.js?v=1785178451"></script>
-  <script src="js/produits.js?v=1785178451"></script>
-  <script src="js/pdf.js?v=1785178451"></script>
-  <script src="js/stats.js?v=1785178451"></script>
-  <script src="js/profil.js?v=1785178451"></script>
-  <script src="js/comptable.js?v=1785178451"></script>
-  <script src="js/messages.js?v=1785178451"></script>
-<script src="js/achats.js?v=1785178451"></script>
-<script src="js/stock.js?v=1785178451"></script>
-<script src="js/finance.js?v=1785178451"></script>
-<script src="js/abonnements.js?v=1785178451"></script>
-<script src="js/signature.js?v=1785178451"></script>
-<script src="js/app.js?v=1785178451"></script>
+<script src="js/config.js?v=1785181049"></script>
+  <script src="js/utils.js?v=1785181049"></script>
+  <script src="js/auth.js?v=1785181049"></script>
+  <script src="js/nav.js?v=1785181049"></script>
+  <script src="js/factures.js?v=1785181049"></script>
+  <script src="js/devis.js?v=1785181049"></script>
+  <script src="js/clients.js?v=1785181049"></script>
+  <script src="js/produits.js?v=1785181049"></script>
+  <script src="js/pdf.js?v=1785181049"></script>
+  <script src="js/stats.js?v=1785181049"></script>
+  <script src="js/profil.js?v=1785181049"></script>
+  <script src="js/comptable.js?v=1785181049"></script>
+  <script src="js/messages.js?v=1785181049"></script>
+<script src="js/achats.js?v=1785181049"></script>
+<script src="js/stock.js?v=1785181049"></script>
+<script src="js/finance.js?v=1785181049"></script>
+<script src="js/abonnements.js?v=1785181049"></script>
+<script src="js/signature.js?v=1785181049"></script>
+<script src="js/app.js?v=1785181049"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -1707,8 +1707,9 @@
 <div class="screen" id="screen-cpt-entreprise" style="background:#F1EEE8">
   <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
     <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
-    <div style="flex:1">
-      <div style="font-size:14px;font-weight:700;color:#fff" id="cpt-ent-nom">Entreprise</div>
+    <img id="cpt-ent-logo" style="display:none;width:32px;height:32px;border-radius:8px;object-fit:cover;background:#fff;flex-shrink:0">
+    <div style="flex:1;cursor:pointer" onclick="toggleEntrepriseDropdownCpt(event)">
+      <div style="font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:4px" id="cpt-ent-nom">Entreprise <span style="font-size:10px;opacity:0.6">▾</span></div>
       <div style="font-size:11px;color:rgba(255,255,255,0.5)" id="cpt-ent-sub"></div>
     </div>
     <button onclick="basculerModeEntreprise()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏢 Mode</button>
@@ -1719,6 +1720,7 @@
     <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#1F6F72;color:#fff">🧾 Factures</button>
     <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📝 Devis</button>
     <button id="cpt-tab-achats" onclick="cptEntTab('achats')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🛒 Achats</button>
+    <button id="cpt-tab-extraction" onclick="cptEntTab('extraction')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📤 Extraction</button>
     <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 TVA</button>
     <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">ℹ️ Infos</button>
     <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🏦 Relevés</button>
