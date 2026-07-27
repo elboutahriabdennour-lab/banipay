@@ -303,6 +303,7 @@ function renderDetail() {
   actions.push(`<button class="action-item whatsapp" onclick="relancerWhatsApp(${f.id})"><div class="action-ico" style="background:#EEF3E4">📱</div>Relance WhatsApp</button>`);
   // Avoir depuis cette facture
   actions.push(`<button class="action-item" style="color:#7C5CA6;border-left-color:#7C5CA6" onclick="creerAvoirDepuisFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">↩️</div>Créer un avoir</button>`);
+  actions.push(`<button class="action-item" style="color:#55702E;border-left-color:#55702E" onclick="creerBonLivraisonDepuisFacture(${f.id})"><div class="action-ico" style="background:#EEF3E4">📦</div>Créer un bon de livraison</button>`);
   // Paiements
   actions.push(`<button class="action-item" onclick="ouvrirAcomptes(${f.id})"><div class="action-ico" style="background:#EEF3E4">💰</div>Versements & acomptes</button>`);
   actions.push(`<button class="action-item" onclick="genRecuPaiement(${f.id})"><div class="action-ico" style="background:#EEF3E4">🧾</div>Reçu de paiement</button>`);
