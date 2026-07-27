@@ -550,6 +550,34 @@ async function sauvegarderAchat() {
 // DÉTAIL ACHAT
 // ============================================================
 
+// NOUVEAU: visualiser la facture d'origine d'un achat (celle envoyée par le
+// fournisseur via BaniPay, ou importée par lien) — réutilise les mêmes
+// helpers déjà utilisés pour l'import.
+async function voirFactureOrigineAchat(factureId) {
+  showToast('⏳ Chargement de la facture...');
+  try {
+    const f = await _fetchFacturePublique(factureId);
+    if (!f) { showToast('Facture introuvable', 'error'); return; }
+    const emetteur = await _fetchProfilPublic(f.user_id);
+    const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
+    genDocPDF({
+      type: 'FACTURE', ref: f.ref, color: emetteur.couleur_accent || '#C9971F',
+      emetteur: emetteur,
+      destinataire: { nom: f.client, chantier: f.chantier },
+      date: f.date_emission, echeance: f.echeance,
+      paiement: f.paiement || '', statut: f.statut,
+      lignes: lignes, note: f.note || '',
+      ht: f.ht, tva: f.tva, ttc: f.ttc,
+      devise: f.devise || 'MAD',
+      montant_recu: f.montant_recu || 0,
+      showStamp: f.statut === 'payee',
+      signatureClient: f.signature_data || null,
+    });
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 function ouvrirDetailAchat(id) {
   const a = STATE.achats.find(function(x) { return x.id === id; });
   if (!a) return;
@@ -596,6 +624,9 @@ function ouvrirDetailAchat(id) {
         }).join('') +
       '</div>';
     })()) +
+
+    (a.facture_source_id ?
+      '<div style="margin:0 16px 16px"><button onclick="voirFactureOrigineAchat(\'' + a.facture_source_id + '\')" style="width:100%;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🧾 Voir la facture d\'origine</button></div>' : '') +
 
     (a.fournisseur_banipay && a.fournisseur_id ?
       '<div style="margin:0 16px 16px;background:#E9F4F3;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
