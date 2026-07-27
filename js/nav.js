@@ -527,7 +527,7 @@ function goScreen(name) {
     'archive': renderArchive,
     'annuaire': filtrerAnnuaire,
     'achats': renderAchats,
-    'nouvelle-achat': function() { calcAchatTotaux(); if (typeof renderAchatProduitPicker === 'function') renderAchatProduitPicker(); },
+    'nouvelle-achat': function() { renderLignesAchat(); },
     'avoir-list': renderAvoirList,
     'abonnements': typeof renderAbonnements === 'function' ? renderAbonnements : function() { showToast('Module abonnements non installé', 'error'); goScreen('dashboard'); },
     'nouvel-abonnement': typeof initNouvelAbonnement === 'function' ? initNouvelAbonnement : function() { showToast('Module abonnements non installé', 'error'); goScreen('dashboard'); },
