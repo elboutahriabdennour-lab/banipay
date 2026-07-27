@@ -261,6 +261,43 @@ async function repondreBonCommandePublic(bcId, reponse, bc) {
   }
 }
 
+// NOUVEAU: vue publique de consultation d'un bon de livraison (via son
+// propre QR ou celui affiché sur le devis/la facture liée) — consultation
+// seule, pas d'action à faire dessus contrairement au BC/devis/facture.
+async function afficherBonLivraisonPublic(blId) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_livraison_public', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_bl_id: blId })
+    });
+    const data = r.ok ? (await r.json()) : [];
+    const bl = data && data[0];
+    if (!bl) {
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Bon de livraison introuvable</h2></div>';
+      return;
+    }
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + bl.user_id + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const profils = await rp.json();
+    const profil = (profils && profils[0]) || {};
+
+    genDocPDF({
+      type: 'BON DE LIVRAISON', ref: bl.ref, color: '#6E8F4E',
+      emetteur: profil,
+      destinataire: { nom: bl.client },
+      date: bl.date_livraison,
+      paiement: '',
+      lignes: (bl.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: 0, unite: l.unite||'u' }; }),
+      note: '', ht: 0, tva: 0, ttc: 0, devise: 'MAD',
+      showPrices: false,
+    });
+  } catch(e) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
+  }
+}
+
 async function afficherDocumentPublic(docId) {
   const urlParams = new URLSearchParams(window.location.search);
   const docType = urlParams.get('type'); // 'devis' ou null
@@ -302,6 +339,45 @@ async function afficherDocumentPublic(docId) {
 
     const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes || '[]') : (doc.lignes || []);
 
+    // NOUVEAU: construire les références croisées (devis/BC/BL) AVANT de
+    // générer le PDF — le devis affiche son BC, la facture affiche les 3.
+    // Vue publique (anonyme) : on ne peut lire le BC/BL que via les RPC
+    // dédiées (RLS bloque un accès direct pour un visiteur non connecté).
+    const refsQR = [];
+    const base = window.location.origin + window.location.pathname;
+    if (doc.devis_ref) {
+      refsQR.push({ icon: '📝', label: 'Devis', ref: doc.devis_ref, url: '' });
+    }
+    if (doc.bc_id) {
+      try {
+        const rBC = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_commande_public', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_bc_id: doc.bc_id })
+        });
+        if (rBC.ok) {
+          const bcData = (await rBC.json()) || [];
+          const bc = bcData[0];
+          if (bc) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: base + '?bc=' + bc.id });
+        }
+      } catch(eBC) {}
+    }
+    let blTrouve = null;
+    if (!isDevis) {
+      try {
+        const rBLref = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_livraison_facture', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_facture_id: docId })
+        });
+        if (rBLref.ok) {
+          const blsRef = (await rBLref.json()) || [];
+          blTrouve = blsRef[0] || null;
+          if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id });
+        }
+      } catch(eBLref) {}
+    }
+
     // Générer le PDF
     genDocPDF({
       type: isDevis ? 'DEVIS' : 'FACTURE',
@@ -320,41 +396,32 @@ async function afficherDocumentPublic(docId) {
       devise: doc.devise || 'MAD',
       montant_recu: doc.montant_recu || 0,
       showStamp: doc.statut === 'payee',
-      devis_ref: doc.devis_ref || '',
-      bl_ref: doc.bl_ref || '',
       doc_id: docId,
       signatureClient: doc.signature_data || null,
       doc_url: window.location.href,
+      refsQR: refsQR,
     });
 
     // NOUVEAU: si un bon de livraison est lié à cette facture, le client
     // peut le consulter directement — c'est le lien réel qui manquait
     // (auparavant juste un texte libre, jamais retrouvable depuis ici).
-    if (!isDevis) {
-      try {
-        const rBL = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_livraison_facture', {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ p_facture_id: docId })
-        });
-        if (rBL.ok) {
-          const bls = (await rBL.json()) || [];
-          if (bls.length) {
-            const bl = bls[0];
-            setTimeout(function() {
-              const screen = document.getElementById('pdf-fullscreen');
-              if (!screen) return;
-              const banniereBL = document.createElement('div');
-              banniereBL.style.cssText = 'background:#EEF3E4;padding:10px 16px;text-align:center;flex-shrink:0';
-              banniereBL.innerHTML = '<button id="btn-voir-bl-public" style="background:#55702E;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📦 Voir le bon de livraison ' + escapeHTML(bl.ref||'') + '</button>';
-              screen.insertBefore(banniereBL, screen.firstChild);
-              document.getElementById('btn-voir-bl-public').onclick = function() {
-                genDocPDF({
-                  type: 'BON DE LIVRAISON', ref: bl.ref, color: '#6E8F4E',
-                  emetteur: profil,
-                  destinataire: { nom: bl.client },
-                  date: bl.date_livraison,
-                  paiement: '',
+    // Réutilise blTrouve déjà récupéré ci-dessus (évite une requête en double).
+    if (!isDevis && blTrouve) {
+      const bl = blTrouve;
+      setTimeout(function() {
+        const screen = document.getElementById('pdf-fullscreen');
+        if (!screen) return;
+        const banniereBL = document.createElement('div');
+        banniereBL.style.cssText = 'background:#EEF3E4;padding:10px 16px;text-align:center;flex-shrink:0';
+        banniereBL.innerHTML = '<button id="btn-voir-bl-public" style="background:#55702E;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📦 Voir le bon de livraison ' + escapeHTML(bl.ref||'') + '</button>';
+        screen.insertBefore(banniereBL, screen.firstChild);
+        document.getElementById('btn-voir-bl-public').onclick = function() {
+          genDocPDF({
+            type: 'BON DE LIVRAISON', ref: bl.ref, color: '#6E8F4E',
+            emetteur: profil,
+            destinataire: { nom: bl.client },
+            date: bl.date_livraison,
+            paiement: '',
                   lignes: (bl.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: 0, unite: l.unite||'u' }; }),
                   note: '', ht: 0, tva: 0, ttc: 0, devise: 'MAD',
                   showPrices: false,
@@ -362,9 +429,6 @@ async function afficherDocumentPublic(docId) {
                 });
               };
             }, 450);
-          }
-        }
-      } catch(eBL) {}
     }
 
     // Type générique + champ de statut à considérer selon devis/facture
@@ -489,6 +553,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const bcId = params.get('bc');
   if (bcId) {
     await afficherBonCommandePublic(bcId);
+    return;
+  }
+
+  // NOUVEAU: lien public vers un bon de livraison (consultation seule, via
+  // le QR généré sur le devis/la facture/le BL lui-même)
+  const blIdParam = params.get('bl');
+  if (blIdParam) {
+    await afficherBonLivraisonPublic(blIdParam);
     return;
   }
 
