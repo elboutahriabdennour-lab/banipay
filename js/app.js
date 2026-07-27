@@ -18,6 +18,10 @@ async function loadAll() {
     STATE.produits = pr || [];
     STATE.avoirs = av || [];
     STATE.profil = (pf && pf[0]) || {};
+    // NOUVEAU: bascule automatiquement en "expiré" les devis envoyés dont la
+    // date de validité est dépassée — le statut existait déjà (couleur,
+    // libellé) mais rien ne le déclenchait jamais.
+    await verifierExpirationDevis();
     // Load paiements
     const pays = await sb.get('paiements', `user_id=eq.${uid}&order=created_at.desc`);
     STATE.paiements = pays || [];
@@ -168,6 +172,94 @@ async function refuserInvitationEmail(emailEnc, entrepriseId) {
 // ============================================================
 // AFFICHAGE PUBLIC D'UN DOCUMENT (facture ou devis) + Accepter/Refuser
 // ============================================================
+
+// NOUVEAU: vue publique du bon de commande — le fournisseur (sans compte
+// BaniPay forcément) peut le consulter et confirmer/refuser, symétrique au
+// cycle d'acceptation des devis/factures.
+async function afficherBonCommandePublic(bcId) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_commande_public', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_bc_id: bcId })
+    });
+    const data = r.ok ? (await r.json()) : [];
+    const bc = data && data[0];
+    if (!bc) {
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Bon de commande introuvable</h2></div>';
+      return;
+    }
+
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + bc.user_id + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const profils = await rp.json();
+    const profil = (profils && profils[0]) || {};
+
+    genDocPDF({
+      type: 'BON DE COMMANDE', ref: bc.ref, color: '#7C5CA6',
+      emetteur: profil,
+      destinataire: { nom: bc.fournisseur },
+      date: bc.date_commande,
+      paiement: '',
+      lignes: bc.lignes || [],
+      note: bc.note || '',
+      ht: (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0),
+      tva: 0, ttc: 0,
+      devise: 'MAD',
+      showPrices: true,
+      doc_id: bcId,
+    });
+
+    if (!bc.reponse_fournisseur) {
+      setTimeout(function() {
+        const screen = document.getElementById('pdf-fullscreen');
+        if (!screen) return;
+        const btnBar = document.createElement('div');
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #E3DCCF;flex-shrink:0';
+        btnBar.innerHTML =
+          '<button id="btn-bc-confirme" style="flex:1;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ Confirmer</button>' +
+          '<button id="btn-bc-refuse" style="flex:1;padding:12px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">❌ Refuser</button>';
+        screen.appendChild(btnBar);
+        document.getElementById('btn-bc-confirme').onclick = function() { repondreBonCommandePublic(bcId, 'confirme', bc); };
+        document.getElementById('btn-bc-refuse').onclick = function() { repondreBonCommandePublic(bcId, 'refuse', bc); };
+      }, 400);
+    }
+  } catch(e) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
+  }
+}
+
+async function repondreBonCommandePublic(bcId, reponse, bc) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_bon_commande', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_bc_id: bcId, p_reponse: reponse })
+    });
+    const icon = reponse === 'confirme' ? '✅' : '❌';
+    document.body.innerHTML = `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">${icon}</div>
+        <h2 style="color:#2A2420;margin-bottom:8px">Bon de commande ${reponse === 'confirme' ? 'confirmé' : 'refusé'} !</h2>
+        <div style="background:${reponse === 'confirme' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${bc.ref}</strong></div>
+        </div>
+        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
+        <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect-bc">4</span>s...</div>
+      </div>
+    `;
+    let s = 4;
+    const iv = setInterval(function() {
+      s--;
+      const span = document.getElementById('compte-redirect-bc');
+      if (span) span.textContent = s;
+      if (s <= 0) { clearInterval(iv); window.location.href = window.location.origin + window.location.pathname; }
+    }, 1000);
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
 
 async function afficherDocumentPublic(docId) {
   const urlParams = new URLSearchParams(window.location.search);
@@ -390,6 +482,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const docId = params.get('doc');
   if (docId) {
     await afficherDocumentPublic(docId);
+    return;
+  }
+
+  // NOUVEAU: lien public vers un bon de commande (le fournisseur confirme/refuse)
+  const bcId = params.get('bc');
+  if (bcId) {
+    await afficherBonCommandePublic(bcId);
     return;
   }
 
