@@ -306,6 +306,15 @@ async function ouvrirEntreprise(entrepriseId) {
   CPT.currentControles = inv._controles || {};
   CPT.currentAchats = inv._achats || [];
   CPT.currentControlesAchats = inv._controlesAchats || [];
+  CPT.currentPaiements = [];
+  try {
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_paiements_entreprise', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_entreprise_id: entrepriseId })
+    });
+    if (rp.ok) CPT.currentPaiements = (await rp.json()) || [];
+  } catch(ePaie) {}
 
   // Load devis — via RPC pour contourner la RLS cross-compte
   try {
@@ -726,6 +735,7 @@ function renderCptTVA() {
         '<button onclick="declarerTVAMois()" style="flex:1;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✅ Déclarer TVA du mois</button>' +
         '<button onclick="exportCptTVA()" style="flex:1;padding:12px;background:#7C5CA6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export CSV</button>' +
       '</div>' +
+    '<button onclick="typeof exporterEcrituresComptables===\'function\' && exporterEcrituresComptables(CPT.currentFactures, CPT.currentAchats, CPT.currentPaiements, CPT.currentProfil)" style="width:100%;margin-top:8px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (plan comptable marocain)</button>' +
   '</div>';
 }
 
