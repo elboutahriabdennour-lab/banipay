@@ -364,6 +364,27 @@ async function sauvegarderBonCommande() {
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
 
+// NOUVEAU: envoyer le BC au fournisseur — lien public où il peut confirmer
+// ou refuser, symétrique au cycle devis (accepter/refuser).
+async function envoyerBonCommande(id) {
+  const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
+  if (!bc) return;
+  try {
+    await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: 'envoye' });
+    bc.statut = 'envoye';
+  } catch(e) {}
+
+  const lien = window.location.origin + window.location.pathname + '?bc=' + id;
+  if (navigator.share) {
+    try { await navigator.share({ title: 'Bon de commande ' + (bc.ref||''), text: 'Bon de commande ' + (bc.ref||'') + ' — merci de confirmer la réception : ' + lien }); }
+    catch(e2) { navigator.clipboard?.writeText(lien); showToast('Lien copié', 'success'); }
+  } else {
+    navigator.clipboard?.writeText(lien);
+    showToast('✅ Lien copié — envoyez-le à votre fournisseur', 'success');
+  }
+  renderBonsCommandeListe();
+}
+
 async function loadBonsCommande() {
   try {
     STATE.bonsCommande = (await sb.get('bons_commande', 'user_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
@@ -379,12 +400,18 @@ function renderBonsCommandeListe() {
     list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucun bon de commande</div></div>';
     return;
   }
+  const statutLabel = { brouillon: 'Brouillon', envoye: 'Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé' };
+  const statutColor = { brouillon: '#9C9186', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
   list.innerHTML = bcs.map(function(bc) {
     const ht = (bc.lignes || []).reduce(function(s, l) { return s + (l.qte||1)*(l.pu||0); }, 0);
-    return '<div class="card" onclick="voirBonCommande(' + bc.id + ')">' +
+    return '<div class="card" style="align-items:flex-start" onclick="voirBonCommande(' + bc.id + ')">' +
       '<div class="card-ico" style="background:#EDE6F0">📋</div>' +
-      '<div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div></div>' +
-      '<div class="card-end"><div class="card-amount">' + fmt(ht*1.2) + ' MAD</div></div>' +
+      '<div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div>' +
+        '<span style="font-size:9px;font-weight:600;color:' + (statutColor[bc.statut]||'#9C9186') + '">' + (statutLabel[bc.statut]||bc.statut) + '</span>' +
+      '</div>' +
+      '<div class="card-end"><div class="card-amount">' + fmt(ht*1.2) + ' MAD</div>' +
+        (bc.statut === 'brouillon' ? '<button onclick="event.stopPropagation();envoyerBonCommande(' + bc.id + ')" style="margin-top:6px;padding:5px 10px;background:#7C5CA6;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">📤 Envoyer</button>' : '') +
+      '</div>' +
     '</div>';
   }).join('');
 }
@@ -740,6 +767,27 @@ async function partagerDevisNatif(id) {
 // Fonction générique : gère à la fois les devis (champ `statut`) et les
 // factures (champ `reponse_client`, car les factures n'avaient pas de
 // champ de réponse client dédié avant).
+// NOUVEAU: bascule en "expiré" tout devis envoyé dont la date de validité
+// (date_emission + validite jours) est dépassée. Le statut/couleur/libellé
+// "expire" existaient déjà dans l'affichage mais rien ne le déclenchait.
+async function verifierExpirationDevis() {
+  const aujourdHui = new Date();
+  const aExpirer = (STATE.devis || []).filter(function(d) {
+    if (d.statut !== 'envoye' || !d.date_emission) return false;
+    const dateValidite = new Date(d.date_emission);
+    dateValidite.setDate(dateValidite.getDate() + (d.validite || 30));
+    return dateValidite < aujourdHui;
+  });
+  if (!aExpirer.length) return;
+
+  for (const d of aExpirer) {
+    try {
+      await sb.patch('devis', 'id=eq.' + d.id + '&user_id=eq.' + sb.user.id, { statut: 'expire' });
+      d.statut = 'expire';
+    } catch(e) { console.warn('verifierExpirationDevis:', e); }
+  }
+}
+
 async function traiterActionDocument(docId, type, action, signatureData) {
   const isFacture = type === 'facture';
   const table = isFacture ? 'factures' : 'devis';
