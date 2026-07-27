@@ -3,6 +3,18 @@
 function renderProduits() {
   const cnt = el('produits-count');
   if(cnt) cnt.textContent = STATE.produits.length;
+  // NOUVEAU: carte valeur totale du stock (visible seulement si au moins un
+  // article a un stock suivi)
+  const carteStock = el('valeur-stock-card');
+  if (carteStock) {
+    const suivis = (STATE.produits || []).filter(function(p) { return p.stock !== null && p.stock !== undefined; });
+    if (suivis.length && typeof calculerValeurStockTotale === 'function') {
+      carteStock.style.display = 'flex';
+      setEl('valeur-stock-montant', fmt(calculerValeurStockTotale()) + ' MAD');
+    } else {
+      carteStock.style.display = 'none';
+    }
+  }
   const list = el('produits-list');
   if (!list) return;
   const q = (el('search-produit-inp')?.value||'').toLowerCase();
