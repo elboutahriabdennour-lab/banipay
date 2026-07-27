@@ -191,6 +191,7 @@ async function sauvegarderFacture(isDraft = false) {
       echeance: el('f-echeance')?.value || null,
       paiement: el('f-paiement')?.value,
       note: el('f-note')?.value.trim(),
+      bc_id: el('f-bc-lie')?.value ? parseInt(el('f-bc-lie').value) : null,
       statut, ht, tva: ht * 0.2, ttc: ht * 1.2,
       lignes: STATE.lignesF,
       devise: STATE.deviseF,
