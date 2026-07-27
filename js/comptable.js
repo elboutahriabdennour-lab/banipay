@@ -97,10 +97,43 @@ async function loadComptableApp() {
       }
     }
 
+    // NOUVEAU: achats de chaque entreprise — visibles au comptable
+    let tousAchats = [];
+    let tousControlesAchats = [];
+    for (const eid of ids) {
+      try {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_achats_entreprise', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_entreprise_id: eid })
+        });
+        if (r.ok) {
+          const rows = (await r.json()) || [];
+          tousAchats = tousAchats.concat(rows);
+          diag.push('✅ Achats de ' + eid + ' : ' + rows.length);
+        } else {
+          const errText = await r.text().catch(function(){return '';});
+          diag.push('❌ RPC get_achats_entreprise a échoué pour ' + eid + ' (HTTP ' + r.status + ') : ' + errText);
+        }
+      } catch(eRpc) {
+        diag.push('❌ RPC get_achats_entreprise — exception JS pour ' + eid + ' : ' + eRpc.message);
+      }
+      try {
+        const r2 = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_controles_achats_entreprise', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_entreprise_id: eid })
+        });
+        if (r2.ok) { tousControlesAchats = tousControlesAchats.concat((await r2.json()) || []); }
+      } catch(eRpc2) {}
+    }
+
     CPT.entreprises.forEach(function(inv) {
       inv.profil = (profils || []).find(function(p) { return p.id === inv.entreprise_id; }) || {};
       inv._factures = (toutesFactures || []).filter(function(f) { return f.user_id === inv.entreprise_id; });
       inv._controles = (tousControles || []).filter(function(c) { return c.entreprise_id === inv.entreprise_id; });
+      inv._achats = (tousAchats || []).filter(function(a) { return a.user_id === inv.entreprise_id; });
+      inv._controlesAchats = (tousControlesAchats || []).filter(function(c) { return c.entreprise_id === inv.entreprise_id; });
       inv._etat = calculerEtat(inv);
     });
 
@@ -271,6 +304,8 @@ async function ouvrirEntreprise(entrepriseId) {
   CPT.currentFactures = inv._factures || [];
   CPT.currentDevis = [];
   CPT.currentControles = inv._controles || {};
+  CPT.currentAchats = inv._achats || [];
+  CPT.currentControlesAchats = inv._controlesAchats || [];
 
   // Load devis — via RPC pour contourner la RLS cross-compte
   try {
@@ -350,7 +385,7 @@ function renderFicheEntreprise() {
 
 function cptEntTab(tab) {
   CPT.currentTab = tab;
-  ['factures', 'devis', 'avoirs', 'infos', 'releves'].forEach(function(t) {
+  ['factures', 'devis', 'achats', 'avoirs', 'infos', 'releves'].forEach(function(t) {
     const btn = el('cpt-tab-' + t);
     if (btn) {
       btn.style.background = t === tab ? '#1F6F72' : '#EAE4DA';
@@ -359,6 +394,7 @@ function cptEntTab(tab) {
   });
   if (tab === 'factures') renderCptFactures();
   else if (tab === 'devis') renderCptDevis();
+  else if (tab === 'achats') renderCptAchats();
   else if (tab === 'avoirs') renderCptTVA();
   else if (tab === 'infos') renderCptInfos();
   else if (tab === 'releves') renderCptReleves();
@@ -516,6 +552,96 @@ async function toggleTVARapide(factureId, btn) {
 }
 
 
+// NOUVEAU: liste des achats de l'entreprise, avec lettrage/TVA dédié
+// (mêmes contrôles que les factures de vente, mais sur controles_factures
+// avec type_doc='achat' — table partagée, jeu de données séparé)
+function renderCptAchats() {
+  const list = el('cpt-ent-content');
+  if (!list) return;
+  const achats = CPT.currentAchats || [];
+
+  if (!achats.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-title">Aucun achat</div></div>';
+    return;
+  }
+
+  const statutBg = { payee: '#EEF3E4', attente: '#F7EFDC' };
+  const statutColor = { payee: '#55702E', attente: '#B8860B' };
+  const statutLabel = { payee: 'Payée', attente: 'En attente' };
+  const totalAchats = achats.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
+
+  list.innerHTML =
+    '<div style="padding:12px 16px;background:#F5E4E1;display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-size:12px;color:#8E2E24;font-weight:600">Total achats</span>' +
+      '<span style="font-size:15px;font-weight:800;color:#8E2E24">' + fmt(totalAchats) + ' MAD</span>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1EEE8">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Achat</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#7C5CA6;text-align:center">T</div>' +
+    '</div>' +
+    achats.map(function(a) {
+      const ctrl = (CPT.currentControlesAchats || []).find(function(c) { return String(c.facture_id) === String(a.id); }) || {};
+      return '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+        '<div>' +
+          '<div style="font-size:12px;font-weight:700">' + escapeHTML(a.fournisseur || '') + '</div>' +
+          '<div style="font-size:11px;color:#6B5F54">' + (a.ref_fournisseur || '') + ' · ' + fmt(a.ttc || 0) + ' MAD · ' + (a.date_achat || '') + '</div>' +
+          '<span style="background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[a.statut] || '') + '</span>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:center">' +
+          '<button class="btn-lettr-achat" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:center">' +
+          '<button class="btn-tva-achat" data-achatid="' + a.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.tva_verifie ? '#fff' : '#CDBEA0') + '">T</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+  if (list.dataset.clickBoundAchat !== '1') {
+    list.dataset.clickBoundAchat = '1';
+    list.addEventListener('click', function(e) {
+      const btnL = e.target.closest('.btn-lettr-achat');
+      if (btnL) { toggleControleAchatRapide(btnL.dataset.achatid, 'lettre', btnL); return; }
+      const btnT = e.target.closest('.btn-tva-achat');
+      if (btnT) { toggleControleAchatRapide(btnT.dataset.achatid, 'tva_verifie', btnT); return; }
+    });
+  }
+}
+
+async function toggleControleAchatRapide(achatId, champ, btn) {
+  const cle = champ === 'lettre' ? 'lettre' : 'tva';
+  const actuel = btn.dataset[cle] === '1';
+  const nouvelleValeur = !actuel;
+  const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
+
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/toggle_controle_achat', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_achat_id: String(achatId), p_entreprise_id: CPT.currentEntrepriseId, p_champ: champ, p_valeur: nouvelleValeur })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(function(){return '';});
+      afficherDiagnosticComptable(['❌ Échec contrôle achat', 'Achat : ' + achatId + ' · Champ : ' + champ, 'HTTP ' + resp.status, errText]);
+      return;
+    }
+    const resultat = await resp.json();
+    if (!resultat) return;
+
+    btn.dataset[cle] = nouvelleValeur ? '1' : '0';
+    if (champ === 'lettre') { btn.style.background = nouvelleValeur ? '#6E8F4E' : '#EAE4DA'; btn.style.color = nouvelleValeur ? '#fff' : '#CDBEA0'; }
+    else { btn.style.background = nouvelleValeur ? '#7C5CA6' : '#EAE4DA'; btn.style.color = nouvelleValeur ? '#fff' : '#CDBEA0'; }
+
+    const local = (CPT.currentControlesAchats || []).find(function(c) { return String(c.facture_id) === String(achatId); });
+    if (local) { Object.assign(local, resultat); }
+    else { CPT.currentControlesAchats = CPT.currentControlesAchats || []; CPT.currentControlesAchats.push(resultat); }
+
+    showToast(champ === 'lettre' ? 'Lettrage mis à jour' : 'TVA mise à jour', 'success');
+  } catch(e) {
+    afficherDiagnosticComptable(['❌ Erreur contrôle achat', e.message]);
+  }
+}
+
 function renderCptDevis() {
   const list = el('cpt-ent-content');
   if (!list) return;
@@ -548,23 +674,52 @@ function renderCptTVA() {
   f.filter(function(x) { return x.statut === 'payee'; }).forEach(function(fac) {
     const key = (fac.date_emission || '').substring(0, 7);
     if (!key) return;
-    if (!byMonth[key]) byMonth[key] = { ht: 0, tva: 0, ttc: 0, count: 0 };
+    if (!byMonth[key]) byMonth[key] = { ht: 0, tva: 0, ttc: 0, count: 0, tvaAchats: 0, achatsCount: 0 };
     byMonth[key].ht += Number(fac.ht) || 0;
     byMonth[key].tva += Number(fac.tva) || 0;
     byMonth[key].ttc += Number(fac.ttc) || 0;
     byMonth[key].count++;
   });
-  const totalTVA = Object.values(byMonth).reduce(function(s, m) { return s + m.tva; }, 0);
+
+  // NOUVEAU: TVA déductible sur les achats — payés uniquement, sur le même
+  // principe que les factures de vente (une TVA sur un achat non payé n'est
+  // généralement pas encore déductible).
+  const achats = CPT.currentAchats || [];
+  achats.filter(function(x) { return x.statut === 'payee'; }).forEach(function(a) {
+    const key = (a.date_achat || '').substring(0, 7);
+    if (!key) return;
+    if (!byMonth[key]) byMonth[key] = { ht: 0, tva: 0, ttc: 0, count: 0, tvaAchats: 0, achatsCount: 0 };
+    byMonth[key].tvaAchats += Number(a.tva) || 0;
+    byMonth[key].achatsCount++;
+  });
+
+  const totalTVACollectee = Object.values(byMonth).reduce(function(s, m) { return s + m.tva; }, 0);
+  const totalTVADeductible = Object.values(byMonth).reduce(function(s, m) { return s + m.tvaAchats; }, 0);
+  const totalTVANette = totalTVACollectee - totalTVADeductible;
+
   list.innerHTML = '<div style="padding:16px">' +
-    '<div style="background:#EDE6F0;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between">' +
-      '<div style="font-size:12px;font-weight:600;color:#7C5CA6">TVA totale collectée</div>' +
-      '<div style="font-size:18px;font-weight:800;color:#7C5CA6">' + fmt(totalTVA) + ' MAD</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">' +
+      '<div style="background:#EDE6F0;border-radius:12px;padding:12px">' +
+        '<div style="font-size:11px;font-weight:600;color:#7C5CA6">TVA collectée</div>' +
+        '<div style="font-size:16px;font-weight:800;color:#7C5CA6">' + fmt(totalTVACollectee) + ' MAD</div>' +
+      '</div>' +
+      '<div style="background:#F5E4E1;border-radius:12px;padding:12px">' +
+        '<div style="font-size:11px;font-weight:600;color:#B23A2E">TVA déductible (achats)</div>' +
+        '<div style="font-size:16px;font-weight:800;color:#B23A2E">' + fmt(totalTVADeductible) + ' MAD</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="background:#241F1B;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">' +
+      '<div style="font-size:12px;font-weight:600;color:#fff">TVA nette à payer</div>' +
+      '<div style="font-size:20px;font-weight:800;color:' + (totalTVANette >= 0 ? '#9CBB7A' : '#D98177') + '">' + fmt(totalTVANette) + ' MAD</div>' +
     '</div>' +
     Object.keys(byMonth).sort().reverse().map(function(m) {
       const d = byMonth[m];
-      return '<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #EAE4DA">' +
-        '<div><div style="font-size:12px;font-weight:600">' + m + '</div><div style="font-size:10px;color:#9C9186">' + d.count + ' facture(s)</div></div>' +
-        '<div style="text-align:right"><div style="font-size:11px;color:#6B5F54">HT: ' + fmt(d.ht) + '</div><div style="font-size:13px;font-weight:700;color:#7C5CA6">TVA: ' + fmt(d.tva) + ' MAD</div></div>' +
+      const net = d.tva - d.tvaAchats;
+      return '<div style="padding:12px 0;border-bottom:1px solid #EAE4DA">' +
+        '<div style="display:flex;justify-content:space-between">' +
+          '<div><div style="font-size:12px;font-weight:600">' + m + '</div><div style="font-size:10px;color:#9C9186">' + d.count + ' facture(s) · ' + d.achatsCount + ' achat(s)</div></div>' +
+          '<div style="text-align:right"><div style="font-size:11px;color:#6B5F54">Collectée: ' + fmt(d.tva) + ' · Déductible: ' + fmt(d.tvaAchats) + '</div><div style="font-size:13px;font-weight:700;color:' + (net >= 0 ? '#7C5CA6' : '#B23A2E') + '">Nette: ' + fmt(net) + ' MAD</div></div>' +
+        '</div>' +
       '</div>';
     }).join('') +
     '<div style="display:flex;gap:8px;margin-top:16px">' +
