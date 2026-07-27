@@ -163,6 +163,10 @@ function filtrerProduits() {
 }
 
 function ajouterDepuisCatalogue(id) {
+  // NOUVEAU: le même catalogue est réutilisé pour les lignes d'achat — si
+  // c'est ce contexte qui l'a ouvert, on route vers la ligne d'achat au
+  // lieu de la ligne de facture.
+  if (typeof ajouterDepuisCatalogueAchatSiActif === 'function' && ajouterDepuisCatalogueAchatSiActif(id)) return;
   const p = STATE.produits.find(x => x.id === id);
   if (!p) return;
   STATE.lignesF.push({ desc: p.nom, qte: 1, pu: p.prix_ht, unite: p.unite || 'u', produit_id: p.id });
