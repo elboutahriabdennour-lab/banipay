@@ -542,6 +542,8 @@ function goScreen(name) {
     'avoir': initAvoir,
     'bon-commande': initBonCommande,
     'bon-livraison': initBonLivraison,
+    'bons-commande-list': function() { loadBonsCommande(); },
+    'bons-livraison-list': function() { loadBonsLivraison(); },
     'clients': renderClients,
     'nouveau-client': initNouveauClient,
     'detail-client': function() {},
