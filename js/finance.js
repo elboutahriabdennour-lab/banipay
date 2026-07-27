@@ -53,7 +53,77 @@ function renderPositionFinanciere() {
       '</div>' : '') +
 
     '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans BaniPay — ne remplace pas un état de trésorerie comptable complet.</div>' +
-    '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>';
+    '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>' +
+    '<button onclick="goScreen(\'rapprochement\',null)" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Rapprocher mes paiements</button>';
+}
+
+// ============================================================
+// RAPPROCHEMENT PAIEMENTS (mini lettrage côté entreprise)
+// ============================================================
+// Contrairement au lettrage comptable (controles_factures, réservé au
+// comptable), ceci est un auto-pointage simple : l'entreprise coche
+// elle-même les factures qu'elle a vérifiées sur son relevé bancaire.
+
+function renderRapprochement() {
+  const container = el('rapprochement-content');
+  if (!container) return;
+
+  const factures = (STATE.factures || []).filter(function(f) { return f.statut !== 'brouillon'; });
+  if (!factures.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-ico">🔗</div><div class="empty-title">Aucune facture</div></div>';
+    return;
+  }
+
+  const filtre = STATE._filtreRapprochement || 'tous';
+  let filtrees = factures;
+  if (filtre === 'a_faire') filtrees = factures.filter(function(f) { return !f.rapproche; });
+  else if (filtre === 'fait') filtrees = factures.filter(function(f) { return f.rapproche; });
+
+  const nbFait = factures.filter(function(f) { return f.rapproche; }).length;
+
+  container.innerHTML =
+    '<div style="background:#EEF3E4;border-radius:12px;padding:12px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-size:12px;font-weight:600;color:#55702E">Rapprochées</span>' +
+      '<span style="font-size:15px;font-weight:800;color:#55702E">' + nbFait + ' / ' + factures.length + '</span>' +
+    '</div>' +
+    '<div style="display:flex;gap:6px;margin-bottom:12px">' +
+      ['tous', 'a_faire', 'fait'].map(function(f) {
+        const label = f === 'tous' ? 'Toutes' : f === 'a_faire' ? 'À faire' : 'Faites';
+        const actif = filtre === f;
+        return '<button onclick="STATE._filtreRapprochement=\'' + f + '\';renderRapprochement()" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (actif ? '#1F6F72' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#6B5F54') + '">' + label + '</button>';
+      }).join('') +
+    '</div>' +
+    filtrees.map(function(f) {
+      const recu = Number(f.montant_recu || 0);
+      return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF;display:flex;align-items:center;gap:12px">' +
+        '<button onclick="toggleRapprochementFacture(' + f.id + ')" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (f.rapproche ? '#6E8F4E' : '#E3DCCF') + ';background:' + (f.rapproche ? '#EEF3E4' : '#fff') + ';font-size:16px;cursor:pointer;flex-shrink:0;font-family:inherit">' + (f.rapproche ? '✓' : '') + '</button>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:700">' + escapeHTML(f.client||'') + '</div>' +
+          '<div style="font-size:11px;color:#9C9186">' + (f.ref||'') + ' · ' + (f.date_emission||'') + '</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0">' +
+          '<div style="font-size:13px;font-weight:700">' + fmt(f.ttc||0) + ' MAD</div>' +
+          '<div style="font-size:10px;color:' + (recu >= Number(f.ttc||0) ? '#6E8F4E' : '#B8860B') + '">' + fmt(recu) + ' MAD reçu(s)</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+}
+
+async function toggleRapprochementFacture(factureId) {
+  const f = (STATE.factures || []).find(function(x) { return x.id === factureId; });
+  if (!f) return;
+  const nouvelleValeur = !f.rapproche;
+  try {
+    await sb.patch('factures', 'id=eq.' + factureId + '&user_id=eq.' + sb.user.id, {
+      rapproche: nouvelleValeur,
+      rapproche_at: nouvelleValeur ? new Date().toISOString() : null
+    });
+    f.rapproche = nouvelleValeur;
+    renderRapprochement();
+    showToast(nouvelleValeur ? '✅ Marquée rapprochée' : 'Rapprochement retiré', 'success');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
 }
 
 // ============================================================
