@@ -1,4 +1,4 @@
-// BANIPAY — ubl.js — Génération de factures structurées UBL 2.1
+// ZELTO — ubl.js — Génération de factures structurées UBL 2.1
 // ============================================================
 // PRÉPARATION À LA FACTURATION ÉLECTRONIQUE DGI (Maroc, obligation 2027
 // pour les PME/TPE) — CE FICHIER EST UNE PRÉPARATION, PAS UNE CONFORMITÉ
@@ -54,7 +54,7 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
   }).join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<!-- Généré par BaniPay — préparation UBL 2.1, format international OASIS.
+<!-- Généré par Zelto — préparation UBL 2.1, format international OASIS.
      Profil marocain DGI/xHub non encore publié au moment de la génération :
      ce fichier n'est PAS garanti conforme tant que la DGI n'a pas publié
      ses spécifications définitives. Voir commentaire en tête de ubl.js. -->
