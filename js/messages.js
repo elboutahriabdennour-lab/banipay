@@ -1,4 +1,4 @@
-// BANIPAY — messages.js — Messagerie temps réel
+// ZELTO — messages.js — Messagerie temps réel
 
 STATE.conversations = STATE.conversations || [];
 STATE.messagesConv = STATE.messagesConv || [];
