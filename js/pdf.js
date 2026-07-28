@@ -1,4 +1,4 @@
-// BANIPAY — pdf.js
+// ZELTO — pdf.js
 
 
 // NOUVEAU: construit les références croisées d'une facture — devis, bon de
@@ -245,7 +245,7 @@ ${(p.banque||p.rib)?`<div class="bank-box">
 <div style="flex:1"></div>
 
 <div class="footer">
-  <div class="footer-brand">Bani<span>Pay</span></div>
+  <div class="footer-brand">Zel<span>to</span></div>
   <div class="footer-center">
     ${[p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Pat: '+p.patente:'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}
     ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+p.ville:''):''}
