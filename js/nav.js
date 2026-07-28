@@ -1,4 +1,4 @@
-// BANIPAY — nav.js
+// ZELTO — nav.js
 
 async function genNotifications() {
   STATE.notifications = [];
@@ -216,7 +216,7 @@ async function gererClicNotification(e) {
             user_id: sb.user?.id,
             nom: inv.comptable_email.split('@')[0],
             email: inv.comptable_email,
-            note: 'Mon comptable BaniPay',
+            note: 'Mon comptable Zelto',
             type: 'comptable_banipay'
           })
         });
@@ -245,7 +245,7 @@ async function gererClicNotification(e) {
   }
 
   // Accepter / Mettre en attente / Refuser une facture/devis reçu via
-  // BaniPay directement depuis la notification — vérifié EN PREMIER, car
+  // Zelto directement depuis la notification — vérifié EN PREMIER, car
   // ces boutons sont imbriqués dans la zone cliquable "voir le document"
   // (sinon le clic sur un bouton déclencherait aussi l'ouverture du PDF).
   const btnDA = e.target.closest('.btn-doc-accept');
@@ -283,7 +283,7 @@ async function gererClicNotification(e) {
           body: JSON.stringify({ p_id: nid })
         });
       }
-      // FIX/NOUVEAU: quand une FACTURE reçue via compte BaniPay est
+      // FIX/NOUVEAU: quand une FACTURE reçue via compte Zelto est
       // acceptée, elle s'enregistre automatiquement côté achats du client
       // — plus besoin de la ressaisir manuellement.
       if (btnDA && t === 'facture' && typeof enregistrerAchatDepuisFactureAcceptee === 'function') {
