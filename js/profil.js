@@ -486,6 +486,23 @@ async function loadArchive() {
 async function renderAccesComptable() { inviterComptable(); }
 
 
+// FIX: cette fonction n'existait tout simplement pas — les boutons
+// "Relevés bancaires" appelaient loadReleves() qui n'était définie nulle
+// part, et STATE.releves n'était jamais initialisé depuis la base. Résultat
+// concret : le bouton ne faisait rien du tout (ReferenceError silencieux),
+// et même en le corrigeant, uploadReleve() aurait planté sur
+// "STATE.releves.unshift" appliqué à undefined.
+async function loadReleves() {
+  const uid = sb.user?.id;
+  if (!uid) { STATE.releves = []; return; }
+  try {
+    STATE.releves = (await sb.get('releves_bancaires', 'user_id=eq.' + uid + '&order=annee.desc,mois.desc')) || [];
+  } catch(e) {
+    STATE.releves = [];
+  }
+  renderReleves();
+}
+
 function renderReleves() {
   const list = el('releves-list');
   if (!list) return;
