@@ -1,4 +1,4 @@
-// BANIPAY — profil.js
+// ZELTO — profil.js
 
 function renderProfil() {
   const p = STATE.profil;
@@ -135,7 +135,7 @@ function copierLienProfil() {
 async function partagerProfil() {
   const id = STATE.profil.id_unique||'BP-000000';
   const lien = `${window.location.origin}${window.location.pathname}?profil=${id}`;
-  if(navigator.share){try{await navigator.share({title:STATE.profil.raison||'BaniPay',url:lien});return;}catch(e){}}
+  if(navigator.share){try{await navigator.share({title:STATE.profil.raison||'Zelto',url:lien});return;}catch(e){}}
   navigator.clipboard?.writeText(lien).then(()=>showToast('✅ Lien copié !','success'));
 }
 
@@ -188,7 +188,7 @@ function genQRCanvas(canvasId, text, size) {
     if(rx>40&&rx<size-40&&ry>40&&ry<size-40) ctx.fillRect(rx,ry,4,4);
   }
   ctx.fillStyle='#C9971F';ctx.font='bold 10px Arial';ctx.textAlign='center';
-  ctx.fillText('BaniPay',size/2,size/2+4);
+  ctx.fillText('Zelto',size/2,size/2+4);
 }
 
 // ============================================================
@@ -366,7 +366,7 @@ function exporterToutesMesDonnees() {
 
 function confirmerSuppressionCompte() {
   if (!confirm('⚠️ Cette action est IRRÉVERSIBLE.\nToutes vos données seront supprimées.\n\nÊtes-vous sûr ?')) return;
-  if (!confirm('Dernière confirmation : supprimer définitivement votre compte BaniPay ?')) return;
+  if (!confirm('Dernière confirmation : supprimer définitivement votre compte Zelto ?')) return;
   deleteAccount();
 }
 
@@ -594,7 +594,7 @@ async function inviterComptable() {
   box.innerHTML =
     '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 20px"></div>' +
     '<div style="font-size:17px;font-weight:700;margin-bottom:6px">🤝 Inviter mon comptable</div>' +
-    '<div style="font-size:13px;color:#6B5F54;margin-bottom:16px">Saisissez l\'email de votre comptable. Il recevra une notification dans BaniPay.</div>' +
+    '<div style="font-size:13px;color:#6B5F54;margin-bottom:16px">Saisissez l\'email de votre comptable. Il recevra une notification dans Zelto.</div>' +
     '<input id="inv-cpt-email-input" class="f-inp" type="email" placeholder="comptable@cabinet.ma" style="margin-bottom:12px">' +
     '<button id="btn-send-inv-cpt" style="width:100%;padding:13px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✉️ Envoyer l\'invitation</button>' +
     '<button id="btn-close-inv-cpt-modal" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
@@ -639,7 +639,7 @@ async function inviterComptable() {
         })
       });
 
-      // 2. Chercher si le comptable a un compte BaniPay
+      // 2. Chercher si le comptable a un compte Zelto
       const userResp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_user_by_email', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
@@ -660,7 +660,7 @@ async function inviterComptable() {
           p_destinataire_email: emailCpt,
           p_type: 'invitation_comptable',
           p_titre: 'Invitation de ' + (profil.raison || emailEnt),
-          p_corps: (profil.raison || emailEnt) + ' vous invite à accéder à ses documents BaniPay.',
+          p_corps: (profil.raison || emailEnt) + ' vous invite à accéder à ses documents Zelto.',
           p_meta: JSON.stringify({ entreprise_id: uid, entreprise_email: emailEnt, comptable_email: emailCpt })
         })
       });
