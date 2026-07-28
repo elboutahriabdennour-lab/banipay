@@ -6,9 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1F6F72">
-<meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
-<title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785232460">
+<meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
+<title>Zelto — Gestion Factures &amp; Devis</title>
+<link rel="stylesheet" href="css/style.css?v=1785245990">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -18,7 +18,7 @@
 <!-- DASHBOARD -->
 <div class="screen" id="screen-dashboard">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <!-- Bouton retour espace comptable (visible uniquement en mode entreprise) -->
       <!-- FIX: bouton redondant retiré — un seul mécanisme de retour reste
@@ -90,7 +90,7 @@
 <!-- ===== MESSAGERIE (liste conversations) ===== -->
 <div class="screen" id="screen-messages" style="background:#F1EEE8">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
     </div>
@@ -124,30 +124,30 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785232460"></script>
-  <script src="js/utils.js?v=1785232460"></script>
-  <script src="js/auth.js?v=1785232460"></script>
-  <script src="js/nav.js?v=1785232460"></script>
-  <script src="js/factures.js?v=1785232460"></script>
-  <script src="js/devis.js?v=1785232460"></script>
-  <script src="js/clients.js?v=1785232460"></script>
-  <script src="js/produits.js?v=1785232460"></script>
-  <script src="js/pdf.js?v=1785232460"></script>
-  <script src="js/stats.js?v=1785232460"></script>
-  <script src="js/profil.js?v=1785232460"></script>
-  <script src="js/comptable.js?v=1785232460"></script>
-  <script src="js/messages.js?v=1785232460"></script>
-<script src="js/achats.js?v=1785232460"></script>
-<script src="js/stock.js?v=1785232460"></script>
-<script src="js/finance.js?v=1785232460"></script>
-<script src="js/ubl.js?v=1785232460"></script>
-<script src="js/abonnements.js?v=1785232460"></script>
-<script src="js/signature.js?v=1785232460"></script>
-<script src="js/app.js?v=1785232460"></script>
+<script src="js/config.js?v=1785245990"></script>
+  <script src="js/utils.js?v=1785245990"></script>
+  <script src="js/auth.js?v=1785245990"></script>
+  <script src="js/nav.js?v=1785245990"></script>
+  <script src="js/factures.js?v=1785245990"></script>
+  <script src="js/devis.js?v=1785245990"></script>
+  <script src="js/clients.js?v=1785245990"></script>
+  <script src="js/produits.js?v=1785245990"></script>
+  <script src="js/pdf.js?v=1785245990"></script>
+  <script src="js/stats.js?v=1785245990"></script>
+  <script src="js/profil.js?v=1785245990"></script>
+  <script src="js/comptable.js?v=1785245990"></script>
+  <script src="js/messages.js?v=1785245990"></script>
+<script src="js/achats.js?v=1785245990"></script>
+<script src="js/stock.js?v=1785245990"></script>
+<script src="js/finance.js?v=1785245990"></script>
+<script src="js/ubl.js?v=1785245990"></script>
+<script src="js/abonnements.js?v=1785245990"></script>
+<script src="js/signature.js?v=1785245990"></script>
+<script src="js/app.js?v=1785245990"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
-  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Archive Entreprise</div><div class="hero-amount" id="archive-count">0 document(s)</div><div class="hero-sub-txt">Partagée avec votre comptable</div></div>
   <div style="padding:12px 20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
     <div class="qa-item" onclick="ajouterDocumentArchive('statuts')"><div class="qa-ico">📋</div><div class="qa-lbl">Statuts</div></div>
@@ -163,8 +163,8 @@
 
 <!-- ANNUAIRE -->
 <div class="screen" id="screen-annuaire">
-  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
-  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Annuaire BaniPay</div><div class="hero-sub-txt">Entreprises utilisant BaniPay</div></div>
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Annuaire Zelto</div><div class="hero-sub-txt">Entreprises utilisant Zelto</div></div>
   <div style="padding:12px 20px">
     <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
     <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px">
@@ -179,14 +179,14 @@
 
 <!-- AVOIR LIST -->
 <div class="screen" id="screen-avoir-list">
-  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#8E2E24;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
   <div id="avoir-list-items"></div><div class="pb"></div>
 </div>
 
 <!-- ABONNEMENTS (facturation récurrente) -->
 <div class="screen" id="screen-abonnements">
-  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#1F6F72;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
   <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
   <div class="card-list" id="abonnements-list"></div>
@@ -253,7 +253,7 @@
 
 <!-- RELEVES -->
 <div class="screen" id="screen-releves">
-  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="hero" style="padding-bottom:20px"><div class="hero-lbl">Relevés bancaires</div><div class="hero-sub-txt">Partagés avec votre comptable</div></div>
   <div style="padding:16px 20px">
     <div style="background:#EEF3E4;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid #C9D9AE">
@@ -272,13 +272,13 @@
 
 <!-- ACHATS -->
 <div class="screen" id="screen-achats">
-  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
   <div style="display:flex;gap:8px;padding:12px 20px;overflow-x:auto">
     <button class="ftab active" onclick="filtrerAchats('tous',this)">Tous</button>
     <button class="ftab" onclick="filtrerAchats('attente',this)">En attente</button>
     <button class="ftab" onclick="filtrerAchats('payee',this)">Payées</button>
-    <button class="ftab" onclick="filtrerAchats('banipay',this)">BaniPay</button>
+    <button class="ftab" onclick="filtrerAchats('banipay',this)">Zelto</button>
   </div>
   <div id="achats-list"></div>
   <button class="fab" onclick="STATE.lignesAchat=[];window._achatFactureLieeId=null;goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
@@ -289,11 +289,11 @@
 <div class="screen" id="screen-nouvelle-achat">
   <div class="form-header"><div class="back-btn" onclick="goScreen('achats',null)">←</div><div class="form-title">Nouvelle facture d'achat</div></div>
   <div style="margin:12px 20px;background:#F5E4E1;border-radius:14px;padding:14px">
-    <div style="font-size:12px;font-weight:700;color:#B23A2E;margin-bottom:8px">📲 Facture ou fournisseur BaniPay ?</div>
+    <div style="font-size:12px;font-weight:700;color:#B23A2E;margin-bottom:8px">📲 Facture ou fournisseur Zelto ?</div>
     <div style="font-size:11px;color:#8E2E24;margin-bottom:8px">Collez le lien d'une facture reçue (ou d'un profil fournisseur) — les champs se remplissent automatiquement.</div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <input id="achat-fournisseur-lien" style="flex:1;padding:10px;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="Lien de la facture ou du profil...">
-      <button onclick="importerFournisseurBaniPay()" style="padding:10px 14px;background:#B23A2E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
+      <button onclick="importerFournisseurZelto()" style="padding:10px 14px;background:#B23A2E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
     </div>
     <button onclick="scannerQRAchat()" style="width:100%;padding:10px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Scanner le QR code de la facture</button>
   </div>
@@ -429,7 +429,7 @@
 <!-- DEVIS -->
 <div class="screen" id="screen-devis-list">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-devis',null)">+ Nouveau</span>
     </div>
@@ -550,7 +550,7 @@
 <!-- PRODUITS -->
 <div class="screen" id="screen-produits">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-produit',null)">+ Ajouter</span>
     </div>
@@ -632,7 +632,7 @@
 <!-- PROFIL -->
 <div class="screen" id="screen-profil">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
     </div>
@@ -673,7 +673,7 @@
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">Mon comptable</div>
       <div id="mon-comptable-section" style="padding:14px 16px">Chargement...</div>
     </div>
-    <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#6E8F4E">🏢 Annuaire BaniPay</button>
+    <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#6E8F4E">🏢 Annuaire Zelto</button>
     <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#7C5CA6">🔐 Lien accès comptable</button>
@@ -744,7 +744,7 @@
 <!-- STATS -->
 <div class="screen" id="screen-stats">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div>
   </div>
   <div class="sec-label">Statistiques</div>
@@ -761,8 +761,27 @@
 <div class="screen active" id="screen-auth">
   <div class="auth-wrap">
     <div class="auth-logo">
-      <h1>Bani<span>Pay</span></h1>
-      
+      <svg width="145" height="17" viewBox="20 18 260 30">
+        <defs>
+          <linearGradient id="gradSafranAuthTop" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#A67A16"/>
+            <stop offset="100%" stop-color="#E0AE5C"/>
+          </linearGradient>
+        </defs>
+        <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="url(#gradSafranAuthTop)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+      </svg>
+      <h1 style="margin:2px 0">Zel<span>to</span></h1>
+      <svg width="145" height="17" viewBox="20 132 260 30">
+        <defs>
+          <linearGradient id="gradZelligeAuthBottom" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#154F52"/>
+            <stop offset="100%" stop-color="#7FB8BA"/>
+          </linearGradient>
+        </defs>
+        <path d="M 270 146 Q 150 160 30 146" fill="none" stroke="url(#gradZelligeAuthBottom)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
+      </svg>
     </div>
     <div class="auth-card">
       <div id="aw-normal">
@@ -855,14 +874,14 @@
         <button class="a-btn a-btn-green" onclick="accederComptable()">Accéder →</button>
       </div>
     </div>
-    <div class="a-footer">Données sécurisées · BaniPay v2.0</div>
+    <div class="a-footer">Données sécurisées · Zelto v2.0</div>
   </div>
 </div>
 
 <!-- DASHBOARD COMPTABLE -->
 <div class="screen" id="screen-dashboard-comptable">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('comptable',null)" style="cursor:pointer">🔐 Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('comptable',null)" style="cursor:pointer">🔐 Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
       <button class="a-btn a-btn-blue" onclick="quitterComptable()" style="padding:8px 14px;margin-top:0;font-size:12px;width:auto">Quitter</button></div>
@@ -1045,7 +1064,7 @@
   </div>
 </div>
 
-<!-- MODAL ENVOYER (WhatsApp / Email / Lien / Compte BaniPay) -->
+<!-- MODAL ENVOYER (WhatsApp / Email / Lien / Compte Zelto) -->
 <div class="modal-overlay" id="modal-envoyer">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -1053,7 +1072,7 @@
     <button class="m-btn" style="background:#25D366" onclick="envoyerVia('whatsapp')">📱 WhatsApp</button>
     <button class="m-btn" style="background:#C9971F" onclick="envoyerVia('email')">✉️ Email</button>
     <button class="m-btn" style="background:#6B5F54" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
-    <button class="m-btn" style="background:#1F6F72" onclick="envoyerVia('banipay')">🅿️ Compte BaniPay</button>
+    <button class="m-btn" style="background:#1F6F72" onclick="envoyerVia('banipay')">🅿️ Compte Zelto</button>
     <div id="me-banipay-picker" style="display:none;margin-top:10px"></div>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
@@ -1106,7 +1125,7 @@
 <!-- ===== HISTORIQUE PAIEMENTS ===== -->
 <div class="screen" id="screen-historique-paiements">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('detail')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
     </div>
@@ -1123,7 +1142,7 @@
 <!-- ===== BROUILLONS ===== -->
 <div class="screen" id="screen-brouillons">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('dashboard')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
     </div>
@@ -1227,7 +1246,7 @@
 <!-- ===== PARAMETRES ===== -->
 <div class="screen" id="screen-parametres">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('profil')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
     </div>
@@ -1365,7 +1384,7 @@
 <!-- ===== RELANCES ===== -->
 <div class="screen" id="screen-relances">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('dashboard')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
     </div>
@@ -1437,7 +1456,7 @@
 <!-- CLIENTS -->
   <div class="screen" id="screen-clients">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
       <button onclick="ouvrirScannerQR()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">+ Ajouter</button>
@@ -1494,9 +1513,9 @@
     </div>
     <div style="padding:16px">
       <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1px solid #EAE4DA" id="dc-infos"></div>
-      <!-- Lien BaniPay du client -->
+      <!-- Lien Zelto du client -->
       <div id="dc-lien-section" style="display:none;background:#FBF0DA;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #E8D9AE">
-        <div style="font-size:11px;font-weight:700;color:#C9971F;margin-bottom:6px">🔗 Profil BaniPay</div>
+        <div style="font-size:11px;font-weight:700;color:#C9971F;margin-bottom:6px">🔗 Profil Zelto</div>
         <div id="dc-lien-banipay" style="font-size:11px;color:#C9971F;word-break:break-all;margin-bottom:8px"></div>
         <div style="display:flex;gap:8px">
           <button id="dc-btn-copier-lien" style="flex:1;padding:7px;background:#fff;color:#C9971F;border:1px solid #E8D9AE;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
@@ -1519,7 +1538,7 @@
   <!-- STATS AVANCEES -->
   <div class="screen" id="screen-tva">
     <div class="app-header" style="padding-top:16px">
-      <div class="brand">Bani<span>Pay</span></div>
+      <div class="brand">Zel<span>to</span></div>
       <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
     </div>
     <div style="padding:0 20px">
@@ -1538,7 +1557,7 @@
   <!-- POSITION FINANCIÈRE -->
   <div class="screen" id="screen-position-financiere">
     <div class="app-header" style="padding-top:16px">
-      <div class="brand">Bani<span>Pay</span></div>
+      <div class="brand">Zel<span>to</span></div>
       <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
     </div>
     <div style="padding:12px 20px 0">
@@ -1551,7 +1570,7 @@
   <!-- RAPPORT DE STOCK -->
   <div class="screen" id="screen-rapport-stock">
     <div class="app-header" style="padding-top:16px">
-      <div class="brand">Bani<span>Pay</span></div>
+      <div class="brand">Zel<span>to</span></div>
       <div class="back-btn" onclick="goScreen('produits',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
     </div>
     <div style="padding:12px 20px 0">
@@ -1564,7 +1583,7 @@
   <!-- RAPPROCHEMENT PAIEMENTS -->
   <div class="screen" id="screen-rapprochement">
     <div class="app-header" style="padding-top:16px">
-      <div class="brand">Bani<span>Pay</span></div>
+      <div class="brand">Zel<span>to</span></div>
       <div class="back-btn" onclick="goScreen('position-financiere',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
     </div>
     <div style="padding:12px 20px 0">
@@ -1578,7 +1597,7 @@
   <!-- RECHERCHE -->
   <div class="screen" id="screen-recherche">
     <div class="app-header" style="padding-top:16px">
-      <div class="brand">Bani<span>Pay</span></div>
+      <div class="brand">Zel<span>to</span></div>
       <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
     </div>
     <div style="padding:0 20px 12px">
@@ -1606,12 +1625,12 @@
     <datalist id="bc-fournisseurs-datalist"></datalist>
     <input type="hidden" id="bc-fournisseur-id" value="">
     <div style="margin-top:8px;background:#F5E4E1;border-radius:12px;padding:12px">
-      <div style="font-size:11px;font-weight:700;color:#8E2E24;margin-bottom:6px">📲 Fournisseur sur BaniPay ?</div>
+      <div style="font-size:11px;font-weight:700;color:#8E2E24;margin-bottom:6px">📲 Fournisseur sur Zelto ?</div>
       <div style="display:flex;gap:8px;margin-bottom:8px">
         <input id="bc-fournisseur-lien" style="flex:1;padding:9px;border:1.5px solid #E0B6AC;border-radius:8px;font-size:12px;font-family:inherit;outline:none;background:#fff" placeholder="Lien du profil...">
         <button onclick="importerFournisseurBCDepuisLien()" style="padding:9px 12px;background:#B23A2E;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
       </div>
-      <button onclick="rechercherFournisseurBCAnnuaire()" style="width:100%;padding:9px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Chercher dans l'annuaire BaniPay</button>
+      <button onclick="rechercherFournisseurBCAnnuaire()" style="width:100%;padding:9px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Chercher dans l'annuaire Zelto</button>
     </div>
   </div>
   <div class="form-section">
@@ -1648,7 +1667,7 @@
 <!-- ===== LISTE BONS DE COMMANDE ===== -->
 <div class="screen" id="screen-bons-commande-list">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
   </div>
   <div class="sec-label">📋 Bons de commande</div>
@@ -1687,7 +1706,7 @@
 <!-- ===== LISTE BONS DE LIVRAISON ===== -->
 <div class="screen" id="screen-bons-livraison-list">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
   </div>
   <div class="sec-label">📦 Bons de livraison</div>
@@ -1698,7 +1717,7 @@
 <!-- ===== NOTIFICATIONS ===== -->
 <div class="screen" id="screen-notifications">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button></div>
   </div>
   <div class="sec-label">Alertes</div>
@@ -1712,7 +1731,7 @@
 <!-- ===== JOURNAL D'AUDIT ===== -->
 <div class="screen" id="screen-audit">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Bani<span>Pay</span></div>
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><button class="back-btn" onclick="goScreen('profil')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button></div>
   </div>
   <div class="hero" style="padding-bottom:16px">
