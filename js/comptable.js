@@ -1,4 +1,4 @@
-// BANIPAY — comptable.js — Espace Comptable Professionnel
+// ZELTO — comptable.js — Espace Comptable Professionnel
 
 // Seuils pour calcul état
 const SEUIL_ACTION = 0.3;  // < 30% contrôlé = action requise
@@ -1341,7 +1341,7 @@ async function envoyerInvitationEntreprise() {
     if (r.ok || r.status === 201) {
       const inviteUrl = window.location.origin + window.location.pathname + '?invite_cpt=' + encodeURIComponent(emailCpt) + '&pour=' + encodeURIComponent(emailEnt);
       if (navigator.share) {
-        try { await navigator.share({ title: 'Invitation BaniPay', text: 'Invitation comptable BaniPay: ' + inviteUrl }); }
+        try { await navigator.share({ title: 'Invitation Zelto', text: 'Invitation comptable Zelto: ' + inviteUrl }); }
         catch(e2) { navigator.clipboard?.writeText(inviteUrl); }
       } else {
         navigator.clipboard?.writeText(inviteUrl);
@@ -2068,7 +2068,7 @@ function renderComptableProfil() {
   const av = el('cpt-profil-av');
   if (av) av.textContent = nom.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'C';
   setEl('cpt-profil-nom', nom);
-  setEl('cpt-profil-cabinet', cabinet ? '🏛️ ' + cabinet : 'Comptable BaniPay');
+  setEl('cpt-profil-cabinet', cabinet ? '🏛️ ' + cabinet : 'Comptable Zelto');
   setEl('cpt-profil-email', email);
 
   const lienId = 'CPT-' + uid.substr(0,8).toUpperCase();
@@ -2103,7 +2103,7 @@ function partagerProfilComptable() {
   if (!lien) return;
   const nom = sb.user?.user_metadata?.nom || 'Comptable';
   if (navigator.share) {
-    navigator.share({ title: nom + ' — BaniPay Comptable', text: 'Voici le profil de votre comptable BaniPay : ' + nom, url: lien })
+    navigator.share({ title: nom + ' — Zelto Comptable', text: 'Voici le profil de votre comptable Zelto : ' + nom, url: lien })
       .catch(function() { navigator.clipboard?.writeText(lien); showToast('Lien copié !', 'success'); });
   } else {
     navigator.clipboard?.writeText(lien);
@@ -2153,7 +2153,7 @@ async function envoyerInvitationDepuisProfil() {
         p_destinataire_email: emailEnt,
         p_type: 'invitation_comptable',
         p_titre: 'Invitation de votre comptable',
-        p_corps: nomCpt + ' souhaite accéder à vos documents BaniPay en tant que comptable.',
+        p_corps: nomCpt + ' souhaite accéder à vos documents Zelto en tant que comptable.',
         p_meta: JSON.stringify({ comptable_email: emailCpt, nom_comptable: nomCpt })
       })
     });
@@ -2420,7 +2420,7 @@ async function ajouterEntrepriseCommeClient(entrepriseId) {
         ville: profil.ville || '',
         ice: profil.ice || '',
         rc: profil.rc || '',
-        note: 'Client BaniPay · ' + (profil.secteur || ''),
+        note: 'Client Zelto · ' + (profil.secteur || ''),
         reference_id: entrepriseId,
         type: 'entreprise_banipay'
       })
