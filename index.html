@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785245990">
+<link rel="stylesheet" href="css/style.css?v=1785267699">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,26 +124,26 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785245990"></script>
-  <script src="js/utils.js?v=1785245990"></script>
-  <script src="js/auth.js?v=1785245990"></script>
-  <script src="js/nav.js?v=1785245990"></script>
-  <script src="js/factures.js?v=1785245990"></script>
-  <script src="js/devis.js?v=1785245990"></script>
-  <script src="js/clients.js?v=1785245990"></script>
-  <script src="js/produits.js?v=1785245990"></script>
-  <script src="js/pdf.js?v=1785245990"></script>
-  <script src="js/stats.js?v=1785245990"></script>
-  <script src="js/profil.js?v=1785245990"></script>
-  <script src="js/comptable.js?v=1785245990"></script>
-  <script src="js/messages.js?v=1785245990"></script>
-<script src="js/achats.js?v=1785245990"></script>
-<script src="js/stock.js?v=1785245990"></script>
-<script src="js/finance.js?v=1785245990"></script>
-<script src="js/ubl.js?v=1785245990"></script>
-<script src="js/abonnements.js?v=1785245990"></script>
-<script src="js/signature.js?v=1785245990"></script>
-<script src="js/app.js?v=1785245990"></script>
+<script src="js/config.js?v=1785267699"></script>
+  <script src="js/utils.js?v=1785267699"></script>
+  <script src="js/auth.js?v=1785267699"></script>
+  <script src="js/nav.js?v=1785267699"></script>
+  <script src="js/factures.js?v=1785267699"></script>
+  <script src="js/devis.js?v=1785267699"></script>
+  <script src="js/clients.js?v=1785267699"></script>
+  <script src="js/produits.js?v=1785267699"></script>
+  <script src="js/pdf.js?v=1785267699"></script>
+  <script src="js/stats.js?v=1785267699"></script>
+  <script src="js/profil.js?v=1785267699"></script>
+  <script src="js/comptable.js?v=1785267699"></script>
+  <script src="js/messages.js?v=1785267699"></script>
+<script src="js/achats.js?v=1785267699"></script>
+<script src="js/stock.js?v=1785267699"></script>
+<script src="js/finance.js?v=1785267699"></script>
+<script src="js/ubl.js?v=1785267699"></script>
+<script src="js/abonnements.js?v=1785267699"></script>
+<script src="js/signature.js?v=1785267699"></script>
+<script src="js/app.js?v=1785267699"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -913,6 +913,36 @@
     <div class="modal-title">👥 Choisir un fournisseur</div>
     <input class="m-inp" id="search-fournisseur-bc" placeholder="Nom du fournisseur (2 lettres min. pour l'annuaire)..." oninput="rechercherFournisseurBC()">
     <div id="fournisseur-bc-picker-list" style="max-height:350px;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL LIGNE BON DE LIVRAISON (manquait — bouton "Ajouter un article" du BL ne faisait rien, même bug que le BC) -->
+<div class="modal-overlay" id="modal-ligne-bl">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter un article livré</div>
+    <input class="m-inp" id="mlbl-desc" placeholder="Description de l'article">
+    <input class="m-inp" id="mlbl-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneBL()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL ÉDITION PROFIL COMPTABLE (manquait — bouton "Modifier" ne faisait rien) -->
+<div class="modal-overlay" id="modal-edition-comptable">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Modifier mes informations</div>
+    <label class="a-lbl">Nom</label>
+    <input class="m-inp" id="ec-nom" placeholder="Votre nom">
+    <label class="a-lbl">Cabinet</label>
+    <input class="m-inp" id="ec-cabinet" placeholder="Nom du cabinet">
+    <label class="a-lbl">Téléphone</label>
+    <input class="m-inp" id="ec-tel" placeholder="Téléphone">
+    <label class="a-lbl">Spécialité</label>
+    <input class="m-inp" id="ec-specialite" placeholder="Ex: Expertise comptable, Audit...">
+    <button class="m-btn" onclick="sauvegarderEditionComptable()">💾 Enregistrer</button>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
 </div>
