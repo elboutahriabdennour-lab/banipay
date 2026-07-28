@@ -44,6 +44,24 @@ async function genNotifications() {
     });
   }
 
+  // NOUVEAU: relance devis envoyé depuis plus de 7 jours sans réponse — rien
+  // ne signalait jusqu'ici qu'un devis dormait sans qu'on y pense.
+  const ilYA7Jours = new Date();
+  ilYA7Jours.setDate(ilYA7Jours.getDate() - 7);
+  (STATE.devis || []).filter(function(d) {
+    return (d.statut === 'envoye' || d.statut === 'en_attente') && d.date_emission && new Date(d.date_emission) <= ilYA7Jours;
+  }).forEach(function(d) {
+    STATE.notifications.push({ type: 'warning', icon: '📝', title: 'Devis sans réponse — ' + d.ref, body: 'Envoyé le ' + d.date_emission + ' à ' + d.client + ' — pensez à relancer' });
+  });
+
+  // NOUVEAU: relance bon de commande envoyé depuis plus de 7 jours sans
+  // confirmation du fournisseur.
+  (STATE.bonsCommande || []).filter(function(bc) {
+    return bc.statut === 'envoye' && bc.date_commande && new Date(bc.date_commande) <= ilYA7Jours;
+  }).forEach(function(bc) {
+    STATE.notifications.push({ type: 'warning', icon: '📋', title: 'Bon de commande sans réponse — ' + bc.ref, body: 'Envoyé le ' + bc.date_commande + ' à ' + bc.fournisseur + ' — pensez à relancer' });
+  });
+
   if (email) {
     try {
       // FIX: fonction RPC SECURITY DEFINER — élimine toute dépendance à une
@@ -85,7 +103,7 @@ function mettreAJourBadgeNotif() {
 
 function badgeF(s) { return {attente:'En attente',retard:'Retard',payee:'Payée',envoyee:'Envoyée'}[s]||s; }
 
-function badgeDV(s) { return {envoye:'Envoyé',accepte:'Accepté',refuse:'Refusé',converti:'→Facture',expire:'Expiré'}[s]||s; }
+function badgeDV(s) { return {envoye:'Envoyé',accepte:'Accepté',refuse:'Refusé',converti:'→Facture',expire:'Expiré',en_attente:'⏳ En attente'}[s]||s; }
 
 // ============================================================
 // CONSTRUCTION HTML PARTAGÉE (écran plein page + panneau déroulant)
@@ -140,7 +158,7 @@ function htmlInvitationsCpt(invitationsCpt) {
 
 function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
-  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝' };
+  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋' };
   return allNotifs.map(function(n) {
     // FIX: même bug que plus haut — n.type est toujours 'info' pour les
     // notifications de la base, le vrai type est dans n.raw.type. Cette
