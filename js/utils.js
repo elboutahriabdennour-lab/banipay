@@ -1,4 +1,4 @@
-// BANIPAY — utils.js
+// ZELTO — utils.js
 
 function fmt(n) { return Number(n || 0).toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
