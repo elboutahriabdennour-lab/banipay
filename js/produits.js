@@ -1,4 +1,4 @@
-// BANIPAY — produits.js
+// ZELTO — produits.js
 
 function renderProduits() {
   const cnt = el('produits-count');
@@ -265,7 +265,7 @@ async function importerProduitsCSV(event) {
 }
 
 // ============================================================
-// ENVOI UNIFIÉ — WhatsApp / Email / Lien / BaniPay
+// ENVOI UNIFIÉ — WhatsApp / Email / Lien / Zelto
 // ============================================================
 
 window._envoiCourant = null;
@@ -318,28 +318,28 @@ function envoyerVia(canal) {
     closeAllModals();
 
   } else if (canal === 'banipay') {
-    afficherPickerClientsBaniPay();
+    afficherPickerClientsZelto();
   }
 }
 
-function afficherPickerClientsBaniPay() {
+function afficherPickerClientsZelto() {
   const picker = el('me-banipay-picker');
   if (!picker) return;
   const clientsBP = (STATE.clients || []).filter(c => c.reference_id);
   picker.style.display = 'block';
   if (!clientsBP.length) {
-    picker.innerHTML = '<div style="font-size:12px;color:#9C9186;padding:10px;text-align:center">Aucun client avec compte BaniPay lié. Importez-le via son lien de profil dans la fiche client.</div>';
+    picker.innerHTML = '<div style="font-size:12px;color:#9C9186;padding:10px;text-align:center">Aucun client avec compte Zelto lié. Importez-le via son lien de profil dans la fiche client.</div>';
     return;
   }
   picker.innerHTML = clientsBP.map(c =>
-    '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteBaniPay(\'' + c.reference_id + '\',\'' + escapeHTML(c.nom||'').replace(/'/g,"\\'") + '\',\'' + (c.email||'').replace(/'/g,"\\'") + '\')">' +
+    '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteZelto(\'' + c.reference_id + '\',\'' + escapeHTML(c.nom||'').replace(/'/g,"\\'") + '\',\'' + (c.email||'').replace(/'/g,"\\'") + '\')">' +
       '<div class="card-ico" style="background:#FBF0DA">🅿️</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.email||'') + '</div></div>' +
     '</div>'
   ).join('');
 }
 
-async function envoyerVersCompteBaniPay(destinataireId, destinataireNom, destinataireEmail) {
+async function envoyerVersCompteZelto(destinataireId, destinataireNom, destinataireEmail) {
   const ctx = window._envoiCourant;
   if (!ctx) return;
   const { type, id, doc } = ctx;
@@ -367,17 +367,17 @@ async function envoyerVersCompteBaniPay(destinataireId, destinataireNom, destina
     });
     if (!resp.ok) {
       const errText = await resp.text().catch(function() { return ''; });
-      console.error('envoyerVersCompteBaniPay: échec envoi notification', resp.status, errText);
-      afficherDiagnostic('Échec envoi notification BaniPay', [
+      console.error('envoyerVersCompteZelto: échec envoi notification', resp.status, errText);
+      afficherDiagnostic('Échec envoi notification Zelto', [
         'Destinataire : ' + destinataireNom + ' (' + destinataireEmail + ')',
         'HTTP ' + resp.status,
         errText || '(pas de détail renvoyé par le serveur)'
       ]);
       return;
     }
-    showToast('✅ Envoyé à ' + destinataireNom + ' sur BaniPay !', 'success');
+    showToast('✅ Envoyé à ' + destinataireNom + ' sur Zelto !', 'success');
     closeAllModals();
   } catch(e) {
-    afficherDiagnostic('Erreur envoi notification BaniPay', ['Exception JS : ' + e.message]);
+    afficherDiagnostic('Erreur envoi notification Zelto', ['Exception JS : ' + e.message]);
   }
 }
