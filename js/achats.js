@@ -1,4 +1,4 @@
-// BANIPAY — achats.js — Factures d'achat
+// ZELTO — achats.js — Factures d'achat
 
 STATE.achats = STATE.achats || [];
 STATE.achatFiltreActuel = 'tous';
@@ -73,9 +73,9 @@ function renderAchats() {
 // IMPORT FOURNISSEUR BANIPAY (profil)
 // ============================================================
 
-async function importerFournisseurBaniPay() {
+async function importerFournisseurZelto() {
   const lien = (el('achat-fournisseur-lien')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
 
   showToast('\u23f3 Chargement...');
 
@@ -128,13 +128,13 @@ async function importerFournisseurBaniPay() {
   }
 }
 
-function remplirFournisseur(nom, id, isBaniPay) {
+function remplirFournisseur(nom, id, isZelto) {
   if (el('achat-fournisseur')) {
     el('achat-fournisseur').value = nom;
     el('achat-fournisseur').style.background = '#EEF3E4';
   }
   if (el('achat-fournisseur-id')) el('achat-fournisseur-id').value = id || '';
-  if (el('achat-fournisseur-banipay')) el('achat-fournisseur-banipay').value = isBaniPay ? '1' : '0';
+  if (el('achat-fournisseur-banipay')) el('achat-fournisseur-banipay').value = isZelto ? '1' : '0';
   if (el('achat-fournisseur-lien')) el('achat-fournisseur-lien').value = '';
 }
 
@@ -230,7 +230,7 @@ function _chargerJsQR() {
   return _jsQRPromise;
 }
 
-// Ouvre la caméra et scanne en continu jusqu'à détecter un QR code BaniPay
+// Ouvre la caméra et scanne en continu jusqu'à détecter un QR code Zelto
 // (lien contenant ?doc=... ou ?profil=...), puis importe automatiquement.
 async function scannerQRAchat() {
   showToast('⏳ Ouverture de la caméra...');
@@ -308,17 +308,17 @@ async function traiterLienScanne(texte) {
     await importerAchatDepuisFactureId(factureId);
   } else if (profilId) {
     el('achat-fournisseur-lien') && (el('achat-fournisseur-lien').value = texte);
-    await importerFournisseurBaniPay();
+    await importerFournisseurZelto();
     goScreen('nouvelle-achat');
   } else {
-    showToast('QR code non reconnu par BaniPay', 'error');
+    showToast('QR code non reconnu par Zelto', 'error');
   }
 }
 
 // ============================================================
 // ENREGISTREMENT 100% AUTOMATIQUE À L'ACCEPTATION
 // ============================================================
-// Le cas idéal demandé : quand le fournisseur émet une facture via BaniPay
+// Le cas idéal demandé : quand le fournisseur émet une facture via Zelto
 // et que le client l'accepte (depuis ses propres notifications, donc avec sa
 // session authentifiée), l'achat s'enregistre tout seul, sans aucune saisie.
 async function enregistrerAchatDepuisFactureAcceptee(factureId) {
@@ -336,7 +336,7 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
 
     const achat = {
       user_id: uid,
-      fournisseur: emetteur.raison || 'Fournisseur BaniPay',
+      fournisseur: emetteur.raison || 'Fournisseur Zelto',
       fournisseur_id: f.user_id,
       fournisseur_banipay: true,
       ref_fournisseur: f.ref || '',
@@ -551,7 +551,7 @@ async function sauvegarderAchat() {
 // ============================================================
 
 // NOUVEAU: visualiser la facture d'origine d'un achat (celle envoyée par le
-// fournisseur via BaniPay, ou importée par lien) — réutilise les mêmes
+// fournisseur via Zelto, ou importée par lien) — réutilise les mêmes
 // helpers déjà utilisés pour l'import.
 async function voirFactureOrigineAchat(factureId) {
   showToast('⏳ Chargement de la facture...');
@@ -593,7 +593,7 @@ function ouvrirDetailAchat(id) {
       '<button onclick="document.getElementById(\'achat-detail-overlay\').remove()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
       '<div><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(a.fournisseur || '') + '</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.6)">' + (a.ref_fournisseur || '') + '</div></div>' +
-      (a.fournisseur_banipay ? '<span style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:600">BaniPay</span>' : '') +
+      (a.fournisseur_banipay ? '<span style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:600">Zelto</span>' : '') +
     '</div>' +
 
     '<div style="margin:16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">' +
@@ -630,7 +630,7 @@ function ouvrirDetailAchat(id) {
 
     (a.fournisseur_banipay && a.fournisseur_id ?
       '<div style="margin:0 16px 16px;background:#E9F4F3;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
-        '<div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:8px">🔗 Fournisseur sur BaniPay</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:8px">🔗 Fournisseur sur Zelto</div>' +
         '<div style="font-size:13px;font-weight:600">' + escapeHTML(a.fournisseur || '') + '</div>' +
         '<div style="font-size:11px;color:#6B5F54;margin-top:4px">Appuyez pour voir la fiche</div>' +
       '</div>' : '') +
@@ -663,7 +663,7 @@ async function voirFicheFournisseur(fournisseurId) {
       '<div style="background:#2A2420;padding:14px 20px;display:flex;align-items:center;gap:12px">' +
         '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
         '<div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(p.raison || '') + '</div>' +
-        '<span style="margin-left:auto;background:#1F6F72;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">BaniPay</span>' +
+        '<span style="margin-left:auto;background:#1F6F72;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">Zelto</span>' +
       '</div>' +
 
       '<div style="padding:16px">' +
