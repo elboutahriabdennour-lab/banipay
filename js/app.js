@@ -111,7 +111,7 @@ async function afficherPageInvitation(email, entrepriseId) {
     '<div style="font-family:Karla,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#2A2420,#1F6F72);display:flex;align-items:center;justify-content:center;padding:20px">' +
     '<div style="background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:400px;text-align:center">' +
       '<div style="font-size:48px;margin-bottom:12px">🔐</div>' +
-      '<div style="font-size:22px;font-weight:800;color:#2A2420;margin-bottom:4px">Bani<span style="color:#C9971F">Pay</span></div>' +
+      '<div style="font-size:22px;font-weight:800;color:#2A2420;margin-bottom:4px">Zel<span style="color:#C9971F">to</span></div>' +
       '<div style="font-size:14px;color:#6B5F54;margin-bottom:24px">Invitation accès comptable</div>' +
       '<div style="background:#E9F4F3;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
         '<div style="font-size:12px;color:#9C9186;margin-bottom:4px">Entreprise</div>' +
@@ -121,10 +121,10 @@ async function afficherPageInvitation(email, entrepriseId) {
       '<div style="font-size:13px;color:#6B5F54;margin-bottom:24px">' +
         'Vous avez été invité(e) à accéder aux données comptables de cette entreprise en lecture seule.' +
       '</div>' +
-      '<button id="btn-acc" style="width:100%;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit">' +
+      '<button id="btn-accept-inv" style="width:100%;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit">' +
         '\u2705 Accepter' +
       '</button>' +
-      '<button id="btn-ref" style="width:100%;padding:14px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
+      '<button id="btn-refuse-inv" style="width:100%;padding:14px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
         'Refuser' +
       '</button>' +
       '<div style="margin-top:20px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>' +
