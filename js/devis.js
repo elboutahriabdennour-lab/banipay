@@ -131,6 +131,25 @@ async function sauvegarderDevis() {
   } catch(e) { showToast('❌ '+e.message, 'error'); }
 }
 
+// NOUVEAU: l'entreprise peut résoudre elle-même un devis en attente/envoyé
+// (accepté ou refusé), sans dépendre du client qui n'a peut-être jamais agi
+// via le lien (réponse reçue par téléphone, par exemple).
+async function resoudreManuellementDevis(id, nouveauStatut) {
+  const d = STATE.devis.find(function(x) { return x.id === id; });
+  if (!d) return;
+  const libelle = nouveauStatut === 'accepte' ? 'accepté' : 'refusé';
+  if (!confirm('Marquer ce devis comme ' + libelle + ' ?')) return;
+  try {
+    await sb.patch('devis', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: nouveauStatut });
+    d.statut = nouveauStatut;
+    showToast('✅ Devis marqué ' + libelle, 'success');
+    logAudit('devis', id, nouveauStatut === 'accepte' ? 'acceptation' : 'refus', (d.ref||'') + ' (manuel)');
+    openDetailDevis(id);
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 function openDetailDevis(id) {
   STATE.currentDevis = STATE.devis.find(d => d.id === id);
   if (!STATE.currentDevis) return;
@@ -161,9 +180,19 @@ function renderDetailDevis() {
   const actions = [];
 
   // Badge statut
-  const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#9C9186' };
-  const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré' };
+  const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#9C9186', en_attente:'#B8860B' };
+  const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré', en_attente:'⏳ En attente (client)' };
   actions.push(`<div style="background:${statutColors[d.statut]||'#6B5F54'}20;border-left:3px solid ${statutColors[d.statut]||'#6B5F54'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#6B5F54'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
+
+  // NOUVEAU: si le devis est "en attente" (mis de côté par le client, ou
+  // simplement pas encore de réponse), l'entreprise peut le résoudre
+  // elle-même — utile si le client a répondu par téléphone par exemple.
+  if (d.statut === 'envoye' || d.statut === 'en_attente') {
+    actions.push(`<div style="display:flex;gap:8px;margin-bottom:4px">
+      <button class="action-item success" style="flex:1;margin-bottom:0" onclick="resoudreManuellementDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>
+      <button class="action-item danger" style="flex:1;margin-bottom:0" onclick="resoudreManuellementDevis(${d.id},'refuse')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusé</button>
+    </div>`);
+  }
 
   // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
   actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
@@ -713,7 +742,10 @@ function exportDevisPDF(id) {
   genDocPDF({
     type: 'DEVIS', ref: d.ref, color: '#B8860B',
     emetteur: STATE.profil || {},
-    destinataire: { nom: d.client, chantier: d.chantier },
+    destinataire: (function() {
+      const clientTrouve = (STATE.clients || []).find(function(c) { return c.nom === d.client; });
+      return { nom: d.client, chantier: d.chantier, ice: clientTrouve?.ice || '', tel: clientTrouve?.tel || '', adresse: clientTrouve?.adresse || '' };
+    })(),
     date: d.date_emission, validite: d.validite,
     paiement: '',
     lignes: lignes, note: d.note||'',
