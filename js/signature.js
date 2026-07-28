@@ -1,4 +1,4 @@
-// BANIPAY — signature.js — Signature tactile pour Accepter devis/facture
+// ZELTO — signature.js — Signature tactile pour Accepter devis/facture
 
 window._signatureCtx = null; // { docId, type }
 window._sigHasDrawn = false;
