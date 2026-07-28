@@ -1,4 +1,4 @@
-// BANIPAY — app.js
+// ZELTO — app.js
 
 async function loadAll() {
   const uid = sb.user?.id;
@@ -78,7 +78,7 @@ async function loadPublicProfil(profilId) {
           ${p.banque?`<div style="font-size:13px;margin-bottom:4px">${p.banque}</div>`:''}
           ${p.rib?`<div style="font-size:12px;font-family:monospace;color:#064E3B">${p.rib}</div>`:''}
         </div>`:''}
-        <div style="text-align:center;margin-top:20px;font-size:11px;color:#9C9186">Profil partagé via <strong>BaniPay</strong></div>
+        <div style="text-align:center;margin-top:20px;font-size:11px;color:#9C9186">Profil partagé via <strong>Zelto</strong></div>
       </div>`;
   } catch(e) { document.body.innerHTML='<div style="text-align:center;padding:60px;font-family:Karla,sans-serif;color:#B23A2E">Erreur de chargement</div>'; }
 }
@@ -86,7 +86,7 @@ async function loadPublicProfil(profilId) {
 
 // ===== PDF.JS =====
 // ============================================================
-// BANIPAY — PDF Generator (Factures, Devis, Avoirs, BC, BL)
+// ZELTO — PDF Generator (Factures, Devis, Avoirs, BC, BL)
 // ============================================================
 
 // ============================================================
@@ -127,7 +127,7 @@ async function afficherPageInvitation(email, entrepriseId) {
       '<button id="btn-ref" style="width:100%;padding:14px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
         'Refuser' +
       '</button>' +
-      '<div style="margin-top:20px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>' +
+      '<div style="margin-top:20px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>' +
     '</div></div>';
   setTimeout(function() {
     const btnA = document.getElementById('btn-accept-inv');
@@ -149,8 +149,8 @@ async function accepterInvitationEmail(emailEnc, entrepriseId) {
       '<div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px">' +
         '<div style="font-size:64px;margin-bottom:16px">✅</div>' +
         '<h2 style="color:#6E8F4E;margin-bottom:8px">Invitation acceptée !</h2>' +
-        '<p style="color:#6B5F54;margin-bottom:24px">Connectez-vous à BaniPay pour accéder aux données.</p>' +
-        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#C9971F;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir BaniPay</a>' +
+        '<p style="color:#6B5F54;margin-bottom:24px">Connectez-vous à Zelto pour accéder aux données.</p>' +
+        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#C9971F;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir Zelto</a>' +
       '</div>';
   } catch(e) {
     document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#B23A2E">Erreur: ' + e.message + '</div>';
@@ -174,7 +174,7 @@ async function refuserInvitationEmail(emailEnc, entrepriseId) {
 // ============================================================
 
 // NOUVEAU: vue publique du bon de commande — le fournisseur (sans compte
-// BaniPay forcément) peut le consulter et confirmer/refuser, symétrique au
+// Zelto forcément) peut le consulter et confirmer/refuser, symétrique au
 // cycle d'acceptation des devis/factures.
 async function afficherBonCommandePublic(bcId) {
   try {
@@ -245,7 +245,7 @@ async function repondreBonCommandePublic(bcId, reponse, bc) {
         <div style="background:${reponse === 'confirme' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
           <div style="font-size:13px;color:#6B5F54">Référence : <strong>${bc.ref}</strong></div>
         </div>
-        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
+        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
         <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect-bc">4</span>s...</div>
       </div>
     `;
@@ -693,7 +693,7 @@ function ecouterChangementsDevis(userId) {
 
       // FIX: même notification temps réel pour les factures — jusqu'ici
       // seuls les devis étaient surveillés, une entreprise qui envoyait une
-      // facture via BaniPay ne recevait jamais de toast quand le client
+      // facture via Zelto ne recevait jamais de toast quand le client
       // répondait (accepter/refuser).
       const factures = await sb.get('factures', 'user_id=eq.' + userId + '&reponse_client=in.(acceptee,refusee)&notif_lue=eq.false');
       if (factures && factures.length) {
@@ -736,7 +736,7 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
         '<div style="font-size:48px;margin-bottom:16px">🤝</div>' +
         '<div style="font-size:18px;font-weight:700;margin-bottom:8px">Invitation comptable</div>' +
         '<div style="font-size:14px;color:#6B5F54;margin-bottom:6px">' + escapeHTML(decodeURIComponent(nomCpt || emailCpt)) + '</div>' +
-        '<div style="font-size:13px;color:#6B5F54;margin-bottom:20px">vous invite à partager vos documents BaniPay</div>' +
+        '<div style="font-size:13px;color:#6B5F54;margin-bottom:20px">vous invite à partager vos documents Zelto</div>' +
         '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#1F6F72">' +
           'Le comptable pourra consulter vos factures, devis et documents en lecture seule.' +
         '</div>' +
