@@ -316,6 +316,27 @@ async function ouvrirEntreprise(entrepriseId) {
     if (rp.ok) CPT.currentPaiements = (await rp.json()) || [];
   } catch(ePaie) {}
 
+  // NOUVEAU: bons de commande et de livraison — la lecture RPC existait
+  // déjà pour les BL, mais rien ne l'utilisait dans l'interface.
+  CPT.currentBonsCommande = [];
+  CPT.currentBonsLivraison = [];
+  try {
+    const rBC = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bons_commande_entreprise', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_entreprise_id: entrepriseId })
+    });
+    if (rBC.ok) CPT.currentBonsCommande = (await rBC.json()) || [];
+  } catch(eBC) {}
+  try {
+    const rBL = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bons_livraison_entreprise', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_entreprise_id: entrepriseId })
+    });
+    if (rBL.ok) CPT.currentBonsLivraison = (await rBL.json()) || [];
+  } catch(eBL) {}
+
   // Load devis — via RPC pour contourner la RLS cross-compte
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_devis_entreprise', {
@@ -442,7 +463,7 @@ function renderFicheEntreprise() {
 
 function cptEntTab(tab) {
   CPT.currentTab = tab;
-  ['factures', 'devis', 'achats', 'avoirs', 'extraction', 'infos', 'releves'].forEach(function(t) {
+  ['factures', 'devis', 'achats', 'avoirs', 'documents', 'extraction', 'infos', 'releves'].forEach(function(t) {
     const btn = el('cpt-tab-' + t);
     if (btn) {
       btn.style.background = t === tab ? '#1F6F72' : '#EAE4DA';
@@ -453,6 +474,7 @@ function cptEntTab(tab) {
   else if (tab === 'devis') renderCptDevis();
   else if (tab === 'achats') renderCptAchats();
   else if (tab === 'avoirs') renderCptTVA();
+  else if (tab === 'documents') renderCptDocuments();
   else if (tab === 'extraction') renderCptExtraction();
   else if (tab === 'infos') renderCptInfos();
   else if (tab === 'releves') renderCptReleves();
@@ -971,6 +993,38 @@ function extraireCSVCpt() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
   showToast('✅ CSV extrait (' + lignes.length + ' ligne(s))', 'success');
+}
+
+// ============================================================
+// DOCUMENTS (BC/BL) — visibles au comptable, jamais câblés jusqu'ici
+// ============================================================
+function renderCptDocuments() {
+  const list = el('cpt-ent-content');
+  if (!list) return;
+  const bcs = CPT.currentBonsCommande || [];
+  const bls = CPT.currentBonsLivraison || [];
+
+  const statutLabelBC = { brouillon: 'Brouillon', envoye: 'Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé' };
+  const statutColorBC = { brouillon: '#9C9186', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
+
+  list.innerHTML =
+    '<div style="padding:10px 16px;font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase">📋 Bons de commande (' + bcs.length + ')</div>' +
+    (bcs.length ? bcs.map(function(bc) {
+      const ht = (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #F1EEE8">' +
+        '<div><div style="font-size:12px;font-weight:700">' + escapeHTML(bc.fournisseur||'') + '</div><div style="font-size:11px;color:#9C9186">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div></div>' +
+        '<div style="text-align:right"><div style="font-size:12px;font-weight:700">' + fmt(ht*1.2) + ' MAD</div><div style="font-size:10px;font-weight:600;color:' + (statutColorBC[bc.statut]||'#9C9186') + '">' + (statutLabelBC[bc.statut]||bc.statut) + '</div></div>' +
+      '</div>';
+    }).join('') : '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucun bon de commande</div>') +
+
+    '<div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase">📦 Bons de livraison (' + bls.length + ')</div>' +
+    (bls.length ? bls.map(function(bl) {
+      const facture = bl.facture_id ? (CPT.currentFactures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
+      return '<div style="padding:12px 16px;border-bottom:1px solid #F1EEE8">' +
+        '<div style="font-size:12px;font-weight:700">' + escapeHTML(bl.client||'') + '</div>' +
+        '<div style="font-size:11px;color:#9C9186">' + (bl.ref||'') + ' · ' + (bl.date_livraison||'') + (facture ? ' · 🔗 ' + escapeHTML(facture.ref) : '') + '</div>' +
+      '</div>';
+    }).join('') : '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucun bon de livraison</div>');
 }
 
 function renderCptInfos() {
