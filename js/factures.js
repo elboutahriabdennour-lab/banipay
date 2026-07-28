@@ -1,1064 +1,1904 @@
-// ZELTO — devis.js
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1F6F72">
+<meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
+<title>Zelto — Gestion Factures &amp; Devis</title>
+<link rel="stylesheet" href="css/style.css?v=1785268401">
+<style>
+#screen-comptable.active{display:flex!important;flex-direction:column}
+</style>
+</head>
+<body>
 
-function renderDevisList() {
-  const list = el('devis-list');
-  if (!list) return;
-  let data = STATE.filterD === 'tous' ? STATE.devis : STATE.devis.filter(d => d.statut === STATE.filterD);
-  if (!data.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">Aucun devis</div></div>`;
-    return;
-  }
-  const icons = { envoye:'📤', accepte:'✅', refuse:'❌', converti:'🧾', expire:'⏰' };
-  const bgs   = { envoye:'#F7EFDC', accepte:'#EEF3E4', refuse:'#F5E4E1', converti:'#E9F4F3', expire:'#EAE4DA' };
-  list.innerHTML = data.map(d => `
-    <div class="card" onclick="openDetailDevis(${d.id})">
-      <div class="card-ico" style="background:${bgs[d.statut]||'#EAE4DA'}">${icons[d.statut]||'📝'}</div>
-      <div class="card-body">
-        <div class="card-name">${escapeHTML(d.client)}</div>
-        <div class="card-ref">${d.ref} · ${d.date_emission||''} · ${d.validite||30}j</div>
-        ${d.statut==='accepte'?'<div style="display:inline-block;background:#EEF3E4;color:#6E8F4E;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">✅ Accepté</div>':d.statut==='refuse'?'<div style="display:inline-block;background:#F5E4E1;color:#8E2E24;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">❌ Refusé</div>':''}
+<!-- DASHBOARD -->
+<div class="screen" id="screen-dashboard">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <!-- Bouton retour espace comptable (visible uniquement en mode entreprise) -->
+      <!-- FIX: bouton redondant retiré — un seul mécanisme de retour reste
+           (la pile flottante appendModeBanner(), présente sur tous les écrans,
+           contrairement à ce bouton qui n'existait que sur le dashboard) -->
+      <span class="t-icon" onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer">💬<span id="msg-badge" style="position:absolute;top:-4px;right:-4px;background:#B23A2E;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center">!</span></span>
+      <span class="t-icon" onclick="toggleNotifDropdown(event)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#B23A2E;border-radius:50%;font-size:9px;font-weight:700;color:#fff;line-height:16px;text-align:center">0</span></span>
+      <span class="t-icon" onclick="goScreen('recherche',null)">🔍</span>
+      <div class="t-avatar" id="user-avatar" onclick="goScreen('profil',null)">AB</div>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="hero-lbl">Total à recevoir</div>
+    <div class="hero-amount" id="hero-total">0 MAD</div>
+    <div class="hero-sub-txt" id="hero-sub">0 facture active</div>
+    <div class="hero-grid">
+      <div class="hero-box"><div class="hero-box-val g" id="stat-payee">0</div><div class="hero-box-lbl">Payées</div></div>
+      <div class="hero-box"><div class="hero-box-val o" id="stat-attente">0</div><div class="hero-box-lbl">En attente</div></div>
+      <div class="hero-box"><div class="hero-box-val r" id="stat-retard">0</div><div class="hero-box-lbl">En retard</div></div>
+    </div>
+  </div>
+  <div style="background:#1F6F72;padding:0 20px 16px">
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:4px">Objectif mensuel</div>
+    <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;overflow:hidden;margin-bottom:4px">
+      <div id="objectif-bar" style="height:100%;background:#9CBB7A;border-radius:3px;width:0%;transition:width 0.8s"></div>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.5)" id="objectif-txt">Non d&#233;fini</div>
+  </div>
+  <div id="alerte-bar" class="alerte-bar hidden" onclick="setFilter('retard',null)">
+    <span>⚠️</span><div class="alerte-text" id="alerte-text">Factures en retard</div><div class="alerte-action">Voir →</div>
+  </div>
+  <div class="sec-label">Actions rapides</div>
+  <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
+    <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#E9F4F3">➕</div><div class="qa-lbl">Facture</div></div>
+    <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#F7EFDC">📝</div><div class="qa-lbl">Devis</div></div>
+    <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
+    <div class="qa-item" onclick="loadAchats();goScreen('achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
+    <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#EAE4DA">📤</div><div class="qa-lbl">Export</div></div>
+  </div>
+  <div style="height:8px"></div>
+  <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
+    <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E9F4F3">📊</div><div class="qa-lbl">Stats</div></div>
+    <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#EEF3E4">🧾</div><div class="qa-lbl">TVA</div></div>
+    <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#EDE6F0">👥</div><div class="qa-lbl">Clients</div></div>
+    <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
+    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
+  </div>
+  <div class="sec-header" style="margin-top:8px">
+    <div class="sec-title">Mes factures</div>
+  </div>
+  <!-- NOUVEAU: résumé des achats, visible directement depuis l'accueil -->
+  <div id="dashboard-achats-resume" onclick="loadAchats();goScreen('achats',null)" style="margin:0 20px 12px;background:#F5E4E1;border-radius:12px;padding:12px 16px;display:none;justify-content:space-between;align-items:center;cursor:pointer">
+    <span style="font-size:12px;font-weight:600;color:#8E2E24">🛒 Achats en attente</span>
+    <span id="dashboard-achats-montant" style="font-size:15px;font-weight:800;color:#8E2E24">0 MAD</span>
+  </div>
+  <div class="filter-tabs">
+    <button class="ftab active" onclick="setFilter('toutes',this)">Toutes</button>
+    <button class="ftab" onclick="setFilter('attente',this)">En attente</button>
+    <button class="ftab" onclick="setFilter('retard',this)">En retard</button>
+    <button class="ftab" onclick="setFilter('payee',this)">Payées</button>
+  </div>
+  <div class="card-list" id="facture-list"></div>
+  <div class="pb"></div>
+  </div>
+
+
+<!-- MODAL PAIEMENT -->
+
+
+</div>
+
+
+
+<!-- ===== MESSAGERIE (liste conversations) ===== -->
+<div class="screen" id="screen-messages" style="background:#F1EEE8">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
+    </div>
+  </div>
+  <div class="hero" style="padding-bottom:16px">
+    <div class="hero-lbl">Messages</div>
+    <div class="hero-sub-txt">Conversations avec vos contacts</div>
+  </div>
+  <div id="conv-list"></div>
+  <div style="padding:12px 20px">
+    <button onclick="messagerAvecComptable()" style="width:100%;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💬 Contacter mon comptable</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== CHAT (conversation) ===== -->
+<div class="screen" id="screen-chat" style="background:#F1EEE8;flex-direction:column">
+  <div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+    <button onclick="desaronnerRealtime();goScreen('messages',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
+    <div id="chat-nom" style="font-size:15px;font-weight:700;color:#fff;flex:1">Conversation</div>
+    <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700" id="chat-avatar">?</div>
+  </div>
+  <div id="messages-container" style="padding:16px 0;padding-bottom:100px;min-height:400px"></div>
+  <div id="chat-input-zone" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E3DCCF;padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:100">
+    <label style="width:40px;height:40px;border-radius:50%;background:#FBF0DA;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px">
+      📎<input type="file" accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="attacherFichierMsg(event)">
+    </label>
+    <input id="msg-input" style="flex:1;padding:10px 14px;border:1.5px solid #E3DCCF;border-radius:24px;font-size:14px;font-family:inherit;outline:none" placeholder="Votre message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMessage();}">
+    <button onclick="envoyerMessage()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9971F,#A67A16);color:#fff;border:none;font-size:18px;cursor:pointer;flex-shrink:0">➤</button>
+  </div>
+  <div style="height:80px"></div>
+</div>
+
+<script src="js/config.js?v=1785268401"></script>
+  <script src="js/utils.js?v=1785268401"></script>
+  <script src="js/auth.js?v=1785268401"></script>
+  <script src="js/nav.js?v=1785268401"></script>
+  <script src="js/factures.js?v=1785268401"></script>
+  <script src="js/devis.js?v=1785268401"></script>
+  <script src="js/clients.js?v=1785268401"></script>
+  <script src="js/produits.js?v=1785268401"></script>
+  <script src="js/pdf.js?v=1785268401"></script>
+  <script src="js/stats.js?v=1785268401"></script>
+  <script src="js/profil.js?v=1785268401"></script>
+  <script src="js/comptable.js?v=1785268401"></script>
+  <script src="js/messages.js?v=1785268401"></script>
+<script src="js/achats.js?v=1785268401"></script>
+<script src="js/stock.js?v=1785268401"></script>
+<script src="js/finance.js?v=1785268401"></script>
+<script src="js/ubl.js?v=1785268401"></script>
+<script src="js/abonnements.js?v=1785268401"></script>
+<script src="js/signature.js?v=1785268401"></script>
+<script src="js/app.js?v=1785268401"></script>
+
+<!-- ARCHIVE -->
+<div class="screen" id="screen-archive">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Archive Entreprise</div><div class="hero-amount" id="archive-count">0 document(s)</div><div class="hero-sub-txt">Partagée avec votre comptable</div></div>
+  <div style="padding:12px 20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <div class="qa-item" onclick="ajouterDocumentArchive('statuts')"><div class="qa-ico">📋</div><div class="qa-lbl">Statuts</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('rib')"><div class="qa-ico">🏦</div><div class="qa-lbl">RIB</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('cnss')"><div class="qa-ico">🛡️</div><div class="qa-lbl">CNSS</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('patente')"><div class="qa-ico">📄</div><div class="qa-lbl">Patente</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('ice')"><div class="qa-ico">🔢</div><div class="qa-lbl">ICE</div></div>
+    <div class="qa-item" onclick="ajouterDocumentArchive('autre')"><div class="qa-ico">📁</div><div class="qa-lbl">Autre</div></div>
+  </div><input type="file" id="archive-file-input" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="display:none" onchange="uploadDocumentArchive(event)"></div>
+  <div class="sec-label">Documents uploadés</div>
+  <div id="archive-list"></div><div class="pb"></div>
+</div>
+
+<!-- ANNUAIRE -->
+<div class="screen" id="screen-annuaire">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Annuaire Zelto</div><div class="hero-sub-txt">Entreprises utilisant Zelto</div></div>
+  <div style="padding:12px 20px">
+    <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
+    <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px">
+      <button class="ftab active" onclick="filtrerAnnuaireSecteur('',this)">Tous</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('BTP & Construction',this)">BTP</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Commerce & Négoce',this)">Commerce</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Transport & Logistique',this)">Transport</button>
+    </div>
+  </div>
+  <div id="annuaire-list"></div><div class="pb"></div>
+</div>
+
+<!-- AVOIR LIST -->
+<div class="screen" id="screen-avoir-list">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#8E2E24;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
+  <div id="avoir-list-items"></div><div class="pb"></div>
+</div>
+
+<!-- ABONNEMENTS (facturation récurrente) -->
+<div class="screen" id="screen-abonnements">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#1F6F72;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
+  <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
+  <div class="card-list" id="abonnements-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- NOUVEL ABONNEMENT -->
+<div class="screen" id="screen-nouvel-abonnement">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('abonnements',null)">←</button>
+    <div class="form-title">Nouvel abonnement</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section"><label class="f-lbl">Client *</label>
+    <div style="display:flex;gap:8px">
+      <input id="ab-client" class="f-inp" placeholder="Nom du client" list="client-datalist-ab" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('ab-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+    <datalist id="client-datalist-ab"></datalist></div>
+  <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="ab-chantier" class="f-inp" placeholder="Optionnel"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Fréquence</label>
+        <select id="ab-frequence" class="f-inp">
+          <option value="mensuel">Mensuel</option>
+          <option value="trimestriel">Trimestriel</option>
+          <option value="annuel">Annuel</option>
+        </select>
       </div>
-      <div class="card-end">
-        <div class="card-amt">${fmt(d.ttc)} ${d.devise||'MAD'}</div>
-        <div class="badge b-${d.statut}">${badgeDV(d.statut)}</div>
+      <div><label class="f-lbl">Jour de génération</label><input id="ab-jour" class="f-inp" type="number" min="1" max="28" value="1"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Date de début</label><input id="ab-date-debut" class="f-inp" type="date"></div>
+  <div class="form-section">
+    <label class="f-lbl">Prestations</label>
+    <div id="ab-lignes-container"></div>
+    <button class="add-ligne" onclick="openAddLigneAB()">＋ Ajouter une ligne</button>
+  </div>
+  <div class="total-recap">
+    <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="ab-total-ht">0 MAD</span></div>
+    <div class="tr-row main"><span class="tr-lbl">Total TTC (par échéance)</span><span class="tr-val" id="ab-total-ttc">0 MAD</span></div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Note</label><input id="ab-note" class="f-inp" placeholder="Note interne..."></div>
+  <div class="send-row" style="grid-template-columns:1fr">
+    <button class="s-btn blue" onclick="sauvegarderAbonnement()">💾 Créer l'abonnement</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- DETAIL ABONNEMENT -->
+<div class="screen" id="screen-detail-abonnement">
+  <div class="detail-top">
+    <div class="d-back" onclick="goScreen('abonnements',null)">← Retour</div>
+    <div class="d-client" id="dab-client"></div>
+    <div class="d-amount" id="dab-amount"></div>
+    <div class="d-meta" id="dab-ref"></div>
+  </div>
+  <div class="d-body">
+    <div class="d-card"><div class="d-card-title">Prestations récurrentes</div><div id="dab-lignes"></div></div>
+    <div id="dab-actions"></div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- RELEVES -->
+<div class="screen" id="screen-releves">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:20px"><div class="hero-lbl">Relevés bancaires</div><div class="hero-sub-txt">Partagés avec votre comptable</div></div>
+  <div style="padding:16px 20px">
+    <div style="background:#EEF3E4;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid #C9D9AE">
+      <div style="font-size:12px;font-weight:700;color:#6E8F4E;margin-bottom:10px">📤 Ajouter un relevé</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <select id="releve-mois" class="f-inp" style="flex:1"><option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option><option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option><option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option><option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option></select>
+        <select id="releve-annee" class="f-inp" style="flex:1"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
       </div>
-    </div>`).join('');
-}
+      <input id="releve-banque" class="f-inp" placeholder="Nom de la banque..." style="margin-bottom:10px">
+      <label style="display:block;background:#fff;border:2px dashed #C9D9AE;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#6E8F4E;font-weight:600">📎 Sélectionner le relevé<input type="file" id="releve-file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="uploadReleve(event)"></label>
+    </div>
+  </div>
+  <div class="sec-label">Relevés uploadés</div>
+  <div id="releves-list"></div><div class="pb"></div>
+</div>
 
-function filterDevis(f, btn) {
-  STATE.filterD = f;
-  document.querySelectorAll('#screen-devis-list .ftab').forEach(t => t.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  renderDevisList();
-}
+<!-- ACHATS -->
+<div class="screen" id="screen-achats">
+  <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
+  <div style="display:flex;gap:8px;padding:12px 20px;overflow-x:auto">
+    <button class="ftab active" onclick="filtrerAchats('tous',this)">Tous</button>
+    <button class="ftab" onclick="filtrerAchats('attente',this)">En attente</button>
+    <button class="ftab" onclick="filtrerAchats('payee',this)">Payées</button>
+    <button class="ftab" onclick="filtrerAchats('banipay',this)">Zelto</button>
+  </div>
+  <div id="achats-list"></div>
+  <button class="fab" onclick="STATE.lignesAchat=[];window._achatFactureLieeId=null;goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
+  <div class="pb"></div>
+</div>
 
-function initNouveauDevis(prefill) {
-  // Populate client suggestions
-  const _dl2 = document.getElementById('client-datalist-devis');
-  if (_dl2 && STATE.clients) {
-    _dl2.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
-  }
-  STATE.lignesD = prefill?.lignes ? [...prefill.lignes] : [];
-  STATE.deviseD = prefill?.devise || 'MAD';
-  el('d-client') && (el('d-client').value = prefill?.client || '');
-  el('d-chantier') && (el('d-chantier').value = prefill?.chantier || '');
-  el('d-date') && (el('d-date').value = prefill?.date_emission || today());
-  el('d-ref') && (el('d-ref').value = prefill?.ref || getRef('DEV', STATE.devis));
-  el('d-validite') && (el('d-validite').value = prefill?.validite || '30');
-  el('d-note') && (el('d-note').value = prefill?.note || '');
-  updateClientDatalist();
-  renderLignesD();
-}
+<!-- NOUVELLE ACHAT -->
+<div class="screen" id="screen-nouvelle-achat">
+  <div class="form-header"><div class="back-btn" onclick="goScreen('achats',null)">←</div><div class="form-title">Nouvelle facture d'achat</div></div>
+  <div style="margin:12px 20px;background:#F5E4E1;border-radius:14px;padding:14px">
+    <div style="font-size:12px;font-weight:700;color:#B23A2E;margin-bottom:8px">📲 Facture ou fournisseur Zelto ?</div>
+    <div style="font-size:11px;color:#8E2E24;margin-bottom:8px">Collez le lien d'une facture reçue (ou d'un profil fournisseur) — les champs se remplissent automatiquement.</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input id="achat-fournisseur-lien" style="flex:1;padding:10px;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="Lien de la facture ou du profil...">
+      <button onclick="importerFournisseurZelto()" style="padding:10px 14px;background:#B23A2E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
+    </div>
+    <button onclick="scannerQRAchat()" style="width:100%;padding:10px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Scanner le QR code de la facture</button>
+  </div>
+  <div class="form-section"><div class="form-label">Fournisseur *</div><input class="form-input" id="achat-fournisseur" placeholder="Nom du fournisseur"></div>
+  <div class="form-section"><div class="form-label">Référence</div><input class="form-input" id="achat-ref" placeholder="Ex: FACT-2026-001"></div>
+  <div style="display:flex;gap:12px;padding:0 20px">
+    <div style="flex:1;margin-bottom:14px"><div class="form-label">Date</div><input class="form-input" id="achat-date" type="date"></div>
+    <div style="flex:1;margin-bottom:14px"><div class="form-label">Échéance</div><input class="form-input" id="achat-echeance" type="date"></div>
+  </div>
+  <div style="display:flex;gap:12px;padding:0 20px">
+    <div style="flex:1;margin-bottom:14px"><div class="form-label">TVA %</div><select class="form-input" id="achat-tva-taux" onchange="calcAchatTotaux()"><option value="20">20%</option><option value="14">14%</option><option value="10">10%</option><option value="7">7%</option><option value="0">0%</option></select></div>
+  </div>
+  <div class="form-section">
+    <div class="form-label">Articles / prestations achetés</div>
+    <div id="achat-lignes-container"></div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="add-ligne" style="flex:1" onclick="openAddLigneAchat()">＋ Ligne manuelle</button>
+      <button class="add-ligne" style="flex:1;color:#55702E;border-color:#55702E" onclick="ouvrirCatalogueAchat()">📦 Depuis le catalogue</button>
+    </div>
+    <div style="font-size:11px;color:#9C9186;margin-top:6px">Une ligne liée au catalogue alimente automatiquement le stock à l'enregistrement.</div>
+  </div>
+  <div style="margin:0 20px 14px;background:#F1EEE8;border-radius:12px;padding:12px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:4px"><span>TVA</span><span id="achat-tva-display">0,00 MAD</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>TTC</span><span id="achat-ttc-display">0,00 MAD</span></div>
+  </div>
+  <div class="form-section"><div class="form-label">Catégorie</div><select class="form-input" id="achat-categorie"><option value="materiel">Matériel</option><option value="services">Services</option><option value="fournitures">Fournitures</option><option value="transport">Transport</option><option value="autre">Autre</option></select></div>
+  <div class="form-section"><div class="form-label">Statut</div><select class="form-input" id="achat-statut"><option value="attente">En attente</option><option value="payee">Payée</option></select></div>
+  <div class="form-section"><div class="form-label">Note</div><textarea class="form-input" id="achat-note" rows="2" placeholder="Notes..."></textarea></div>
+  <div style="margin:0 20px 14px"><div class="form-label">Photo de la facture</div><label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">📷 Prendre en photo<input type="file" id="achat-pj" accept="image/*" capture="environment" style="display:none" onchange="previewAchatPJ(event)"></label><label style="display:block;margin-top:6px;text-align:center;font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Choisir depuis la galerie / un PDF<input type="file" id="achat-pj-galerie" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div id="achat-pj-preview" style="margin-top:8px"></div></div>
+  <input type="hidden" id="achat-fournisseur-id" value=""><input type="hidden" id="achat-fournisseur-banipay" value="0">
+  <div style="padding:0 20px 20px"><button class="a-btn" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#B23A2E,#8E2E24);color:#fff">💾 Enregistrer</button></div>
+  <div class="pb"></div>
+</div>
 
-function renderLignesD() {
-  const c = el('d-lignes-container');
-  if (!c) return;
-  c.innerHTML = STATE.lignesD.map((l,i) => `
-    <div class="ligne-item">
-      <div class="ligne-body">
-        <div class="ligne-desc">${l.desc}</div>
-        <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseD}</div>
+
+</div>
+
+<!-- NOUVELLE FACTURE -->
+<div class="screen" id="screen-nouvelle">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('dashboard',null)">←</button>
+    <div class="form-title">Nouvelle facture</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section">
+    <label class="f-lbl">Client *</label>
+    <div style="display:flex;gap:8px">
+      <input id="f-client" class="f-inp" placeholder="Nom du client" list="client-datalist" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('f-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+    <datalist id="client-datalist"></datalist>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">N° Facture</label><input id="f-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
+      <div><label class="f-lbl">Date</label><input id="f-date" class="f-inp" type="date"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="f-chantier" class="f-inp" placeholder="Ex: Rénovation bureau"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Ech&#233;ance</label><input id="f-echeance" class="f-inp" type="date"></div>
+      <div><label class="f-lbl">Note</label><input id="f-note" class="f-inp" placeholder="Note..."></div>
+      <div><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="f-bc-lie" class="f-inp"></select></div>
+    </div>
+  </div>
+  <div class="form-section">
+    <label class="f-lbl">Prestations</label>
+    <div id="lignes-container"></div>
+    <button class="add-ligne" onclick="openAddLigne()">＋ Ajouter une ligne</button>
+    <button class="add-ligne" onclick="openCatalogue()" style="margin-top:6px;color:#6E8F4E;border-color:#6E8F4E">📦 Depuis le catalogue</button>
+  </div>
+  <div class="total-recap">
+    <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="total-ht">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="total-tva">0 MAD</span></div>
+    <div class="tr-sep"></div>
+    <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="total-ttc">0 MAD</span></div>
+  </div>
+  <div class="form-section">
+    <label class="f-lbl">Mode de paiement</label>
+    <select id="f-paiement" class="f-inp">
+      <option value="virement">Virement bancaire</option>
+      <option value="cheque">Chèque</option>
+      <option value="especes">Espèces</option>
+      <option value="carte">Carte bancaire</option>
+    </select>
+  </div>
+  <div class="form-section">
+    <label class="f-lbl">Statut</label>
+    <select id="f-statut" class="f-inp">
+      <option value="envoyee">Envoyée</option>
+      <option value="attente">En attente</option>
+    </select>
+  </div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderFacture()">💾 Sauvegarder</button>
+    <button class="s-btn gray" onclick="previewPDF()">📄 PDF</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- DETAIL FACTURE -->
+<div class="screen" id="screen-detail">
+  <div class="detail-top">
+    <div class="d-back" onclick="goScreen('dashboard',null)">← Retour</div>
+    <div class="d-client" id="detail-client"></div>
+    <div class="d-amount" id="detail-amount"></div>
+    <div class="d-meta" id="detail-ref"></div>
+    <div id="detail-date" style="display:none"></div>
+  </div>
+  <div class="d-body">
+    <div class="d-card">
+      <div class="d-card-title">Prestations</div>
+      <div id="detail-lignes"></div>
+    </div>
+    <div id="detail-chantier" style="display:none;padding:8px 16px;font-size:12px;color:#6B5F54;background:#F1EEE8;border-radius:8px;margin-bottom:8px"></div>
+    <div id="detail-paiement-prog" style="display:none;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;border:1px solid #EAE4DA">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:6px">
+        <span>Progression paiement</span><span id="detail-prog-pct">0%</span>
       </div>
-      <div class="ligne-amt">${fmt(l.qte*l.pu)} ${STATE.deviseD}</div>
-      <button class="ligne-del" onclick="supprimerLigneD(${i})">×</button>
-    </div>`).join('');
-  updateTotauxD();
-}
-
-function supprimerLigneD(i) { STATE.lignesD.splice(i,1); renderLignesD(); }
-
-function updateTotauxD() {
-  const ht = STATE.lignesD.reduce((s,l) => s+l.qte*l.pu, 0);
-  setEl('d-total-ht', fmt(ht)+' '+STATE.deviseD);
-  setEl('d-total-tva', fmt(ht*0.2)+' '+STATE.deviseD);
-  setEl('d-total-ttc', fmt(ht*1.2)+' '+STATE.deviseD);
-}
-
-function openAddLigneDevis() {
-  el('mld-desc') && (el('mld-desc').value = '');
-  el('mld-qte') && (el('mld-qte').value = '1');
-  el('mld-pu') && (el('mld-pu').value = '');
-  el('mld-unite') && (el('mld-unite').value = 'u');
-  el('modal-ligne-d')?.classList.add('active');
-  setTimeout(() => el('mld-desc')?.focus(), 100);
-}
-
-function confirmerLigneDevis() {
-  const desc = el('mld-desc')?.value.trim();
-  const qte = parseFloat(el('mld-qte')?.value.replace(',','.'))||1;
-  const pu = parseFloat(el('mld-pu')?.value.replace(',','.'))||0;
-  const unite = el('mld-unite')?.value||'u';
-  if (!desc) { showToast('Entrez une description', 'error'); return; }
-  if (pu <= 0) { showToast('Entrez un prix unitaire', 'error'); return; }
-  STATE.lignesD.push({desc,qte,pu,unite});
-  closeAllModals();
-  renderLignesD();
-}
-
-// NOUVEAU: liste des BC disponibles à lier à ce devis
-function remplirPickerBCPourDevis() {
-  const sel = el('d-bc-lie');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Aucun</option>' +
-    (STATE.bonsCommande || []).map(function(bc) {
-      return '<option value="' + bc.id + '">' + escapeHTML(bc.ref||'') + ' — ' + escapeHTML(bc.fournisseur||'') + '</option>';
-    }).join('');
-}
-
-async function sauvegarderDevis() {
-  const client = el('d-client')?.value.trim();
-  if (!client) { showToast('Entrez le nom du client', 'error'); return; }
-  if (!STATE.lignesD.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
-  const ht = STATE.lignesD.reduce((s,l)=>s+l.qte*l.pu,0);
-  showToast('⏳ Sauvegarde...');
-  try {
-    const r = await sb.post('devis', {
-      user_id: sb.user.id,
-      ref: el('d-ref')?.value,
-      client, chantier: el('d-chantier')?.value.trim(),
-      date_emission: el('d-date')?.value,
-      validite: parseInt(el('d-validite')?.value)||30,
-      note: el('d-note')?.value.trim(),
-      bc_id: el('d-bc-lie')?.value ? parseInt(el('d-bc-lie').value) : null,
-      statut: 'envoye', ht, tva:ht*0.2, ttc:ht*1.2,
-      lignes: STATE.lignesD, devise: STATE.deviseD,
-    });
-    if (r && r.length > 0) { STATE.devis.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
-    autoAddClient(client);
-    showToast('✅ Devis enregistré !', 'success');
-    logAudit('devis', r[0].id, 'creation', (r[0].ref || '') + ' — ' + client + ' — ' + fmt(r[0].ttc) + ' MAD');
-    setTimeout(()=>goScreen('devis-list'), 800);
-  } catch(e) { showToast('❌ '+e.message, 'error'); }
-}
-
-// NOUVEAU: l'entreprise peut résoudre elle-même un devis en attente/envoyé
-// (accepté ou refusé), sans dépendre du client qui n'a peut-être jamais agi
-// via le lien (réponse reçue par téléphone, par exemple).
-async function resoudreManuellementDevis(id, nouveauStatut) {
-  const d = STATE.devis.find(function(x) { return x.id === id; });
-  if (!d) return;
-  const libelle = nouveauStatut === 'accepte' ? 'accepté' : 'refusé';
-  if (!confirm('Marquer ce devis comme ' + libelle + ' ?')) return;
-  try {
-    await sb.patch('devis', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: nouveauStatut });
-    d.statut = nouveauStatut;
-    showToast('✅ Devis marqué ' + libelle, 'success');
-    logAudit('devis', id, nouveauStatut === 'accepte' ? 'acceptation' : 'refus', (d.ref||'') + ' (manuel)');
-    openDetailDevis(id);
-  } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
-  }
-}
-
-function openDetailDevis(id) {
-  STATE.currentDevis = STATE.devis.find(d => d.id === id);
-  if (!STATE.currentDevis) return;
-  renderDetailDevis();
-  goScreen('detail-devis');
-}
-
-function renderDetailDevis() {
-  const d = STATE.currentDevis;
-  if (!d) return;
-  const dv = d.devise||'MAD';
-  setEl('dv-client', d.client);
-  setEl('dv-amount', fmt(d.ttc)+' '+dv+' TTC');
-  setEl('dv-ref', `${d.ref} · ${d.date_emission||''} · Validité: ${d.validite||30}j`);
-  const lignesEl = el('dv-lignes');
-  if (lignesEl) lignesEl.innerHTML = (d.lignes||[]).map(l=>`
-    <div class="d-ligne">
-      <div><div style="font-size:13px;font-weight:500">${l.desc}</div><div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div></div>
-      <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
-    </div>`).join('');
-  const totEl = el('dv-totals');
-  if (totEl) totEl.innerHTML = `
-    <div class="d-tot-row"><span>HT</span><span>${fmt(d.ht)} ${dv}</span></div>
-    <div class="d-tot-row"><span>TVA 20%</span><span>${fmt(d.tva)} ${dv}</span></div>
-    <div class="d-tot-row main"><span>Total TTC</span><span>${fmt(d.ttc)} ${dv}</span></div>`;
-  const actEl = el('dv-actions');
-  if (!actEl) return;
-  const actions = [];
-
-  // Badge statut
-  const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#9C9186', en_attente:'#B8860B' };
-  const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré', en_attente:'⏳ En attente (client)' };
-  actions.push(`<div style="background:${statutColors[d.statut]||'#6B5F54'}20;border-left:3px solid ${statutColors[d.statut]||'#6B5F54'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#6B5F54'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
-
-  // NOUVEAU: si le devis est "en attente" (mis de côté par le client, ou
-  // simplement pas encore de réponse), l'entreprise peut le résoudre
-  // elle-même — utile si le client a répondu par téléphone par exemple.
-  if (d.statut === 'envoye' || d.statut === 'en_attente') {
-    actions.push(`<div style="display:flex;gap:8px;margin-bottom:4px">
-      <button class="action-item success" style="flex:1;margin-bottom:0" onclick="resoudreManuellementDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>
-      <button class="action-item danger" style="flex:1;margin-bottom:0" onclick="resoudreManuellementDevis(${d.id},'refuse')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusé</button>
-    </div>`);
-  }
-
-  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte Zelto) — en premier
-  actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
-
-  // Actions selon statut
-  if (d.statut === 'envoye') {
-    actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>`);
-    actions.push(`<button class="action-item danger" onclick="changerStatutDevis(${d.id},'refuse')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusé</button>`);
-  }
-  if (d.statut === 'accepte') {
-    actions.push(`<button class="action-item" style="color:#C9971F;border-left-color:#C9971F" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#E9F4F3">🧾</div>Convertir en facture</button>`);
-  }
-
-  // Partage
-  // FIX: boutons "Partager WhatsApp" / "Partager / Copier lien" retirés —
-  // redondants avec le bouton "Envoyer" unifié (WhatsApp/Email/Lien/Zelto)
-  // déjà en premier dans cette liste d'actions.
-  actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#F7EFDC">📄</div>Voir PDF</button>`);
-  actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
-  actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
-  actEl.innerHTML = actions.join('');
-}
-
-async function changerStatutDevis(id, statut) {
-  await sb.patch('devis', `id=eq.${id}&user_id=eq.${sb.user.id}`, {statut});
-  const d = STATE.devis.find(x=>x.id===id); if(d) d.statut=statut;
-  STATE.currentDevis = d; renderDetailDevis();
-  showToast('Statut mis à jour');
-}
-
-async function convertirEnFacture(id) {
-  const d = STATE.devis.find(x=>x.id===id); if(!d) return;
-  showToast('⏳ Conversion...');
-  try {
-    const ht = d.ht; const ref = getRef('FAC', STATE.factures);
-    const r = await sb.post('factures', {
-      user_id: sb.user.id, ref, client: d.client, chantier: d.chantier,
-      date_emission: today(), paiement: 'virement', statut: 'envoyee',
-      lignes: d.lignes, ht, tva: ht*0.2, ttc: ht*1.2, devis_ref: d.ref,
-      bc_id: d.bc_id || null,
-      devise: d.devise||'MAD', montant_recu: 0
-    });
-    if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
-    await sb.patch('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`,{statut:'converti',facture_ref:ref});
-    d.statut='converti'; d.facture_ref=ref;
-    showToast('🎉 Facture '+ref+' créée !','success');
-    setTimeout(()=>goScreen('dashboard'),1200);
-  } catch(e){showToast('❌ '+e.message,'error');}
-}
-
-async function supprimerDevis(id) {
-  if (!confirm('Supprimer ce devis ?')) return;
-  const d = STATE.devis.find(x=>x.id===id);
-  await sb.del('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`);
-  STATE.devis = STATE.devis.filter(x=>x.id!==id);
-  showToast('Supprimé'); goScreen('devis-list');
-  logAudit('devis', id, 'suppression', d?.ref || '');
-}
-
-function dupliquerDevis(id) {
-  const d = STATE.devis.find(x=>x.id===id); if(!d) return;
-  initNouveauDevis({...d, ref:getRef('DEV',STATE.devis), statut:'envoye', date_emission:today()});
-  goScreen('nouveau-devis');
-  showToast('📋 Devis dupliqué');
-}
-
-// ============================================================
-// AVOIR
-// ============================================================
-
-function initAvoir() {
-  el('av-client') && (el('av-client').value = '');
-  el('av-montant') && (el('av-montant').value = '');
-  el('av-date') && (el('av-date').value = today());
-  el('av-ref') && (el('av-ref').value = getRef('AV', STATE.avoirs));
-  const sel = el('av-facture-origine');
-  if (sel) {
-    sel.innerHTML = '<option value="">Sélectionner...</option>' +
-      STATE.factures.map(f=>`<option value="${f.id}">${f.ref} — ${f.client} — ${fmt(f.ttc)} MAD</option>`).join('');
-    sel.onchange = function() {
-      const f = STATE.factures.find(x=>String(x.id)===this.value);
-      if(f){el('av-client').value=f.client;el('av-montant').value=Number(f.ht).toFixed(2);updateAvoirTotal();}
-    };
-  }
-  updateAvoirTotal();
-}
-
-function updateAvoirTotal() {
-  const ht = parseFloat(el('av-montant')?.value)||0;
-  setEl('av-total-ht',fmt(ht)+' MAD');
-  setEl('av-total-tva',fmt(ht*0.2)+' MAD');
-  setEl('av-total-ttc',fmt(ht*1.2)+' MAD');
-}
-
-async function sauvegarderAvoir() {
-  const client = el('av-client')?.value.trim();
-  const ht = parseFloat(el('av-montant')?.value)||0;
-  if(!client||ht<=0){showToast('Remplissez tous les champs','error');return;}
-  showToast('⏳ Émission...');
-  try {
-    const r = await sb.post('avoirs',{
-      user_id:sb.user.id, ref:el('av-ref')?.value,
-      client, ht, tva:ht*0.2, ttc:ht*1.2,
-      date_emission:el('av-date')?.value,
-      motif:el('av-motif')?.value,
-      facture_origine_ref:STATE.factures.find(f=>String(f.id)===el('av-facture-origine')?.value)?.ref||''
-    });
-    STATE.avoirs.unshift(r[0]);
-    // L'avoir est un document distinct - ne pas modifier la facture d'origine
-    // Lier l'avoir à la facture d'origine pour référence uniquement
-    const factureId = el('av-facture-origine')?.value;
-    if (factureId) {
-      const f = STATE.factures.find(x => String(x.id) === factureId);
-      if (f && el('av-motif')?.value === 'annulation') {
-        // Annulation totale : marquer la facture comme annulée (pas payée)
-        await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + sb.user.id, { statut: 'annulee' });
-        f.statut = 'annulee';
-      }
-    }
-    showToast('✅ Avoir émis !', 'success');
-    // Aller vers la liste des avoirs
-    setTimeout(() => goScreen('avoir-list'), 800);
-  } catch(e){showToast('❌ '+e.message,'error');}
-}
-
-// ============================================================
-// BON DE COMMANDE
-// ============================================================
-
-// ============================================================
-// SÉLECTION FOURNISSEUR POUR LE BON DE COMMANDE
-// (existant dans l'historique / lien Zelto / recherche annuaire)
-// ============================================================
-
-function ouvrirPickerFournisseurBC() {
-  el('search-fournisseur-bc') && (el('search-fournisseur-bc').value = '');
-  afficherFournisseursHistoriqueBC();
-  el('modal-fournisseur-bc')?.classList.add('active');
-  setTimeout(function() { el('search-fournisseur-bc')?.focus(); }, 100);
-}
-
-function afficherFournisseursHistoriqueBC(filtreTexte) {
-  const noms = Array.from(new Set((STATE.achats || []).map(function(a) { return a.fournisseur; }).filter(Boolean)));
-  const q = (filtreTexte || '').toLowerCase();
-  const filtres = q ? noms.filter(function(n) { return n.toLowerCase().includes(q); }) : noms;
-  const list = el('fournisseur-bc-picker-list');
-  if (!list) return;
-  list.innerHTML = (filtres.length ? filtres.map(function(n) {
-    return '<div class="card" onclick="choisirFournisseurBC(' + "'" + n.replace(/'/g,"\\'") + "'" + ',null)"><div class="card-ico" style="background:#EDE6F0">🏢</div><div class="card-body"><div class="card-name">' + escapeHTML(n) + '</div><div class="card-ref">Déjà utilisé</div></div></div>';
-  }).join('') : '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucun fournisseur dans l\'historique</div>');
-}
-
-let _timeoutRechercheFournisseurBC = null;
-function rechercherFournisseurBC() {
-  const q = el('search-fournisseur-bc')?.value || '';
-  afficherFournisseursHistoriqueBC(q);
-  clearTimeout(_timeoutRechercheFournisseurBC);
-  if (q.length < 2) return;
-  // Recherche dans l'annuaire Zelto (profils_entreprise) après une courte
-  // pause, pour ne pas spammer une requête à chaque frappe.
-  _timeoutRechercheFournisseurBC = setTimeout(async function() {
-    try {
-      const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?raison=ilike.*' + encodeURIComponent(q) + '*&select=id,raison,secteur,ville&limit=10', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
-      });
-      const resultats = r.ok ? ((await r.json()) || []) : [];
-      const list = el('fournisseur-bc-picker-list');
-      if (!list) return;
-      if (resultats.length) {
-        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
-          resultats.map(function(p) {
-            return '<div class="card" onclick="choisirFournisseurBC(' + "'" + (p.raison||'').replace(/'/g,"\\'") + "'" + ',\'' + p.id + '\')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div></div></div>';
-          }).join('');
-      }
-    } catch(e) {}
-  }, 400);
-}
-
-function choisirFournisseurBC(nom, id) {
-  el('bc-fournisseur') && (el('bc-fournisseur').value = nom);
-  el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = id || '');
-  closeAllModals();
-}
-
-async function importerFournisseurBCDepuisLien() {
-  const lien = (el('bc-fournisseur-lien')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
-  try {
-    const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
-    const profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
-    if (!profilId) { showToast('Lien non reconnu', 'error'); return; }
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
-    });
-    const data = await r.json();
-    const p = data && data[0];
-    if (!p) { showToast('Profil introuvable', 'error'); return; }
-    el('bc-fournisseur') && (el('bc-fournisseur').value = p.raison || '');
-    el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = p.id || '');
-    el('bc-fournisseur-lien') && (el('bc-fournisseur-lien').value = '');
-    showToast('✅ Fournisseur importé : ' + p.raison, 'success');
-  } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
-  }
-}
-
-function rechercherFournisseurBCAnnuaire() {
-  ouvrirPickerFournisseurBC();
-  setTimeout(function() { el('search-fournisseur-bc')?.focus(); }, 150);
-}
-
-function initBonCommande(prefill) {
-  STATE.lignesBC = prefill?.lignes||[];
-  el('bc-fournisseur')&&(el('bc-fournisseur').value=prefill?.fournisseur||'');
-  el('bc-fournisseur-id')&&(el('bc-fournisseur-id').value='');
-  el('bc-ref')&&(el('bc-ref').value=getRef('BC',STATE.bonsCommande||[]));
-  el('bc-date')&&(el('bc-date').value=today());
-  el('bc-livraison')&&(el('bc-livraison').value='');
-  el('bc-note')&&(el('bc-note').value='');
-  renderLignesBC();
-}
-
-function renderLignesBC() {
-  const c=el('bc-lignes'); if(!c) return;
-  c.innerHTML=STATE.lignesBC.map((l,i)=>`
-    <div class="ligne-item">
-      <div class="ligne-body"><div class="ligne-desc">${l.desc}</div><div class="ligne-meta">${l.qte} × ${fmt(l.pu)} MAD</div></div>
-      <div class="ligne-amt">${fmt(l.qte*l.pu)} MAD</div>
-      <button class="ligne-del" onclick="STATE.lignesBC.splice(${i},1);renderLignesBC()">×</button>
-    </div>`).join('');
-  const ht=STATE.lignesBC.reduce((s,l)=>s+l.qte*l.pu,0);
-  setEl('bc-ht',fmt(ht)+' MAD'); setEl('bc-tva',fmt(ht*0.2)+' MAD'); setEl('bc-ttc',fmt(ht*1.2)+' MAD');
-}
-
-function openAddLigneBC() {
-  el('mlbc-desc')&&(el('mlbc-desc').value='');
-  el('mlbc-qte')&&(el('mlbc-qte').value='1');
-  el('mlbc-pu')&&(el('mlbc-pu').value='');
-  el('modal-ligne-bc')?.classList.add('active');
-  setTimeout(()=>el('mlbc-desc')?.focus(),100);
-}
-
-function confirmerLigneBC() {
-  const desc=el('mlbc-desc')?.value.trim(), qte=parseFloat(el('mlbc-qte')?.value.replace(',','.'))||1, pu=parseFloat(el('mlbc-pu')?.value.replace(',','.'))||0;
-  if(!desc||pu<=0){showToast('Remplissez tous les champs','error');return;}
-  STATE.lignesBC.push({desc,qte,pu});
-  closeAllModals(); renderLignesBC();
-}
-
-function genBonCommandePDF() {
-  const fournisseur = el('bc-fournisseur')?.value.trim();
-  if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
-  const ht = STATE.lignesBC.reduce((s,l) => s + (l.qte||1)*(l.pu||0), 0);
-  genDocPDF({
-    type: 'BON DE COMMANDE', ref: el('bc-ref')?.value, color: '#7C5CA6',
-    emetteur: STATE.profil || {},
-    destinataire: { nom: fournisseur },
-    date: el('bc-date')?.value,
-    paiement: '',
-    lignes: STATE.lignesBC,
-    note: el('bc-note')?.value || '',
-    ht, tva: ht*0.2, ttc: ht*1.2,
-    devise: 'MAD',
-    bl_ref: el('bc-livraison')?.value ? 'Livraison prévue: ' + el('bc-livraison').value : '',
-    showPrices: true,
-  });
-}
-
-// NOUVEAU: enregistre le bon de commande en base (auparavant : PDF à la
-// volée, jamais sauvegardé — aucun historique, aucune liste possible).
-async function sauvegarderBonCommande() {
-  const fournisseur = el('bc-fournisseur')?.value.trim();
-  if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
-  const bc = {
-    user_id: sb.user?.id,
-    ref: el('bc-ref')?.value,
-    fournisseur: fournisseur,
-    fournisseur_id: el('bc-fournisseur-id')?.value || null,
-    date_commande: el('bc-date')?.value || today(),
-    livraison_prevue: el('bc-livraison')?.value || null,
-    lignes: STATE.lignesBC,
-    note: el('bc-note')?.value || '',
-    statut: 'brouillon'
-  };
-  try {
-    const result = await sb.post('bons_commande', bc);
-    if (result) {
-      STATE.bonsCommande = STATE.bonsCommande || [];
-      STATE.bonsCommande.unshift(result[0] || bc);
-      showToast('✅ Bon de commande enregistré', 'success');
-      genBonCommandePDF();
-      goScreen('bons-commande-list', null);
-    }
-  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
-}
-
-// NOUVEAU: envoyer le BC au fournisseur — lien public où il peut confirmer
-// ou refuser, symétrique au cycle devis (accepter/refuser).
-async function envoyerBonCommande(id) {
-  const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
-  if (!bc) return;
-  try {
-    await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: 'envoye' });
-    bc.statut = 'envoye';
-  } catch(e) {}
-
-  const lien = window.location.origin + window.location.pathname + '?bc=' + id;
-  if (navigator.share) {
-    try { await navigator.share({ title: 'Bon de commande ' + (bc.ref||''), text: 'Bon de commande ' + (bc.ref||'') + ' — merci de confirmer la réception : ' + lien }); }
-    catch(e2) { navigator.clipboard?.writeText(lien); showToast('Lien copié', 'success'); }
-  } else {
-    navigator.clipboard?.writeText(lien);
-    showToast('✅ Lien copié — envoyez-le à votre fournisseur', 'success');
-  }
-  renderBonsCommandeListe();
-}
-
-async function loadBonsCommande() {
-  try {
-    STATE.bonsCommande = (await sb.get('bons_commande', 'user_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
-  } catch(e) { STATE.bonsCommande = []; }
-  renderBonsCommandeListe();
-}
-
-function renderBonsCommandeListe() {
-  const list = el('bons-commande-liste');
-  if (!list) return;
-  const bcs = STATE.bonsCommande || [];
-  if (!bcs.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucun bon de commande</div></div>';
-    return;
-  }
-  const statutLabel = { brouillon: 'Brouillon', envoye: 'Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé' };
-  const statutColor = { brouillon: '#9C9186', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
-  list.innerHTML = bcs.map(function(bc) {
-    const ht = (bc.lignes || []).reduce(function(s, l) { return s + (l.qte||1)*(l.pu||0); }, 0);
-    return '<div class="card" style="align-items:flex-start" onclick="voirBonCommande(' + bc.id + ')">' +
-      '<div class="card-ico" style="background:#EDE6F0">📋</div>' +
-      '<div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div>' +
-        '<span style="font-size:9px;font-weight:600;color:' + (statutColor[bc.statut]||'#9C9186') + '">' + (statutLabel[bc.statut]||bc.statut) + '</span>' +
-      '</div>' +
-      '<div class="card-end"><div class="card-amount">' + fmt(ht*1.2) + ' MAD</div>' +
-        (bc.statut === 'brouillon' ? '<button onclick="event.stopPropagation();envoyerBonCommande(' + bc.id + ')" style="margin-top:6px;padding:5px 10px;background:#7C5CA6;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">📤 Envoyer</button>' : '') +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-function voirBonCommande(id) {
-  const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
-  if (!bc) return;
-  STATE.lignesBC = bc.lignes || [];
-  el('bc-fournisseur') && (el('bc-fournisseur').value = bc.fournisseur || '');
-  el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = bc.fournisseur_id || '');
-  el('bc-ref') && (el('bc-ref').value = bc.ref || '');
-  el('bc-date') && (el('bc-date').value = bc.date_commande || '');
-  el('bc-livraison') && (el('bc-livraison').value = bc.livraison_prevue || '');
-  el('bc-note') && (el('bc-note').value = bc.note || '');
-  renderLignesBC();
-  genBonCommandePDF();
-}
-
-function initBonLivraison(prefill) {
-  STATE.lignesBL = prefill?.lignes || [];
-  el('bl-client') && (el('bl-client').value = prefill?.client || '');
-  el('bl-ref') && (el('bl-ref').value = getRef('BL', STATE.bonsLivraison||[]));
-  el('bl-date') && (el('bl-date').value = today());
-  window._blFactureId = prefill?.facture_id || null;
-  renderPickerFactureBL();
-  renderLignesBL();
-}
-
-// NOUVEAU: sélecteur de la facture liée (remplace le champ texte libre
-// "Facture réf" — c'est ce vrai lien qui permet au client de retrouver le
-// bon de livraison depuis sa facture).
-function renderPickerFactureBL() {
-  const sel = el('bl-facture-liee');
-  if (!sel) return;
-  const factures = (STATE.factures || []).slice(0, 100);
-  sel.innerHTML = '<option value="">Aucune (BL indépendant)</option>' +
-    factures.map(function(f) {
-      return '<option value="' + f.id + '"' + (window._blFactureId === f.id ? ' selected' : '') + '>' + escapeHTML(f.ref||'') + ' — ' + escapeHTML(f.client||'') + '</option>';
-    }).join('');
-}
-
-function surChangementFactureBL() {
-  const id = parseInt(el('bl-facture-liee')?.value || '');
-  window._blFactureId = id || null;
-  const f = (STATE.factures || []).find(function(x) { return x.id === id; });
-  if (f && el('bl-client') && !el('bl-client').value) el('bl-client').value = f.client || '';
-}
-
-function renderLignesBL() {
-  const c=el('bl-lignes'); if(!c) return;
-  c.innerHTML=STATE.lignesBL.map((l,i)=>`
-    <div class="ligne-item">
-      <div class="ligne-body"><div class="ligne-desc">${l.desc}</div><div class="ligne-meta">Qté: ${l.qte} ${l.unite||'u'}</div></div>
-      <div class="ligne-amt">${l.qte} ${l.unite||'u'}</div>
-      <button class="ligne-del" onclick="STATE.lignesBL.splice(${i},1);renderLignesBL()">×</button>
-    </div>`).join('');
-}
-
-function openAddLigneBL() {
-  el('mlbl-desc')&&(el('mlbl-desc').value='');
-  el('mlbl-qte')&&(el('mlbl-qte').value='1');
-  el('modal-ligne-bl')?.classList.add('active');
-  setTimeout(()=>el('mlbl-desc')?.focus(),100);
-}
-
-function confirmerLigneBL() {
-  const desc=el('mlbl-desc')?.value.trim(),qte=parseFloat(el('mlbl-qte')?.value.replace(',','.'))||1;
-  if(!desc){showToast('Entrez une description','error');return;}
-  STATE.lignesBL.push({desc,qte,unite:'u'});
-  closeAllModals();renderLignesBL();
-}
-
-function genBonLivraisonPDF(refFactureLiee, blIdPourQR) {
-  const client = el('bl-client')?.value.trim();
-  if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
-
-  // NOUVEAU: le BL doit afficher le devis ET le BC liés (via la facture),
-  // plus son propre QR (pour qu'on puisse le retrouver/vérifier).
-  const refsQR = [];
-  const factureLiee = window._blFactureId ? (STATE.factures || []).find(function(f) { return f.id === window._blFactureId; }) : null;
-  if (factureLiee) {
-    if (factureLiee.devis_ref) {
-      const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === factureLiee.devis_ref; });
-      refsQR.push({ icon: '📝', label: 'Devis', ref: factureLiee.devis_ref, url: devisTrouve ? (window.location.origin + window.location.pathname + '?doc=' + devisTrouve.id + '&type=devis') : '' });
-    }
-    if (factureLiee.bc_id) {
-      const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === factureLiee.bc_id; });
-      if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: window.location.origin + window.location.pathname + '?bc=' + bcTrouve.id });
-    }
-  }
-  if (blIdPourQR) {
-    refsQR.push({ icon: '📦', label: 'Ce bon de livraison', ref: el('bl-ref')?.value, url: window.location.origin + window.location.pathname + '?bl=' + blIdPourQR });
-  }
-
-  genDocPDF({
-    type: 'BON DE LIVRAISON', ref: el('bl-ref')?.value, color: '#6E8F4E',
-    emetteur: STATE.profil || {},
-    destinataire: { nom: client },
-    date: el('bl-date')?.value,
-    paiement: '',
-    lignes: STATE.lignesBL.map(l => ({ desc: l.desc||l.designation||'', qte: l.qte||1, pu: 0, unite: l.unite||'u' })),
-    note: '',
-    ht: 0, tva: 0, ttc: 0,
-    devise: 'MAD',
-    showPrices: false,
-    devis_ref: (!refsQR.length && refFactureLiee) ? 'Facture réf: ' + refFactureLiee : '',
-    refsQR: refsQR,
-  });
-}
-
-// NOUVEAU: enregistre le BL en base avec un vrai facture_id — c'est ce qui
-// permet au client de le retrouver depuis sa facture (voir
-// afficherDocumentPublic dans app.js).
-async function sauvegarderBonLivraison() {
-  const client = el('bl-client')?.value.trim();
-  if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
-  const factureId = window._blFactureId || null;
-  const factureLiee = factureId ? (STATE.factures || []).find(function(f) { return f.id === factureId; }) : null;
-
-  const bl = {
-    user_id: sb.user?.id,
-    ref: el('bl-ref')?.value,
-    client: client,
-    facture_id: factureId,
-    date_livraison: el('bl-date')?.value || today(),
-    lignes: STATE.lignesBL,
-    note: '',
-    statut: 'prepare'
-  };
-  try {
-    const result = await sb.post('bons_livraison', bl);
-    if (result) {
-      STATE.bonsLivraison = STATE.bonsLivraison || [];
-      STATE.bonsLivraison.unshift(result[0] || bl);
-      showToast('✅ Bon de livraison enregistré' + (factureLiee ? ' et lié à ' + factureLiee.ref : ''), 'success');
-      genBonLivraisonPDF(factureLiee ? factureLiee.ref : '', (result[0]||bl).id);
-      goScreen('bons-livraison-list', null);
-    }
-  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
-}
-
-async function loadBonsLivraison() {
-  try {
-    STATE.bonsLivraison = (await sb.get('bons_livraison', 'user_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
-  } catch(e) { STATE.bonsLivraison = []; }
-  renderBonsLivraisonListe();
-}
-
-function renderBonsLivraisonListe() {
-  const list = el('bons-livraison-liste');
-  if (!list) return;
-  const bls = STATE.bonsLivraison || [];
-  if (!bls.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">Aucun bon de livraison</div></div>';
-    return;
-  }
-  list.innerHTML = bls.map(function(bl) {
-    const facture = bl.facture_id ? (STATE.factures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
-    return '<div class="card" onclick="voirBonLivraison(' + bl.id + ')">' +
-      '<div class="card-ico" style="background:#EEF3E4">📦</div>' +
-      '<div class="card-body"><div class="card-name">' + escapeHTML(bl.client||'') + '</div><div class="card-ref">' + (bl.ref||'') + ' · ' + (bl.date_livraison||'') + (facture ? ' · 🔗 ' + escapeHTML(facture.ref) : '') + '</div></div>' +
-    '</div>';
-  }).join('');
-}
-
-function voirBonLivraison(id) {
-  const bl = (STATE.bonsLivraison || []).find(function(x) { return x.id === id; });
-  if (!bl) return;
-  STATE.lignesBL = bl.lignes || [];
-  el('bl-client') && (el('bl-client').value = bl.client || '');
-  el('bl-ref') && (el('bl-ref').value = bl.ref || '');
-  el('bl-date') && (el('bl-date').value = bl.date_livraison || '');
-  window._blFactureId = bl.facture_id || null;
-  renderPickerFactureBL();
-  renderLignesBL();
-  const facture = bl.facture_id ? (STATE.factures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
-  genBonLivraisonPDF(facture ? facture.ref : '', bl.id);
-}
-
-// NOUVEAU: création directe depuis une facture — pré-remplit client +
-// lignes + lie automatiquement le facture_id (le moyen le plus fiable
-// d'avoir une liaison correcte, sans ressaisie).
-function creerBonLivraisonDepuisFacture(factureId) {
-  const f = (STATE.factures || []).find(function(x) { return x.id === factureId; });
-  if (!f) return;
-  const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
-  // FIX: goScreen('bon-livraison') appelle initBonLivraison() SANS argument
-  // (remise à zéro) — on navigue donc D'ABORD, puis on applique le
-  // pré-remplissage APRÈS, sinon la navigation écraserait immédiatement ce
-  // qu'on vient de préparer.
-  goScreen('bon-livraison');
-  initBonLivraison({
-    client: f.client,
-    facture_id: f.id,
-    lignes: lignes.map(function(l) { return { desc: l.desc, qte: l.qte, unite: l.unite || 'u' }; })
-  });
-}
-
-function exportDevisPDF(id) {
-  const d = STATE.devis.find(x=>x.id===id); if(!d) return;
-  const lignes = typeof d.lignes === 'string' ? JSON.parse(d.lignes||'[]') : (d.lignes||[]);
-  const bc = d.bc_id ? (STATE.bonsCommande || []).find(function(b) { return b.id === d.bc_id; }) : null;
-  genDocPDF({
-    type: 'DEVIS', ref: d.ref, color: '#B8860B',
-    emetteur: STATE.profil || {},
-    destinataire: (function() {
-      const clientTrouve = (STATE.clients || []).find(function(c) { return c.nom === d.client; });
-      return { nom: d.client, chantier: d.chantier, ice: clientTrouve?.ice || '', tel: clientTrouve?.tel || '', adresse: clientTrouve?.adresse || '' };
-    })(),
-    date: d.date_emission, validite: d.validite,
-    paiement: '',
-    lignes: lignes, note: d.note||'',
-    ht: d.ht, tva: d.tva, ttc: d.ttc,
-    devise: d.devise || 'MAD',
-    doc_id: id,
-    doc_url: window.location.origin + window.location.pathname + '?doc=' + id,
-    signatureClient: d.signature_data || null,
-    refsQR: bc ? [{ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: window.location.origin + window.location.pathname + '?bc=' + bc.id }] : [],
-  });
-}
-
-function previewDevisPDF() {
-  const client = el('d-client')?.value.trim();
-  if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
-  const ht = STATE.lignesD.reduce((s,l) => s + l.qte*l.pu, 0);
-  genDocPDF({
-    type: 'DEVIS', ref: el('d-ref')?.value, color: '#B8860B',
-    emetteur: STATE.profil || {},
-    destinataire: { nom: client, chantier: el('d-chantier')?.value },
-    date: el('d-date')?.value,
-    validite: el('d-validite')?.value,
-    paiement: '',
-    lignes: STATE.lignesD,
-    note: el('d-note')?.value || '',
-    ht, tva: ht*0.2, ttc: ht*1.2,
-    devise: STATE.deviseF || 'MAD',
-    doc_id: STATE.currentDevis?.id || '',
-    doc_url: STATE.currentDevis?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentDevis.id) : '',
-  });
-}
-function previewAvoirPDF() {
-  const client = el('av-client')?.value.trim();
-  if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
-  const ht = parseFloat(el('av-montant')?.value) || 0;
-  // Trouver la facture d'origine
-  const factureId = el('av-facture-origine')?.value;
-  const factureOrig = factureId ? STATE.factures.find(x => String(x.id) === factureId) : null;
-  const motifLabels = {
-    'annulation': 'Annulation totale de facture',
-    'remboursement': 'Remboursement partiel',
-    'correction': "Correction d'erreur",
-    'retour': 'Retour marchandise'
-  };
-  const motif = el('av-motif')?.value || 'annulation';
-  genDocPDF({
-    type: 'AVOIR',
-    ref: el('av-ref')?.value,
-    color: '#8E2E24',
-    emetteur: STATE.profil || {},
-    destinataire: { nom: client },
-    date: el('av-date')?.value,
-    motif: motifLabels[motif] || motif,
-    devis_ref: factureOrig ? 'Facture annulée: ' + factureOrig.ref : '',
-    lignes: [{ desc: motifLabels[motif] || 'Avoir', qte: 1, pu: ht, unite: 'Fft', tva: 20 }],
-    ht, tva: ht*0.2, ttc: ht*1.2,
-    devise: STATE.deviseF || 'MAD',
-    showStamp: false,
-  });
-}
-
-// ============================================================
-// LISTE DES AVOIRS
-// ============================================================
-
-function renderAvoirList() {
-  const list = el('avoir-list-items');
-  if (!list) return;
-  const avoirs = STATE.avoirs || [];
-  if (!avoirs.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">↩️</div><div class="empty-title">Aucun avoir</div><div>Créez un avoir depuis le formulaire</div></div>';
-    return;
-  }
-  list.innerHTML = avoirs.map(a => `
-    <div class="card" style="margin:0 20px 10px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-size:13px;font-weight:700;color:#8E2E24">↩️ ${escapeHTML(a.ref||'')}</div>
-          <div style="font-size:12px;color:#2A2420;margin-top:2px">${escapeHTML(a.client||'')}</div>
-          <div style="font-size:11px;color:#6B5F54;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
-          ${a.facture_origine_ref?`<div style="font-size:10px;color:#9C9186">Facture: ${a.facture_origine_ref}</div>`:''}
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:14px;font-weight:700;color:#8E2E24">-${fmt(a.ttc||0)} MAD</div>
-          <button onclick="exportAvoirPDF('${a.id}')" style="background:#F5E4E1;color:#8E2E24;border:none;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;margin-top:4px">📄 PDF</button>
-        </div>
+      <div style="height:8px;background:#E3DCCF;border-radius:4px;overflow:hidden">
+        <div id="detail-prog-bar" style="height:100%;background:#6E8F4E;border-radius:4px;width:0%"></div>
       </div>
     </div>
-  `).join('');
-}
+    <div class="d-card" id="detail-totals"></div>
+    <div id="detail-note" style="display:none;margin-bottom:8px"></div>
+    <div id="detail-actions"></div>
+  </div>
+  <div class="pb"></div>
+</div>
 
-function exportAvoirPDF(id) {
-  const a = STATE.avoirs.find(x => x.id === id);
-  if (!a) return;
-  const motifLabels = {
-    'annulation': 'Annulation totale de facture',
-    'remboursement': 'Remboursement partiel',
-    'correction': "Correction d'erreur",
-    'retour': 'Retour marchandise'
-  };
-  genDocPDF({
-    type: 'AVOIR',
-    ref: a.ref,
-    color: '#8E2E24',
-    emetteur: STATE.profil || {},
-    destinataire: { nom: a.client || '' },
-    date: a.date_emission,
-    motif: motifLabels[a.motif] || a.motif || '',
-    devis_ref: a.facture_origine_ref ? 'Facture: ' + a.facture_origine_ref : '',
-    lignes: [{ desc: motifLabels[a.motif] || 'Avoir', qte: 1, pu: a.ht || 0, unite: 'Fft', tva: 20 }],
-    ht: a.ht, tva: a.tva, ttc: a.ttc,
-    devise: 'MAD',
-  });
-}
-
-
-
-// ============================================================
-// PARTAGE DEVIS WHATSAPP
-// ============================================================
-
-function partagerDevisWhatsApp(id) {
-  const d = STATE.devis.find(x => x.id === id);
-  if (!d) return;
-  const p = STATE.profil || {};
-  // Lien vers le DEVIS (pas la facture) avec paramètre type=devis
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&type=devis';
-  const validiteDate = d.date_emission ? (() => {
-    const dt = new Date(d.date_emission);
-    dt.setDate(dt.getDate() + (d.validite || 30));
-    return dt.toLocaleDateString('fr-FR');
-  })() : '';
-
-  const msg = encodeURIComponent(
-    'Bonjour ' + (d.client||'') + ',\n\n' +
-    'Veuillez trouver notre devis *' + d.ref + '*' + (d.chantier ? ' pour ' + d.chantier : '') + '.\n\n' +
-    '• Montant TTC : *' + fmt(d.ttc) + ' MAD*\n' +
-    (validiteDate ? '• Valide jusqu\'au : ' + validiteDate + '\n' : '') +
-    '\n📎 Consulter et répondre :\n' + docUrl + '\n\n' +
-    'Cordialement,\n' +
-    (p.raison||'') +
-    (p.tel ? '\n📞 ' + p.tel : '')
-  );
-  window.open('https://wa.me/?text=' + msg, '_blank');
-}
-
-async function partagerDevisNatif(id) {
-  const d = STATE.devis.find(x => x.id === id);
-  if (!d) return;
-  const p = STATE.profil || {};
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
-  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter';
-
-  const texte = 'Devis ' + d.ref + ' - ' + (d.client||'') + '\n' +
-    'Montant: ' + fmt(d.ttc) + ' MAD TTC\n\n' +
-    'Voir: ' + docUrl + '\n' +
-    'Accepter: ' + acceptUrl;
-
-  if (navigator.share) {
-    try { await navigator.share({ title: 'Devis ' + d.ref, text: texte }); return; }
-    catch(e) { if (e.name === 'AbortError') return; }
-  }
-  navigator.clipboard?.writeText(texte).then(() => showToast('✅ Lien copié !', 'success'));
-}
-
-// ============================================================
-// ACCEPTER / REFUSER — DEVIS ET FACTURES (via lien public)
-// ============================================================
-
-// Fonction générique : gère à la fois les devis (champ `statut`) et les
-// factures (champ `reponse_client`, car les factures n'avaient pas de
-// champ de réponse client dédié avant).
-// NOUVEAU: bascule en "expiré" tout devis envoyé dont la date de validité
-// (date_emission + validite jours) est dépassée. Le statut/couleur/libellé
-// "expire" existaient déjà dans l'affichage mais rien ne le déclenchait.
-async function verifierExpirationDevis() {
-  const aujourdHui = new Date();
-  const aExpirer = (STATE.devis || []).filter(function(d) {
-    if (d.statut !== 'envoye' || !d.date_emission) return false;
-    const dateValidite = new Date(d.date_emission);
-    dateValidite.setDate(dateValidite.getDate() + (d.validite || 30));
-    return dateValidite < aujourdHui;
-  });
-  if (!aExpirer.length) return;
-
-  for (const d of aExpirer) {
-    try {
-      await sb.patch('devis', 'id=eq.' + d.id + '&user_id=eq.' + sb.user.id, { statut: 'expire' });
-      d.statut = 'expire';
-    } catch(e) { console.warn('verifierExpirationDevis:', e); }
-  }
-}
-
-async function traiterActionDocument(docId, type, action, signatureData) {
-  const isFacture = type === 'facture';
-  const table = isFacture ? 'factures' : 'devis';
-  const champ = isFacture ? 'reponse_client' : 'statut';
-  const valeurAcceptee = isFacture ? 'acceptee' : 'accepte';
-  const valeurRefusee = isFacture ? 'refusee' : 'refuse';
-  const valeurAttente = 'en_attente';
-  const libelleDoc = isFacture ? 'facture' : 'devis';
-  const libelleAction = action === 'accepter' ? 'Acceptation' : action === 'refuser' ? 'Refus' : 'Mise en attente';
-  const iconAction = action === 'accepter' ? '✅' : action === 'refuser' ? '❌' : '⏳';
-
-  // Afficher une page de confirmation propre
-  document.body.innerHTML = `
-    <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
-      <div style="font-size:48px;margin-bottom:16px">${iconAction}</div>
-      <h2 style="color:#2A2420;margin-bottom:8px">${libelleAction} ${isFacture ? 'de la facture' : 'du devis'}</h2>
-      <p style="color:#6B5F54;margin-bottom:24px">Chargement...</p>
+<!-- DEVIS -->
+<div class="screen" id="screen-devis-list">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-devis',null)">+ Nouveau</span>
     </div>
-  `;
+  </div>
+  <div style="display:none" id="devis-total"></div>
+  <div style="display:none" id="devis-sub"></div>
+  <div class="filter-tabs" style="padding-top:12px">
+    <button class="ftab active" onclick="filterDevis('tous',this)">Tous</button>
+    <button class="ftab" onclick="filterDevis('envoye',this)">Envoyés</button>
+    <button class="ftab" onclick="filterDevis('accepte',this)">Acceptés</button>
+    <button class="ftab" onclick="filterDevis('refuse',this)">Refusés</button>
+  </div>
+  <div class="card-list" id="devis-list"></div>
+  <div class="pb"></div>
+  
+</div>
 
-  try {
-    // Charger le document
-    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const data = await r.json();
-    const d = data && data[0];
-    if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">' + (isFacture ? 'Facture' : 'Devis') + ' introuvable</div>'; return; }
+<!-- NOUVEAU DEVIS -->
+<div class="screen" id="screen-nouveau-devis">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('devis-list',null)">←</button>
+    <div class="form-title">Nouveau devis</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section"><label class="f-lbl">Client *</label>
+    <div style="display:flex;gap:8px">
+      <input id="d-client" class="f-inp" placeholder="Nom du client" list="client-datalist-devis" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('d-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+    <datalist id="client-datalist-devis"></datalist></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">N° Devis</label><input id="d-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
+      <div><label class="f-lbl">Date</label><input id="d-date" class="f-inp" type="date"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="d-chantier" class="f-inp" placeholder="Ex: Villa Casablanca"></div>
+  <div class="form-section">
+    <label class="f-lbl">Validité</label>
+    <select id="d-validite" class="f-inp">
+      <option value="15">15 jours</option><option value="30" selected>30 jours</option>
+      <option value="60">60 jours</option><option value="90">90 jours</option>
+    </select>
+  </div>
+  <div class="form-section">
+    <label class="f-lbl">Prestations</label>
+    <div id="d-lignes-container"></div>
+    <button class="add-ligne" onclick="openAddLigneDevis()">＋ Ajouter une ligne</button>
+  </div>
+  <div class="total-recap">
+    <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="d-total-ht">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="d-total-tva">0 MAD</span></div>
+    <div class="tr-sep"></div>
+    <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="d-total-ttc">0 MAD</span></div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="d-bc-lie" class="f-inp"></select></div>
+  <div class="form-section"><label class="f-lbl">Notes</label><input id="d-note" class="f-inp" placeholder="Conditions particulières..."></div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderDevis()">💾 Sauvegarder</button>
+    <button class="s-btn gray" onclick="previewDevisPDF()">📄 PDF</button>
+  </div>
+  <div class="pb"></div>
+</div>
 
-    // FIX: un document déjà accepté ou refusé ne doit plus jamais changer
-    // d'état — que ce soit via un lien réutilisé (ancien message WhatsApp/
-    // email), un double-clic, ou un rechargement de page. "En attente" ne
-    // verrouille rien : le client peut toujours accepter/refuser après.
-    const statutActuel = d[champ];
-    const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
-    if (dejaTraite) {
-      document.body.innerHTML = `
-        <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
-          <div style="font-size:64px;margin-bottom:16px">${statutActuel === valeurAcceptee ? '✅' : '❌'}</div>
-          <h2 style="color:#2A2420;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
-          <div style="background:${statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-            <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
-            <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
+<!-- DETAIL DEVIS -->
+<div class="screen" id="screen-detail-devis">
+  <div class="detail-top">
+    <div class="d-back" onclick="goScreen('devis-list',null)">← Retour</div>
+    <div class="d-client" id="dv-client"></div>
+    <div class="d-amount" id="dv-amount"></div>
+    <div class="d-meta" id="dv-ref"></div>
+  </div>
+  <div class="d-body">
+    <div class="d-card"><div class="d-card-title">Prestations</div><div id="dv-lignes"></div></div>
+    <div class="d-card" id="dv-totals"></div>
+    <div id="dv-actions"></div>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- AVOIR -->
+<div class="screen" id="screen-avoir">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('dashboard',null)">←</button>
+    <div class="form-title">Facture Avoir</div>
+  </div>
+  <div style="margin:14px 20px;background:#F5E4E1;border-radius:10px;padding:12px;border-left:3px solid #B23A2E;font-size:12px;color:#B23A2E">↩️ Avoir = annulation ou remboursement d'une facture existante</div>
+  <div class="form-section"><label class="f-lbl">Client</label><input id="av-client" class="f-inp" placeholder="Nom du client"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">N° Avoir</label><input id="av-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
+      <div><label class="f-lbl">Date</label><input id="av-date" class="f-inp" type="date"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Facture d'origine</label><select id="av-facture-origine" class="f-inp"><option value="">Sélectionner...</option></select></div>
+  <div class="form-section"><label class="f-lbl">Motif</label>
+    <select id="av-motif" class="f-inp">
+      <option value="annulation">Annulation totale</option>
+      <option value="remboursement">Remboursement partiel</option>
+      <option value="correction">Correction d'erreur</option>
+      <option value="retour">Retour marchandise</option>
+    </select>
+  </div>
+  <div class="form-section"><label class="f-lbl">Montant HT (MAD)</label><input id="av-montant" class="f-inp" type="number" placeholder="0.00" oninput="updateAvoirTotal()"></div>
+  <div class="total-recap">
+    <div class="tr-row"><span class="tr-lbl">Montant HT</span><span class="tr-val" id="av-total-ht">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="av-total-tva">0 MAD</span></div>
+    <div class="tr-sep"></div>
+    <div class="tr-row main"><span class="tr-lbl">Total Avoir TTC</span><span class="tr-val" id="av-total-ttc" style="color:#9CBB7A">0 MAD</span></div>
+  </div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderAvoir()">💾 Émettre</button>
+    <button class="s-btn gray" onclick="previewAvoirPDF()">📄 PDF</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- PRODUITS -->
+<div class="screen" id="screen-produits">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('nouveau-produit',null)">+ Ajouter</span>
+    </div>
+  </div>
+  <div id="valeur-stock-card" onclick="goScreen('rapport-stock',null)" style="margin:12px 20px;background:#EEF3E4;border-radius:12px;padding:12px 16px;display:none;justify-content:space-between;align-items:center;cursor:pointer">
+    <span style="font-size:12px;font-weight:600;color:#55702E">📦 Valeur totale du stock</span>
+    <span id="valeur-stock-montant" style="font-size:16px;font-weight:800;color:#55702E">0 MAD</span>
+  </div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center">
+    <div class="sec-title">Articles (<span id="produits-count">0</span>)</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <label style="font-size:11px;font-weight:600;color:#fff;cursor:pointer;background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:14px">📤 Import CSV<input type="file" accept=".csv" style="display:none" onchange="importerProduitsCSV(event)"></label>
+      <span onclick="exporterProduitsCSV()" style="font-size:11px;font-weight:600;color:#fff;cursor:pointer;background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:14px">📥 Export CSV</span>
+    </div>
+  </div>
+  <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#9C9186;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
+  <div class="card-list" id="produits-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- NOUVEAU PRODUIT -->
+<div class="screen" id="screen-nouveau-produit">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('produits',null)">←</button>
+    <div class="form-title">Nouvel article</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section"><label class="f-lbl">Désignation *</label><input id="p-nom" class="f-inp" placeholder="Ex: Prestation de service"></div>
+  <div class="form-section"><label class="f-lbl">Description</label><input id="p-desc" class="f-inp" placeholder="Détail optionnel"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Prix HT (MAD)</label><input id="p-prix" class="f-inp" type="number" oninput="calcPrixTTC()" placeholder="0.00"></div>
+      <div><label class="f-lbl">Unité</label>
+        <select id="p-unite" class="f-inp">
+          <option value="Fft">Forfait</option><option value="u">Unité</option>
+          <option value="m²">m²</option><option value="j">Jour</option>
+          <option value="h">Heure</option><option value="kg">kg</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Catégorie</label>
+    <select id="p-categorie" class="f-inp">
+      <option value="service">Prestation de service</option>
+      <option value="produit">Produit / Marchandise</option>
+      <option value="main-oeuvre">Main d'oeuvre</option>
+      <option value="transport">Transport</option>
+      <option value="autre">Autre</option>
+    </select>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">R&#233;f&#233;rence</label><input id="p-ref" class="f-inp" placeholder="REF-001"></div>
+      <div><label class="f-lbl">Stock</label><input id="p-stock" class="f-inp" type="number" placeholder="0"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="p-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">TVA (%)</label>
+        <select id="p-tva" class="f-inp" onchange="calcPrixTTC()">
+          <option value="0">0%</option><option value="7">7%</option>
+          <option value="10">10%</option><option value="14">14%</option>
+          <option value="20" selected>20%</option>
+        </select>
+      </div>
+      <div><label class="f-lbl">Co&#251;t achat</label><input id="p-cout" class="f-inp" type="number" oninput="calcPrixTTC()" placeholder="0.00"></div>
+    </div>
+    <div style="font-size:12px;color:#6E8F4E;margin-top:4px;font-weight:600" id="p-marge"></div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Prix TTC</label><input id="p-prix-ttc" class="f-inp" readonly style="background:#EAE4DA"></div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderProduit()">💾 Sauvegarder</button>
+    <button class="s-btn gray" onclick="goScreen('produits',null)">✕ Annuler</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- PROFIL -->
+<div class="screen" id="screen-profil">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button>
+    </div>
+  </div>
+  <div class="profil-hero">
+    <button onclick="partagerProfil()" style="position:absolute;top:60px;right:16px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+    <div class="profil-av" id="pv-initiales">?</div>
+    <div>
+      <div class="p-nom-big" id="pv-nom">Mon Entreprise</div>
+      <div class="p-id" id="pv-rc-label">RC — · IF — · ICE —</div>
+      <div class="p-badge" id="pv-badge" style="background:rgba(239,68,68,0.2);color:#C96F63">⚠️ Profil incomplet</div>
+    </div>
+  </div>
+  <!-- QR -->
+  <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #EAE4DA;text-align:center">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:12px">QR Code & Lien public</div>
+    <div id="qr-canvas-container" style="display:flex;justify-content:center;margin:0 auto 10px"></div>
+    <!-- FIX: cet élément était auparavant absent du HTML alors que renderProfil()
+         essayait déjà de le remplir (setEl('pv-lien', ...)) — le lien affiché
+         sous le QR ne correspondait donc jamais au vrai lien public encodé
+         dans le QR code. -->
+    <div id="pv-lien" style="font-size:11px;color:#C9971F;margin-bottom:10px;word-break:break-all;background:#F1EEE8;padding:8px;border-radius:8px">—</div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="copierLienProfil()" style="background:#E9F4F3;color:#C9971F;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfil()" style="background:#C9971F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+    </div>
+  </div>
+  <div style="padding:0 16px" id="profil-view">
+    <div class="p-card" id="pv-infos-card">
+      <div class="p-card-title">Informations entreprise</div>
+    </div>
+    <div id="pv-objectif" style="display:none;background:#E9F4F3;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#A67A16"></div>
+    <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
+    <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#C9971F">📁 Archive documents</button>
+    <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
+    <!-- Section Mon Comptable -->
+    <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
+      <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">Mon comptable</div>
+      <div id="mon-comptable-section" style="padding:14px 16px">Chargement...</div>
+    </div>
+    <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#6E8F4E">🏢 Annuaire Zelto</button>
+    <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
+    <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
+    <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#7C5CA6">🔐 Lien accès comptable</button>
+    <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
+  </div>
+  <div id="profil-edit" style="display:none;padding:0 16px">
+    <div style="font-size:13px;color:#6B5F54;margin:16px 0">Ces informations apparaissent sur vos factures PDF</div>
+    <label class="f-lbl">Raison sociale *</label><input id="pe-raison" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Secteur</label>
+    <select id="pe-secteur" class="f-inp" style="margin-bottom:10px">
+      <option value="">Sélectionner...</option>
+      <option>BTP & Construction</option><option>Commerce & Négoce</option>
+      <option>Transport & Logistique</option><option>Conseil & Expertise</option>
+      <option>Santé & Médical</option><option>Immobilier</option>
+      <option>Informatique & Tech</option><option>Artisanat</option><option>Autre</option>
+    </select>
+    <label class="f-lbl">Forme juridique</label>
+    <select id="pe-forme" class="f-inp" style="margin-bottom:10px">
+      <option value="">Sélectionner...</option>
+      <option>SARL</option><option>SA</option><option>SARL AU</option>
+      <option>Auto-entrepreneur</option><option>Personne physique</option>
+    </select>
+    <label class="f-lbl">Adresse</label><input id="pe-adresse" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Ville</label><input id="pe-ville" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Téléphone</label><input id="pe-tel" class="f-inp" type="tel" style="margin-bottom:10px">
+    <label class="f-lbl">Email</label><input id="pe-email" class="f-inp" type="email" style="margin-bottom:10px">
+    <label class="f-lbl">Site web</label><input id="pe-web" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">RC</label><input id="pe-rc" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Identifiant Fiscal (IF)</label><input id="pe-if" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">ICE</label><input id="pe-ice" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Patente</label><input id="pe-patente" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">CNSS</label><input id="pe-cnss" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Banque</label><input id="pe-banque" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">RIB / IBAN</label><input id="pe-rib" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Conditions de paiement</label><input id="pe-conditions" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">🎨 Couleur d'accent des PDF (factures)</label>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
+      <input id="pe-couleur" type="color" value="#C9971F" style="width:52px;height:40px;border:1.5px solid #E3DCCF;border-radius:10px;padding:2px;cursor:pointer">
+      <div style="font-size:11px;color:#9C9186">S'applique aux factures uniquement — devis/avoirs gardent leur code couleur habituel</div>
+    </div>
+    <label class="f-lbl">🔐 Code comptable (6 chiffres)</label>
+    <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px">
+    <div style="font-size:11px;color:#9C9186;margin-bottom:16px">Partagez ce code avec votre comptable</div>
+    <div style="margin-bottom:12px">
+      <div class="f-lbl">Logo entreprise</div>
+      <div id="logo-preview-container" style="margin-bottom:8px"></div>
+      <input type="file" id="logo-input" accept="image/*" style="display:none" onchange="uploadLogo(event)">
+      <button onclick="document.getElementById('logo-input').click()" class="s-btn gray" style="width:100%;margin-bottom:6px">📷 Choisir un logo</button>
+      <button id="del-logo-btn" onclick="supprimerLogo()" class="s-btn" style="width:100%;background:#F5E4E1;color:#B23A2E;display:none">🗑️ Supprimer le logo</button>
+    </div>
+    <div style="margin-bottom:12px">
+      <div class="f-lbl">✍️ Ma signature / cachet</div>
+      <div style="font-size:11px;color:#9C9186;margin-bottom:8px">S'appose automatiquement sur vos documents, à côté de la signature du client une fois le document accepté</div>
+      <canvas id="pe-sig-canvas" style="width:100%;height:120px;background:#F1EEE8;border:1.5px dashed #CDBEA0;border-radius:10px;touch-action:none;display:block;margin-bottom:8px"></canvas>
+      <div style="display:flex;gap:8px">
+        <button onclick="typeof effacerSignatureEntreprise==='function' && effacerSignatureEntreprise()" class="s-btn gray" style="flex:1">🔄 Effacer</button>
+        <label class="s-btn gray" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">📷 Importer un cachet
+          <input type="file" accept="image/*" style="display:none" onchange="typeof importerPhotoSignatureEntreprise==='function' && importerPhotoSignatureEntreprise(event)">
+        </label>
+      </div>
+    </div>
+    <button class="s-btn blue" onclick="saveProfil()" style="width:100%;margin-bottom:10px">💾 Enregistrer</button>
+    <button class="s-btn gray" onclick="goProfilEdit(false)" style="width:100%;margin-bottom:20px">Annuler</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- STATS -->
+<div class="screen" id="screen-stats">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div>
+  </div>
+  <div class="sec-label">Statistiques</div>
+  <div style="padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" id="stats-grid"></div>
+  <div style="padding:0 20px;margin-bottom:16px" id="sa-monthly"></div>
+  <div style="padding:0 20px" id="chart-bars"></div>
+  <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
+  <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
+  <div style="padding:0 20px;margin-top:16px;padding-bottom:20px" id="sa-top-produits"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- AUTH -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <svg width="145" height="17" viewBox="20 18 260 30">
+        <defs>
+          <linearGradient id="gradSafranAuthTop" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#A67A16"/>
+            <stop offset="100%" stop-color="#E0AE5C"/>
+          </linearGradient>
+        </defs>
+        <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="url(#gradSafranAuthTop)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+      </svg>
+      <h1 style="margin:2px 0">Zel<span>to</span></h1>
+      <svg width="145" height="17" viewBox="20 132 260 30">
+        <defs>
+          <linearGradient id="gradZelligeAuthBottom" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#154F52"/>
+            <stop offset="100%" stop-color="#7FB8BA"/>
+          </linearGradient>
+        </defs>
+        <path d="M 270 146 Q 150 160 30 146" fill="none" stroke="url(#gradZelligeAuthBottom)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
+      </svg>
+    </div>
+    <div class="auth-card">
+      <div id="aw-normal">
+        <div class="auth-title">Connexion</div>
+        <label class="a-lbl">Email</label>
+        <input id="login-email" class="a-inp" type="email" placeholder="votre@email.com" autocomplete="email">
+        <label class="a-lbl">Mot de passe</label>
+        <div style="position:relative">
+          <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
+          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9C9186;padding:0" id="eye-login">👁️</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
+          <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer" onchange="toggleRememberMe()">
+          <label for="remember-me" style="font-size:13px;color:#6B5F54;cursor:pointer">Se souvenir de moi</label>
+        </div>
+        <div id="login-err" class="a-err"></div>
+        <button class="a-btn a-btn-blue" onclick="doLogin()">Se connecter</button>
+        <div class="a-link" style="margin-top:10px"><a onclick="doForgotPassword()">Mot de passe oublié ?</a></div>
+        <div class="a-link">Pas de compte ? <a onclick="switchTab('signup')">Créer un compte</a></div>
+      </div>
+      <div id="aw-signup" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
+        <div class="auth-title">Créer un compte</div>
+
+        <!-- ÉTAPE 1: Choisir le type de compte EN PREMIER -->
+        <div style="margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:10px;text-align:center">Je suis...</div>
+          <div style="display:flex;gap:8px">
+            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #C9971F;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#FBF0DA">
+              <div style="font-size:28px;margin-bottom:6px">🏢</div>
+              <div style="font-size:13px;font-weight:700;color:#C9971F">Entreprise</div>
+              <div style="font-size:10px;color:#6B5F54;margin-top:3px">Gérer mes factures</div>
+            </div>
+            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E3DCCF;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F1EEE8">
+              <div style="font-size:28px;margin-bottom:6px">📊</div>
+              <div style="font-size:13px;font-weight:700;color:#6B5F54">Comptable</div>
+              <div style="font-size:10px;color:#6B5F54;margin-top:3px">Gérer mes clients</div>
+            </div>
           </div>
-          <p style="color:#6B5F54;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
-          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
+          <input type="hidden" id="signup-role" value="entreprise">
         </div>
-      `;
-      return;
-    }
 
-    // Mettre à jour le statut / la réponse client
-    const nouvelleValeur = action === 'accepter' ? valeurAcceptee : action === 'refuser' ? valeurRefusee : valeurAttente;
-    const patchBody = { notif_lue: false };
-    patchBody[champ] = nouvelleValeur;
-    if (action === 'accepter') {
-      // L'acceptation vaut signature électronique — si le client a dessiné
-      // une signature (canal facultatif, encore utilisable ailleurs), on la
-      // garde ; sinon un tampon horodaté est généré automatiquement, sans
-      // aucune action requise du client.
-      patchBody.signature_data = signatureData || ('TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }));
-    }
-
-    await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(patchBody)
-    });
-
-    // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
-    try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : action === 'refuser' ? 'refus' : 'mise en attente', d.ref || ''); } catch(eAudit) {}
-
-    // Page de confirmation
-    const messageFinal = action === 'accepter'
-      ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.'
-      : action === 'refuser'
-      ? 'Votre r\u00e9ponse a \u00e9t\u00e9 transmise \u00e0 l\u2019entreprise.'
-      : 'Vous pourrez accepter ou refuser ce document \u00e0 tout moment via ce m\u00eame lien.';
-    const titreFinal = action === 'accepter' ? (isFacture ? 'Facture acceptée' : 'Devis accepté') + ' !'
-      : action === 'refuser' ? (isFacture ? 'Facture refusée' : 'Devis refusé') + ' !'
-      : 'Mis en attente';
-    const bg = action === 'accepter' ? '#EEF3E4' : action === 'refuser' ? '#F5E4E1' : '#F7EFDC';
-
-    document.body.innerHTML = `
-      <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
-        <div style="font-size:64px;margin-bottom:16px">${iconAction}</div>
-        <h2 style="color:#2A2420;margin-bottom:8px">${titreFinal}</h2>
-        <div style="background:${bg};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
-          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
-          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
+        <!-- Champ cabinet (comptable uniquement) -->
+        <div id="signup-comptable-fields" style="display:none;background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:12px">
+          <label class="a-lbl" style="color:#C9971F">Cabinet comptable</label>
+          <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet (optionnel)">
         </div>
-        <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>
-        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
-        <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect">4</span>s...</div>
+
+        <!-- ÉTAPE 2: Informations personnelles -->
+        <label class="a-lbl">Nom complet</label><input id="signup-nom" class="a-inp" type="text" placeholder="Ahmed Benali">
+        <label class="a-lbl">Email</label><input id="signup-email" class="a-inp" type="email" placeholder="votre@email.com">
+        <label class="a-lbl">Mot de passe</label>
+        <div style="position:relative">
+          <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password" style="padding-right:44px">
+          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9C9186;padding:0" id="eye-signup">👁️</button>
+        </div>
+        <div class="pwd-bar"><div id="pwd-bar" class="pwd-fill"></div></div>
+        <div id="pwd-hint" class="pwd-hint"></div>
+        <label class="a-lbl">Confirmer le mot de passe</label>
+        <input id="signup-password2" class="a-inp" type="password" placeholder="Retapez le mot de passe" oninput="checkPwdMatch()">
+        <div id="pwd-match" style="font-size:11px;margin-top:4px;min-height:16px"></div>
+        <div id="signup-err" class="a-err"></div>
+        <button class="a-btn a-btn-blue" onclick="doSignup()" style="margin-top:8px">Créer mon compte</button>
+        <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
       </div>
-    `;
-    // NOUVEAU: retour automatique à l'accueil après 4 secondes, avec un
-    // petit compte à rebours visible plutôt qu'une redirection surprise.
-    let secondesRestantes = 4;
-    const intervalRedirect = setInterval(function() {
-      secondesRestantes--;
-      const span = document.getElementById('compte-redirect');
-      if (span) span.textContent = secondesRestantes;
-      if (secondesRestantes <= 0) {
-        clearInterval(intervalRedirect);
-        window.location.href = window.location.origin + window.location.pathname;
-      }
-    }, 1000);
-  } catch(e) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
-  }
-}
+      <div id="aw-confirm" style="display:none">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:48px;margin-bottom:12px">&#128231;</div>
+          <div class="auth-title" style="margin-bottom:8px">V&#233;rifiez votre email</div>
+          <div style="font-size:13px;color:#6B5F54;line-height:1.5">Lien envoy&#233; &#224;</div>
+          <div style="font-size:14px;font-weight:600;color:#C9971F;margin:8px 0;word-break:break-all" id="confirm-email-display">&#8212;</div>
+          <div style="font-size:12px;color:#9C9186">Cliquez le lien pour activer votre compte</div>
+        </div>
+        <div style="background:#F7EFDC;border-left:3px solid #B8860B;border-radius:8px;padding:12px;font-size:12px;color:#7A5A0E;margin-bottom:16px">
+          &#9888; V&#233;rifiez vos <strong>spams</strong> si vous ne trouvez pas l'email.
+        </div>
+        <button class="a-btn a-btn-blue" onclick="renvoyerConfirmation()">&#128228; Renvoyer l'email</button>
+        <button onclick="switchTab('login')" class="a-btn" style="background:#EAE4DA;color:#6B5F54;margin-top:8px">&#8592; Retour</button>
+      </div>
 
-// Alias de compatibilité pour les anciens liens ?devis=ID&action=...
-async function traiterActionDevis(devisId, action) {
-  return traiterActionDocument(devisId, 'devis', action);
-}
+      <div id="aw-comptable" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
+        <div style="background:#EEF3E4;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:20px">
+          <div style="font-size:28px">🔐</div>
+          <div><div style="font-size:14px;font-weight:600;color:#6E8F4E">Espace Comptable</div><div style="font-size:11px;color:#9CBB7A">Lecture seule</div></div>
+        </div>
+        <label class="a-lbl">Code d'accès</label>
+        <input id="comptable-code" class="a-inp" type="password" placeholder="123456" maxlength="6" style="letter-spacing:8px;font-size:22px;text-align:center">
+        <div id="comptable-error" class="a-err"></div>
+        <button class="a-btn a-btn-green" onclick="accederComptable()">Accéder →</button>
+      </div>
+    </div>
+    <div class="a-footer">Données sécurisées · Zelto v2.0</div>
+  </div>
+</div>
+
+<!-- DASHBOARD COMPTABLE -->
+<div class="screen" id="screen-dashboard-comptable">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('comptable',null)" style="cursor:pointer">🔐 Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
+      <button class="a-btn a-btn-blue" onclick="quitterComptable()" style="padding:8px 14px;margin-top:0;font-size:12px;width:auto">Quitter</button></div>
+  </div>
+  <div class="hero">
+    <div class="hero-lbl">Vue comptable</div>
+    <div class="hero-amount" id="c-total-ht">0 MAD HT</div>
+    <div class="hero-sub-txt" id="c-total-factures">0 factures</div>
+    <div class="hero-grid">
+      <div class="hero-box"><div class="hero-box-val g" id="c-total-tva">0</div><div class="hero-box-lbl">TVA collectée</div></div>
+      <div class="hero-box"><div class="hero-box-val o" id="ds-envoye">0</div><div class="hero-box-lbl">En attente</div></div>
+      <div class="hero-box"><div class="hero-box-val g" id="ds-accepte">0</div><div class="hero-box-lbl">Payées</div></div>
+    </div>
+  </div>
+  <div style="display:none" id="comptable-client-nom"></div>
+  <div style="display:none" id="comptable-banque"></div>
+  <div style="display:none" id="ds-refuse"></div>
+  <div class="sec-label">Entreprise</div>
+  <div style="padding:0 20px;background:#fff;border-radius:12px;margin:0 20px;border:1px solid #EAE4DA" id="comptable-infos-content"></div>
+  <div class="sec-label">Factures</div>
+  <div class="card-list" id="comptable-factures-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- MODAL RECHERCHE FOURNISSEUR BC (annuaire + historique) -->
+<div class="modal-overlay" id="modal-fournisseur-bc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👥 Choisir un fournisseur</div>
+    <input class="m-inp" id="search-fournisseur-bc" placeholder="Nom du fournisseur (2 lettres min. pour l'annuaire)..." oninput="rechercherFournisseurBC()">
+    <div id="fournisseur-bc-picker-list" style="max-height:350px;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL LIGNE BON DE LIVRAISON (manquait — bouton "Ajouter un article" du BL ne faisait rien, même bug que le BC) -->
+<div class="modal-overlay" id="modal-ligne-bl">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter un article livré</div>
+    <input class="m-inp" id="mlbl-desc" placeholder="Description de l'article">
+    <input class="m-inp" id="mlbl-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneBL()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL ÉDITION PROFIL COMPTABLE (manquait — bouton "Modifier" ne faisait rien) -->
+<div class="modal-overlay" id="modal-edition-comptable">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Modifier mes informations</div>
+    <label class="a-lbl">Nom</label>
+    <input class="m-inp" id="ec-nom" placeholder="Votre nom">
+    <label class="a-lbl">Cabinet</label>
+    <input class="m-inp" id="ec-cabinet" placeholder="Nom du cabinet">
+    <label class="a-lbl">Téléphone</label>
+    <input class="m-inp" id="ec-tel" placeholder="Téléphone">
+    <label class="a-lbl">Spécialité</label>
+    <input class="m-inp" id="ec-specialite" placeholder="Ex: Expertise comptable, Audit...">
+    <button class="m-btn" onclick="sauvegarderEditionComptable()">💾 Enregistrer</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL LIGNE BON DE COMMANDE (manquait — bouton "Ajouter un article" du BC ne faisait rien) -->
+<div class="modal-overlay" id="modal-ligne-bc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter un article</div>
+    <input class="m-inp" id="mlbc-desc" placeholder="Description de l'article">
+    <input class="m-inp" id="mlbc-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mlbc-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneBC()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL LIGNE -->
+<div class="modal-overlay" id="modal-ligne">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une ligne</div>
+    <input class="m-inp" id="ml-desc" placeholder="Description de la prestation">
+    <input class="m-inp" id="ml-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="ml-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <select class="m-inp" id="ml-unite">
+      <option value="u">Unit&#233; (u)</option>
+      <option value="h">Heure (h)</option>
+      <option value="j">Jour (j)</option>
+      <option value="Fft">Forfait (Fft)</option>
+      <option value="m2">m&#178;</option>
+      <option value="ml">ml</option>
+      <option value="kg">kg</option>
+    </select>
+    <button class="m-btn" onclick="confirmerLigne()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="modal-ligne-d">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une ligne</div>
+    <input class="m-inp" id="mld-desc" placeholder="Description de la prestation">
+    <input class="m-inp" id="mld-qte" type="number" placeholder="Quantit&#233;" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mld-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <select class="m-inp" id="mld-unite">
+      <option value="u">Unit&#233; (u)</option>
+      <option value="h">Heure (h)</option>
+      <option value="j">Jour (j)</option>
+      <option value="Fft">Forfait (Fft)</option>
+      <option value="m2">m&#178;</option>
+      <option value="ml">ml</option>
+      <option value="kg">kg</option>
+    </select>
+    <button class="m-btn" onclick="confirmerLigneDevis()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ligne-ab">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une ligne</div>
+    <input class="m-inp" id="mlab-desc" placeholder="Description de la prestation">
+    <input class="m-inp" id="mlab-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mlab-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <select class="m-inp" id="mlab-unite">
+      <option value="u">Unité (u)</option>
+      <option value="h">Heure (h)</option>
+      <option value="j">Jour (j)</option>
+      <option value="Fft">Forfait (Fft)</option>
+      <option value="m2">m²</option>
+      <option value="ml">ml</option>
+      <option value="kg">kg</option>
+    </select>
+    <button class="m-btn" onclick="confirmerLigneAB()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ligne-achat">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajouter une ligne d'achat</div>
+    <input class="m-inp" id="mla-desc" placeholder="Description de l'article/prestation">
+    <input class="m-inp" id="mla-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
+    <input class="m-inp" id="mla-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
+    <select class="m-inp" id="mla-unite">
+      <option value="u">Unité (u)</option>
+      <option value="h">Heure (h)</option>
+      <option value="j">Jour (j)</option>
+      <option value="Fft">Forfait (Fft)</option>
+      <option value="m2">m²</option>
+      <option value="ml">ml</option>
+      <option value="kg">kg</option>
+    </select>
+    <button class="m-btn" onclick="confirmerLigneAchat()">Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL CATALOGUE -->
+<div class="modal-overlay" id="modal-produits">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Choisir un article</div>
+    <input class="m-inp" id="search-produit" placeholder="Rechercher..." oninput="filtrerProduits()">
+    <div id="produits-picker" style="max-height:350px;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL SÉLECTION CLIENT -->
+<div class="modal-overlay" id="modal-clients-picker">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👥 Choisir un client</div>
+    <input class="m-inp" id="search-client-picker" placeholder="Rechercher..." oninput="filtrerPickerClients()">
+    <div id="clients-picker-list" style="max-height:350px;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL PAIEMENT -->
+<div class="modal-overlay" id="modal-paiement">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">&#128176; Enregistrer un paiement</div>
+    <div style="background:#F1EEE8;padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6B5F54">Total TTC</span><strong id="pp-total">0</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6B5F54">D&#233;j&#224; re&#231;u</span><strong id="pp-recu" style="color:#6E8F4E">0</strong></div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid #E3DCCF;padding-top:4px;margin-top:4px"><span style="color:#2A2420;font-weight:600">Reste &#224; payer</span><strong id="pp-restant" style="color:#B23A2E">0</strong></div>
+    </div>
+    <label class="a-lbl">Montant re&#231;u</label>
+    <input class="m-inp" id="pp-montant" type="number" placeholder="Ex: 1500.00" step="0.01">
+    <label class="a-lbl">Date du paiement</label>
+    <input class="m-inp" id="pp-date" type="date">
+    <label class="a-lbl">Mode de paiement</label>
+    <select id="pp-mode" class="m-inp">
+      <option value="virement">Virement bancaire</option>
+      <option value="cheque">Ch&#232;que</option>
+      <option value="especes">Esp&#232;ces</option>
+      <option value="carte">Carte bancaire</option>
+    </select>
+    <button class="m-btn green" onclick="confirmerPaiement()">Valider le paiement</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL ENVOYER (WhatsApp / Email / Lien / Compte Zelto) -->
+<div class="modal-overlay" id="modal-envoyer">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="me-titre">Envoyer le document</div>
+    <button class="m-btn" style="background:#25D366" onclick="envoyerVia('whatsapp')">📱 WhatsApp</button>
+    <button class="m-btn" style="background:#C9971F" onclick="envoyerVia('email')">✉️ Email</button>
+    <button class="m-btn" style="background:#6B5F54" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
+    <button class="m-btn" style="background:#1F6F72" onclick="envoyerVia('banipay')">🅿️ Compte Zelto</button>
+    <div id="me-banipay-picker" style="display:none;margin-top:10px"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL SIGNATURE TACTILE (acceptation devis/facture) -->
+<div class="modal-overlay" id="modal-signature">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✍️ Signez pour accepter</div>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Dessinez votre signature dans le cadre ci-dessous (facultatif)</div>
+    <canvas id="sig-canvas" style="width:100%;height:160px;background:#F1EEE8;border:1.5px dashed #CDBEA0;border-radius:10px;touch-action:none;display:block"></canvas>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="m-btn-sec" style="flex:1;margin-top:0" onclick="effacerSignature()">🔄 Effacer</button>
+      <button class="m-btn" style="flex:1;margin-top:0;background:#6E8F4E" onclick="confirmerSignatureEtAccepter()">✅ Valider et accepter</button>
+    </div>
+    <button class="m-btn-sec" style="font-weight:600;text-decoration:underline" onclick="accepterSansSignature()">Accepter sans signer →</button>
+    <button class="m-btn-sec" onclick="annulerSignature()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL AJUSTEMENT STOCK -->
+<div class="modal-overlay" id="modal-ajustement-stock">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="as-titre">Ajuster le stock</div>
+    <div style="background:#F1EEE8;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:flex;justify-content:space-between">
+      <span style="color:#6B5F54">Stock actuel</span><strong id="as-stock-actuel">0</strong>
+    </div>
+    <label class="a-lbl">Type de mouvement</label>
+    <select id="as-type" class="m-inp" onchange="afficherChampCoutSiEntree()">
+      <option value="entree">⬆️ Entrée (réapprovisionnement)</option>
+      <option value="sortie">⬇️ Sortie manuelle</option>
+      <option value="ajustement">⚖️ Ajustement (nouvelle valeur)</option>
+    </select>
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="as-quantite" type="number" placeholder="Ex: 10" step="0.01">
+    <div id="as-cout-bloc">
+      <label class="a-lbl">Coût unitaire d'achat (MAD)</label>
+      <input class="m-inp" id="as-cout" type="number" placeholder="Ex: 45.00" step="0.01">
+      <div style="font-size:11px;color:#9C9186;margin-top:-6px;margin-bottom:10px">Sert au calcul automatique du coût moyen / FIFO / LIFO</div>
+    </div>
+    <label class="a-lbl">Motif (optionnel)</label>
+    <input class="m-inp" id="as-motif" placeholder="Ex: Livraison fournisseur">
+    <button class="m-btn" onclick="confirmerAjustementStock()">✅ Valider</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- ===== HISTORIQUE PAIEMENTS ===== -->
+<div class="screen" id="screen-historique-paiements">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('detail')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
+    </div>
+  </div>
+  <div class="sec-label">Historique des paiements</div>
+  <div style="padding:0 20px 10px;font-size:13px;color:#6B5F54" id="hp-facture-info"></div>
+  <div class="card-list" id="hp-liste"></div>
+  <div style="padding:16px 20px">
+    <button class="s-btn blue full" onclick="ouvrirPaiementPartiel(STATE.currentFacture?.id)">&#10133; Ajouter un paiement</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== BROUILLONS ===== -->
+<div class="screen" id="screen-brouillons">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
+    </div>
+  </div>
+  <div class="sec-header">
+    <div class="sec-title">Brouillons (<span id="brouillons-count">0</span>)</div>
+  </div>
+  <div class="card-list" id="brouillons-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== MODIFIER CLIENT ===== -->
+<div class="screen" id="screen-modifier-client">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('detail-client')">&#8592;</button>
+    <div class="form-title">Modifier le client</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section"><label class="f-lbl">Nom / Raison sociale *</label><input id="mc-nom" class="f-inp" placeholder="Ex: SARL B&#226;tir Maroc"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">T&#233;l&#233;phone</label><input id="mc-tel" class="f-inp" type="tel"></div>
+      <div><label class="f-lbl">Email</label><input id="mc-email" class="f-inp" type="email"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Adresse</label><input id="mc-adresse" class="f-inp"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">ICE</label><input id="mc-ice" class="f-inp"></div>
+      <div><label class="f-lbl">IF</label><input id="mc-if" class="f-inp"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Conditions de paiement</label><input id="mc-conditions" class="f-inp"></div>
+  <div class="form-section"><label class="f-lbl">Limite de cr&#233;dit (MAD)</label><input id="mc-limite" class="f-inp" type="number"></div>
+  <div class="form-section"><label class="f-lbl">Notes internes</label><textarea id="mc-notes" class="f-inp" rows="3" style="resize:none"></textarea></div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderModifClient()">&#128190; Enregistrer</button>
+    <button class="s-btn gray" onclick="goScreen('detail-client')">Annuler</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== MODIFIER PRODUIT ===== -->
+<div class="screen" id="screen-modifier-produit">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('produits')">&#8592;</button>
+    <div class="form-title">Modifier l'article</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section"><label class="f-lbl">D&#233;signation *</label><input id="mp-nom" class="f-inp"></div>
+  <div class="form-section"><label class="f-lbl">R&#233;f&#233;rence</label><input id="mp-ref" class="f-inp"></div>
+  <div class="form-section"><label class="f-lbl">Description</label><input id="mp-desc" class="f-inp"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Prix HT (MAD)</label><input id="mp-prix" class="f-inp" type="number" oninput="calcPrixTTCModif()"></div>
+      <div><label class="f-lbl">TVA (%)</label>
+        <select id="mp-tva" class="f-inp" onchange="calcPrixTTCModif()">
+          <option value="0">0%</option><option value="7">7%</option>
+          <option value="10">10%</option><option value="14">14%</option>
+          <option value="20" selected>20%</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Prix TTC</label><input id="mp-prix-ttc" class="f-inp" readonly style="background:#EAE4DA"></div>
+      <div><label class="f-lbl">Co&#251;t d'achat</label><input id="mp-cout" class="f-inp" type="number" oninput="calcPrixTTCModif()"></div>
+    </div>
+    <div style="font-size:12px;color:#6E8F4E;margin-top:4px;font-weight:600" id="mp-marge"></div>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Unit&#233;</label>
+        <select id="mp-unite" class="f-inp">
+          <option value="u">Unit&#233;</option><option value="Fft">Forfait</option>
+          <option value="m2">m&#178;</option><option value="j">Jour</option>
+          <option value="h">Heure</option><option value="kg">kg</option>
+        </select>
+      </div>
+      <div><label class="f-lbl">Stock</label><input id="mp-stock" class="f-inp" type="number"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="mp-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
+  <div class="form-section"><label class="f-lbl">Cat&#233;gorie</label>
+    <select id="mp-categorie" class="f-inp">
+      <option value="service">Prestation de service</option>
+      <option value="produit">Produit / Marchandise</option>
+      <option value="main-oeuvre">Main d'oeuvre</option>
+      <option value="materiaux">Mat&#233;riaux</option>
+      <option value="transport">Transport</option>
+    </select>
+  </div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderModifProduit()">&#128190; Enregistrer</button>
+    <button class="s-btn gray" onclick="goScreen('produits')">Annuler</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== PARAMETRES ===== -->
+<div class="screen" id="screen-parametres">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('profil')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
+    </div>
+  </div>
+  <div class="sec-label">Param&#232;tres entreprise</div>
+  <div style="padding:0 20px">
+    <!-- Numerotation -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">&#128203; Num&#233;rotation des documents</div>
+      <div style="padding:14px 16px">
+        <label class="f-lbl">Pr&#233;fixe factures</label>
+        <input id="param-prefix-fac" class="f-inp" placeholder="FAC" style="margin-bottom:10px">
+        <label class="f-lbl">Pr&#233;fixe devis</label>
+        <input id="param-prefix-dev" class="f-inp" placeholder="DEV" style="margin-bottom:10px">
+        <label class="f-lbl">Num&#233;ro de d&#233;part</label>
+        <input id="param-num-start" class="f-inp" type="number" placeholder="1" style="margin-bottom:10px">
+        <div style="font-size:12px;color:#9C9186;margin-bottom:10px">
+          Exemple : <strong id="param-preview">FAC-2026-0001</strong>
+        </div>
+      </div>
+    </div>
+    <!-- Paiement -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">&#128176; Conditions de paiement</div>
+      <div style="padding:14px 16px">
+        <label class="f-lbl">D&#233;lai par d&#233;faut</label>
+        <select id="param-delai" class="f-inp" style="margin-bottom:10px">
+          <option value="0">Comptant</option>
+          <option value="7">7 jours</option>
+          <option value="30" selected>30 jours</option>
+          <option value="60">60 jours</option>
+          <option value="90">90 jours</option>
+        </select>
+        <label class="f-lbl">Mode de paiement par d&#233;faut</label>
+        <select id="param-mode-paiement" class="f-inp">
+          <option value="virement">Virement bancaire</option>
+          <option value="cheque">Ch&#232;que</option>
+          <option value="especes">Esp&#232;ces</option>
+          <option value="carte">Carte bancaire</option>
+        </select>
+      </div>
+    </div>
+    <!-- TVA -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">&#129534; TVA</div>
+      <div style="padding:14px 16px">
+        <label class="f-lbl">Taux par d&#233;faut</label>
+        <select id="param-tva-defaut" class="f-inp">
+          <option value="0">0%</option>
+          <option value="7">7%</option>
+          <option value="10">10%</option>
+          <option value="14">14%</option>
+          <option value="20" selected>20%</option>
+        </select>
+        <label class="f-lbl" style="margin-top:10px">Assujetti &#224; la TVA</label>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="radio" id="param-tva-oui" name="param-tva-assujetti" value="oui" checked> Oui
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="radio" id="param-tva-non" name="param-tva-assujetti" value="non"> Non
+          </label>
+        </div>
+      </div>
+    </div>
+    <!-- Stock -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">📦 Valorisation du stock</div>
+      <div style="padding:14px 16px">
+        <label class="f-lbl">Méthode de calcul</label>
+        <select id="param-methode-stock" class="f-inp">
+          <option value="CMUP">CMUP — Coût moyen unitaire pondéré</option>
+          <option value="FIFO">FIFO — Premier entré, premier sorti</option>
+          <option value="LIFO">LIFO — Dernier entré, premier sorti</option>
+        </select>
+        <div style="font-size:11px;color:#9C9186;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
+      </div>
+    </div>
+    <!-- Préparation DGI -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">🧬 Facturation électronique (DGI 2027)</div>
+      <div style="padding:14px 16px">
+        <div id="dgi-readiness-status" style="font-size:12px;color:#6B5F54;margin-bottom:10px">Vérification...</div>
+        <div style="font-size:11px;color:#9C9186;margin-bottom:10px">Obligatoire pour les PME/TPE à partir de janvier 2027. Export de préparation disponible dès maintenant (format UBL 2.1) — les spécifications officielles marocaines n'étant pas encore publiées, ce n'est pas encore une conformité garantie.</div>
+        <button onclick="goScreen('profil-edit',null)" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
+      </div>
+    </div>
+    <!-- Documents BC/BL -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">📄 Bons de commande / livraison</div>
+      <div style="padding:14px 16px;display:flex;gap:8px">
+        <button onclick="goScreen('bons-commande-list',null)" style="flex:1;padding:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Bons de commande</button>
+        <button onclick="goScreen('bons-livraison-list',null)" style="flex:1;padding:10px;background:#EEF3E4;color:#55702E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📦 Bons de livraison</button>
+      </div>
+    </div>
+    <!-- Affichage -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">🎨 Affichage</div>
+      <div style="padding:14px 16px">
+        <button class="p-btn" onclick="toggleDarkMode()">🌙 Basculer mode sombre / clair</button>
+      </div>
+    </div>
+    <!-- Securite -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">&#128274; S&#233;curit&#233;</div>
+      <div style="padding:14px 16px">
+        <button class="p-btn blue" onclick="ouvrirModifMotDePasse()">&#128273; Changer le mot de passe</button>
+        <button class="p-btn" onclick="exporterToutesMesDonnees()">&#128190; Exporter toutes mes données</button>
+        <button class="p-btn danger" onclick="confirmerSuppressionCompte()">&#128465;&#65039; Supprimer mon compte</button>
+      </div>
+    </div>
+    <button class="s-btn blue full" onclick="sauvegarderParametres()" style="margin-bottom:20px">&#128190; Sauvegarder les param&#232;tres</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== ACOMPTES ===== -->
+<div class="screen" id="screen-acomptes">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('detail')">&#8592;</button>
+    <div class="form-title">Acomptes</div>
+  </div>
+  <div style="padding:16px 20px;background:#E9F4F3;border-bottom:1px solid #CFE3E2">
+    <div style="font-size:13px;color:#A67A16;font-weight:600" id="ac-facture-ref">Facture</div>
+    <div style="font-size:12px;color:#6B5F54;margin-top:2px">Total : <strong id="ac-total">0 MAD</strong> | Payé : <strong id="ac-paye" style="color:#6E8F4E">0 MAD</strong> | Restant : <strong id="ac-restant" style="color:#B23A2E">0 MAD</strong></div>
+  </div>
+  <div class="sec-label">Historique des versements</div>
+  <div class="card-list" id="ac-liste"></div>
+  <div style="padding:16px 20px">
+    <button class="s-btn blue full" onclick="ouvrirNouvelAcompte()">&#10133; Nouveau versement</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== RELANCES ===== -->
+<div class="screen" id="screen-relances">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button>
+    </div>
+  </div>
+  <div class="hero" style="padding-bottom:16px">
+    <div class="hero-lbl">Factures impay&#233;es</div>
+    <div class="hero-amount" id="relances-total">0 MAD</div>
+    <div class="hero-sub-txt" id="relances-count">0 facture(s) en retard</div>
+  </div>
+  <div class="filter-tabs" style="padding-top:12px">
+    <button class="ftab active" onclick="filterRelances('toutes',this)">Toutes</button>
+    <button class="ftab" onclick="filterRelances('retard',this)">En retard</button>
+    <button class="ftab" onclick="filterRelances('attente',this)">En attente</button>
+  </div>
+  <div class="card-list" id="relances-list"></div>
+  <div style="padding:16px 20px">
+    <button class="s-btn blue full" onclick="relancerTousWhatsApp()">&#128241; Relancer tous par WhatsApp</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- MODAL ACOMPTE -->
+<div class="modal-overlay" id="modal-acompte">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">&#128176; Nouveau versement</div>
+    <label class="a-lbl">Montant (MAD)</label>
+    <input class="m-inp" id="ac-montant" type="number" placeholder="Ex: 5000.00" step="0.01">
+    <label class="a-lbl">Date</label>
+    <input class="m-inp" id="ac-date" type="date">
+    <label class="a-lbl">Type</label>
+    <select class="m-inp" id="ac-type">
+      <option value="acompte">Acompte</option>
+      <option value="paiement">Paiement partiel</option>
+      <option value="solde">Solde final</option>
+    </select>
+    <label class="a-lbl">Mode</label>
+    <select class="m-inp" id="ac-mode">
+      <option value="virement">Virement</option>
+      <option value="cheque">Ch&#232;que</option>
+      <option value="especes">Esp&#232;ces</option>
+      <option value="carte">Carte</option>
+    </select>
+    <label class="a-lbl">R&#233;f&#233;rence (optionnel)</label>
+    <input class="m-inp" id="ac-ref" placeholder="N&#176; ch&#232;que, virement...">
+    <button class="m-btn green" onclick="confirmerAcompte()">&#10003; Enregistrer</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL MOT DE PASSE -->
+<div class="modal-overlay" id="modal-mdp">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">&#128273; Changer le mot de passe</div>
+    <label class="a-lbl">Nouveau mot de passe</label>
+    <input class="m-inp" id="mdp-new" type="password" placeholder="8 car, majuscule, chiffre">
+    <label class="a-lbl">Confirmer</label>
+    <input class="m-inp" id="mdp-confirm" type="password" placeholder="Retaper">
+    <div id="mdp-err" class="a-err"></div>
+    <button class="m-btn" onclick="doUpdatePassword()">Mettre &#224; jour</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<input type="hidden" id="search-produit-inp">
+<input type="hidden" id="filtre-categorie">
+<div class="toast" id="toast"></div>
+<!-- CLIENTS -->
+  <div class="screen" id="screen-clients">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right">
+      <button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff;margin-right:8px">←</button>
+      <button onclick="ouvrirScannerQR()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">+ Ajouter</button>
+    </div>
+  </div>
+    <div style="padding:0 20px 12px">
+      <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client..." oninput="renderClients()" style="margin-top:12px">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted)">Clients (<span id="clients-count">0</span>)</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span onclick="exporterClientsCSV()" style="font-size:11px;font-weight:500;color:#6B5F54;cursor:pointer">📥 Export CSV</span>
+        <div onclick="goScreen('nouveau-client',null)" style="font-size:12px;font-weight:500;color:var(--orange);cursor:pointer">+ Ajouter</div>
+      </div>
+    </div>
+    <div id="clients-list" style="padding:0 20px;display:flex;flex-direction:column;gap:8px"></div>
+    <div style="height:110px"></div>
+    
+  </div>
+
+  <!-- NOUVEAU CLIENT -->
+  <div class="screen" id="screen-nouveau-client">
+    <div class="form-header">
+      <div class="back-btn" onclick="goScreen('clients',null)">←</div>
+      <div class="form-title">Nouveau client</div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="form-section"><div class="form-label">Nom / Raison sociale *</div><input class="form-input" id="cl-nom" placeholder="Ex: SARL BTP Maroc"></div>
+    <div class="form-section"><div class="form-label">Téléphone</div><input class="form-input" id="cl-tel" type="tel" placeholder="+212 6XX XX XX XX"></div>
+    <div class="form-section"><div class="form-label">Email</div><input class="form-input" id="cl-email" type="email" placeholder="contact@client.ma"></div>
+    <div class="form-section"><div class="form-label">Adresse</div><input class="form-input" id="cl-adresse" placeholder="Ex: 12 Rue Hassan II, Casablanca"></div>
+    <div class="form-section"><div class="form-label">ICE</div><input class="form-input" id="cl-ice" placeholder="Ex: 001234567000012"></div>
+    <div class="form-section"><div class="form-label">Notes</div><input class="form-input" id="cl-notes" placeholder="Informations complémentaires..."></div>
+      <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">IF</label><input id="cl-if" class="f-inp"></div>
+      <div><label class="f-lbl">Limite cr&#233;dit</label><input id="cl-limite" class="f-inp" type="number"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Conditions paiement</label><input id="cl-conditions" class="f-inp" placeholder="Ex: 30 jours"></div>
+<div class="send-options">
+      <button class="send-btn primary" onclick="sauvegarderClient()"><div class="send-icon">💾</div>Sauvegarder</button>
+      <button class="send-btn secondary" onclick="goScreen('clients',null)"><div class="send-icon">✕</div>Annuler</button>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- DETAIL CLIENT -->
+  <div class="screen" id="screen-detail-client">
+    <div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px" onclick="goScreen('clients',null)">← Retour</div>
+      <div style="font-size:22px;font-weight:700;color:#fff" id="dc-nom"></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px" id="dc-meta"></div>
+    </div>
+    <div style="padding:16px">
+      <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1px solid #EAE4DA" id="dc-infos"></div>
+      <!-- Lien Zelto du client -->
+      <div id="dc-lien-section" style="display:none;background:#FBF0DA;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #E8D9AE">
+        <div style="font-size:11px;font-weight:700;color:#C9971F;margin-bottom:6px">🔗 Profil Zelto</div>
+        <div id="dc-lien-banipay" style="font-size:11px;color:#C9971F;word-break:break-all;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <button id="dc-btn-copier-lien" style="flex:1;padding:7px;background:#fff;color:#C9971F;border:1px solid #E8D9AE;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+          <button id="dc-btn-partager-lien" style="flex:1;padding:7px;background:#C9971F;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin-bottom:10px">Factures</div>
+      <div id="dc-factures"></div>
+      <button onclick="ouvrirMsgClient()" style="display:flex;align-items:center;gap:12px;background:#FBF0DA;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #E8D9AE;font-size:14px;font-weight:600;color:#C9971F;font-family:inherit;width:100%;margin-bottom:8px">💬 Envoyer un message</button>
+    <button onclick="goScreen('nouvelle',null);setTimeout(()=>{const el=document.getElementById('f-client');if(el)el.value=window._clientNom||'';},100)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#C9971F;font-family:inherit;width:100%;text-align:left;margin-top:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center">➕</div>Nouvelle facture pour ce client
+      </button>
+      <button onclick="supprimerClient(window._currentClientId)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#B23A2E;font-family:inherit;width:100%;text-align:left;margin-top:8px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#F5E4E1;display:flex;align-items:center;justify-content:center">🗑️</div>Supprimer le client
+      </button>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- STATS AVANCEES -->
+  <div class="screen" id="screen-tva">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:0 20px">
+      <div style="font-size:13px;color:var(--ink-muted);padding:12px 0 16px">Récapitulatif mensuel pour votre déclaration TVA</div>
+      <div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #EAE4DA">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#2A2420"><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th><th style="padding:10px 12px;font-size:11px;color:#9CBB7A;text-align:right">TVA 20%</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th></tr></thead>
+          <tbody id="tva-body"></tbody>
+        </table>
+      </div>
+      <button onclick="goScreen('position-financiere',null)" style="width:100%;margin-top:14px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💼 Voir ma position financière</button>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- POSITION FINANCIÈRE -->
+  <div class="screen" id="screen-position-financiere">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">💼 Position financière</div>
+      <div id="position-financiere-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- RAPPORT DE STOCK -->
+  <div class="screen" id="screen-rapport-stock">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('produits',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">📦 Valorisation du stock</div>
+      <div id="rapport-stock-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- RAPPROCHEMENT PAIEMENTS -->
+  <div class="screen" id="screen-rapprochement">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('position-financiere',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">🔗 Rapprochement paiements</div>
+      <div style="font-size:12px;color:#6B5F54;padding-bottom:12px">Cochez les factures que vous avez vérifiées sur votre relevé bancaire.</div>
+      <div id="rapprochement-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- RECHERCHE -->
+  <div class="screen" id="screen-recherche">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:0 20px 12px">
+      <input class="form-input" id="search-global" placeholder="🔍 Rechercher factures, clients, devis..." oninput="rechercheGlobale()" style="margin-top:12px">
+    </div>
+    <div id="search-results" style="padding:0 20px"></div>
+    <div style="height:30px"></div>
+  </div>
+
+  
+
+<!-- ===== BON DE COMMANDE ===== -->
+<div class="screen" id="screen-bon-commande">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('dashboard')">&#8592;</button>
+    <div class="form-title">Bon de commande</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section">
+    <label class="f-lbl">Fournisseur *</label>
+    <div style="display:flex;gap:8px">
+      <input id="bc-fournisseur" class="f-inp" placeholder="Nom du fournisseur" list="bc-fournisseurs-datalist" style="flex:1">
+      <button type="button" onclick="ouvrirPickerFournisseurBC()" style="flex-shrink:0;padding:0 14px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+    <datalist id="bc-fournisseurs-datalist"></datalist>
+    <input type="hidden" id="bc-fournisseur-id" value="">
+    <div style="margin-top:8px;background:#F5E4E1;border-radius:12px;padding:12px">
+      <div style="font-size:11px;font-weight:700;color:#8E2E24;margin-bottom:6px">📲 Fournisseur sur Zelto ?</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="bc-fournisseur-lien" style="flex:1;padding:9px;border:1.5px solid #E0B6AC;border-radius:8px;font-size:12px;font-family:inherit;outline:none;background:#fff" placeholder="Lien du profil...">
+        <button onclick="importerFournisseurBCDepuisLien()" style="padding:9px 12px;background:#B23A2E;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
+      </div>
+      <button onclick="rechercherFournisseurBCAnnuaire()" style="width:100%;padding:9px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔍 Chercher dans l'annuaire Zelto</button>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">N&#176; BC</label><input id="bc-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
+      <div><label class="f-lbl">Date BC</label><input id="bc-date" class="f-inp" type="date"></div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">Livraison pr&#233;vue</label><input id="bc-livraison" class="f-inp" type="date"></div>
+    </div>
+  </div>
+  <div class="form-section">
+    <label class="f-lbl">Articles command&#233;s</label>
+    <div id="bc-lignes"></div>
+    <button class="add-ligne" onclick="openAddLigneBC()">&#65291; Ajouter un article</button>
+  </div>
+  <div class="total-recap">
+    <div class="tr-row"><span class="tr-lbl">Total HT</span><span class="tr-val" id="bc-ht">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="bc-tva">0 MAD</span></div>
+    <div class="tr-sep"></div>
+    <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="bc-ttc">0 MAD</span></div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Description de la demande (optionnel)</label><textarea id="bc-note" class="f-inp" rows="3" placeholder="Décrivez ce que vous voulez commander, des instructions de livraison, ou toute précision utile pour le fournisseur..."></textarea></div>
+  <div style="padding:0 20px 8px"><button onclick="goScreen('bons-commande-list',null)" style="width:100%;padding:8px;background:none;color:#7C5CA6;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📋 Voir mes bons de commande</button></div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderBonCommande()">&#128190; Enregistrer + PDF</button>
+    <button class="s-btn gray" onclick="goScreen('dashboard')">&#10005; Annuler</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== LISTE BONS DE COMMANDE ===== -->
+<div class="screen" id="screen-bons-commande-list">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
+  </div>
+  <div class="sec-label">📋 Bons de commande</div>
+  <div class="card-list" id="bons-commande-liste"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== BON DE LIVRAISON ===== -->
+<div class="screen" id="screen-bon-livraison">
+  <div class="form-header">
+    <button class="back-btn" onclick="goScreen('dashboard')">&#8592;</button>
+    <div class="form-title">Bon de livraison</div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="form-section"><label class="f-lbl">Client *</label><input id="bl-client" class="f-inp" placeholder="Nom du client" list="client-datalist"></div>
+  <div class="form-section">
+    <div class="f-row">
+      <div><label class="f-lbl">N&#176; BL</label><input id="bl-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
+      <div><label class="f-lbl">Date</label><input id="bl-date" class="f-inp" type="date"></div>
+    </div>
+  </div>
+  <div class="form-section"><label class="f-lbl">Facture liée (optionnel)</label><select id="bl-facture-liee" class="f-inp" onchange="surChangementFactureBL()"></select></div>
+  <div class="form-section">
+    <label class="f-lbl">Articles livrés</label>
+    <div id="bl-lignes"></div>
+    <button class="add-ligne" onclick="openAddLigneBL()">&#65291; Ajouter un article</button>
+  </div>
+  <div style="padding:0 20px 8px"><button onclick="goScreen('bons-livraison-list',null)" style="width:100%;padding:8px;background:none;color:#55702E;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📦 Voir mes bons de livraison</button></div>
+  <div class="send-row">
+    <button class="s-btn blue" onclick="sauvegarderBonLivraison()">&#128190; Enregistrer + PDF</button>
+    <button class="s-btn gray" onclick="goScreen('dashboard')">&#10005; Annuler</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== LISTE BONS DE LIVRAISON ===== -->
+<div class="screen" id="screen-bons-livraison-list">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
+  </div>
+  <div class="sec-label">📦 Bons de livraison</div>
+  <div class="card-list" id="bons-livraison-liste"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== NOTIFICATIONS ===== -->
+<div class="screen" id="screen-notifications">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button></div>
+  </div>
+  <div class="sec-label">Alertes</div>
+  <div style="padding:0 20px" id="notif-list"></div>
+  <div style="padding:12px 20px">
+    <button onclick="typeof genNotifications==='function' && genNotifications().then(function(){afficherDiagnostic('Diagnostic notifications', window._dernierDiagNotifications || ['Aucune donnée — clique une première fois puis reclique.']);})" style="width:100%;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Diagnostic de chargement</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== JOURNAL D'AUDIT ===== -->
+<div class="screen" id="screen-audit">
+  <div class="topbar">
+    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-right"><button class="back-btn" onclick="goScreen('profil')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button></div>
+  </div>
+  <div class="hero" style="padding-bottom:16px">
+    <div class="hero-lbl">Journal d'activité</div>
+    <div class="hero-sub-txt">Historique des 100 dernières actions</div>
+  </div>
+  <div style="padding:0 20px" id="audit-list"></div>
+  <div class="pb"></div>
+</div>
+
+<!-- ===== DASHBOARD COMPTABLE FULL ===== -->
+<div class="screen" id="screen-comptable" style="background:#F1EEE8;flex-direction:column">
+  <!-- Header violet -->
+  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:16px 20px 12px;flex-shrink:0">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <!-- Logo -->
+      <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Bani<span style="color:#E0AE5C">Pay</span></div>
+      <!-- Droite: actions -->
+      <div style="display:flex;align-items:center;gap:6px">
+        <!-- Messages -->
+        <div onclick="ouvrirMessagerie()" style="position:relative;cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px">
+          💬
+          <span id="cpt-msg-badge" style="position:absolute;top:-2px;right:-2px;background:#B23A2E;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center">!</span>
+        </div>
+        <!-- Notifications -->
+        <div onclick="switchCptNav('notifs')" style="position:relative;cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px">
+          🔔
+          <span id="cpt-notif-badge" style="position:absolute;top:-2px;right:-2px;background:#B23A2E;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center"></span>
+        </div>
+        <!-- Mon espace -->
+        <div onclick="basculerModeEntreprise()" style="cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:16px" title="Mes factures & devis">
+          🧾
+        </div>
+        <!-- Avatar → profil -->
+        <div id="comptable-avatar" onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;cursor:pointer">C</div>
+      </div>
+    </div>
+    <!-- Nom et email -->
+    <div style="margin-bottom:2px">
+      <div style="font-size:13px;font-weight:700;color:#fff" id="cpt-nom-display">Comptable</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4)" id="cpt-email-display"></div>
+    </div>
+    <!-- Navigation onglets -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
+      <button id="cpt-nav-dashboard" onclick="switchCptNav('dashboard')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.9);color:#1F6F72">📊 Vue globale</button>
+      <button id="cpt-nav-entreprises" onclick="switchCptNav('entreprises')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🏢 Entreprises</button>
+      <button id="cpt-nav-traiter" onclick="switchCptNav('traiter')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📥 À traiter</button>
+      <button id="cpt-nav-historique" onclick="switchCptNav('historique')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📋 Historique</button>
+      <button id="cpt-nav-activite" onclick="switchCptNav('activite')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📡 Activité</button>
+      <button id="cpt-nav-notifs" onclick="switchCptNav('notifs')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🔔 Notifs</button>
+    </div>
+  </div>
+  <!-- Contenu dynamique -->
+  <div id="cpt-main-content" style="flex:1;overflow-y:auto"></div>
+  <div class="pb"></div>
+</div>
+
+<div class="screen" id="screen-cpt-entreprise" style="background:#F1EEE8">
+  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+    <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
+    <img id="cpt-ent-logo" style="display:none;width:32px;height:32px;border-radius:8px;object-fit:cover;background:#fff;flex-shrink:0">
+    <div style="flex:1;cursor:pointer" onclick="toggleEntrepriseDropdownCpt(event)">
+      <div style="font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:4px" id="cpt-ent-nom">Entreprise <span style="font-size:10px;opacity:0.6">▾</span></div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5)" id="cpt-ent-sub"></div>
+    </div>
+    <button onclick="basculerModeEntreprise()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏢 Mode</button>
+  </div>
+  <div id="cpt-ent-kpis"></div>
+  <!-- Onglets -->
+  <div style="display:flex;gap:6px;padding:10px 16px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto;position:sticky;top:52px;z-index:9">
+    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#1F6F72;color:#fff">🧾 Factures</button>
+    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📝 Devis</button>
+    <button id="cpt-tab-achats" onclick="cptEntTab('achats')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🛒 Achats</button>
+    <button id="cpt-tab-documents" onclick="cptEntTab('documents')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📄 Docs</button>
+    <button id="cpt-tab-extraction" onclick="cptEntTab('extraction')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📤 Extraction</button>
+    <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 TVA</button>
+    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">ℹ️ Infos</button>
+    <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🏦 Relevés</button>
+  </div>
+  <div id="cpt-ent-content"></div>
+  <div class="pb"></div>
+</div>
+
+<div class="screen" id="screen-comptable-profil" style="background:#F1EEE8">
+  <!-- Header -->
+  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:0 0 30px">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px">
+      <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
+      <div style="font-size:14px;font-weight:700;color:#fff">Mon profil</div>
+      <button onclick="partagerProfilComptable()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+    </div>
+    <!-- Avatar -->
+    <div style="text-align:center;padding:10px 0">
+      <div id="cpt-profil-av" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 12px">C</div>
+      <div id="cpt-profil-nom" style="font-size:20px;font-weight:700;color:#fff">Mon compte</div>
+      <div id="cpt-profil-cabinet" style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:4px"></div>
+      <div id="cpt-profil-email" style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px"></div>
+    </div>
+  </div>
+
+  <!-- QR Code + Lien -->
+  <div style="margin:-20px 20px 16px;background:#fff;border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+    <div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Mon lien profil</div>
+    <div id="cpt-qr-container" style="display:flex;justify-content:center;margin-bottom:14px"></div>
+    <div id="cpt-lien-display" style="font-size:11px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px;word-break:break-all;margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="copierLienComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfilComptable()" style="flex:1;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+    </div>
+  </div>
+
+  <!-- Inviter une entreprise -->
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
+    <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:12px">📧 Inviter une entreprise</div>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Saisissez l'email de l'entreprise — elle recevra un lien pour accepter l'accès</div>
+    <input id="cpt-invite-email" class="f-inp" type="email" placeholder="email@entreprise.ma" style="margin-bottom:10px">
+    <button onclick="envoyerInvitationDepuisProfil()" style="width:100%;padding:11px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Envoyer l'invitation</button>
+  </div>
+
+  <!-- Mes infos -->
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
+    <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:12px">⚙️ Mes informations</div>
+    <div id="cpt-profil-infos"></div>
+    <button onclick="ouvrirEditionComptable()" style="width:100%;margin-top:12px;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">✏️ Modifier</button>
+  </div>
+
+  <!-- Actions -->
+  <div style="margin:0 20px 20px;display:flex;flex-direction:column;gap:8px">
+    <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
+  </div>
+  <div class="pb"></div>
+</div>
+
+</body>
+</html>
