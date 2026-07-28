@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="BaniPay — Gestion de factures et devis pour PME marocaines">
 <title>BaniPay — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785227276">
+<link rel="stylesheet" href="css/style.css?v=1785232460">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -124,25 +124,26 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785227276"></script>
-  <script src="js/utils.js?v=1785227276"></script>
-  <script src="js/auth.js?v=1785227276"></script>
-  <script src="js/nav.js?v=1785227276"></script>
-  <script src="js/factures.js?v=1785227276"></script>
-  <script src="js/devis.js?v=1785227276"></script>
-  <script src="js/clients.js?v=1785227276"></script>
-  <script src="js/produits.js?v=1785227276"></script>
-  <script src="js/pdf.js?v=1785227276"></script>
-  <script src="js/stats.js?v=1785227276"></script>
-  <script src="js/profil.js?v=1785227276"></script>
-  <script src="js/comptable.js?v=1785227276"></script>
-  <script src="js/messages.js?v=1785227276"></script>
-<script src="js/achats.js?v=1785227276"></script>
-<script src="js/stock.js?v=1785227276"></script>
-<script src="js/finance.js?v=1785227276"></script>
-<script src="js/abonnements.js?v=1785227276"></script>
-<script src="js/signature.js?v=1785227276"></script>
-<script src="js/app.js?v=1785227276"></script>
+<script src="js/config.js?v=1785232460"></script>
+  <script src="js/utils.js?v=1785232460"></script>
+  <script src="js/auth.js?v=1785232460"></script>
+  <script src="js/nav.js?v=1785232460"></script>
+  <script src="js/factures.js?v=1785232460"></script>
+  <script src="js/devis.js?v=1785232460"></script>
+  <script src="js/clients.js?v=1785232460"></script>
+  <script src="js/produits.js?v=1785232460"></script>
+  <script src="js/pdf.js?v=1785232460"></script>
+  <script src="js/stats.js?v=1785232460"></script>
+  <script src="js/profil.js?v=1785232460"></script>
+  <script src="js/comptable.js?v=1785232460"></script>
+  <script src="js/messages.js?v=1785232460"></script>
+<script src="js/achats.js?v=1785232460"></script>
+<script src="js/stock.js?v=1785232460"></script>
+<script src="js/finance.js?v=1785232460"></script>
+<script src="js/ubl.js?v=1785232460"></script>
+<script src="js/abonnements.js?v=1785232460"></script>
+<script src="js/signature.js?v=1785232460"></script>
+<script src="js/app.js?v=1785232460"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -1303,6 +1304,15 @@
           <option value="LIFO">LIFO — Dernier entré, premier sorti</option>
         </select>
         <div style="font-size:11px;color:#9C9186;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
+      </div>
+    </div>
+    <!-- Préparation DGI -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">🧬 Facturation électronique (DGI 2027)</div>
+      <div style="padding:14px 16px">
+        <div id="dgi-readiness-status" style="font-size:12px;color:#6B5F54;margin-bottom:10px">Vérification...</div>
+        <div style="font-size:11px;color:#9C9186;margin-bottom:10px">Obligatoire pour les PME/TPE à partir de janvier 2027. Export de préparation disponible dès maintenant (format UBL 2.1) — les spécifications officielles marocaines n'étant pas encore publiées, ce n'est pas encore une conformité garantie.</div>
+        <button onclick="goScreen('profil-edit',null)" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
       </div>
     </div>
     <!-- Documents BC/BL -->
