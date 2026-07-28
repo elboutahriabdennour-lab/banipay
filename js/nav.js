@@ -582,7 +582,7 @@ function goScreen(name) {
     'cpt-entreprise': function() {},
     'brouillons': renderBrouillons,
     'relances': renderRelances,
-    'parametres': renderParametres,
+    'parametres': function() { renderParametres(); if (typeof afficherStatutDGI === 'function') afficherStatutDGI(); },
     'historique-paiements': function() {},
     'acomptes': function() {},
   };
