@@ -322,132 +322,13 @@ async function sauvegarderModifClient() {
 
 function modifierClient(id) { ouvrirModifClient(id); }
 
-async function importerDepuisLienForm() {
-  const lien = (el('import-client-lien')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
-
-  let profilId = null;
-  try {
-    const url = new URL(lien);
-    profilId = url.searchParams.get('profil') || url.searchParams.get('portail') || url.searchParams.get('doc');
-    if (!profilId) {
-      profilId = lien.split('profil=')[1]?.split('&')[0] || lien.split('portail=')[1]?.split('&')[0];
-    }
-  } catch(e) {
-    profilId = lien.includes('=') ? lien.split('=').pop() : lien;
-  }
-
-  if (!profilId) { showToast('Lien invalide — copie le lien complet', 'error'); return; }
-
-  showToast('⏳ Chargement du profil...');
-
-  try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + encodeURIComponent(profilId) + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const data = await r.json();
-    let p = data && data[0];
-
-    if (!p) {
-      const r2 = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + profilId + '&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data2 = await r2.json();
-      p = data2 && data2[0];
-    }
-
-    if (!p) { showToast('Profil introuvable', 'error'); return; }
-
-    remplirFormulaireClient(p);
-    showToast('✅ Profil importé : ' + (p.raison || ''), 'success');
-
-    if (el('import-client-lien')) el('import-client-lien').value = '';
-
-  } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
-  }
-}
-
-function remplirFormulaireClient(p) {
-  const fields = {
-    'cl-nom': p.raison || '',
-    'cl-tel': p.tel || '',
-    'cl-email': p.email || '',
-    'cl-adresse': (p.adresse || '') + (p.ville ? ', ' + p.ville : ''),
-    'cl-ice': p.ice || '',
-    'cl-rc': p.rc || '',
-    'cl-if': p.identifiant_fiscal || '',
-    'cl-notes': p.secteur ? 'Secteur: ' + p.secteur : '',
-  };
-
-  Object.keys(fields).forEach(function(id) {
-    const inp = el(id);
-    if (inp && fields[id]) {
-      inp.value = fields[id];
-      inp.style.background = '#EEF3E4';
-      inp.style.borderColor = '#6E8F4E';
-      setTimeout(function() {
-        inp.style.background = '';
-        inp.style.borderColor = '';
-      }, 2000);
-    }
-  });
-
-  const firstField = el('cl-nom');
-  if (firstField) firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-function importerDepuisQRCodeForm(event) {
-  showToast('Prenez la photo, puis copiez le lien manuellement si besoin', 'success');
-  event.target.value = '';
-}
-
-
-async function importerClientVieLien() {
-  const lien = (document.getElementById('cl-lien-import')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
-
-  showToast('⏳ Chargement...', 'success');
-
-  try {
-    let profilId = null;
-    try {
-      const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
-      profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
-    } catch(e2) {
-      profilId = lien.split('profil=')[1]?.split('&')[0];
-    }
-    if (!profilId) { showToast('Lien invalide', 'error'); return; }
-
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
-    });
-    const data = await r.json();
-    const p = data && data[0];
-    if (!p) { showToast('Profil introuvable', 'error'); return; }
-
-    const set = function(id, val) { const el2 = document.getElementById(id); if (el2 && val) el2.value = val; };
-    set('cl-nom', p.raison || p.nom);
-    set('cl-tel', p.tel);
-    set('cl-email', p.email);
-    set('cl-adresse', (p.adresse || '') + (p.ville ? ', ' + p.ville : ''));
-    set('cl-ice', p.ice);
-    set('cl-identif', p.identifiant_fiscal);
-    set('cl-note', 'Client Zelto · ' + (p.secteur || ''));
-
-    window._clientLienZelto = lien.startsWith('http') ? lien : window.location.origin + window.location.pathname + '?profil=' + profilId;
-    window._clientRefId = p.id;
-
-    if (document.getElementById('cl-lien-import')) {
-      document.getElementById('cl-lien-import').value = '';
-      document.getElementById('cl-lien-import').style.background = '#EEF3E4';
-    }
-    showToast('✅ Profil importé : ' + (p.raison || p.nom), 'success');
-
-  } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
-  }
-}
+// NOTE: importerDepuisLienForm(), remplirFormulaireClient(),
+// importerDepuisQRCodeForm() et importerClientVieLien() ont été retirées —
+// trois fonctions différentes qui refaisaient (mal) la même chose que
+// importerClientDepuisLien(), jamais appelées par aucun bouton, et
+// référençant des champs HTML (import-client-lien, cl-lien-import) qui
+// n'ont jamais existé. La seule fonction réellement branchée à l'interface
+// est importerClientDepuisLien(), plus haut dans ce fichier.
 
 function ouvrirMsgClient() {
   const c = STATE.currentClient;
