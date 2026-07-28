@@ -1,4 +1,4 @@
-// BANIPAY — devis.js
+// ZELTO — devis.js
 
 function renderDevisList() {
   const list = el('devis-list');
@@ -194,7 +194,7 @@ function renderDetailDevis() {
     </div>`);
   }
 
-  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
+  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte Zelto) — en premier
   actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
 
   // Actions selon statut
@@ -208,7 +208,7 @@ function renderDetailDevis() {
 
   // Partage
   // FIX: boutons "Partager WhatsApp" / "Partager / Copier lien" retirés —
-  // redondants avec le bouton "Envoyer" unifié (WhatsApp/Email/Lien/BaniPay)
+  // redondants avec le bouton "Envoyer" unifié (WhatsApp/Email/Lien/Zelto)
   // déjà en premier dans cette liste d'actions.
   actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#F7EFDC">📄</div>Voir PDF</button>`);
   actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
@@ -324,7 +324,7 @@ async function sauvegarderAvoir() {
 
 // ============================================================
 // SÉLECTION FOURNISSEUR POUR LE BON DE COMMANDE
-// (existant dans l'historique / lien BaniPay / recherche annuaire)
+// (existant dans l'historique / lien Zelto / recherche annuaire)
 // ============================================================
 
 function ouvrirPickerFournisseurBC() {
@@ -351,7 +351,7 @@ function rechercherFournisseurBC() {
   afficherFournisseursHistoriqueBC(q);
   clearTimeout(_timeoutRechercheFournisseurBC);
   if (q.length < 2) return;
-  // Recherche dans l'annuaire BaniPay (profils_entreprise) après une courte
+  // Recherche dans l'annuaire Zelto (profils_entreprise) après une courte
   // pause, pour ne pas spammer une requête à chaque frappe.
   _timeoutRechercheFournisseurBC = setTimeout(async function() {
     try {
@@ -362,7 +362,7 @@ function rechercherFournisseurBC() {
       const list = el('fournisseur-bc-picker-list');
       if (!list) return;
       if (resultats.length) {
-        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur BaniPay</div>' +
+        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
           resultats.map(function(p) {
             return '<div class="card" onclick="choisirFournisseurBC(' + "'" + (p.raison||'').replace(/'/g,"\\'") + "'" + ',\'' + p.id + '\')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div></div></div>';
           }).join('');
@@ -379,7 +379,7 @@ function choisirFournisseurBC(nom, id) {
 
 async function importerFournisseurBCDepuisLien() {
   const lien = (el('bc-fournisseur-lien')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
   try {
     const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
     const profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
@@ -984,7 +984,7 @@ async function traiterActionDocument(docId, type, action, signatureData) {
             <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
           </div>
           <p style="color:#6B5F54;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
-          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
+          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
         </div>
       `;
       return;
@@ -1037,7 +1037,7 @@ async function traiterActionDocument(docId, type, action, signatureData) {
           <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
         </div>
         <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>
-        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">BaniPay</strong></div>
+        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
         <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect">4</span>s...</div>
       </div>
     `;
