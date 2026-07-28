@@ -220,6 +220,25 @@ async function dupliquerFacture(id) {
 // DETAIL FACTURE
 // ============================================================
 
+// NOUVEAU: l'entreprise peut résoudre elle-même la réponse client d'une
+// facture (acceptée/refusée), sans dépendre du lien public (réponse reçue
+// par un autre canal, par exemple).
+async function resoudreManuellementFacture(id, nouvelleReponse) {
+  const f = STATE.factures.find(function(x) { return x.id === id; });
+  if (!f) return;
+  const libelle = nouvelleReponse === 'acceptee' ? 'acceptée' : 'refusée';
+  if (!confirm('Marquer cette facture comme ' + libelle + ' ?')) return;
+  try {
+    await sb.patch('factures', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { reponse_client: nouvelleReponse });
+    f.reponse_client = nouvelleReponse;
+    showToast('✅ Facture marquée ' + libelle, 'success');
+    if (typeof logAudit === 'function') logAudit('facture', id, nouvelleReponse === 'acceptee' ? 'acceptation' : 'refus', (f.ref||'') + ' (manuel)');
+    openDetail(id);
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 function openDetail(id) {
   STATE.currentFacture = STATE.factures.find(f => f.id === id);
   if (!STATE.currentFacture) return;
@@ -291,6 +310,23 @@ function renderDetail() {
   const actEl = el('detail-actions');
   if (!actEl) return;
   const actions = [];
+
+  // NOUVEAU: affichage de la réponse du client (accepté/refusé/en attente)
+  // — jusqu'ici totalement invisible dans le propre écran de l'entreprise.
+  const reponseLabels = { acceptee: '✅ Client : Accepté', refusee: '❌ Client : Refusé', en_attente: '⏳ Client : En attente' };
+  const reponseColors = { acceptee: '#6E8F4E', refusee: '#8E2E24', en_attente: '#B8860B' };
+  if (f.reponse_client && reponseLabels[f.reponse_client]) {
+    actions.push(`<div style="background:${reponseColors[f.reponse_client]}20;border-left:3px solid ${reponseColors[f.reponse_client]};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${reponseColors[f.reponse_client]};margin-bottom:4px">${reponseLabels[f.reponse_client]}</div>`);
+  }
+  // NOUVEAU: résolution manuelle si le client n'a pas encore répondu ou a
+  // mis en attente — utile si la réponse arrive par un autre canal (téléphone).
+  if (!f.reponse_client || f.reponse_client === 'en_attente') {
+    actions.push(`<div style="display:flex;gap:8px;margin-bottom:4px">
+      <button class="action-item success" style="flex:1;margin-bottom:0" onclick="resoudreManuellementFacture(${f.id},'acceptee')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer acceptée</button>
+      <button class="action-item danger" style="flex:1;margin-bottom:0" onclick="resoudreManuellementFacture(${f.id},'refusee')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusée</button>
+    </div>`);
+  }
+
   // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte BaniPay) — en premier
   actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
   if (f.statut !== 'payee') {
@@ -301,6 +337,7 @@ function renderDetail() {
   }
   // PDF actions
   actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#E9F4F3">👁️</div>Aperçu PDF</button>`);
+  actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="typeof telechargerXMLUBLFacture==='function' && telechargerXMLUBLFacture(${f.id})"><div class="action-ico" style="background:#F7EFDC">🧬</div>Export XML UBL (préparation DGI)</button>`);
   actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#E9F4F3">💾</div>Enregistrer PDF</button>`);
   // FIX: bouton "Partager la facture" retiré — redondant avec "Envoyer"
   // (déjà en premier dans cette liste), qui couvre WhatsApp/Email/Lien/BaniPay.
