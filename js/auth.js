@@ -1,4 +1,4 @@
-// BANIPAY — auth.js
+// ZELTO — auth.js
 
 function switchTab(tab) {
   ['aw-normal','aw-signup','aw-comptable','aw-confirm'].forEach(id => {
@@ -208,7 +208,7 @@ async function doLogin() {
       if (typeof loadAbonnements === 'function') await loadAbonnements();
       if (typeof verifierAbonnements === 'function') await verifierAbonnements();
       // Crée un profil entreprise minimal si absent, pour apparaître
-      // immédiatement dans l'annuaire BaniPay sans avoir à remplir le profil
+      // immédiatement dans l'annuaire Zelto sans avoir à remplir le profil
       await assurerProfilEntrepriseMinimal();
 
       // Traiter invitation en attente
@@ -263,7 +263,7 @@ async function synchroniserProfilComptable() {
 }
 
 // S'assure qu'une entreprise a au moins un profil minimal (raison sociale)
-// dès la première connexion, pour apparaître dans l'annuaire BaniPay sans
+// dès la première connexion, pour apparaître dans l'annuaire Zelto sans
 // attendre que l'utilisateur remplisse son profil manuellement.
 async function assurerProfilEntrepriseMinimal() {
   if (STATE.profil && STATE.profil.raison) return; // déjà rempli
