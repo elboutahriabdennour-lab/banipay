@@ -28,7 +28,14 @@ function exportPDF(id) {
   genDocPDF({
     type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#C9971F',
     emetteur: profil,
-    destinataire:{nom:f.client,chantier:f.chantier,ice:f.client_ice,tel:f.client_tel,adresse:f.client_adresse},
+    destinataire:(function() {
+      // FIX: f.client_ice/client_tel/client_adresse n'étaient jamais
+      // renseignés nulle part — la fiche client, elle, contient bien ces
+      // infos. On les retrouve par correspondance de nom (les factures ne
+      // stockent qu'un nom de client, pas un identifiant).
+      const clientTrouve = (STATE.clients || []).find(function(c) { return c.nom === f.client; });
+      return { nom: f.client, chantier: f.chantier, ice: clientTrouve?.ice || f.client_ice || '', tel: clientTrouve?.tel || f.client_tel || '', adresse: clientTrouve?.adresse || f.client_adresse || '' };
+    })(),
     date:f.date_emission, echeance:f.echeance,
     paiement:f.paiement, statut:f.statut,
     lignes: lignes, note:f.note,
