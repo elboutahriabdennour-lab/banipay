@@ -1,4 +1,4 @@
-// BANIPAY — stock.js — Gestion de stock avancée + valorisation CMUP/FIFO/LIFO
+// ZELTO — stock.js — Gestion de stock avancée + valorisation CMUP/FIFO/LIFO
 
 // ============================================================
 // ENTRÉE DE STOCK (achats, réapprovisionnement)
