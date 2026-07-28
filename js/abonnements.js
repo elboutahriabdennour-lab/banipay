@@ -1,4 +1,4 @@
-// BANIPAY — abonnements.js — Facturation récurrente
+// ZELTO — abonnements.js — Facturation récurrente
 
 STATE.abonnements = STATE.abonnements || [];
 STATE.lignesAB = STATE.lignesAB || [];
