@@ -1,4 +1,4 @@
-// BANIPAY — clients.js
+// ZELTO — clients.js
 
 function ouvrirScannerQR() {
   const overlay = document.createElement('div');
@@ -10,11 +10,11 @@ function ouvrirScannerQR() {
   box.innerHTML = `
     <div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 20px"></div>
     <div style="font-size:16px;font-weight:700;color:#2A2420;margin-bottom:6px">➕ Ajouter un client</div>
-    <div style="font-size:12px;color:#6B5F54;margin-bottom:20px">Importez un client via son lien BaniPay, un QR code ou manuellement</div>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:20px">Importez un client via son lien Zelto, un QR code ou manuellement</div>
 
     <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">🔗 Via lien BaniPay</div>
-      <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #E3DCCF;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil BaniPay...">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">🔗 Via lien Zelto</div>
+      <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #E3DCCF;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil Zelto...">
       <button onclick="importerClientDepuisLien()" style="width:100%;margin-top:10px;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Importer</button>
     </div>
 
@@ -24,7 +24,7 @@ function ouvrirScannerQR() {
         📷 Ouvrir la caméra
         <input type="file" accept="image/*" capture="environment" style="display:none" onchange="importerClientDepuisQRImage(event)">
       </label>
-      <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:6px">Prend une photo du QR code profil BaniPay</div>
+      <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:6px">Prend une photo du QR code profil Zelto</div>
     </div>
 
     <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:12px">
@@ -52,7 +52,7 @@ function ouvrirScannerQR() {
 async function importerClientDepuisLien() {
   const input = el('qr-link-input');
   const lien = input?.value.trim();
-  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
 
   let profilId = null;
   try {
@@ -87,7 +87,7 @@ async function importerClientDepuisLien() {
       email: p.email || '',
       adresse: p.adresse ? (p.adresse + (p.ville ? ', ' + p.ville : '')) : '',
       ice: p.ice || '',
-      notes: 'Importé via profil BaniPay',
+      notes: 'Importé via profil Zelto',
       reference_id: p.id || null,
       created_at: new Date().toISOString(),
     };
@@ -98,7 +98,7 @@ async function importerClientDepuisLien() {
       renderClients();
       document.getElementById('scanner-overlay')?.remove();
       showToast('✅ Client ' + p.raison + ' ajouté !', 'success');
-      logAudit('client', (result[0] || newClient).id, 'creation', p.raison + ' (import lien BaniPay)');
+      logAudit('client', (result[0] || newClient).id, 'creation', p.raison + ' (import lien Zelto)');
     }
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
@@ -324,7 +324,7 @@ function modifierClient(id) { ouvrirModifClient(id); }
 
 async function importerDepuisLienForm() {
   const lien = (el('import-client-lien')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
 
   let profilId = null;
   try {
@@ -405,7 +405,7 @@ function importerDepuisQRCodeForm(event) {
 
 async function importerClientVieLien() {
   const lien = (document.getElementById('cl-lien-import')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien BaniPay', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
 
   showToast('⏳ Chargement...', 'success');
 
@@ -433,9 +433,9 @@ async function importerClientVieLien() {
     set('cl-adresse', (p.adresse || '') + (p.ville ? ', ' + p.ville : ''));
     set('cl-ice', p.ice);
     set('cl-identif', p.identifiant_fiscal);
-    set('cl-note', 'Client BaniPay · ' + (p.secteur || ''));
+    set('cl-note', 'Client Zelto · ' + (p.secteur || ''));
 
-    window._clientLienBaniPay = lien.startsWith('http') ? lien : window.location.origin + window.location.pathname + '?profil=' + profilId;
+    window._clientLienZelto = lien.startsWith('http') ? lien : window.location.origin + window.location.pathname + '?profil=' + profilId;
     window._clientRefId = p.id;
 
     if (document.getElementById('cl-lien-import')) {
@@ -455,7 +455,7 @@ function ouvrirMsgClient() {
   if (c.reference_id) {
     demarrerConversation(c.reference_id, c.email, sb.user?.email);
   } else {
-    showToast('Ce client n a pas de compte BaniPay', 'error');
+    showToast('Ce client n a pas de compte Zelto', 'error');
   }
 }
 
