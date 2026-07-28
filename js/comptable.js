@@ -2056,6 +2056,56 @@ async function toggleTVA(factureId) {
 // PROFIL COMPTABLE — QR + PARTAGE + INVITATION
 // ============================================================
 
+// FIX: le bouton "Modifier" du profil comptable n'appelait tout simplement
+// aucune fonction existante — rien ne permettait de changer son nom, son
+// cabinet, son téléphone ou sa spécialité après l'inscription initiale.
+async function ouvrirEditionComptable() {
+  const email = sb.user?.email;
+  let p = {};
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?email=eq.' + encodeURIComponent(email) + '&limit=1', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    const data = await r.json();
+    p = (data && data[0]) || {};
+  } catch(e) {}
+
+  el('ec-nom') && (el('ec-nom').value = p.nom || sb.user?.user_metadata?.nom || '');
+  el('ec-cabinet') && (el('ec-cabinet').value = p.cabinet || '');
+  el('ec-tel') && (el('ec-tel').value = p.tel || '');
+  el('ec-specialite') && (el('ec-specialite').value = p.specialite || '');
+  el('modal-edition-comptable')?.classList.add('active');
+}
+
+async function sauvegarderEditionComptable() {
+  const nom = el('ec-nom')?.value.trim();
+  if (!nom) { showToast('Le nom est obligatoire', 'error'); return; }
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/profils_comptable', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + sb.token,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({
+        id: sb.user.id,
+        email: sb.user.email,
+        nom: nom,
+        cabinet: el('ec-cabinet')?.value.trim() || '',
+        tel: el('ec-tel')?.value.trim() || '',
+        specialite: el('ec-specialite')?.value.trim() || '',
+      })
+    });
+    closeAllModals();
+    showToast('✅ Profil mis à jour', 'success');
+    renderComptableProfil();
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 function renderComptableProfil() {
   const user = sb.user;
   if (!user) return;
