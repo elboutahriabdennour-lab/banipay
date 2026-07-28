@@ -194,23 +194,11 @@ async function importerAchatDepuisFactureId(factureId) {
   }
 }
 
-// Import via collage direct d'un lien de facture (bouton dédié dans le
-// formulaire "Nouvelle achat", distinct du champ "lien fournisseur" existant)
-async function importerAchatDepuisLienFacture() {
-  const lien = (el('achat-lien-facture')?.value || '').trim();
-  if (!lien) { showToast('Collez le lien de la facture reçue', 'error'); return; }
-  let factureId = null;
-  try {
-    const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
-    factureId = url.searchParams.get('doc');
-  } catch(e) {
-    const m = lien.match(/doc=([^&]+)/);
-    factureId = m ? m[1] : null;
-  }
-  if (!factureId) { showToast('Lien invalide — copiez le lien complet de la facture', 'error'); return; }
-  el('achat-lien-facture') && (el('achat-lien-facture').value = '');
-  await importerAchatDepuisFactureId(factureId);
-}
+// NOTE: importerAchatDepuisLienFacture() a été retirée — elle référençait un
+// champ HTML qui n'a jamais existé et n'était appelée par aucun bouton. Sa
+// fonctionnalité est déjà couverte par importerFournisseurBaniPay() (le
+// champ "Fournisseur sur BaniPay ?" détecte déjà les liens ?doc=... via son
+// bouton "Import").
 
 // ============================================================
 // SCAN QR CODE RÉEL (jsQR, chargé à la demande depuis un CDN)
