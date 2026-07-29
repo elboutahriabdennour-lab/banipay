@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785270628">
+<link rel="stylesheet" href="css/style.css?v=1785312515">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -46,6 +46,7 @@
       <div id="objectif-bar" style="height:100%;background:#9CBB7A;border-radius:3px;width:0%;transition:width 0.8s"></div>
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,0.5)" id="objectif-txt">Non d&#233;fini</div>
+    <div onclick="goScreen('dashboard-avance',null)" style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.7);cursor:pointer;text-decoration:underline">📊 Voir les statistiques avancées</div>
   </div>
   <div id="alerte-bar" class="alerte-bar hidden" onclick="setFilter('retard',null)">
     <span>⚠️</span><div class="alerte-text" id="alerte-text">Factures en retard</div><div class="alerte-action">Voir →</div>
@@ -129,26 +130,31 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785270628"></script>
-  <script src="js/utils.js?v=1785270628"></script>
-  <script src="js/auth.js?v=1785270628"></script>
-  <script src="js/nav.js?v=1785270628"></script>
-  <script src="js/factures.js?v=1785270628"></script>
-  <script src="js/devis.js?v=1785270628"></script>
-  <script src="js/clients.js?v=1785270628"></script>
-  <script src="js/produits.js?v=1785270628"></script>
-  <script src="js/pdf.js?v=1785270628"></script>
-  <script src="js/stats.js?v=1785270628"></script>
-  <script src="js/profil.js?v=1785270628"></script>
-  <script src="js/comptable.js?v=1785270628"></script>
-  <script src="js/messages.js?v=1785270628"></script>
-<script src="js/achats.js?v=1785270628"></script>
-<script src="js/stock.js?v=1785270628"></script>
-<script src="js/finance.js?v=1785270628"></script>
-<script src="js/ubl.js?v=1785270628"></script>
-<script src="js/abonnements.js?v=1785270628"></script>
-<script src="js/signature.js?v=1785270628"></script>
-<script src="js/app.js?v=1785270628"></script>
+<script src="js/config.js?v=1785312515"></script>
+  <script src="js/utils.js?v=1785312515"></script>
+  <script src="js/auth.js?v=1785312515"></script>
+  <script src="js/nav.js?v=1785312515"></script>
+  <script src="js/factures.js?v=1785312515"></script>
+  <script src="js/devis.js?v=1785312515"></script>
+  <script src="js/clients.js?v=1785312515"></script>
+  <script src="js/produits.js?v=1785312515"></script>
+  <script src="js/pdf.js?v=1785312515"></script>
+  <script src="js/stats.js?v=1785312515"></script>
+  <script src="js/profil.js?v=1785312515"></script>
+  <script src="js/comptable.js?v=1785312515"></script>
+  <script src="js/messages.js?v=1785312515"></script>
+<script src="js/achats.js?v=1785312515"></script>
+<script src="js/stock.js?v=1785312515"></script>
+<script src="js/finance.js?v=1785312515"></script>
+<script src="js/ubl.js?v=1785312515"></script>
+<script src="js/relances.js?v=1785312515"></script>
+<script src="js/dashboard-avance.js?v=1785312515"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="js/ocr-achats.js?v=1785312515"></script>
+<script src="js/equipe.js?v=1785312515"></script>
+<script src="js/abonnements.js?v=1785312515"></script>
+<script src="js/signature.js?v=1785312515"></script>
+<script src="js/app.js?v=1785312515"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -1369,6 +1375,43 @@
         <button onclick="goScreen('profil-edit',null)" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
       </div>
     </div>
+    <!-- Équipe (fondation multi-utilisateurs) -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">👥 Équipe</div>
+      <div style="padding:14px 16px">
+        <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des membres et leur attribuer un rôle, mais les écrans de l'app (factures, achats...) ne leur montrent pas encore vos données — cette partie arrive dans une prochaine mise à jour.</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input id="equipe-email" class="f-inp" placeholder="Email du membre" style="flex:1">
+          <select id="equipe-role" class="f-inp" style="width:110px">
+            <option value="lecture">Lecture</option>
+            <option value="edition">Édition</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <button onclick="inviterMembreEquipe()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter</button>
+        <div id="equipe-liste"></div>
+      </div>
+    </div>
+    <!-- Relances automatiques -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">⏰ Relances automatiques</div>
+      <div style="padding:14px 16px">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#6B5F54">
+          <input type="checkbox" id="param-relance-activee" style="width:16px;height:16px">
+          Activer les relances automatiques
+        </label>
+        <label class="f-lbl">Relancer combien de jours avant l'échéance ?</label>
+        <input id="param-relance-jours" class="f-inp" type="number" min="1" max="30" value="3" style="margin-bottom:10px">
+        <label class="f-lbl">Message — avant échéance</label>
+        <textarea id="param-relance-msg-avant" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
+        <label class="f-lbl">Message — jour de l'échéance</label>
+        <textarea id="param-relance-msg-jour" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
+        <label class="f-lbl">Message — après échéance (retard)</label>
+        <textarea id="param-relance-msg-retard" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
+        <div style="font-size:10px;color:#9C9186;margin-bottom:10px">Variables disponibles : {client}, {ref}, {montant}, {echeance}</div>
+        <button onclick="sauvegarderParametresRelance()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
+      </div>
+    </div>
     <!-- Documents BC/BL -->
     <div class="p-card" style="margin-bottom:14px">
       <div class="p-card-title">📄 Bons de commande / livraison</div>
@@ -1603,6 +1646,19 @@
   </div>
 
   <!-- RAPPORT DE STOCK -->
+  <!-- TABLEAU DE BORD AVANCÉ -->
+  <div class="screen" id="screen-dashboard-avance">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">📊 Statistiques avancées</div>
+      <div id="dashboard-avance-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
   <div class="screen" id="screen-rapport-stock">
     <div class="app-header" style="padding-top:16px">
       <div class="brand">Zel<span>to</span></div>
