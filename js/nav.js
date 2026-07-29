@@ -83,7 +83,7 @@ async function genNotifications() {
         console.warn('get_mes_notifications a échoué', resp.status, errText);
         window._dernierDiagNotifications = ['Email : ' + email, 'HTTP ' + resp.status, errText || '(pas de détail)'];
       } else {
-        window._dernierDiagNotifications = ['Email : ' + email, '✅ ' + notifs.length + ' notification(s) non lue(s) trouvée(s)'];
+        window._dernierDiagNotifications = ['Email : ' + email, '✅ ' + notifs.length + ' notification(s) trouvée(s) (non lues + historique)'];
       }
       notifs.forEach(function(n) {
         STATE.notifications.push({ type: 'info', icon: n.type === 'invitation_comptable' ? '🤝' : '🔔', title: n.titre || '', body: n.corps || '', id: n.id, raw: n });
@@ -99,7 +99,13 @@ async function genNotifications() {
 function mettreAJourBadgeNotif() {
   const badge = document.getElementById('notif-badge');
   if (badge) {
-    const count = (STATE.notifications || []).length;
+    // FIX: depuis que get_mes_notifications() renvoie aussi l'historique
+    // des notifications déjà lues (voir migration_phase27), le badge ne
+    // doit compter que celles qui restent à traiter — sinon il afficherait
+    // un chiffre qui ne baisse jamais vraiment.
+    const count = (STATE.notifications || []).filter(function(n) {
+      return n.raw ? !n.raw.lue : true; // notifications locales (relances, etc.) toujours comptées
+    }).length;
     badge.textContent = count > 99 ? '99+' : count;
     badge.style.display = count > 0 ? 'flex' : 'none';
   }
@@ -164,7 +170,17 @@ function htmlInvitationsCpt(invitationsCpt) {
 function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
   const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋' };
+  // NOUVEAU: séparateur visuel avant la première notification déjà lue —
+  // rend l'historique explicite plutôt que de mélanger silencieusement
+  // non-lues et déjà traitées dans la même liste.
+  let separateurAjoute = false;
   return allNotifs.map(function(n) {
+    const estLue = n.raw ? !!n.raw.lue : false;
+    let separateur = '';
+    if (estLue && !separateurAjoute) {
+      separateurAjoute = true;
+      separateur = '<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase">Historique</div>';
+    }
     // FIX: même bug que plus haut — n.type est toujours 'info' pour les
     // notifications de la base, le vrai type est dans n.raw.type. Cette
     // vérification étant toujours fausse, AUCUNE notification n'a jamais
@@ -173,7 +189,7 @@ function htmlListeNotifications(allNotifs) {
     const isDoc = n.raw && (n.raw.type === 'facture_recue' || n.raw.type === 'devis_recu');
     let meta = {};
     try { meta = JSON.parse((n.raw && n.raw.meta) || '{}'); } catch(e3) {}
-    return '<div class="notif-item' + (n.lue ? '' : ' notif-unread') + (isDoc ? ' notif-doc-view' : '') + '" ' + (isDoc ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="cursor:pointer"' : '') + '>' +
+    return separateur + '<div class="notif-item' + (estLue ? '' : ' notif-unread') + (isDoc ? ' notif-doc-view' : '') + '" ' + (isDoc ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="cursor:pointer"' : '') + '>' +
       '<div class="notif-ico">' + (typeIco[n.raw && n.raw.type] || n.icon || '🔔') + '</div>' +
       '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
       '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
