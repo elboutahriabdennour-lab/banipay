@@ -302,6 +302,12 @@ async function gererClicNotification(e) {
       if (btnDA && t === 'facture' && typeof enregistrerAchatDepuisFactureAcceptee === 'function') {
         await enregistrerAchatDepuisFactureAcceptee(docId);
       }
+      // NOUVEAU: quand un DEVIS reçu via compte Zelto est accepté, un bon
+      // de commande se génère automatiquement chez le client, adressé à
+      // l'entreprise émettrice — formalise la commande sans ressaisie.
+      if (btnDA && t === 'devis' && typeof enregistrerBCDepuisDevisAccepte === 'function') {
+        await enregistrerBCDepuisDevisAccepte(docId);
+      }
       showToast(btnDA ? '✅ Accepté' : btnDAtt ? '⏳ Mis en attente' : '❌ Refusé', 'success');
       await genNotifications();
       renderNotifScreen();
