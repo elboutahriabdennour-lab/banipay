@@ -455,6 +455,13 @@ function previewAchatPJ(event) {
       : '<div style="background:#F1EEE8;border-radius:10px;padding:10px;font-size:12px;color:#6B5F54;border:1px solid #E3DCCF">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>';
     STATE._achatPJData = e.target.result;
     STATE._achatPJNom = file.name;
+
+    // NOUVEAU: lecture automatique basique (OCR) — extrait le texte de la
+    // photo et propose fournisseur/date/montant en pré-remplissage. À
+    // calibrer : c'est de la reconnaissance de texte + heuristiques
+    // simples, pas une IA qui "comprend" la facture — à vérifier/corriger
+    // systématiquement avant d'enregistrer.
+    if (isImage && typeof lireFactureParOCR === 'function') lireFactureParOCR(e.target.result);
   };
   reader.readAsDataURL(file);
 }
