@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785359561">
+<link rel="stylesheet" href="css/style.css?v=1785360595">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -56,7 +56,7 @@
     <div class="qa-item" onclick="goScreen('nouvelle',null)"><div class="qa-ico" style="background:#E9F4F3">➕</div><div class="qa-lbl">Facture</div></div>
     <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#F7EFDC">📝</div><div class="qa-lbl">Devis</div></div>
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
-    <div class="qa-item" onclick="loadAchats();goScreen('achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
+    <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
     <div class="qa-item" onclick="exporterTout()"><div class="qa-ico" style="background:#EAE4DA">📤</div><div class="qa-lbl">Export</div></div>
   </div>
   <div style="height:8px"></div>
@@ -130,32 +130,33 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785359561"></script>
-  <script src="js/utils.js?v=1785359561"></script>
-  <script src="js/auth.js?v=1785359561"></script>
-  <script src="js/nav.js?v=1785359561"></script>
-  <script src="js/factures.js?v=1785359561"></script>
-  <script src="js/devis.js?v=1785359561"></script>
-  <script src="js/clients.js?v=1785359561"></script>
-  <script src="js/produits.js?v=1785359561"></script>
-  <script src="js/pdf.js?v=1785359561"></script>
-  <script src="js/stats.js?v=1785359561"></script>
-  <script src="js/profil.js?v=1785359561"></script>
-  <script src="js/comptable.js?v=1785359561"></script>
-  <script src="js/messages.js?v=1785359561"></script>
-<script src="js/achats.js?v=1785359561"></script>
-<script src="js/stock.js?v=1785359561"></script>
-<script src="js/finance.js?v=1785359561"></script>
-<script src="js/ubl.js?v=1785359561"></script>
-<script src="js/relances.js?v=1785359561"></script>
-<script src="js/dashboard-avance.js?v=1785359561"></script>
-<script src="js/ocr-achats.js?v=1785359561"></script>
-<script src="js/equipe.js?v=1785359561"></script>
-<script src="js/equipe-cabinet.js?v=1785359561"></script>
-<script src="js/rh.js?v=1785359561"></script>
-<script src="js/abonnements.js?v=1785359561"></script>
-<script src="js/signature.js?v=1785359561"></script>
-<script src="js/app.js?v=1785359561"></script>
+<script src="js/config.js?v=1785360595"></script>
+  <script src="js/utils.js?v=1785360595"></script>
+  <script src="js/auth.js?v=1785360595"></script>
+  <script src="js/nav.js?v=1785360595"></script>
+  <script src="js/factures.js?v=1785360595"></script>
+  <script src="js/devis.js?v=1785360595"></script>
+  <script src="js/clients.js?v=1785360595"></script>
+  <script src="js/produits.js?v=1785360595"></script>
+  <script src="js/pdf.js?v=1785360595"></script>
+  <script src="js/stats.js?v=1785360595"></script>
+  <script src="js/profil.js?v=1785360595"></script>
+  <script src="js/comptable.js?v=1785360595"></script>
+  <script src="js/messages.js?v=1785360595"></script>
+<script src="js/achats.js?v=1785360595"></script>
+<script src="js/stock.js?v=1785360595"></script>
+<script src="js/finance.js?v=1785360595"></script>
+<script src="js/ubl.js?v=1785360595"></script>
+<script src="js/relances.js?v=1785360595"></script>
+<script src="js/dashboard-avance.js?v=1785360595"></script>
+<script src="js/ocr-achats.js?v=1785360595"></script>
+<script src="js/equipe.js?v=1785360595"></script>
+<script src="js/equipe-cabinet.js?v=1785360595"></script>
+<script src="js/rh.js?v=1785360595"></script>
+<script src="js/hubs.js?v=1785360595"></script>
+<script src="js/abonnements.js?v=1785360595"></script>
+<script src="js/signature.js?v=1785360595"></script>
+<script src="js/app.js?v=1785360595"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -283,6 +284,32 @@
 </div>
 
 <!-- ACHATS -->
+  <!-- RUBRIQUE ACHATS (hub) -->
+  <div class="screen" id="screen-hub-achats">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">🛒 Achats</div>
+      <div id="hub-achats-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- RUBRIQUE VENTES (hub) -->
+  <div class="screen" id="screen-hub-ventes">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">💰 Ventes</div>
+      <div id="hub-ventes-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
 <div class="screen" id="screen-achats">
   <div class="topbar"><div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span><button class="back-btn" onclick="goScreen('dashboard',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
@@ -433,6 +460,7 @@
     </div>
     <div class="d-card" id="detail-totals"></div>
     <div id="detail-note" style="display:none;margin-bottom:8px"></div>
+    <div id="detail-docs-lies" style="margin:0 20px 14px"></div>
     <div id="detail-actions"></div>
   </div>
   <div class="pb"></div>
@@ -682,6 +710,7 @@
     <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
     <button class="p-btn" onclick="loadEmployes();goScreen('employes',null)" style="color:#1F6F72">👥 Registre du personnel</button>
     <button class="p-btn" onclick="loadBCRecus();goScreen('bc-recus',null)" style="color:#7C5CA6">📋 Bons de commande reçus</button>
+    <button class="p-btn" onclick="renderHubVentes();goScreen('hub-ventes',null)" style="color:#55702E">💰 Rubrique Ventes</button>
     <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
     <!-- Section Mon Comptable -->
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
