@@ -273,11 +273,14 @@ window._envoiCourant = null;
 function ouvrirModalEnvoi(type, id) {
   const doc = type === 'facture'
     ? STATE.factures.find(x => x.id === id)
+    : type === 'bon-commande'
+    ? (STATE.bonsCommande || []).find(x => x.id === id)
     : STATE.devis.find(x => x.id === id);
   if (!doc) return;
 
   window._envoiCourant = { type, id, doc };
-  setEl('me-titre', 'Envoyer ' + (type === 'facture' ? 'la facture' : 'le devis') + ' ' + doc.ref);
+  const libelleType = type === 'facture' ? 'la facture' : type === 'bon-commande' ? 'le bon de commande' : 'le devis';
+  setEl('me-titre', 'Envoyer ' + libelleType + ' ' + doc.ref);
   const picker = el('me-banipay-picker');
   if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
   el('modal-envoyer')?.classList.add('active');
@@ -288,38 +291,76 @@ function envoyerVia(canal) {
   if (!ctx) return;
   const { type, id, doc } = ctx;
   const p = STATE.profil || {};
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + (type === 'devis' ? '&type=devis' : '');
+  const isBC = type === 'bon-commande';
+  const docUrl = window.location.origin + window.location.pathname + (isBC ? '?bc=' + id : '?doc=' + id + (type === 'devis' ? '&type=devis' : ''));
+  const libelleDest = isBC ? (doc.fournisseur || '') : (doc.client || '');
+  const libelleDoc = type === 'facture' ? 'facture' : isBC ? 'bon de commande' : 'devis';
 
   if (canal === 'whatsapp') {
     const msg = encodeURIComponent(
-      'Bonjour ' + (doc.client||'') + ',\n\n' +
-      'Veuillez trouver ' + (type === 'facture' ? 'notre facture' : 'notre devis') + ' *' + doc.ref + '*.\n\n' +
-      '• Montant TTC : *' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + '*\n\n' +
+      'Bonjour ' + libelleDest + ',\n\n' +
+      'Veuillez trouver notre ' + libelleDoc + ' *' + doc.ref + '*.\n\n' +
+      (isBC ? '' : '• Montant TTC : *' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + '*\n\n') +
       '📎 Consulter et répondre :\n' + docUrl + '\n\n' +
       'Cordialement,\n' + (p.raison||'') + (p.tel ? '\n📞 ' + p.tel : '')
     );
     window.open('https://wa.me/?text=' + msg, '_blank');
+    if (isBC && typeof envoyerBonCommande === 'function') _marquerBCEnvoye(id);
     closeAllModals();
 
   } else if (canal === 'email') {
-    const sujet = encodeURIComponent((type === 'facture' ? 'Facture ' : 'Devis ') + doc.ref);
+    const sujet = encodeURIComponent((type === 'facture' ? 'Facture ' : isBC ? 'Bon de commande ' : 'Devis ') + doc.ref);
     const corps = encodeURIComponent(
-      'Bonjour ' + (doc.client||'') + ',\n\n' +
-      'Veuillez trouver ci-joint ' + (type === 'facture' ? 'notre facture' : 'notre devis') + ' ' + doc.ref + '.\n' +
-      'Montant TTC : ' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + '\n\n' +
+      'Bonjour ' + libelleDest + ',\n\n' +
+      'Veuillez trouver ci-joint notre ' + libelleDoc + ' ' + doc.ref + '.\n' +
+      (isBC ? '' : 'Montant TTC : ' + fmt(doc.ttc) + ' ' + (doc.devise||'MAD') + '\n\n') +
       'Consulter et répondre : ' + docUrl + '\n\n' +
       'Cordialement,\n' + (p.raison||'')
     );
     window.location.href = 'mailto:' + (doc.client_email || '') + '?subject=' + sujet + '&body=' + corps;
+    if (isBC) _marquerBCEnvoye(id);
     closeAllModals();
 
   } else if (canal === 'lien') {
     navigator.clipboard?.writeText(docUrl).then(() => showToast('✅ Lien copié !', 'success'));
+    if (isBC) _marquerBCEnvoye(id);
     closeAllModals();
 
   } else if (canal === 'banipay') {
-    afficherPickerClientsZelto();
+    if (isBC) {
+      // NOUVEAU: le BC connaît déjà son fournisseur_id s'il a été choisi via
+      // le sélecteur "Fournisseur sur Zelto" — pas besoin de repicker, on
+      // notifie directement.
+      if (doc.fournisseur_id) {
+        _marquerBCEnvoye(id, true);
+        closeAllModals();
+      } else {
+        showToast('Aucun compte Zelto lié à ce fournisseur — liez-le via "Fournisseur sur Zelto" en modifiant le bon de commande', 'error');
+      }
+    } else {
+      afficherPickerClientsZelto();
+    }
   }
+}
+
+// Marque le BC comme envoyé et notifie le fournisseur s'il a un compte Zelto
+async function _marquerBCEnvoye(id, notifierMaintenant) {
+  if (typeof envoyerBonCommande !== 'function') return;
+  // Réutilise la logique déjà écrite (statut + notification RPC) sans
+  // dupliquer le partage, puisqu'on vient de le faire nous-mêmes ci-dessus.
+  try {
+    await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: 'envoye' });
+    const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
+    if (bc) bc.statut = 'envoye';
+    if (bc && bc.fournisseur_id) {
+      await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_bc_recu', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_bc_id: id })
+      });
+      if (notifierMaintenant) showToast('✅ Notification envoyée au fournisseur', 'success');
+    }
+  } catch(e) {}
 }
 
 function afficherPickerClientsZelto() {
