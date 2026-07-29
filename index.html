@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785358730">
+<link rel="stylesheet" href="css/style.css?v=1785359561">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -130,32 +130,32 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785358730"></script>
-  <script src="js/utils.js?v=1785358730"></script>
-  <script src="js/auth.js?v=1785358730"></script>
-  <script src="js/nav.js?v=1785358730"></script>
-  <script src="js/factures.js?v=1785358730"></script>
-  <script src="js/devis.js?v=1785358730"></script>
-  <script src="js/clients.js?v=1785358730"></script>
-  <script src="js/produits.js?v=1785358730"></script>
-  <script src="js/pdf.js?v=1785358730"></script>
-  <script src="js/stats.js?v=1785358730"></script>
-  <script src="js/profil.js?v=1785358730"></script>
-  <script src="js/comptable.js?v=1785358730"></script>
-  <script src="js/messages.js?v=1785358730"></script>
-<script src="js/achats.js?v=1785358730"></script>
-<script src="js/stock.js?v=1785358730"></script>
-<script src="js/finance.js?v=1785358730"></script>
-<script src="js/ubl.js?v=1785358730"></script>
-<script src="js/relances.js?v=1785358730"></script>
-<script src="js/dashboard-avance.js?v=1785358730"></script>
-<script src="js/ocr-achats.js?v=1785358730"></script>
-<script src="js/equipe.js?v=1785358730"></script>
-<script src="js/equipe-cabinet.js?v=1785358730"></script>
-<script src="js/rh.js?v=1785358730"></script>
-<script src="js/abonnements.js?v=1785358730"></script>
-<script src="js/signature.js?v=1785358730"></script>
-<script src="js/app.js?v=1785358730"></script>
+<script src="js/config.js?v=1785359561"></script>
+  <script src="js/utils.js?v=1785359561"></script>
+  <script src="js/auth.js?v=1785359561"></script>
+  <script src="js/nav.js?v=1785359561"></script>
+  <script src="js/factures.js?v=1785359561"></script>
+  <script src="js/devis.js?v=1785359561"></script>
+  <script src="js/clients.js?v=1785359561"></script>
+  <script src="js/produits.js?v=1785359561"></script>
+  <script src="js/pdf.js?v=1785359561"></script>
+  <script src="js/stats.js?v=1785359561"></script>
+  <script src="js/profil.js?v=1785359561"></script>
+  <script src="js/comptable.js?v=1785359561"></script>
+  <script src="js/messages.js?v=1785359561"></script>
+<script src="js/achats.js?v=1785359561"></script>
+<script src="js/stock.js?v=1785359561"></script>
+<script src="js/finance.js?v=1785359561"></script>
+<script src="js/ubl.js?v=1785359561"></script>
+<script src="js/relances.js?v=1785359561"></script>
+<script src="js/dashboard-avance.js?v=1785359561"></script>
+<script src="js/ocr-achats.js?v=1785359561"></script>
+<script src="js/equipe.js?v=1785359561"></script>
+<script src="js/equipe-cabinet.js?v=1785359561"></script>
+<script src="js/rh.js?v=1785359561"></script>
+<script src="js/abonnements.js?v=1785359561"></script>
+<script src="js/signature.js?v=1785359561"></script>
+<script src="js/app.js?v=1785359561"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -681,6 +681,7 @@
     <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#C9971F">📁 Archive documents</button>
     <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
     <button class="p-btn" onclick="loadEmployes();goScreen('employes',null)" style="color:#1F6F72">👥 Registre du personnel</button>
+    <button class="p-btn" onclick="loadBCRecus();goScreen('bc-recus',null)" style="color:#7C5CA6">📋 Bons de commande reçus</button>
     <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
     <!-- Section Mon Comptable -->
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
@@ -1708,6 +1709,20 @@
     </div>
     <div style="padding:0 20px"><button onclick="supprimerEmploye()" style="width:100%;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit">🗑️ Retirer du registre</button></div>
     <div class="pb"></div>
+  </div>
+
+  <!-- BONS DE COMMANDE REÇUS (côté fournisseur) -->
+  <div class="screen" id="screen-bc-recus">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">📋 Bons de commande reçus</div>
+      <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Bons de commande envoyés par vos clients suite à l'acceptation d'un devis — convertissez-les en facture d'un clic.</div>
+      <div id="bc-recus-liste"></div>
+    </div>
+    <div style="height:30px"></div>
   </div>
 
   <div class="screen" id="screen-rapport-stock">
