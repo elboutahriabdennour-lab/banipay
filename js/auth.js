@@ -139,6 +139,17 @@ async function doSignup() {
 // LOGIN — REDIRECTION SELON ROLE
 // ============================================================
 
+// Exécute une étape du chargement post-connexion sans jamais bloquer la
+// suite si elle échoue (table pas encore migrée, réseau, etc.) — voir le
+// commentaire dans doLogin().
+async function _essai(fn, nom) {
+  try {
+    await fn();
+  } catch(e) {
+    console.warn('Étape post-connexion ignorée (' + nom + '):', e.message || e);
+  }
+}
+
 async function doLogin() {
   const email = el('login-email')?.value.trim();
   const pwd = el('login-password')?.value;
@@ -203,36 +214,44 @@ async function doLogin() {
     CPT.role = role;
 
     if (role === 'comptable') {
-      await loadComptableApp();
+      await _essai(loadComptableApp, 'loadComptableApp');
       // Synchronise l'identité publique du comptable (nom/cabinet) — sans
       // ça, aucun autre utilisateur ne peut jamais voir autre chose que son
       // email brut (ni dans l'annuaire, ni dans les conversations, etc.)
-      await synchroniserProfilComptable();
+      await _essai(synchroniserProfilComptable, 'synchroniserProfilComptable');
       // Le comptable doit apparaître comme son propre premier "client"
-      await assurerAutoClientComptable();
+      await _essai(assurerAutoClientComptable, 'assurerAutoClientComptable');
       // FIX: rafraîchissement périodique des notifications (invitations en
       // attente, etc.) — auparavant seulement chargées à l'ouverture du
       // tableau de bord ou de l'onglet notifications.
       setInterval(function() {
         if (sb.user?.id) chargerNotificationsComptable();
       }, 30000);
+      if (errEl) errEl.textContent = '';
       goScreen('comptable');
       showToast('✅ Bienvenue dans votre espace comptable !', 'success');
     } else {
       // Reset données avant chargement nouveau compte
       STATE.factures = []; STATE.devis = []; STATE.clients = [];
       STATE.produits = []; STATE.avoirs = []; STATE.achats = []; STATE.abonnements = [];
-      await loadAll();
-      await loadAchats();
-      if (typeof loadBonsCommande === 'function') await loadBonsCommande();
-      if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
-      if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
-      if (typeof loadEmployes === 'function') await loadEmployes();
-      if (typeof loadAbonnements === 'function') await loadAbonnements();
-      if (typeof verifierAbonnements === 'function') await verifierAbonnements();
+      // FIX MAJEUR: chacun de ces chargements passe maintenant par _essai()
+      // — avant, si UNE SEULE de ces étapes plantait (par exemple une table
+      // pas encore migrée), toute la suite s'arrêtait et l'écran restait
+      // bloqué sur la page de connexion, sans jamais atteindre
+      // goScreen('dashboard') à la fin. Maintenant, un échec isolé est
+      // simplement ignoré (avec un avertissement en console) et la
+      // connexion continue quand même.
+      await _essai(loadAll, 'loadAll');
+      await _essai(loadAchats, 'loadAchats');
+      if (typeof loadBonsCommande === 'function') await _essai(loadBonsCommande, 'loadBonsCommande');
+      if (typeof loadBonsLivraison === 'function') await _essai(loadBonsLivraison, 'loadBonsLivraison');
+      if (typeof loadRelancesEnvoyees === 'function') await _essai(loadRelancesEnvoyees, 'loadRelancesEnvoyees');
+      if (typeof loadEmployes === 'function') await _essai(loadEmployes, 'loadEmployes');
+      if (typeof loadAbonnements === 'function') await _essai(loadAbonnements, 'loadAbonnements');
+      if (typeof verifierAbonnements === 'function') await _essai(verifierAbonnements, 'verifierAbonnements');
       // Crée un profil entreprise minimal si absent, pour apparaître
       // immédiatement dans l'annuaire Zelto sans avoir à remplir le profil
-      await assurerProfilEntrepriseMinimal();
+      await _essai(assurerProfilEntrepriseMinimal, 'assurerProfilEntrepriseMinimal');
 
       // Traiter invitation en attente
       if (window._pendingInviteCpt) {
@@ -248,6 +267,7 @@ async function doLogin() {
         } catch(e2) {}
       }
 
+      if (errEl) errEl.textContent = '';
       goScreen('dashboard');
       showToast('✅ Bienvenue !', 'success');
     }
