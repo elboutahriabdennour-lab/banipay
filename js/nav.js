@@ -167,6 +167,25 @@ function htmlInvitationsCpt(invitationsCpt) {
     }).join('');
 }
 
+// NOUVEAU: horodatage relatif façon Facebook ("à l'instant", "il y a 5
+// min", "il y a 2h", "hier", "il y a 3 jours"...) — jusqu'ici aucune
+// notification n'affichait quand elle était arrivée.
+function tempsRelatif(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'à l\'instant';
+  if (diffMin < 60) return 'il y a ' + diffMin + ' min';
+  const diffH = Math.floor(diffMin / 60);
+  if (diffH < 24) return 'il y a ' + diffH + 'h';
+  const diffJ = Math.floor(diffH / 24);
+  if (diffJ === 1) return 'hier';
+  if (diffJ < 7) return 'il y a ' + diffJ + 'j';
+  return date.toLocaleDateString('fr-FR');
+}
+
 function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
   const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋' };
@@ -190,9 +209,11 @@ function htmlListeNotifications(allNotifs) {
     let meta = {};
     try { meta = JSON.parse((n.raw && n.raw.meta) || '{}'); } catch(e3) {}
     return separateur + '<div class="notif-item' + (estLue ? '' : ' notif-unread') + (isDoc ? ' notif-doc-view' : '') + '" ' + (isDoc ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="cursor:pointer"' : '') + '>' +
+      (!estLue ? '<div style="width:9px;height:9px;border-radius:50%;background:#1F6F72;flex-shrink:0;margin-top:6px"></div>' : '<div style="width:9px;flex-shrink:0"></div>') +
       '<div class="notif-ico">' + (typeIco[n.raw && n.raw.type] || n.icon || '🔔') + '</div>' +
       '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
       '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
+      (n.raw && n.raw.created_at ? '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + tempsRelatif(n.raw.created_at) + '</div>' : '') +
       (isDoc ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir le document</div><div style="display:flex;gap:6px;margin-top:8px">' +
         '<button class="btn-doc-accept" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#6E8F4E;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
         '<button class="btn-doc-attente" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F7EFDC;color:#B8860B;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">⏳ Attente</button>' +
@@ -387,6 +408,26 @@ async function renderNotifScreen() {
 // ne reste plus cumulatif indéfiniment (seules les factures/devis reçus non
 // encore traités continuent de compter, à juste titre).
 
+// NOUVEAU: "Tout marquer comme lu" en un clic, façon Facebook — jusqu'ici
+// il fallait traiter chaque notification une par une.
+async function marquerToutesNotificationsLues() {
+  const email = sb.user?.email;
+  if (!email) return;
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_toutes_notifications_lues', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: email })
+    });
+    showToast('✅ Tout marqué comme lu', 'success');
+    fermerNotifDropdown();
+    await genNotifications();
+    if (document.getElementById('notif-list')) renderNotifScreen();
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 function fermerNotifDropdown() {
   document.getElementById('notif-dropdown')?.remove();
   document.removeEventListener('click', _fermerNotifDropdownSiExterieur, true);
@@ -417,7 +458,10 @@ async function toggleNotifDropdown(event) {
   panel.innerHTML =
     '<div style="padding:14px 16px;border-bottom:1px solid #E3DCCF;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;border-radius:16px 16px 0 0">' +
       '<div style="font-family:\'Baloo 2\',sans-serif;font-size:15px;font-weight:700;color:#2A2420">🔔 Notifications</div>' +
-      '<button onclick="fermerNotifDropdown()" style="background:#EAE4DA;color:#6B5F54;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;font-family:inherit">✕</button>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button onclick="marquerToutesNotificationsLues()" style="background:none;color:#1F6F72;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Tout marquer comme lu</button>' +
+        '<button onclick="fermerNotifDropdown()" style="background:#EAE4DA;color:#6B5F54;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;font-family:inherit">✕</button>' +
+      '</div>' +
     '</div>' +
     (allNotifs.length || invitationsCpt.length ? contenu : '<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>') +
     '<div style="padding:10px 16px;border-top:1px solid #E3DCCF"><button onclick="fermerNotifDropdown();goScreen(\'notifications\',null)" style="width:100%;padding:8px;background:none;color:#9C9186;border:none;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">Voir tout / diagnostic</button></div>';
