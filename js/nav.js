@@ -592,7 +592,7 @@ function goScreen(name) {
     'audit': renderJournalAudit,
     'profil': function() { renderProfil(); setTimeout(renderMonComptable, 300); },
     'comptable': renderComptableDashboard,
-    'comptable-profil': renderComptableProfil,
+    'comptable-profil': function() { renderComptableProfil(); if (typeof chargerEquipeCabinet === 'function') chargerEquipeCabinet(); },
     'cpt-entreprise': function() {},
     'brouillons': renderBrouillons,
     'relances': renderRelances,
