@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785333140">
+<link rel="stylesheet" href="css/style.css?v=1785339240">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -130,32 +130,32 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785333140"></script>
-  <script src="js/utils.js?v=1785333140"></script>
-  <script src="js/auth.js?v=1785333140"></script>
-  <script src="js/nav.js?v=1785333140"></script>
-  <script src="js/factures.js?v=1785333140"></script>
-  <script src="js/devis.js?v=1785333140"></script>
-  <script src="js/clients.js?v=1785333140"></script>
-  <script src="js/produits.js?v=1785333140"></script>
-  <script src="js/pdf.js?v=1785333140"></script>
-  <script src="js/stats.js?v=1785333140"></script>
-  <script src="js/profil.js?v=1785333140"></script>
-  <script src="js/comptable.js?v=1785333140"></script>
-  <script src="js/messages.js?v=1785333140"></script>
-<script src="js/achats.js?v=1785333140"></script>
-<script src="js/stock.js?v=1785333140"></script>
-<script src="js/finance.js?v=1785333140"></script>
-<script src="js/ubl.js?v=1785333140"></script>
-<script src="js/relances.js?v=1785333140"></script>
-<script src="js/dashboard-avance.js?v=1785333140"></script>
-<script src="js/ocr-achats.js?v=1785333140"></script>
-<script src="js/equipe.js?v=1785333140"></script>
-<script src="js/equipe-cabinet.js?v=1785333140"></script>
-<script src="js/rh.js?v=1785333140"></script>
-<script src="js/abonnements.js?v=1785333140"></script>
-<script src="js/signature.js?v=1785333140"></script>
-<script src="js/app.js?v=1785333140"></script>
+<script src="js/config.js?v=1785339240"></script>
+  <script src="js/utils.js?v=1785339240"></script>
+  <script src="js/auth.js?v=1785339240"></script>
+  <script src="js/nav.js?v=1785339240"></script>
+  <script src="js/factures.js?v=1785339240"></script>
+  <script src="js/devis.js?v=1785339240"></script>
+  <script src="js/clients.js?v=1785339240"></script>
+  <script src="js/produits.js?v=1785339240"></script>
+  <script src="js/pdf.js?v=1785339240"></script>
+  <script src="js/stats.js?v=1785339240"></script>
+  <script src="js/profil.js?v=1785339240"></script>
+  <script src="js/comptable.js?v=1785339240"></script>
+  <script src="js/messages.js?v=1785339240"></script>
+<script src="js/achats.js?v=1785339240"></script>
+<script src="js/stock.js?v=1785339240"></script>
+<script src="js/finance.js?v=1785339240"></script>
+<script src="js/ubl.js?v=1785339240"></script>
+<script src="js/relances.js?v=1785339240"></script>
+<script src="js/dashboard-avance.js?v=1785339240"></script>
+<script src="js/ocr-achats.js?v=1785339240"></script>
+<script src="js/equipe.js?v=1785339240"></script>
+<script src="js/equipe-cabinet.js?v=1785339240"></script>
+<script src="js/rh.js?v=1785339240"></script>
+<script src="js/abonnements.js?v=1785339240"></script>
+<script src="js/signature.js?v=1785339240"></script>
+<script src="js/app.js?v=1785339240"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -787,8 +787,6 @@
         <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
       </svg>
       <h1 style="margin:2px 0">Zel<span>to</span></h1>
-      <div style="text-align:center;font-size:9px;color:#C4BCAE;margin-bottom:4px">build 2026-07-29-v3</div>
-      <div id="diag-auth-boot" style="margin:8px 16px;padding:10px 12px;background:#241F1B;color:#F7EFDC;border-radius:10px;font-size:11px;font-family:monospace;white-space:pre-wrap;text-align:left"></div>
       <svg width="145" height="17" viewBox="20 132 260 30">
         <defs>
           <linearGradient id="gradZelligeAuthBottom" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -2025,45 +2023,5 @@
   <div class="pb"></div>
 </div>
 
-<script>
-// DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème résolu. Vérifie
-// directement à l'écran (sans F12) si config.js s'est bien chargé et si
-// les fonctions essentielles existent.
-(function() {
-  function afficherDiag() {
-    const diag = document.getElementById('diag-auth-boot');
-    if (!diag) return;
-    const lignes = [];
-    lignes.push('SUPABASE_URL: ' + (typeof SUPABASE_URL !== 'undefined' ? (SUPABASE_URL ? 'défini' : 'VIDE') : 'MANQUANT'));
-    lignes.push('sb: ' + (typeof sb !== 'undefined' ? 'défini' : 'MANQUANT'));
-    lignes.push('sb.login: ' + (typeof sb !== 'undefined' && typeof sb.login === 'function' ? 'fonction OK' : 'MANQUANT/PAS UNE FONCTION'));
-    lignes.push('doLogin: ' + (typeof doLogin === 'function' ? 'fonction OK' : 'MANQUANT'));
-    lignes.push('STATE: ' + (typeof STATE !== 'undefined' ? 'défini' : 'MANQUANT'));
-    diag.textContent = lignes.join('\n');
-  }
-  // Attendre que tous les scripts soient chargés
-  if (document.readyState === 'complete') afficherDiag();
-  else window.addEventListener('load', afficherDiag);
-  setTimeout(afficherDiag, 500);
-
-  // Intercepte le clic sur "Se connecter" pour afficher chaque étape à
-  // l'écran, sans dépendre de la console.
-  document.addEventListener('click', function(e) {
-    const btn = e.target.closest('button');
-    if (btn && btn.textContent.trim() === 'Se connecter' && btn.getAttribute('onclick') === 'doLogin()') {
-      const diag = document.getElementById('diag-auth-boot');
-      if (diag) diag.textContent = '👆 Clic détecté sur "Se connecter"\nAppel de doLogin() en cours...';
-      setTimeout(function() {
-        try {
-          const errEl = document.getElementById('login-err');
-          if (diag) diag.textContent += '\nContenu de #login-err après 1s: "' + (errEl ? errEl.textContent : 'ÉLÉMENT INTROUVABLE') + '"';
-        } catch(ex) {
-          if (diag) diag.textContent += '\nERREUR pendant le diagnostic: ' + ex.message;
-        }
-      }, 1000);
-    }
-  }, true);
-})();
-</script>
 </body>
 </html>
