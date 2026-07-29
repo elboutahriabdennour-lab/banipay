@@ -21,6 +21,15 @@ function getRef(prefix, list) {
 }
 
 
+// FIX: _toastTimer était utilisé (clearTimeout/setTimeout) sans jamais
+// être déclaré — la toute première fois que showToast() était appelée,
+// clearTimeout(_toastTimer) plantait avec "ReferenceError: _toastTimer is
+// not defined", ce qui interrompait l'exécution de tout le code qui
+// suivait l'appel à showToast() dans la fonction appelante. Un bug de ce
+// type, sur une fonction utilisée des centaines de fois dans l'app, a pu
+// causer des échecs silencieux un peu partout.
+let _toastTimer = null;
+
 function showToast(msg, type) {
   if (!type) type = 'default';
   const t = document.getElementById('toast');
