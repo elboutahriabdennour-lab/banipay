@@ -44,6 +44,11 @@ async function genNotifications() {
     });
   }
 
+  // NOUVEAU: relances factures configurables (avant échéance / jour J /
+  // retard), avec message personnalisable — remplace/complète l'alerte
+  // générique "en retard" par une vraie proposition d'action.
+  if (typeof ajouterNotificationsRelances === 'function') ajouterNotificationsRelances();
+
   // NOUVEAU: relance devis envoyé depuis plus de 7 jours sans réponse — rien
   // ne signalait jusqu'ici qu'un devis dormait sans qu'on y pense.
   const ilYA7Jours = new Date();
@@ -177,6 +182,7 @@ function htmlListeNotifications(allNotifs) {
         '<button class="btn-doc-attente" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F7EFDC;color:#B8860B;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">⏳ Attente</button>' +
         '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
       '</div>' : '') +
+      (n._relanceFactureId ? '<button class="btn-envoyer-relance" data-facture-id="' + n._relanceFactureId + '" data-type-relance="' + n._relanceType + '" style="margin-top:8px;width:100%;padding:6px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📤 Envoyer la relance</button>' : '') +
       '</div></div>';
   }).join('');
 }
@@ -186,6 +192,13 @@ function htmlListeNotifications(allNotifs) {
 // ============================================================
 
 async function gererClicNotification(e) {
+  const btnRelance = e.target.closest('.btn-envoyer-relance');
+  if (btnRelance) {
+    const fid = parseInt(btnRelance.dataset.factureId);
+    const type = btnRelance.dataset.typeRelance;
+    if (typeof envoyerRelance === 'function') await envoyerRelance(fid, type);
+    return;
+  }
   const btnA = e.target.closest('.btn-accept-cpt-inv');
   if (btnA) {
     const invId = btnA.dataset.id;
@@ -573,6 +586,7 @@ function goScreen(name) {
     'tva': renderTVA,
     'position-financiere': renderPositionFinanciere,
     'rapport-stock': function() { if (typeof renderRapportStock === 'function') renderRapportStock(); },
+    'dashboard-avance': function() { if (typeof renderDashboardAvance === 'function') renderDashboardAvance(); },
     'recherche': initRecherche,
     'notifications': renderNotifScreen,
     'audit': renderJournalAudit,
@@ -582,7 +596,7 @@ function goScreen(name) {
     'cpt-entreprise': function() {},
     'brouillons': renderBrouillons,
     'relances': renderRelances,
-    'parametres': function() { renderParametres(); if (typeof afficherStatutDGI === 'function') afficherStatutDGI(); },
+    'parametres': function() { renderParametres(); if (typeof afficherStatutDGI === 'function') afficherStatutDGI(); if (typeof afficherParametresRelance === 'function') afficherParametresRelance(); if (typeof chargerEquipe === 'function') chargerEquipe(); },
     'historique-paiements': function() {},
     'acomptes': function() {},
   };
