@@ -700,7 +700,7 @@ function renderBonsCommandeListe() {
         '<span style="font-size:9px;font-weight:600;color:' + (statutColor[bc.statut]||'#9C9186') + '">' + (statutLabel[bc.statut]||bc.statut) + '</span>' +
       '</div>' +
       '<div class="card-end"><div class="card-amount">' + fmt(ht*1.2) + ' MAD</div>' +
-        (bc.statut === 'brouillon' ? '<button onclick="event.stopPropagation();envoyerBonCommande(' + bc.id + ')" style="margin-top:6px;padding:5px 10px;background:#7C5CA6;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">📤 Envoyer</button>' : '') +
+        (bc.statut === 'brouillon' ? '<button onclick="event.stopPropagation();ouvrirModalEnvoi(\'bon-commande\',' + bc.id + ')" style="margin-top:6px;padding:5px 10px;background:#7C5CA6;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">📤 Envoyer</button>' : '') +
       '</div>' +
     '</div>';
   }).join('');
