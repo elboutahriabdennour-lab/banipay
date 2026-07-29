@@ -9,9 +9,28 @@
 // Les champs sont pré-remplis comme SUGGESTIONS à vérifier, jamais
 // enregistrés directement sans passage par l'utilisateur.
 
+// NOUVEAU: Tesseract.js (~2-3 Mo) n'est chargé qu'au moment où une photo
+// est réellement prise — plus de ralentissement du chargement de l'app
+// pour tout le monde alors que peu l'utilisent à chaque session.
+let _tesseractChargement = null;
+function _chargerTesseract() {
+  if (typeof Tesseract !== 'undefined') return Promise.resolve();
+  if (_tesseractChargement) return _tesseractChargement;
+  _tesseractChargement = new Promise(function(resolve, reject) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return _tesseractChargement;
+}
+
 async function lireFactureParOCR(imageDataUrl) {
-  if (typeof Tesseract === 'undefined') {
-    console.warn('Tesseract.js non chargé — lecture automatique indisponible');
+  try {
+    await _chargerTesseract();
+  } catch(e) {
+    console.warn('Tesseract.js n\'a pas pu être chargé — lecture automatique indisponible');
     return;
   }
 
