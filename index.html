@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785316536">
+<link rel="stylesheet" href="css/style.css?v=1785330662">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -130,31 +130,32 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785316536"></script>
-  <script src="js/utils.js?v=1785316536"></script>
-  <script src="js/auth.js?v=1785316536"></script>
-  <script src="js/nav.js?v=1785316536"></script>
-  <script src="js/factures.js?v=1785316536"></script>
-  <script src="js/devis.js?v=1785316536"></script>
-  <script src="js/clients.js?v=1785316536"></script>
-  <script src="js/produits.js?v=1785316536"></script>
-  <script src="js/pdf.js?v=1785316536"></script>
-  <script src="js/stats.js?v=1785316536"></script>
-  <script src="js/profil.js?v=1785316536"></script>
-  <script src="js/comptable.js?v=1785316536"></script>
-  <script src="js/messages.js?v=1785316536"></script>
-<script src="js/achats.js?v=1785316536"></script>
-<script src="js/stock.js?v=1785316536"></script>
-<script src="js/finance.js?v=1785316536"></script>
-<script src="js/ubl.js?v=1785316536"></script>
-<script src="js/relances.js?v=1785316536"></script>
-<script src="js/dashboard-avance.js?v=1785316536"></script>
-<script src="js/ocr-achats.js?v=1785316536"></script>
-<script src="js/equipe.js?v=1785316536"></script>
-<script src="js/equipe-cabinet.js?v=1785316536"></script>
-<script src="js/abonnements.js?v=1785316536"></script>
-<script src="js/signature.js?v=1785316536"></script>
-<script src="js/app.js?v=1785316536"></script>
+<script src="js/config.js?v=1785330662"></script>
+  <script src="js/utils.js?v=1785330662"></script>
+  <script src="js/auth.js?v=1785330662"></script>
+  <script src="js/nav.js?v=1785330662"></script>
+  <script src="js/factures.js?v=1785330662"></script>
+  <script src="js/devis.js?v=1785330662"></script>
+  <script src="js/clients.js?v=1785330662"></script>
+  <script src="js/produits.js?v=1785330662"></script>
+  <script src="js/pdf.js?v=1785330662"></script>
+  <script src="js/stats.js?v=1785330662"></script>
+  <script src="js/profil.js?v=1785330662"></script>
+  <script src="js/comptable.js?v=1785330662"></script>
+  <script src="js/messages.js?v=1785330662"></script>
+<script src="js/achats.js?v=1785330662"></script>
+<script src="js/stock.js?v=1785330662"></script>
+<script src="js/finance.js?v=1785330662"></script>
+<script src="js/ubl.js?v=1785330662"></script>
+<script src="js/relances.js?v=1785330662"></script>
+<script src="js/dashboard-avance.js?v=1785330662"></script>
+<script src="js/ocr-achats.js?v=1785330662"></script>
+<script src="js/equipe.js?v=1785330662"></script>
+<script src="js/equipe-cabinet.js?v=1785330662"></script>
+<script src="js/rh.js?v=1785330662"></script>
+<script src="js/abonnements.js?v=1785330662"></script>
+<script src="js/signature.js?v=1785330662"></script>
+<script src="js/app.js?v=1785330662"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -679,6 +680,7 @@
     <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
     <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#C9971F">📁 Archive documents</button>
     <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
+    <button class="p-btn" onclick="loadEmployes();goScreen('employes',null)" style="color:#1F6F72">👥 Registre du personnel</button>
     <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
     <!-- Section Mon Comptable -->
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
@@ -1659,6 +1661,53 @@
       <div id="dashboard-avance-content"></div>
     </div>
     <div style="height:30px"></div>
+  </div>
+
+  <!-- REGISTRE DU PERSONNEL (RH) -->
+  <div class="screen" id="screen-employes">
+    <div class="topbar">
+      <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+      <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="initNouvelEmploye();goScreen('nouvel-employe',null)">+ Ajouter</span></div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">👥 Registre du personnel</div>
+      <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:12px">⚠️ Registre simple pour votre suivi — ce n'est pas un système de paie (pas de bulletin conforme, pas de calcul CNSS/AMO/IR).</div>
+      <div id="employes-resume"></div>
+      <div id="employes-liste"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <div class="screen" id="screen-nouvel-employe">
+    <div class="form-header">
+      <button class="back-btn" onclick="goScreen('employes',null)">&#8592;</button>
+      <div class="form-title" id="emp-form-titre">Nouvel employé</div>
+    </div>
+    <div class="form-section"><label class="f-lbl">Nom *</label><input id="emp-nom" class="f-inp" placeholder="Nom complet"></div>
+    <div class="form-section"><label class="f-lbl">Poste</label><input id="emp-poste" class="f-inp" placeholder="Ex: Maçon, Comptable, Chauffeur..."></div>
+    <div class="form-section"><label class="f-lbl">Téléphone</label><input id="emp-tel" class="f-inp" placeholder="Téléphone"></div>
+    <div class="form-section"><label class="f-lbl">Date d'entrée</label><input id="emp-date-entree" class="f-inp" type="date"></div>
+    <div class="form-section"><label class="f-lbl">Salaire mensuel (MAD)</label><input id="emp-salaire" class="f-inp" type="number" step="0.01" placeholder="0.00"></div>
+    <div class="form-section">
+      <label class="f-lbl">Jours de travail</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Lun">Lun</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Mar">Mar</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Mer">Mer</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Jeu">Jeu</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Ven">Ven</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Sam">Sam</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Dim">Dim</label>
+      </div>
+    </div>
+    <div class="form-section"><label class="f-lbl">Statut</label><select id="emp-statut" class="f-inp"><option value="actif">Actif</option><option value="inactif">Inactif</option></select></div>
+    <div class="form-section"><label class="f-lbl">Notes</label><textarea id="emp-notes" class="f-inp" rows="2"></textarea></div>
+    <div class="send-row">
+      <button class="s-btn blue" onclick="sauvegarderEmploye()">&#128190; Enregistrer</button>
+      <button class="s-btn gray" onclick="goScreen('employes',null)">&#10005; Annuler</button>
+    </div>
+    <div style="padding:0 20px"><button onclick="supprimerEmploye()" style="width:100%;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit">🗑️ Retirer du registre</button></div>
+    <div class="pb"></div>
   </div>
 
   <div class="screen" id="screen-rapport-stock">
