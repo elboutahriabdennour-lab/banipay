@@ -163,7 +163,7 @@ function htmlInvitationsCpt(invitationsCpt) {
 
 function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
-  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋' };
+  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋' };
   return allNotifs.map(function(n) {
     // FIX: même bug que plus haut — n.type est toujours 'info' pour les
     // notifications de la base, le vrai type est dans n.raw.type. Cette
@@ -618,6 +618,7 @@ function goScreen(name) {
     'acomptes': function() {},
     'employes': function() { if (typeof loadEmployes==='function') loadEmployes(); },
     'nouvel-employe': function() {},
+    'bc-recus': function() { if (typeof loadBCRecus==='function') loadBCRecus(); },
   };
   if (actions[name]) actions[name]();
 }
