@@ -619,6 +619,8 @@ function goScreen(name) {
     'employes': function() { if (typeof loadEmployes==='function') loadEmployes(); },
     'nouvel-employe': function() {},
     'bc-recus': function() { if (typeof loadBCRecus==='function') loadBCRecus(); },
+    'hub-achats': function() { if (typeof renderHubAchats==='function') renderHubAchats(); },
+    'hub-ventes': function() { if (typeof renderHubVentes==='function') renderHubVentes(); },
   };
   if (actions[name]) actions[name]();
 }
