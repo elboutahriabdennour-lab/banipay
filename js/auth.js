@@ -116,7 +116,16 @@ async function doSignup() {
   if (pwd !== pwd2) { if(errEl) errEl.textContent = 'Mots de passe différents'; return; }
   if (errEl) errEl.textContent = '⏳ Création...';
   try {
-    await sb.signup(email, pwd, { nom, role, cabinet });
+    const resultatSignup = await sb.signup(email, pwd, { nom, role, cabinet });
+    // FIX: même bug que doLogin() — sb.signup() n'était jamais vérifié,
+    // donc un email déjà utilisé (ou toute autre erreur) affichait quand
+    // même "Email de confirmation envoyé !" comme si tout s'était bien
+    // passé.
+    if (resultatSignup && resultatSignup.error) {
+      const messageErreur = resultatSignup.error?.message || resultatSignup.error || 'Erreur lors de la création du compte';
+      if (errEl) errEl.textContent = '❌ ' + messageErreur;
+      return;
+    }
     window._pendingConfirmEmail = email;
     switchTab('confirm');
     const cEl3 = el('confirm-email-display');
@@ -139,7 +148,19 @@ async function doLogin() {
   if (!email || !pwd) { if(errEl) errEl.textContent = 'Remplissez tous les champs'; return; }
   if (errEl) errEl.textContent = '⏳ Connexion...';
   try {
-    await sb.login(email, pwd);
+    const resultatLogin = await sb.login(email, pwd);
+    // FIX MAJEUR: sb.login() n'était jamais vérifié — si les identifiants
+    // étaient incorrects (ou toute autre erreur de connexion), le code
+    // continuait comme si ça avait marché, avec sb.user vide, jusqu'à
+    // planter plus loin de façon confuse au lieu d'afficher clairement
+    // "email ou mot de passe incorrect". On vérifie maintenant les deux
+    // façons possibles dont une erreur peut être signalée (retournée dans
+    // l'objet, ou simplement l'absence d'utilisateur après l'appel).
+    if ((resultatLogin && resultatLogin.error) || !sb.user) {
+      const messageErreur = resultatLogin?.error?.message || resultatLogin?.error || 'Email ou mot de passe incorrect';
+      if (errEl) errEl.textContent = '❌ ' + messageErreur;
+      return;
+    }
     // Email confirmation désactivée dans Supabase - pas de vérification
     // const confirmed = sb.user?.email_confirmed_at || sb.user?.confirmed_at;
     // Se souvenir de l'email
