@@ -554,51 +554,129 @@ function goScreen(name) {
   const _activeNav = _navMap[name];
   if (_activeNav) { const _nb = document.getElementById(_activeNav); if(_nb) _nb.classList.add('active'); }
 
+  // FIX MAJEUR: chaque valeur ci-dessous était une référence "nue" à une
+  // fonction (ex: 'tva': renderTVA). En JavaScript, cet objet est
+  // reconstruit à CHAQUE appel de goScreen() — et si UNE SEULE de ces
+  // fonctions n'existe pas (bug de nommage, fichier manquant comme
+  // stats.js), la construction de tout l'objet plante immédiatement,
+  // cassant la navigation vers TOUS les écrans, pas seulement celui
+  // concerné. On enveloppe donc chaque référence dans une vérification
+  // typeof, pour qu'une fonction manquante n'affecte plus qu'elle-même.
+  function _safe(fn, nomFn) {
+    return typeof fn === 'function' ? fn : function() { console.warn('Fonction manquante: ' + nomFn); };
+  }
   const actions = {
-    'archive': renderArchive,
-    'annuaire': filtrerAnnuaire,
-    'achats': renderAchats,
-    'nouvelle-achat': function() { renderLignesAchat(); },
-    'avoir-list': renderAvoirList,
+    'archive': _safe(typeof renderArchive!=='undefined'?renderArchive:undefined,'renderArchive'),
+    'annuaire': _safe(typeof filtrerAnnuaire!=='undefined'?filtrerAnnuaire:undefined,'filtrerAnnuaire'),
+    'achats': _safe(typeof renderAchats!=='undefined'?renderAchats:undefined,'renderAchats'),
+    'nouvelle-achat': function() { if (typeof renderLignesAchat==='function') renderLignesAchat(); },
+    'avoir-list': _safe(typeof renderAvoirList!=='undefined'?renderAvoirList:undefined,'renderAvoirList'),
     'abonnements': typeof renderAbonnements === 'function' ? renderAbonnements : function() { showToast('Module abonnements non installé', 'error'); goScreen('dashboard'); },
     'nouvel-abonnement': typeof initNouvelAbonnement === 'function' ? initNouvelAbonnement : function() { showToast('Module abonnements non installé', 'error'); goScreen('dashboard'); },
     'detail-abonnement': function() {},
-    'releves': function() { loadReleves(); },
-    'messages': function() { loadConversations().then(renderConversations); },
+    'releves': function() { if (typeof loadReleves==='function') loadReleves(); },
+    'messages': function() { if (typeof loadConversations==='function') loadConversations().then(renderConversations); },
     'chat': function() {},
-    'dashboard': renderDashboard,
-    'nouvelle': function() { initNouvelle(); if (typeof remplirPickerBCPourDevis === 'function') { const sel = el('f-bc-lie'); if (sel) { sel.innerHTML = '<option value="">Aucun</option>' + (STATE.bonsCommande || []).map(function(bc) { return '<option value="' + bc.id + '">' + escapeHTML(bc.ref||'') + ' — ' + escapeHTML(bc.fournisseur||'') + '</option>'; }).join(''); } } },
-    'devis-list': renderDevisList,
-    'nouveau-devis': function() { initNouveauDevis(); remplirPickerBCPourDevis(); },
-    'avoir': initAvoir,
-    'bon-commande': initBonCommande,
-    'bon-livraison': initBonLivraison,
-    'bons-commande-list': function() { loadBonsCommande(); },
-    'bons-livraison-list': function() { loadBonsLivraison(); },
-    'clients': renderClients,
-    'nouveau-client': initNouveauClient,
+    'dashboard': _safe(typeof renderDashboard!=='undefined'?renderDashboard:undefined,'renderDashboard'),
+    'nouvelle': function() { if (typeof initNouvelle==='function') initNouvelle(); if (typeof remplirPickerBCPourDevis === 'function') { const sel = el('f-bc-lie'); if (sel) { sel.innerHTML = '<option value="">Aucun</option>' + (STATE.bonsCommande || []).map(function(bc) { return '<option value="' + bc.id + '">' + escapeHTML(bc.ref||'') + ' — ' + escapeHTML(bc.fournisseur||'') + '</option>'; }).join(''); } } },
+    'devis-list': _safe(typeof renderDevisList!=='undefined'?renderDevisList:undefined,'renderDevisList'),
+    'nouveau-devis': function() { if (typeof initNouveauDevis==='function') initNouveauDevis(); if (typeof remplirPickerBCPourDevis==='function') remplirPickerBCPourDevis(); },
+    'avoir': _safe(typeof initAvoir!=='undefined'?initAvoir:undefined,'initAvoir'),
+    'bon-commande': _safe(typeof initBonCommande!=='undefined'?initBonCommande:undefined,'initBonCommande'),
+    'bon-livraison': _safe(typeof initBonLivraison!=='undefined'?initBonLivraison:undefined,'initBonLivraison'),
+    'bons-commande-list': function() { if (typeof loadBonsCommande==='function') loadBonsCommande(); },
+    'bons-livraison-list': function() { if (typeof loadBonsLivraison==='function') loadBonsLivraison(); },
+    'clients': _safe(typeof renderClients!=='undefined'?renderClients:undefined,'renderClients'),
+    'nouveau-client': _safe(typeof initNouveauClient!=='undefined'?initNouveauClient:undefined,'initNouveauClient'),
     'detail-client': function() {},
     'modifier-client': function() {},
-    'produits': renderProduits,
-    'nouveau-produit': initNouveauProduit,
+    'produits': _safe(typeof renderProduits!=='undefined'?renderProduits:undefined,'renderProduits'),
+    'nouveau-produit': _safe(typeof initNouveauProduit!=='undefined'?initNouveauProduit:undefined,'initNouveauProduit'),
     'modifier-produit': function() {},
-    'stats': function() { renderStats(); renderStatsDashboard(); verifierRappels(); },
-    'tva': renderTVA,
-    'position-financiere': renderPositionFinanciere,
+    'stats': function() { if (typeof renderStats==='function') renderStats(); if (typeof renderStatsDashboard==='function') renderStatsDashboard(); if (typeof verifierRappels==='function') verifierRappels(); },
+    'tva': _safe(typeof renderTVA!=='undefined'?renderTVA:undefined,'renderTVA'),
+    'position-financiere': _safe(typeof renderPositionFinanciere!=='undefined'?renderPositionFinanciere:undefined,'renderPositionFinanciere'),
     'rapport-stock': function() { if (typeof renderRapportStock === 'function') renderRapportStock(); },
     'dashboard-avance': function() { if (typeof renderDashboardAvance === 'function') renderDashboardAvance(); },
-    'recherche': initRecherche,
-    'notifications': renderNotifScreen,
-    'audit': renderJournalAudit,
-    'profil': function() { renderProfil(); setTimeout(renderMonComptable, 300); },
-    'comptable': renderComptableDashboard,
-    'comptable-profil': function() { renderComptableProfil(); if (typeof chargerEquipeCabinet === 'function') chargerEquipeCabinet(); },
+    'recherche': _safe(typeof initRecherche!=='undefined'?initRecherche:undefined,'initRecherche'),
+    'notifications': _safe(typeof renderNotifScreen!=='undefined'?renderNotifScreen:undefined,'renderNotifScreen'),
+    'audit': _safe(typeof renderJournalAudit!=='undefined'?renderJournalAudit:undefined,'renderJournalAudit'),
+    'profil': function() { if (typeof renderProfil==='function') renderProfil(); setTimeout(function(){ if (typeof renderMonComptable==='function') renderMonComptable(); }, 300); },
+    'comptable': _safe(typeof renderComptableDashboard!=='undefined'?renderComptableDashboard:undefined,'renderComptableDashboard'),
+    'comptable-profil': function() { if (typeof renderComptableProfil==='function') renderComptableProfil(); if (typeof chargerEquipeCabinet === 'function') chargerEquipeCabinet(); },
     'cpt-entreprise': function() {},
-    'brouillons': renderBrouillons,
-    'relances': renderRelances,
-    'parametres': function() { renderParametres(); if (typeof afficherStatutDGI === 'function') afficherStatutDGI(); if (typeof afficherParametresRelance === 'function') afficherParametresRelance(); if (typeof chargerEquipe === 'function') chargerEquipe(); },
+    'brouillons': _safe(typeof renderBrouillons!=='undefined'?renderBrouillons:undefined,'renderBrouillons'),
+    'relances': _safe(typeof renderRelances!=='undefined'?renderRelances:undefined,'renderRelances'),
+    'parametres': function() { if (typeof renderParametres==='function') renderParametres(); if (typeof afficherStatutDGI === 'function') afficherStatutDGI(); if (typeof afficherParametresRelance === 'function') afficherParametresRelance(); if (typeof chargerEquipe === 'function') chargerEquipe(); },
     'historique-paiements': function() {},
     'acomptes': function() {},
+    'employes': function() { if (typeof loadEmployes==='function') loadEmployes(); },
+    'nouvel-employe': function() {},
   };
   if (actions[name]) actions[name]();
+}
+
+// FIX MAJEUR: initRecherche() n'existait nulle part (même souci que
+// renderTVA — cassait toute la navigation). rechercheGlobale() non plus,
+// alors que le champ de recherche l'appelait déjà depuis longtemps.
+function initRecherche() {
+  const input = el('search-global');
+  if (input) input.value = '';
+  const results = el('search-results');
+  if (results) results.innerHTML = '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Tapez pour rechercher parmi vos factures, devis, clients et achats</div>';
+  setTimeout(function() { input?.focus(); }, 150);
+}
+
+function rechercheGlobale() {
+  const q = (el('search-global')?.value || '').trim().toLowerCase();
+  const results = el('search-results');
+  if (!results) return;
+  if (q.length < 2) {
+    results.innerHTML = '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Tapez au moins 2 caractères</div>';
+    return;
+  }
+
+  const blocs = [];
+
+  const facturesTrouvees = (STATE.factures || []).filter(function(f) {
+    return (f.ref||'').toLowerCase().includes(q) || (f.client||'').toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (facturesTrouvees.length) {
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">🧾 Factures</div>' +
+      facturesTrouvees.map(function(f) {
+        return '<div class="card" onclick="openDetail(' + f.id + ')"><div class="card-ico" style="background:#FBF0DA">🧾</div><div class="card-body"><div class="card-name">' + escapeHTML(f.client||'') + '</div><div class="card-ref">' + (f.ref||'') + '</div></div><div class="card-end"><div class="card-amount">' + fmt(f.ttc||0) + ' MAD</div></div></div>';
+      }).join(''));
+  }
+
+  const devisTrouves = (STATE.devis || []).filter(function(d) {
+    return (d.ref||'').toLowerCase().includes(q) || (d.client||'').toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (devisTrouves.length) {
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📝 Devis</div>' +
+      devisTrouves.map(function(d) {
+        return '<div class="card" onclick="openDetailDevis(' + d.id + ')"><div class="card-ico" style="background:#F7EFDC">📝</div><div class="card-body"><div class="card-name">' + escapeHTML(d.client||'') + '</div><div class="card-ref">' + (d.ref||'') + '</div></div><div class="card-end"><div class="card-amount">' + fmt(d.ttc||0) + ' MAD</div></div></div>';
+      }).join(''));
+  }
+
+  const clientsTrouves = (STATE.clients || []).filter(function(c) {
+    return (c.nom||'').toLowerCase().includes(q) || (c.tel||'').includes(q);
+  }).slice(0, 8);
+  if (clientsTrouves.length) {
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">👤 Clients</div>' +
+      clientsTrouves.map(function(c) {
+        return '<div class="card" onclick="ouvrirModifClient(' + c.id + ')"><div class="card-ico" style="background:#E9F4F3">👤</div><div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.tel||'') + '</div></div></div>';
+      }).join(''));
+  }
+
+  const achatsTrouves = (STATE.achats || []).filter(function(a) {
+    return (a.fournisseur||'').toLowerCase().includes(q) || (a.ref_fournisseur||'').toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (achatsTrouves.length) {
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">🛒 Achats</div>' +
+      achatsTrouves.map(function(a) {
+        return '<div class="card" onclick="ouvrirDetailAchat(' + a.id + ')"><div class="card-ico" style="background:#F5E4E1">🛒</div><div class="card-body"><div class="card-name">' + escapeHTML(a.fournisseur||'') + '</div><div class="card-ref">' + (a.ref_fournisseur||'') + '</div></div><div class="card-end"><div class="card-amount">' + fmt(a.ttc||0) + ' MAD</div></div></div>';
+      }).join(''));
+  }
+
+  results.innerHTML = blocs.length ? blocs.join('') : '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Aucun résultat pour "' + escapeHTML(q) + '"</div>';
 }
