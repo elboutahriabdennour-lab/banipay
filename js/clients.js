@@ -226,12 +226,38 @@ function openDetailClient(id) {
   const factEl = el('dc-factures');
   if (factEl) {
     const cFact = STATE.factures.filter(f=>f.client===c.nom);
-    factEl.innerHTML = cFact.slice(0,5).map(f=>`
+    factEl.innerHTML = cFact.map(f=>`
       <div class="card" onclick="openDetail(${f.id})" style="margin-bottom:8px">
         <div class="card-ico" style="background:#E9F4F3">📄</div>
         <div class="card-body"><div class="card-name">${f.ref}</div><div class="card-ref">${f.date_emission||''}</div></div>
         <div class="card-end"><div class="card-amt">${fmt(f.ttc)} MAD</div><div class="badge b-${f.statut}">${badgeF(f.statut)}</div></div>
       </div>`).join('') || '<div style="color:#9C9186;font-size:13px;padding:8px 0">Aucune facture</div>';
+  }
+  // NOUVEAU: historique complet — devis et paiements, en plus des
+  // factures (auparavant limité aux 5 dernières factures, rien d'autre).
+  const devisEl = el('dc-devis');
+  if (devisEl) {
+    const cDevis = (STATE.devis || []).filter(d => d.client === c.nom);
+    devisEl.innerHTML = cDevis.map(d => `
+      <div class="card" onclick="openDetailDevis(${d.id})" style="margin-bottom:8px">
+        <div class="card-ico" style="background:#F7EFDC">📝</div>
+        <div class="card-body"><div class="card-name">${d.ref}</div><div class="card-ref">${d.date_emission||''}</div></div>
+        <div class="card-end"><div class="card-amt">${fmt(d.ttc)} MAD</div><div class="badge b-${d.statut}">${badgeDV(d.statut)}</div></div>
+      </div>`).join('') || '<div style="color:#9C9186;font-size:13px;padding:8px 0">Aucun devis</div>';
+  }
+  const paiementsEl = el('dc-paiements');
+  if (paiementsEl) {
+    const idsFacturesClient = STATE.factures.filter(f => f.client === c.nom).map(f => f.id);
+    const cPaiements = (STATE.paiements || []).filter(p => idsFacturesClient.includes(p.facture_id));
+    paiementsEl.innerHTML = cPaiements.map(p => {
+      const facLiee = STATE.factures.find(f => f.id === p.facture_id);
+      return `
+      <div class="card" style="margin-bottom:8px">
+        <div class="card-ico" style="background:#EEF3E4">💰</div>
+        <div class="card-body"><div class="card-name">${facLiee ? facLiee.ref : 'Facture #' + p.facture_id}</div><div class="card-ref">${p.date || ''} · ${p.mode || ''}</div></div>
+        <div class="card-end"><div class="card-amt" style="color:#6E8F4E">${fmt(p.montant||0)} MAD</div></div>
+      </div>`;
+    }).join('') || '<div style="color:#9C9186;font-size:13px;padding:8px 0">Aucun paiement enregistré</div>';
   }
   const lienSection = document.getElementById('dc-lien-section');
   const lienEl = document.getElementById('dc-lien-banipay');
