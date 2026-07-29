@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785312515">
+<link rel="stylesheet" href="css/style.css?v=1785315403">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -48,7 +48,7 @@
     <div style="font-size:10px;color:rgba(255,255,255,0.5)" id="objectif-txt">Non d&#233;fini</div>
     <div onclick="goScreen('dashboard-avance',null)" style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.7);cursor:pointer;text-decoration:underline">📊 Voir les statistiques avancées</div>
   </div>
-  <div id="alerte-bar" class="alerte-bar hidden" onclick="setFilter('retard',null)">
+  <div id="alerte-bar" class="alerte-bar hidden" onclick="goScreen('relances',null)">
     <span>⚠️</span><div class="alerte-text" id="alerte-text">Factures en retard</div><div class="alerte-action">Voir →</div>
   </div>
   <div class="sec-label">Actions rapides</div>
@@ -130,31 +130,30 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785312515"></script>
-  <script src="js/utils.js?v=1785312515"></script>
-  <script src="js/auth.js?v=1785312515"></script>
-  <script src="js/nav.js?v=1785312515"></script>
-  <script src="js/factures.js?v=1785312515"></script>
-  <script src="js/devis.js?v=1785312515"></script>
-  <script src="js/clients.js?v=1785312515"></script>
-  <script src="js/produits.js?v=1785312515"></script>
-  <script src="js/pdf.js?v=1785312515"></script>
-  <script src="js/stats.js?v=1785312515"></script>
-  <script src="js/profil.js?v=1785312515"></script>
-  <script src="js/comptable.js?v=1785312515"></script>
-  <script src="js/messages.js?v=1785312515"></script>
-<script src="js/achats.js?v=1785312515"></script>
-<script src="js/stock.js?v=1785312515"></script>
-<script src="js/finance.js?v=1785312515"></script>
-<script src="js/ubl.js?v=1785312515"></script>
-<script src="js/relances.js?v=1785312515"></script>
-<script src="js/dashboard-avance.js?v=1785312515"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="js/ocr-achats.js?v=1785312515"></script>
-<script src="js/equipe.js?v=1785312515"></script>
-<script src="js/abonnements.js?v=1785312515"></script>
-<script src="js/signature.js?v=1785312515"></script>
-<script src="js/app.js?v=1785312515"></script>
+<script src="js/config.js?v=1785315403"></script>
+  <script src="js/utils.js?v=1785315403"></script>
+  <script src="js/auth.js?v=1785315403"></script>
+  <script src="js/nav.js?v=1785315403"></script>
+  <script src="js/factures.js?v=1785315403"></script>
+  <script src="js/devis.js?v=1785315403"></script>
+  <script src="js/clients.js?v=1785315403"></script>
+  <script src="js/produits.js?v=1785315403"></script>
+  <script src="js/pdf.js?v=1785315403"></script>
+  <script src="js/stats.js?v=1785315403"></script>
+  <script src="js/profil.js?v=1785315403"></script>
+  <script src="js/comptable.js?v=1785315403"></script>
+  <script src="js/messages.js?v=1785315403"></script>
+<script src="js/achats.js?v=1785315403"></script>
+<script src="js/stock.js?v=1785315403"></script>
+<script src="js/finance.js?v=1785315403"></script>
+<script src="js/ubl.js?v=1785315403"></script>
+<script src="js/relances.js?v=1785315403"></script>
+<script src="js/dashboard-avance.js?v=1785315403"></script>
+<script src="js/ocr-achats.js?v=1785315403"></script>
+<script src="js/equipe.js?v=1785315403"></script>
+<script src="js/abonnements.js?v=1785315403"></script>
+<script src="js/signature.js?v=1785315403"></script>
+<script src="js/app.js?v=1785315403"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -678,6 +677,7 @@
     <div id="pv-objectif" style="display:none;background:#E9F4F3;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#A67A16"></div>
     <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
     <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#C9971F">📁 Archive documents</button>
+    <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
     <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
     <!-- Section Mon Comptable -->
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
@@ -687,6 +687,7 @@
     <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#6E8F4E">🏢 Annuaire Zelto</button>
     <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
+    <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
     <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#7C5CA6">🔐 Lien accès comptable</button>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
@@ -1839,7 +1840,7 @@
   <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:16px 20px 12px;flex-shrink:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <!-- Logo -->
-      <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Bani<span style="color:#E0AE5C">Pay</span></div>
+      <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Zel<span style="color:#E0AE5C">to</span></div>
       <!-- Droite: actions -->
       <div style="display:flex;align-items:center;gap:6px">
         <!-- Messages -->
