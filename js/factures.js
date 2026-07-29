@@ -156,8 +156,10 @@ function renderFactureList() {
   list.innerHTML = data.map(f => {
     const recu = Number(f.montant_recu || 0);
     const pct = f.ttc > 0 ? Math.round(recu / f.ttc * 100) : 0;
+    const enSelection = typeof estEnSelection === 'function' && estEnSelection('factures');
     return `
-    <div class="card" onclick="openDetail(${f.id})">
+    <div class="card" onclick="${enSelection ? 'toggleSelectionItem(' + f.id + ')' : 'openDetail(' + f.id + ')'}">
+      ${typeof checkboxSelection === 'function' ? checkboxSelection('factures', f.id) : ''}
       <div class="card-ico" style="background:${bgs[f.statut]||'#EAE4DA'}">${icons[f.statut]||'📄'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(f.client)}</div>
@@ -167,7 +169,7 @@ function renderFactureList() {
       <div class="card-end">
         <div class="card-amt">${fmt(f.ttc)} ${f.devise||'MAD'}</div>
         <div class="badge b-${f.statut}">${badgeF(f.statut)}</div>
-        <button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>
+        ${!enSelection ? `<button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>` : ''}
       </div>
     </div>`;
   }).join('');
