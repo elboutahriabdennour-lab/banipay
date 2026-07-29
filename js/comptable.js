@@ -1424,7 +1424,7 @@ function switchCptNav(tab) {
 
     renderListeEntreprises();
     content.addEventListener('click', function(e) {
-      if (e.target.closest('.btn-go-profil-cpt')) { renderComptableProfil(); goScreen('comptable-profil', null); }
+      if (e.target.closest('.btn-go-profil-cpt')) { renderComptableProfil(); if (typeof chargerEquipeCabinet === 'function') chargerEquipeCabinet(); goScreen('comptable-profil', null); }
       if (e.target.closest('.btn-tri-action')) { trierEntreprises('action'); }
       if (e.target.closest('.btn-tri-lettrage')) { trierEntreprises('lettrage'); }
       if (e.target.closest('.btn-tri-nom')) { trierEntreprises('nom'); }
