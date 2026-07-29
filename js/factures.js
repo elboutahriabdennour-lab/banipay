@@ -429,6 +429,35 @@ function renderDetail() {
     if (f.note) { noteEl.textContent = f.note; noteEl.parentElement.style.display = 'block'; }
     else { noteEl.parentElement.style.display = 'none'; }
   }
+
+  // NOUVEAU: vue globale — tous les documents liés à cette vente en un
+  // coup d'œil (devis d'origine, bon de commande, bon de livraison),
+  // cliquables pour ouvrir chacun directement.
+  const docsLiesEl = el('detail-docs-lies');
+  if (docsLiesEl) {
+    const liens = [];
+    if (f.devis_ref) {
+      const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === f.devis_ref; });
+      liens.push({ icone: '📝', label: 'Devis', ref: f.devis_ref, action: devisTrouve ? 'openDetailDevis(' + devisTrouve.id + ')' : null });
+    }
+    if (f.bc_id) {
+      const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === f.bc_id; });
+      if (bcTrouve) liens.push({ icone: '📋', label: 'Bon de commande', ref: bcTrouve.ref, action: 'voirBonCommande(' + bcTrouve.id + ')' });
+    }
+    const blTrouve = (STATE.bonsLivraison || []).find(function(bl) { return bl.facture_id === f.id; });
+    if (blTrouve) liens.push({ icone: '📦', label: 'Bon de livraison', ref: blTrouve.ref, action: 'voirBonLivraison(' + blTrouve.id + ')' });
+
+    docsLiesEl.innerHTML = !liens.length ? '' :
+      '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🔗 Documents liés</div>' +
+      liens.map(function(l) {
+        return '<div ' + (l.action ? 'onclick="' + l.action + '" style="cursor:pointer"' : '') + ' style="background:#fff;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px' + (l.action ? ';cursor:pointer' : '') + '">' +
+          '<span style="font-size:18px">' + l.icone + '</span>' +
+          '<div style="flex:1"><div style="font-size:11px;color:#9C9186">' + l.label + '</div><div style="font-size:13px;font-weight:600">' + escapeHTML(l.ref||'') + '</div></div>' +
+          (l.action ? '<span style="color:#9C9186">→</span>' : '') +
+        '</div>';
+      }).join('');
+  }
+
   // Chantier
   const chantEl = el('detail-chantier');
   if (chantEl) {
