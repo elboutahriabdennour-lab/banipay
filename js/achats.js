@@ -621,7 +621,14 @@ function ouvrirDetailAchat(id) {
     })()) +
 
     (a.facture_source_id ?
-      '<div style="margin:0 16px 16px"><button onclick="voirFactureOrigineAchat(\'' + a.facture_source_id + '\')" style="width:100%;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🧾 Voir la facture d\'origine</button></div>' : '') +
+      '<div style="margin:0 16px 16px">' +
+        '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🔗 Documents liés</div>' +
+        '<div onclick="voirFactureOrigineAchat(\'' + a.facture_source_id + '\')" style="cursor:pointer;background:#fff;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">' +
+          '<span style="font-size:18px">🧾</span>' +
+          '<div style="flex:1"><div style="font-size:11px;color:#9C9186">Facture d\'origine</div><div style="font-size:13px;font-weight:600">Voir le document</div></div>' +
+          '<span style="color:#9C9186">→</span>' +
+        '</div>' +
+      '</div>' : '') +
 
     (a.fournisseur_banipay && a.fournisseur_id ?
       '<div style="margin:0 16px 16px;background:#E9F4F3;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
