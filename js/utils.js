@@ -21,14 +21,14 @@ function getRef(prefix, list) {
 }
 
 
-// FIX: _toastTimer était utilisé (clearTimeout/setTimeout) sans jamais
-// être déclaré — la toute première fois que showToast() était appelée,
-// clearTimeout(_toastTimer) plantait avec "ReferenceError: _toastTimer is
-// not defined", ce qui interrompait l'exécution de tout le code qui
-// suivait l'appel à showToast() dans la fonction appelante. Un bug de ce
-// type, sur une fonction utilisée des centaines de fois dans l'app, a pu
-// causer des échecs silencieux un peu partout.
-let _toastTimer = null;
+// CORRECTIF ANNULÉ : j'avais ajouté "let _toastTimer" ici en pensant
+// qu'elle n'était déclarée nulle part — en réalité config.js la déclare
+// déjà ("let _toastTimer;") tout en bas du fichier. Deux "let" du même nom
+// au niveau racine entre deux scripts classiques provoquent une ERREUR DE
+// SYNTAXE qui empêche tout ce fichier (utils.js) de s'exécuter — donc
+// showToast, fmt, el, et toutes les autres fonctions utilitaires
+// utilisées PARTOUT dans l'app. C'est cette régression, introduite par ma
+// propre correction précédente, qui a cassé les boutons.
 
 function showToast(msg, type) {
   if (!type) type = 'default';
