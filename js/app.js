@@ -644,17 +644,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     m.addEventListener('click', e => { if (e.target === m) closeAllModals(); });
   });
 
-  // Polling 30s pour détecter acceptation/refus des devis
+  // Polling 30s pour détecter acceptation/refus des devis + rafraîchir les
+  // notifications générales — un seul intervalle (fusion de deux
+  // intervalles séparés qui déclenchaient tous les deux genNotifications()
+  // à ~30s d'écart, doublant inutilement les appels réseau).
   if (sb.user?.id) ecouterChangementsDevis(sb.user.id);
-  // FIX: les notifications générales (facture_recue, devis_recu, remarque
-  // comptable, TVA déclarée...) n'étaient rafraîchies qu'au chargement de la
-  // page ou en changeant d'écran. Rafraîchissement périodique pour qu'elles
-  // apparaissent sans action manuelle de l'utilisateur.
-  if (sb.user?.id && CPT.role !== 'comptable') {
-    setInterval(function() {
-      if (sb.user?.id) genNotifications();
-    }, 30000);
-  }
 });
 
 function verifierChangementsDevis() {
@@ -713,9 +707,12 @@ function ecouterChangementsDevis(userId) {
       }
 
       if ((devis && devis.length) || (factures && factures.length)) {
-        genNotifications();
         badgeF();
       }
+      // Rafraîchit aussi les notifications générales à chaque cycle
+      // (remarque comptable, TVA déclarée, stock bas, échéances...),
+      // plus besoin d'un second intervalle séparé pour ça.
+      if (CPT.role !== 'comptable') genNotifications();
     } catch(e) {}
   }, 30000);
 }
