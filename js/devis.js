@@ -539,6 +539,15 @@ async function enregistrerBCDepuisDevisAccepte(devisId) {
       STATE.bonsCommande.unshift(result[0] || bc);
       showToast('📋 Bon de commande ' + bc.ref + ' généré automatiquement', 'success');
       if (typeof logAudit === 'function') logAudit('bon_commande', (result[0]||bc).id, 'creation', 'Auto — depuis devis ' + (d.ref||''));
+      // Notifie le fournisseur (l'entreprise émettrice du devis) — ce BC
+      // étant auto-confirmé, il doit apparaître immédiatement chez lui.
+      try {
+        await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_bc_recu', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_bc_id: (result[0]||bc).id })
+        });
+      } catch(e4) {}
     }
   } catch(e) {
     console.warn('enregistrerBCDepuisDevisAccepte:', e);
@@ -553,6 +562,18 @@ async function envoyerBonCommande(id) {
     bc.statut = 'envoye';
   } catch(e) {}
 
+  // NOUVEAU: si le fournisseur a un compte Zelto, il reçoit une
+  // notification directe (en plus du lien partageable ci-dessous).
+  if (bc.fournisseur_id) {
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_bc_recu', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_bc_id: id })
+      });
+    } catch(e3) {}
+  }
+
   const lien = window.location.origin + window.location.pathname + '?bc=' + id;
   if (navigator.share) {
     try { await navigator.share({ title: 'Bon de commande ' + (bc.ref||''), text: 'Bon de commande ' + (bc.ref||'') + ' — merci de confirmer la réception : ' + lien }); }
@@ -562,6 +583,96 @@ async function envoyerBonCommande(id) {
     showToast('✅ Lien copié — envoyez-le à votre fournisseur', 'success');
   }
   renderBonsCommandeListe();
+}
+
+// ============================================================
+// BC REÇUS (côté fournisseur) — conversion en facture
+// ============================================================
+STATE.bcRecus = STATE.bcRecus || [];
+
+async function loadBCRecus() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bons_commande_recus', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.bcRecus = r.ok ? ((await r.json()) || []) : [];
+  } catch(e) { STATE.bcRecus = []; }
+  renderBCRecus();
+}
+
+function renderBCRecus() {
+  const container = el('bc-recus-liste');
+  if (!container) return;
+  const bcs = STATE.bcRecus || [];
+  const statutLabel = { envoye: '📤 Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé', brouillon: 'Brouillon' };
+
+  container.innerHTML = !bcs.length
+    ? '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucun bon de commande reçu</div></div>'
+    : bcs.map(function(bc) {
+        const ht = (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
+        const dejaConverti = bc.facture_generee_id ? true : false;
+        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+            '<div><div style="font-size:13px;font-weight:700">' + (bc.ref||'') + '</div><div style="font-size:11px;color:#9C9186">' + (bc.date_commande||'') + ' · ' + (statutLabel[bc.statut]||bc.statut) + '</div></div>' +
+            '<div style="font-size:13px;font-weight:800">' + fmt(ht*1.2) + ' MAD</div>' +
+          '</div>' +
+          (bc.note ? '<div style="font-size:11px;color:#6B5F54;margin-top:6px;background:#F1EEE8;padding:6px 8px;border-radius:6px">' + escapeHTML(bc.note) + '</div>' : '') +
+          (dejaConverti
+            ? '<div style="margin-top:8px;font-size:11px;color:#6E8F4E;font-weight:600">✅ Déjà converti en facture</div>'
+            : '<button onclick="convertirBCEnFacture(' + bc.id + ')" style="width:100%;margin-top:8px;padding:9px;background:#C9971F;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Convertir en facture</button>') +
+        '</div>';
+      }).join('');
+}
+
+// Convertit un BC reçu en facture, pré-remplie et liée (bc_id), adressée
+// au client qui a émis ce bon de commande.
+async function convertirBCEnFacture(bcId) {
+  const bc = (STATE.bcRecus || []).find(function(x) { return x.id === bcId; });
+  if (!bc) return;
+  try {
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + bc.user_id + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    const profils = await rp.json();
+    const client = (profils && profils[0]) || {};
+    const ht = (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
+
+    const facture = {
+      user_id: sb.user.id,
+      ref: getRef('FAC', STATE.factures || []),
+      client: client.raison || 'Client Zelto',
+      date_emission: today(),
+      paiement: 'virement',
+      statut: 'envoyee',
+      lignes: (bc.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u' }; }),
+      ht: ht, tva: ht*0.2, ttc: ht*1.2,
+      bc_id: bc.id,
+      devise: 'MAD', montant_recu: 0,
+      note: 'Générée à partir du bon de commande ' + (bc.ref||'')
+    };
+
+    const r = await sb.post('factures', facture);
+    if (r && r.length) {
+      STATE.factures.unshift(r[0]);
+      bc.facture_generee_id = r[0].id;
+      // Persiste le marquage côté BC (le fournisseur n'est pas propriétaire
+      // de cette ligne, d'où la RPC dédiée plutôt qu'un simple patch).
+      try {
+        await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_bc_converti', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_bc_id: bc.id, p_facture_id: r[0].id })
+        });
+      } catch(e5) {}
+      showToast('✅ Facture ' + facture.ref + ' créée depuis le BC ' + (bc.ref||''), 'success');
+      renderBCRecus();
+      openDetail(r[0].id);
+    }
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
 }
 
 async function loadBonsCommande() {
@@ -1091,10 +1202,23 @@ async function traiterActionDocument(docId, type, action, signatureData) {
           <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
         </div>
         <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>
+        ${(action === 'accepter' && !isFacture && sb.user?.id) ? '<button id="btn-convertir-bc-manuel" style="width:100%;padding:12px;background:#7C5CA6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px">📋 Convertir en bon de commande</button>' : ''}
         <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
         <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect">4</span>s...</div>
       </div>
     `;
+    // NOUVEAU: bouton manuel de conversion en BC — complète la génération
+    // automatique (qui ne se déclenche que via le panneau de
+    // notifications) pour couvrir aussi ce cas du lien autonome.
+    const btnBCManuel = document.getElementById('btn-convertir-bc-manuel');
+    if (btnBCManuel) {
+      btnBCManuel.onclick = async function() {
+        btnBCManuel.disabled = true;
+        btnBCManuel.textContent = '⏳ Génération...';
+        if (typeof enregistrerBCDepuisDevisAccepte === 'function') await enregistrerBCDepuisDevisAccepte(docId);
+        btnBCManuel.textContent = '✅ Bon de commande généré';
+      };
+    }
     // NOUVEAU: retour automatique à l'accueil après 4 secondes, avec un
     // petit compte à rebours visible plutôt qu'une redirection surprise.
     let secondesRestantes = 4;
