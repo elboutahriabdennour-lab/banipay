@@ -491,6 +491,60 @@ async function sauvegarderBonCommande() {
 
 // NOUVEAU: envoyer le BC au fournisseur — lien public où il peut confirmer
 // ou refuser, symétrique au cycle devis (accepter/refuser).
+// NOUVEAU: quand un client (avec compte Zelto) accepte un devis reçu, un
+// bon de commande se crée automatiquement chez lui, adressé à
+// l'entreprise émettrice du devis — même principe que l'achat
+// auto-enregistré à l'acceptation d'une facture (achats.js).
+async function enregistrerBCDepuisDevisAccepte(devisId) {
+  const uid = sb.user?.id;
+  if (!uid) return;
+  try {
+    // Éviter les doublons si la notification est traitée deux fois
+    const existant = (STATE.bonsCommande || []).find(function(bc) { return bc.devis_source_id === parseInt(devisId); });
+    if (existant) return;
+
+    const r = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + devisId + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const data = await r.json();
+    const d = data && data[0];
+    if (!d) return;
+
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + d.user_id + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const profils = await rp.json();
+    const emetteur = (profils && profils[0]) || {};
+    const lignesDevis = typeof d.lignes === 'string' ? JSON.parse(d.lignes || '[]') : (d.lignes || []);
+
+    const bc = {
+      user_id: uid,
+      ref: getRef('BC', STATE.bonsCommande || []),
+      fournisseur: emetteur.raison || 'Fournisseur Zelto',
+      fournisseur_id: d.user_id,
+      date_commande: today(),
+      livraison_prevue: null,
+      lignes: lignesDevis.map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u' }; }),
+      note: 'Généré automatiquement à l\'acceptation du devis ' + (d.ref || ''),
+      devis_source_id: parseInt(devisId),
+      statut: 'confirme',
+      reponse_fournisseur: 'confirme',
+      reponse_at: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+
+    const result = await sb.post('bons_commande', bc);
+    if (result) {
+      STATE.bonsCommande = STATE.bonsCommande || [];
+      STATE.bonsCommande.unshift(result[0] || bc);
+      showToast('📋 Bon de commande ' + bc.ref + ' généré automatiquement', 'success');
+      if (typeof logAudit === 'function') logAudit('bon_commande', (result[0]||bc).id, 'creation', 'Auto — depuis devis ' + (d.ref||''));
+    }
+  } catch(e) {
+    console.warn('enregistrerBCDepuisDevisAccepte:', e);
+  }
+}
+
 async function envoyerBonCommande(id) {
   const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
   if (!bc) return;
