@@ -7,6 +7,38 @@
 // d'objectif mensuel, bandeau d'alerte, liste des factures elle-même à
 // l'ouverture. C'est la cause racine derrière "rien ne s'affiche/se met à
 // jour sur l'accueil".
+// FIX MAJEUR: renderTVA() n'existait nulle part alors que nav.js
+// l'appelle en référence nue dans l'objet actions de goScreen() — une
+// référence non définie dans cet objet fait planter la construction de
+// TOUT l'objet (JS s'arrête à la première erreur), ce qui cassait la
+// navigation vers N'IMPORTE QUEL écran, pas seulement TVA, à chaque appel
+// de goScreen(). Un des bugs les plus larges trouvés dans l'audit.
+function renderTVA() {
+  const tbody = el('tva-body');
+  if (!tbody) return;
+  const parMois = {};
+  (STATE.factures || []).filter(function(f) { return f.statut === 'payee'; }).forEach(function(f) {
+    const mois = (f.date_emission || '').substring(0, 7);
+    if (!mois) return;
+    if (!parMois[mois]) parMois[mois] = { ht: 0, tva: 0, ttc: 0 };
+    parMois[mois].ht += Number(f.ht) || 0;
+    parMois[mois].tva += Number(f.tva) || 0;
+    parMois[mois].ttc += Number(f.ttc) || 0;
+  });
+  const moisTries = Object.keys(parMois).sort().reverse();
+  tbody.innerHTML = moisTries.length
+    ? moisTries.map(function(m) {
+        const d = parMois[m];
+        return '<tr style="border-bottom:1px solid #F1EEE8">' +
+          '<td style="padding:10px 12px;font-size:12px">' + m + '</td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:right">' + fmt(d.ht) + '</td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:right;color:#6E8F4E;font-weight:700">' + fmt(d.tva) + '</td>' +
+          '<td style="padding:10px 12px;font-size:12px;text-align:right;font-weight:700">' + fmt(d.ttc) + '</td>' +
+        '</tr>';
+      }).join('')
+    : '<tr><td colspan="4" style="padding:20px;text-align:center;color:#9C9186;font-size:12px">Aucune facture payée pour l\'instant</td></tr>';
+}
+
 function renderDashboard() {
   const factures = STATE.factures || [];
 
