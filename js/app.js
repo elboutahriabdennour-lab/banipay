@@ -577,6 +577,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof loadBonsCommande === 'function') await loadBonsCommande();
       if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
       if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
+      if (typeof loadEmployes === 'function') await loadEmployes();
     await loadConversations();
       if (typeof loadAbonnements === 'function') await loadAbonnements();
       if (typeof verifierAbonnements === 'function') await verifierAbonnements();
@@ -628,6 +629,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof loadBonsCommande === 'function') await loadBonsCommande();
       if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
       if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
+      if (typeof loadEmployes === 'function') await loadEmployes();
     await loadConversations();
         if (typeof loadAbonnements === 'function') await loadAbonnements();
         if (typeof verifierAbonnements === 'function') await verifierAbonnements();
