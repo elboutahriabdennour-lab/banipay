@@ -206,6 +206,7 @@ async function doLogin() {
       if (typeof loadBonsCommande === 'function') await loadBonsCommande();
       if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
       if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
+      if (typeof loadEmployes === 'function') await loadEmployes();
       if (typeof loadAbonnements === 'function') await loadAbonnements();
       if (typeof verifierAbonnements === 'function') await verifierAbonnements();
       // Crée un profil entreprise minimal si absent, pour apparaître
