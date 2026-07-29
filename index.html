@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785361042">
+<link rel="stylesheet" href="css/style.css?v=1785361534">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -80,6 +80,7 @@
     <button class="ftab" onclick="setFilter('attente',this)">En attente</button>
     <button class="ftab" onclick="setFilter('retard',this)">En retard</button>
     <button class="ftab" onclick="setFilter('payee',this)">Payées</button>
+    <button class="ftab" onclick="toggleSelectionMode('factures')" style="margin-left:auto">☑️ Sélectionner</button>
   </div>
   <div class="card-list" id="facture-list"></div>
   <div class="pb"></div>
@@ -130,33 +131,34 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785361042"></script>
-  <script src="js/utils.js?v=1785361042"></script>
-  <script src="js/auth.js?v=1785361042"></script>
-  <script src="js/nav.js?v=1785361042"></script>
-  <script src="js/factures.js?v=1785361042"></script>
-  <script src="js/devis.js?v=1785361042"></script>
-  <script src="js/clients.js?v=1785361042"></script>
-  <script src="js/produits.js?v=1785361042"></script>
-  <script src="js/pdf.js?v=1785361042"></script>
-  <script src="js/stats.js?v=1785361042"></script>
-  <script src="js/profil.js?v=1785361042"></script>
-  <script src="js/comptable.js?v=1785361042"></script>
-  <script src="js/messages.js?v=1785361042"></script>
-<script src="js/achats.js?v=1785361042"></script>
-<script src="js/stock.js?v=1785361042"></script>
-<script src="js/finance.js?v=1785361042"></script>
-<script src="js/ubl.js?v=1785361042"></script>
-<script src="js/relances.js?v=1785361042"></script>
-<script src="js/dashboard-avance.js?v=1785361042"></script>
-<script src="js/ocr-achats.js?v=1785361042"></script>
-<script src="js/equipe.js?v=1785361042"></script>
-<script src="js/equipe-cabinet.js?v=1785361042"></script>
-<script src="js/rh.js?v=1785361042"></script>
-<script src="js/hubs.js?v=1785361042"></script>
-<script src="js/abonnements.js?v=1785361042"></script>
-<script src="js/signature.js?v=1785361042"></script>
-<script src="js/app.js?v=1785361042"></script>
+<script src="js/config.js?v=1785361534"></script>
+  <script src="js/utils.js?v=1785361534"></script>
+  <script src="js/auth.js?v=1785361534"></script>
+  <script src="js/nav.js?v=1785361534"></script>
+  <script src="js/factures.js?v=1785361534"></script>
+  <script src="js/devis.js?v=1785361534"></script>
+  <script src="js/clients.js?v=1785361534"></script>
+  <script src="js/produits.js?v=1785361534"></script>
+  <script src="js/pdf.js?v=1785361534"></script>
+  <script src="js/stats.js?v=1785361534"></script>
+  <script src="js/profil.js?v=1785361534"></script>
+  <script src="js/comptable.js?v=1785361534"></script>
+  <script src="js/messages.js?v=1785361534"></script>
+<script src="js/achats.js?v=1785361534"></script>
+<script src="js/stock.js?v=1785361534"></script>
+<script src="js/finance.js?v=1785361534"></script>
+<script src="js/ubl.js?v=1785361534"></script>
+<script src="js/relances.js?v=1785361534"></script>
+<script src="js/dashboard-avance.js?v=1785361534"></script>
+<script src="js/ocr-achats.js?v=1785361534"></script>
+<script src="js/equipe.js?v=1785361534"></script>
+<script src="js/equipe-cabinet.js?v=1785361534"></script>
+<script src="js/rh.js?v=1785361534"></script>
+<script src="js/hubs.js?v=1785361534"></script>
+<script src="js/selection.js?v=1785361534"></script>
+<script src="js/abonnements.js?v=1785361534"></script>
+<script src="js/signature.js?v=1785361534"></script>
+<script src="js/app.js?v=1785361534"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -318,6 +320,7 @@
     <button class="ftab" onclick="filtrerAchats('attente',this)">En attente</button>
     <button class="ftab" onclick="filtrerAchats('payee',this)">Payées</button>
     <button class="ftab" onclick="filtrerAchats('banipay',this)">Zelto</button>
+    <button class="ftab" onclick="toggleSelectionMode('achats')" style="margin-left:auto">☑️ Sélectionner</button>
   </div>
   <div id="achats-list"></div>
   <button class="fab" onclick="STATE.lignesAchat=[];window._achatFactureLieeId=null;goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
@@ -481,6 +484,7 @@
     <button class="ftab" onclick="filterDevis('envoye',this)">Envoyés</button>
     <button class="ftab" onclick="filterDevis('accepte',this)">Acceptés</button>
     <button class="ftab" onclick="filterDevis('refuse',this)">Refusés</button>
+    <button class="ftab" onclick="toggleSelectionMode('devis')" style="margin-left:auto">☑️ Sélectionner</button>
   </div>
   <div class="card-list" id="devis-list"></div>
   <div class="pb"></div>
@@ -1636,7 +1640,11 @@
       </div>
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin-bottom:10px">Factures</div>
       <div id="dc-factures"></div>
-      <button onclick="ouvrirMsgClient()" style="display:flex;align-items:center;gap:12px;background:#FBF0DA;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #E8D9AE;font-size:14px;font-weight:600;color:#C9971F;font-family:inherit;width:100%;margin-bottom:8px">💬 Envoyer un message</button>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin:16px 0 10px">Devis</div>
+      <div id="dc-devis"></div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin:16px 0 10px">Paiements reçus</div>
+      <div id="dc-paiements"></div>
+      <button onclick="ouvrirMsgClient()" style="display:flex;align-items:center;gap:12px;background:#FBF0DA;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #E8D9AE;font-size:14px;font-weight:600;color:#C9971F;font-family:inherit;width:100%;margin-bottom:8px;margin-top:16px">💬 Envoyer un message</button>
     <button onclick="goScreen('nouvelle',null);setTimeout(()=>{const el=document.getElementById('f-client');if(el)el.value=window._clientNom||'';},100)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#C9971F;font-family:inherit;width:100%;text-align:left;margin-top:12px">
         <div style="width:36px;height:36px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center">➕</div>Nouvelle facture pour ce client
       </button>
@@ -1856,7 +1864,10 @@
     <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
   </div>
-  <div class="sec-label">📋 Bons de commande</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px">
+    <div class="sec-label" style="padding:0">📋 Bons de commande</div>
+    <button class="ftab" onclick="toggleSelectionMode('bc')">☑️ Sélectionner</button>
+  </div>
   <div class="card-list" id="bons-commande-liste"></div>
   <div class="pb"></div>
 </div>
