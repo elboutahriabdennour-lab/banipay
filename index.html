@@ -1917,7 +1917,10 @@
     <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard')" style="background:rgba(255,255,255,0.15);color:#fff">&#8592;</button></div>
   </div>
-  <div class="sec-label">Alertes</div>
+  <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Alertes</span>
+    <button onclick="marquerToutesNotificationsLues()" style="background:none;color:#1F6F72;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Tout marquer comme lu</button>
+  </div>
   <div style="padding:0 20px" id="notif-list"></div>
   <div style="padding:12px 20px">
     <button onclick="typeof genNotifications==='function' && genNotifications().then(function(){afficherDiagnostic('Diagnostic notifications', window._dernierDiagNotifications || ['Aucune donnée — clique une première fois puis reclique.']);})" style="width:100%;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Diagnostic de chargement</button>
