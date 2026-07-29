@@ -55,7 +55,9 @@ function renderAchats() {
   const statutLabel = { payee:'Payée', attente:'En attente' };
 
   list.innerHTML = achats.map(function(a) {
-    return '<div class="card" onclick="ouvrirDetailAchat(\'' + a.id + '\')">' +
+    const enSelection = typeof estEnSelection === 'function' && estEnSelection('achats');
+    return '<div class="card" onclick="' + (enSelection ? 'toggleSelectionItem(' + a.id + ')' : "ouvrirDetailAchat('" + a.id + "')") + '">' +
+      (typeof checkboxSelection === 'function' ? checkboxSelection('achats', a.id) : '') +
       '<div class="card-ico" style="background:#F5E4E1;font-size:20px">' + (catIcons[a.categorie] || '📄') + '</div>' +
       '<div class="card-body">' +
         '<div class="card-name">' + escapeHTML(a.fournisseur || '—') + (a.fournisseur_banipay ? ' <span style="font-size:9px;background:#E9F4F3;color:#1F6F72;padding:1px 5px;border-radius:4px;font-weight:600">BP</span>' : (a.origine === 'auto_acceptation' ? ' <span style="font-size:9px;background:#EEF3E4;color:#55702E;padding:1px 5px;border-radius:4px;font-weight:600">AUTO</span>' : '')) + '</div>' +
