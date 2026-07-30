@@ -45,6 +45,7 @@ function renderHubVentes() {
   const bcNonConvertis = bcRecus.filter(function(bc){return !bc.facture_generee_id;}).length;
 
   container.innerHTML =
+    _tuileHub('📥', 'Demandes de devis', 'Reçues depuis votre profil public', null, '#FBF0DA', '#A67A16', "loadDemandesDevis();goScreen('demandes-devis',null)") +
     _tuileHub('📝', 'Devis', devisListe.length + ' devis', null, '#F7EFDC', '#A67A16', "goScreen('devis-list',null)") +
     _tuileHub('🧾', 'Factures', factures.length + ' facture(s)', fmt(totalCA) + ' MAD encaissé', '#EEF3E4', '#55702E', "goScreen('dashboard',null)") +
     _tuileHub('📋', 'Bons de commande reçus', bcRecus.length + ' reçu(s) · ' + bcNonConvertis + ' à convertir', null, '#EDE6F0', '#6A4E85', "loadBCRecus();goScreen('bc-recus',null)") +
