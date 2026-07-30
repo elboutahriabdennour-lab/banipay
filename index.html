@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785361534">
+<link rel="stylesheet" href="css/style.css?v=1785402252">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -131,34 +131,35 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785361534"></script>
-  <script src="js/utils.js?v=1785361534"></script>
-  <script src="js/auth.js?v=1785361534"></script>
-  <script src="js/nav.js?v=1785361534"></script>
-  <script src="js/factures.js?v=1785361534"></script>
-  <script src="js/devis.js?v=1785361534"></script>
-  <script src="js/clients.js?v=1785361534"></script>
-  <script src="js/produits.js?v=1785361534"></script>
-  <script src="js/pdf.js?v=1785361534"></script>
-  <script src="js/stats.js?v=1785361534"></script>
-  <script src="js/profil.js?v=1785361534"></script>
-  <script src="js/comptable.js?v=1785361534"></script>
-  <script src="js/messages.js?v=1785361534"></script>
-<script src="js/achats.js?v=1785361534"></script>
-<script src="js/stock.js?v=1785361534"></script>
-<script src="js/finance.js?v=1785361534"></script>
-<script src="js/ubl.js?v=1785361534"></script>
-<script src="js/relances.js?v=1785361534"></script>
-<script src="js/dashboard-avance.js?v=1785361534"></script>
-<script src="js/ocr-achats.js?v=1785361534"></script>
-<script src="js/equipe.js?v=1785361534"></script>
-<script src="js/equipe-cabinet.js?v=1785361534"></script>
-<script src="js/rh.js?v=1785361534"></script>
-<script src="js/hubs.js?v=1785361534"></script>
-<script src="js/selection.js?v=1785361534"></script>
-<script src="js/abonnements.js?v=1785361534"></script>
-<script src="js/signature.js?v=1785361534"></script>
-<script src="js/app.js?v=1785361534"></script>
+<script src="js/config.js?v=1785402252"></script>
+  <script src="js/utils.js?v=1785402252"></script>
+  <script src="js/auth.js?v=1785402252"></script>
+  <script src="js/nav.js?v=1785402252"></script>
+  <script src="js/factures.js?v=1785402252"></script>
+  <script src="js/devis.js?v=1785402252"></script>
+  <script src="js/clients.js?v=1785402252"></script>
+  <script src="js/produits.js?v=1785402252"></script>
+  <script src="js/pdf.js?v=1785402252"></script>
+  <script src="js/stats.js?v=1785402252"></script>
+  <script src="js/profil.js?v=1785402252"></script>
+  <script src="js/comptable.js?v=1785402252"></script>
+  <script src="js/messages.js?v=1785402252"></script>
+<script src="js/achats.js?v=1785402252"></script>
+<script src="js/stock.js?v=1785402252"></script>
+<script src="js/finance.js?v=1785402252"></script>
+<script src="js/ubl.js?v=1785402252"></script>
+<script src="js/relances.js?v=1785402252"></script>
+<script src="js/dashboard-avance.js?v=1785402252"></script>
+<script src="js/ocr-achats.js?v=1785402252"></script>
+<script src="js/equipe.js?v=1785402252"></script>
+<script src="js/equipe-cabinet.js?v=1785402252"></script>
+<script src="js/rh.js?v=1785402252"></script>
+<script src="js/hubs.js?v=1785402252"></script>
+<script src="js/demandes-devis.js?v=1785402252"></script>
+<script src="js/selection.js?v=1785402252"></script>
+<script src="js/abonnements.js?v=1785402252"></script>
+<script src="js/signature.js?v=1785402252"></script>
+<script src="js/app.js?v=1785402252"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -300,6 +301,20 @@
   </div>
 
   <!-- RUBRIQUE VENTES (hub) -->
+  <!-- DEMANDES DE DEVIS REÇUES -->
+  <div class="screen" id="screen-demandes-devis">
+    <div class="app-header" style="padding-top:16px">
+      <div class="brand">Zel<span>to</span></div>
+      <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
+    </div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">📝 Demandes de devis reçues</div>
+      <div id="demandes-devis-resume"></div>
+      <div id="demandes-devis-liste"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
   <div class="screen" id="screen-hub-ventes">
     <div class="app-header" style="padding-top:16px">
       <div class="brand">Zel<span>to</span></div>
