@@ -78,8 +78,50 @@ async function loadPublicProfil(profilId) {
           ${p.banque?`<div style="font-size:13px;margin-bottom:4px">${p.banque}</div>`:''}
           ${p.rib?`<div style="font-size:12px;font-family:monospace;color:#064E3B">${p.rib}</div>`:''}
         </div>`:''}
+        <button id="btn-ouvrir-demande-devis" style="width:100%;margin-top:16px;padding:14px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>
+        <div id="zone-demande-devis" style="display:none;background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-top:12px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px">Votre demande</div>
+          <input id="dd-nom" placeholder="Votre nom" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
+          <input id="dd-tel" placeholder="Téléphone" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
+          <input id="dd-email" placeholder="Email (optionnel)" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
+          <textarea id="dd-description" placeholder="Décrivez ce dont vous avez besoin..." rows="4" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:10px;box-sizing:border-box;resize:none"></textarea>
+          <button id="btn-envoyer-demande-devis" style="width:100%;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Envoyer la demande</button>
+          <div id="dd-feedback" style="font-size:12px;text-align:center;margin-top:8px;min-height:16px"></div>
+        </div>
         <div style="text-align:center;margin-top:20px;font-size:11px;color:#9C9186">Profil partagé via <strong>Zelto</strong></div>
       </div>`;
+    document.getElementById('btn-ouvrir-demande-devis').onclick = function() {
+      document.getElementById('zone-demande-devis').style.display = 'block';
+      this.style.display = 'none';
+    };
+    document.getElementById('btn-envoyer-demande-devis').onclick = async function() {
+      const nom = document.getElementById('dd-nom').value.trim();
+      const description = document.getElementById('dd-description').value.trim();
+      const feedback = document.getElementById('dd-feedback');
+      if (!nom || !description) { feedback.style.color = '#B23A2E'; feedback.textContent = 'Nom et description obligatoires'; return; }
+      feedback.style.color = '#6B5F54';
+      feedback.textContent = '⏳ Envoi...';
+      try {
+        const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/creer_demande_devis', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            p_id_unique: profilId,
+            p_client_nom: nom,
+            p_client_tel: document.getElementById('dd-tel').value.trim(),
+            p_client_email: document.getElementById('dd-email').value.trim(),
+            p_description: description
+          })
+        });
+        if (!resp.ok) { feedback.style.color = '#B23A2E'; feedback.textContent = 'Erreur — réessayez'; return; }
+        feedback.style.color = '#6E8F4E';
+        feedback.textContent = '✅ Demande envoyée ! L\'entreprise vous recontactera.';
+        document.getElementById('btn-envoyer-demande-devis').disabled = true;
+      } catch(e) {
+        feedback.style.color = '#B23A2E';
+        feedback.textContent = 'Erreur: ' + e.message;
+      }
+    };
   } catch(e) { document.body.innerHTML='<div style="text-align:center;padding:60px;font-family:Karla,sans-serif;color:#B23A2E">Erreur de chargement</div>'; }
 }
 
@@ -578,6 +620,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
       if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
       if (typeof loadEmployes === 'function') await loadEmployes();
+      if (typeof loadDemandesDevis === 'function') await loadDemandesDevis();
     await loadConversations();
       if (typeof loadAbonnements === 'function') await loadAbonnements();
       if (typeof verifierAbonnements === 'function') await verifierAbonnements();
@@ -630,6 +673,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
       if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
       if (typeof loadEmployes === 'function') await loadEmployes();
+      if (typeof loadDemandesDevis === 'function') await loadDemandesDevis();
     await loadConversations();
         if (typeof loadAbonnements === 'function') await loadAbonnements();
         if (typeof verifierAbonnements === 'function') await verifierAbonnements();
