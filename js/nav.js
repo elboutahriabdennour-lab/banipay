@@ -188,7 +188,7 @@ function tempsRelatif(dateStr) {
 
 function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
-  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋' };
+  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋', demande_devis:'📥' };
   // NOUVEAU: séparateur visuel avant la première notification déjà lue —
   // rend l'historique explicite plutôt que de mélanger silencieusement
   // non-lues et déjà traitées dans la même liste.
@@ -681,6 +681,7 @@ function goScreen(name) {
     'bc-recus': function() { if (typeof loadBCRecus==='function') loadBCRecus(); },
     'hub-achats': function() { if (typeof renderHubAchats==='function') renderHubAchats(); },
     'hub-ventes': function() { if (typeof renderHubVentes==='function') renderHubVentes(); },
+    'demandes-devis': function() { if (typeof loadDemandesDevis==='function') loadDemandesDevis(); },
   };
   if (actions[name]) actions[name]();
 }
