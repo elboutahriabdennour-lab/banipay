@@ -247,6 +247,7 @@ async function doLogin() {
       if (typeof loadBonsLivraison === 'function') await _essai(loadBonsLivraison, 'loadBonsLivraison');
       if (typeof loadRelancesEnvoyees === 'function') await _essai(loadRelancesEnvoyees, 'loadRelancesEnvoyees');
       if (typeof loadEmployes === 'function') await _essai(loadEmployes, 'loadEmployes');
+      if (typeof loadDemandesDevis === 'function') await _essai(loadDemandesDevis, 'loadDemandesDevis');
       if (typeof loadAbonnements === 'function') await _essai(loadAbonnements, 'loadAbonnements');
       if (typeof verifierAbonnements === 'function') await _essai(verifierAbonnements, 'verifierAbonnements');
       // Crée un profil entreprise minimal si absent, pour apparaître
