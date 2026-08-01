@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785402252">
+<link rel="stylesheet" href="css/style.css?v=1785528480">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -131,35 +131,36 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785402252"></script>
-  <script src="js/utils.js?v=1785402252"></script>
-  <script src="js/auth.js?v=1785402252"></script>
-  <script src="js/nav.js?v=1785402252"></script>
-  <script src="js/factures.js?v=1785402252"></script>
-  <script src="js/devis.js?v=1785402252"></script>
-  <script src="js/clients.js?v=1785402252"></script>
-  <script src="js/produits.js?v=1785402252"></script>
-  <script src="js/pdf.js?v=1785402252"></script>
-  <script src="js/stats.js?v=1785402252"></script>
-  <script src="js/profil.js?v=1785402252"></script>
-  <script src="js/comptable.js?v=1785402252"></script>
-  <script src="js/messages.js?v=1785402252"></script>
-<script src="js/achats.js?v=1785402252"></script>
-<script src="js/stock.js?v=1785402252"></script>
-<script src="js/finance.js?v=1785402252"></script>
-<script src="js/ubl.js?v=1785402252"></script>
-<script src="js/relances.js?v=1785402252"></script>
-<script src="js/dashboard-avance.js?v=1785402252"></script>
-<script src="js/ocr-achats.js?v=1785402252"></script>
-<script src="js/equipe.js?v=1785402252"></script>
-<script src="js/equipe-cabinet.js?v=1785402252"></script>
-<script src="js/rh.js?v=1785402252"></script>
-<script src="js/hubs.js?v=1785402252"></script>
-<script src="js/demandes-devis.js?v=1785402252"></script>
-<script src="js/selection.js?v=1785402252"></script>
-<script src="js/abonnements.js?v=1785402252"></script>
-<script src="js/signature.js?v=1785402252"></script>
-<script src="js/app.js?v=1785402252"></script>
+<script src="js/config.js?v=1785528480"></script>
+  <script src="js/utils.js?v=1785528480"></script>
+  <script src="js/auth.js?v=1785528480"></script>
+  <script src="js/nav.js?v=1785528480"></script>
+  <script src="js/factures.js?v=1785528480"></script>
+  <script src="js/devis.js?v=1785528480"></script>
+  <script src="js/clients.js?v=1785528480"></script>
+  <script src="js/produits.js?v=1785528480"></script>
+  <script src="js/pdf.js?v=1785528480"></script>
+  <script src="js/stats.js?v=1785528480"></script>
+  <script src="js/profil.js?v=1785528480"></script>
+  <script src="js/comptable.js?v=1785528480"></script>
+  <script src="js/messages.js?v=1785528480"></script>
+<script src="js/achats.js?v=1785528480"></script>
+<script src="js/stock.js?v=1785528480"></script>
+<script src="js/finance.js?v=1785528480"></script>
+<script src="js/ubl.js?v=1785528480"></script>
+<script src="js/relances.js?v=1785528480"></script>
+<script src="js/dashboard-avance.js?v=1785528480"></script>
+<script src="js/ocr-achats.js?v=1785528480"></script>
+<script src="js/equipe.js?v=1785528480"></script>
+<script src="js/equipe-cabinet.js?v=1785528480"></script>
+<script src="js/rh.js?v=1785528480"></script>
+<script src="js/hubs.js?v=1785528480"></script>
+<script src="js/demandes-devis.js?v=1785528480"></script>
+<script src="js/support.js?v=1785528480"></script>
+<script src="js/selection.js?v=1785528480"></script>
+<script src="js/abonnements.js?v=1785528480"></script>
+<script src="js/signature.js?v=1785528480"></script>
+<script src="js/app.js?v=1785528480"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -288,7 +289,65 @@
 
 <!-- ACHATS -->
   <!-- RUBRIQUE ACHATS (hub) -->
-  <div class="screen" id="screen-hub-achats">
+    <!-- SUPPORT -->
+  <div class="screen" id="screen-support">
+    <div class="topbar">
+      <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+      <div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div>
+    </div>
+    <div style="padding:16px 20px">
+      <div class="sec-label" style="padding:0 0 12px">🆘 Support</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button onclick="contacterSupportEmail()" style="flex:1;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Email</button>
+        <button onclick="contacterSupportWhatsApp()" style="flex:1;padding:12px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📱 WhatsApp</button>
+      </div>
+
+      <div class="p-card" style="margin-bottom:16px">
+        <div class="p-card-title">📝 Nous écrire</div>
+        <div style="padding:14px 16px">
+          <input id="sup-sujet" class="f-inp" placeholder="Sujet" style="margin-bottom:10px">
+          <textarea id="sup-message" class="f-inp" rows="4" placeholder="Décrivez votre problème ou question..." style="margin-bottom:10px"></textarea>
+          <button onclick="envoyerTicketSupport()" style="width:100%;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Envoyer</button>
+        </div>
+      </div>
+
+      <div class="p-card">
+        <div class="p-card-title">💬 Assistant Zelto</div>
+        <div style="font-size:10px;color:#9C9186;padding:0 16px 10px">Répond aux questions fréquentes — pas une IA, juste des réponses toutes prêtes. Contactez le support ci-dessus pour un vrai humain.</div>
+        <div id="chatbot-messages" style="padding:10px 16px;max-height:280px;overflow-y:auto"></div>
+        <div style="display:flex;gap:8px;padding:10px 16px 16px">
+          <input id="chatbot-input" class="f-inp" placeholder="Posez votre question..." style="flex:1" onkeydown="if(event.key==='Enter'){envoyerMessageChatbot();}">
+          <button onclick="envoyerMessageChatbot()" style="padding:0 16px;background:#C9971F;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:inherit">➤</button>
+        </div>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+
+  <!-- QUI SOMMES-NOUS -->
+  <div class="screen" id="screen-qui-sommes-nous">
+    <div class="topbar">
+      <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+      <div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div>
+    </div>
+    <div style="padding:20px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:32px;font-weight:900;color:#2A2420">Zel<span style="color:#C9971F">to</span></div>
+      </div>
+      <div class="p-card">
+        <div style="padding:16px;font-size:13px;line-height:1.7;color:#2A2420">
+          <p style="margin-bottom:12px">Zelto est né d'un constat simple : trop de PME et TPE marocaines gèrent encore leurs factures, devis et TVA sur papier ou dans des tableurs, avec le temps perdu et les erreurs que ça entraîne.</p>
+          <p style="margin-bottom:12px">Notre objectif est de rendre la facturation, la gestion des achats et le suivi comptable accessibles à toute entreprise marocaine, quelle que soit sa taille — sans jargon inutile, avec des outils pensés pour un usage quotidien réel : sur le terrain, au bureau, ou entre deux rendez-vous.</p>
+          <p>Zelto évolue en continu, avec un objectif clair : préparer les entreprises marocaines à la facturation électronique obligatoire, tout en simplifiant leur gestion de tous les jours.</p>
+        </div>
+      </div>
+      <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:16px">⚠️ Texte générique à personnaliser selon votre histoire réelle.</div>
+    </div>
+    <div class="pb"></div>
+  </div>
+
+<div class="screen" id="screen-hub-achats">
     <div class="app-header" style="padding-top:16px">
       <div class="brand">Zel<span>to</span></div>
       <div class="back-btn" onclick="goScreen('dashboard',null)" style="font-size:14px;padding:8px 14px;border-radius:20px">← Retour</div>
@@ -740,6 +799,8 @@
     <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
+    <button class="p-btn" onclick="goScreen('support',null)" style="color:#1F6F72">🆘 Support</button>
+    <button class="p-btn" onclick="goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
     <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#7C5CA6">🔐 Lien accès comptable</button>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
@@ -2091,6 +2152,8 @@
 
   <!-- Actions -->
   <div style="margin:0 20px 20px;display:flex;flex-direction:column;gap:8px">
+    <button onclick="goScreen('support',null)" style="width:100%;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🆘 Support</button>
+    <button onclick="goScreen('qui-sommes-nous',null)" style="width:100%;padding:12px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">ℹ️ Qui sommes-nous</button>
     <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
   </div>
   <div class="pb"></div>
