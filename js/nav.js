@@ -682,6 +682,8 @@ function goScreen(name) {
     'hub-achats': function() { if (typeof renderHubAchats==='function') renderHubAchats(); },
     'hub-ventes': function() { if (typeof renderHubVentes==='function') renderHubVentes(); },
     'demandes-devis': function() { if (typeof loadDemandesDevis==='function') loadDemandesDevis(); },
+    'support': function() { if (typeof initChatbot==='function') setTimeout(initChatbot, 100); },
+    'qui-sommes-nous': function() {},
   };
   if (actions[name]) actions[name]();
 }
