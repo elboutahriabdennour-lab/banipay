@@ -684,6 +684,7 @@ function goScreen(name) {
     'demandes-devis': function() { if (typeof loadDemandesDevis==='function') loadDemandesDevis(); },
     'support': function() { if (typeof initChatbot==='function') setTimeout(initChatbot, 100); },
     'qui-sommes-nous': function() {},
+    'espace-support': function() {},
   };
   if (actions[name]) actions[name]();
 }
