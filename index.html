@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785665984">
+<link rel="stylesheet" href="css/style.css?v=1785698985">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -131,36 +131,38 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785665984"></script>
-  <script src="js/utils.js?v=1785665984"></script>
-  <script src="js/auth.js?v=1785665984"></script>
-  <script src="js/nav.js?v=1785665984"></script>
-  <script src="js/factures.js?v=1785665984"></script>
-  <script src="js/devis.js?v=1785665984"></script>
-  <script src="js/clients.js?v=1785665984"></script>
-  <script src="js/produits.js?v=1785665984"></script>
-  <script src="js/pdf.js?v=1785665984"></script>
-  <script src="js/stats.js?v=1785665984"></script>
-  <script src="js/profil.js?v=1785665984"></script>
-  <script src="js/comptable.js?v=1785665984"></script>
-  <script src="js/messages.js?v=1785665984"></script>
-<script src="js/achats.js?v=1785665984"></script>
-<script src="js/stock.js?v=1785665984"></script>
-<script src="js/finance.js?v=1785665984"></script>
-<script src="js/ubl.js?v=1785665984"></script>
-<script src="js/relances.js?v=1785665984"></script>
-<script src="js/dashboard-avance.js?v=1785665984"></script>
-<script src="js/ocr-achats.js?v=1785665984"></script>
-<script src="js/equipe.js?v=1785665984"></script>
-<script src="js/equipe-cabinet.js?v=1785665984"></script>
-<script src="js/rh.js?v=1785665984"></script>
-<script src="js/hubs.js?v=1785665984"></script>
-<script src="js/demandes-devis.js?v=1785665984"></script>
-<script src="js/support.js?v=1785665984"></script>
-<script src="js/selection.js?v=1785665984"></script>
-<script src="js/abonnements.js?v=1785665984"></script>
-<script src="js/signature.js?v=1785665984"></script>
-<script src="js/app.js?v=1785665984"></script>
+<script src="js/config.js?v=1785698985"></script>
+  <script src="js/utils.js?v=1785698985"></script>
+  <script src="js/auth.js?v=1785698985"></script>
+  <script src="js/nav.js?v=1785698985"></script>
+  <script src="js/factures.js?v=1785698985"></script>
+  <script src="js/devis.js?v=1785698985"></script>
+  <script src="js/clients.js?v=1785698985"></script>
+  <script src="js/produits.js?v=1785698985"></script>
+  <script src="js/pdf.js?v=1785698985"></script>
+  <script src="js/stats.js?v=1785698985"></script>
+  <script src="js/profil.js?v=1785698985"></script>
+  <script src="js/comptable.js?v=1785698985"></script>
+  <script src="js/messages.js?v=1785698985"></script>
+<script src="js/achats.js?v=1785698985"></script>
+<script src="js/stock.js?v=1785698985"></script>
+<script src="js/finance.js?v=1785698985"></script>
+<script src="js/ubl.js?v=1785698985"></script>
+<script src="js/relances.js?v=1785698985"></script>
+<script src="js/dashboard-avance.js?v=1785698985"></script>
+<script src="js/ocr-achats.js?v=1785698985"></script>
+<script src="js/equipe.js?v=1785698985"></script>
+<script src="js/equipe-cabinet.js?v=1785698985"></script>
+<script src="js/rh.js?v=1785698985"></script>
+<script src="js/hubs.js?v=1785698985"></script>
+<script src="js/demandes-devis.js?v=1785698985"></script>
+<script src="js/support.js?v=1785698985"></script>
+<script src="js/devis-recus.js?v=1785698985"></script>
+<script src="js/demande-devis-fournisseur.js?v=1785698985"></script>
+<script src="js/selection.js?v=1785698985"></script>
+<script src="js/abonnements.js?v=1785698985"></script>
+<script src="js/signature.js?v=1785698985"></script>
+<script src="js/app.js?v=1785698985"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -364,6 +366,42 @@
         <button class="ftab" onclick="filtrerTicketsSupport('resolu',this)">Résolus</button>
       </div>
       <div id="tickets-support-liste"></div>
+    </div>
+    <div class="pb"></div>
+  </div>
+
+  <!-- DEVIS REÇUS ACCEPTÉS (à convertir en BC) -->
+  <div class="screen" id="screen-devis-recus">
+    <div class="topbar">
+      <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+      <div class="topbar-right"><button class="back-btn" onclick="goScreen('hub-achats',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div>
+    </div>
+    <div style="padding:16px 20px">
+      <div class="sec-label" style="padding:0 0 12px">📝 Devis reçus acceptés</div>
+      <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Devis d'autres entreprises Zelto que vous avez acceptés — convertissez-les en bon de commande si ce n'est pas déjà fait.</div>
+      <div id="devis-recus-resume"></div>
+      <div id="devis-recus-liste"></div>
+    </div>
+    <div class="pb"></div>
+  </div>
+
+  <!-- DEMANDER UN DEVIS À UN FOURNISSEUR -->
+  <div class="screen" id="screen-demande-devis-fournisseur">
+    <div class="form-header">
+      <button class="back-btn" onclick="goScreen('bon-commande',null)">←</button>
+      <div class="form-title">Demander un devis</div>
+    </div>
+    <div style="margin:14px 20px;background:#EDE6F0;border-radius:10px;padding:12px;font-size:12px;color:#6A4E85">📝 Demandez un prix à votre fournisseur avant de commander. S'il a un compte Zelto, sa demande apparaîtra directement dans son espace.</div>
+    <div class="form-section"><label class="f-lbl">Lien du profil Zelto du fournisseur (si disponible)</label><input id="ddf-fournisseur-lien" class="f-inp" placeholder="Collez le lien ici..."></div>
+    <div class="form-section"><label class="f-lbl">Ou nom du fournisseur</label><input id="ddf-fournisseur-nom" class="f-inp" placeholder="Nom du fournisseur"></div>
+    <div class="form-section"><label class="f-lbl">Téléphone (si pas sur Zelto, pour WhatsApp)</label><input id="ddf-fournisseur-tel" class="f-inp" type="tel" placeholder="+212 6XX XX XX XX"></div>
+    <div class="form-section"><label class="f-lbl">Ce dont vous avez besoin *</label><textarea id="ddf-description" class="f-inp" rows="5" placeholder="Décrivez les articles ou prestations souhaités, quantités, délais..."></textarea></div>
+    <div style="display:flex;gap:8px;padding:0 20px 14px">
+      <button onclick="discuterAvecFournisseur()" style="flex:1;padding:10px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💬 Discuter</button>
+      <button onclick="proposerRendezVousFournisseur()" style="flex:1;padding:10px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📅 Rendez-vous</button>
+    </div>
+    <div class="send-row" style="grid-template-columns:1fr">
+      <button class="s-btn blue" onclick="envoyerDemandeDevisFournisseur()">📤 Envoyer la demande</button>
     </div>
     <div class="pb"></div>
   </div>
@@ -1948,6 +1986,7 @@
   </div>
   <div class="form-section"><label class="f-lbl">Description de la demande (optionnel)</label><textarea id="bc-note" class="f-inp" rows="3" placeholder="Décrivez ce que vous voulez commander, des instructions de livraison, ou toute précision utile pour le fournisseur..."></textarea></div>
   <div style="padding:0 20px 8px"><button onclick="goScreen('bons-commande-list',null)" style="width:100%;padding:8px;background:none;color:#7C5CA6;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📋 Voir mes bons de commande</button></div>
+  <div style="padding:0 20px 8px"><button onclick="ouvrirDemandeDevisFournisseur()" style="width:100%;padding:8px;background:none;color:#A67A16;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📝 Demander d'abord un devis à ce fournisseur</button></div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderBonCommande()">&#128190; Enregistrer + PDF</button>
     <button class="s-btn gray" onclick="goScreen('dashboard')">&#10005; Annuler</button>
