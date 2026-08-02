@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785528480">
+<link rel="stylesheet" href="css/style.css?v=1785665984">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -131,36 +131,36 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785528480"></script>
-  <script src="js/utils.js?v=1785528480"></script>
-  <script src="js/auth.js?v=1785528480"></script>
-  <script src="js/nav.js?v=1785528480"></script>
-  <script src="js/factures.js?v=1785528480"></script>
-  <script src="js/devis.js?v=1785528480"></script>
-  <script src="js/clients.js?v=1785528480"></script>
-  <script src="js/produits.js?v=1785528480"></script>
-  <script src="js/pdf.js?v=1785528480"></script>
-  <script src="js/stats.js?v=1785528480"></script>
-  <script src="js/profil.js?v=1785528480"></script>
-  <script src="js/comptable.js?v=1785528480"></script>
-  <script src="js/messages.js?v=1785528480"></script>
-<script src="js/achats.js?v=1785528480"></script>
-<script src="js/stock.js?v=1785528480"></script>
-<script src="js/finance.js?v=1785528480"></script>
-<script src="js/ubl.js?v=1785528480"></script>
-<script src="js/relances.js?v=1785528480"></script>
-<script src="js/dashboard-avance.js?v=1785528480"></script>
-<script src="js/ocr-achats.js?v=1785528480"></script>
-<script src="js/equipe.js?v=1785528480"></script>
-<script src="js/equipe-cabinet.js?v=1785528480"></script>
-<script src="js/rh.js?v=1785528480"></script>
-<script src="js/hubs.js?v=1785528480"></script>
-<script src="js/demandes-devis.js?v=1785528480"></script>
-<script src="js/support.js?v=1785528480"></script>
-<script src="js/selection.js?v=1785528480"></script>
-<script src="js/abonnements.js?v=1785528480"></script>
-<script src="js/signature.js?v=1785528480"></script>
-<script src="js/app.js?v=1785528480"></script>
+<script src="js/config.js?v=1785665984"></script>
+  <script src="js/utils.js?v=1785665984"></script>
+  <script src="js/auth.js?v=1785665984"></script>
+  <script src="js/nav.js?v=1785665984"></script>
+  <script src="js/factures.js?v=1785665984"></script>
+  <script src="js/devis.js?v=1785665984"></script>
+  <script src="js/clients.js?v=1785665984"></script>
+  <script src="js/produits.js?v=1785665984"></script>
+  <script src="js/pdf.js?v=1785665984"></script>
+  <script src="js/stats.js?v=1785665984"></script>
+  <script src="js/profil.js?v=1785665984"></script>
+  <script src="js/comptable.js?v=1785665984"></script>
+  <script src="js/messages.js?v=1785665984"></script>
+<script src="js/achats.js?v=1785665984"></script>
+<script src="js/stock.js?v=1785665984"></script>
+<script src="js/finance.js?v=1785665984"></script>
+<script src="js/ubl.js?v=1785665984"></script>
+<script src="js/relances.js?v=1785665984"></script>
+<script src="js/dashboard-avance.js?v=1785665984"></script>
+<script src="js/ocr-achats.js?v=1785665984"></script>
+<script src="js/equipe.js?v=1785665984"></script>
+<script src="js/equipe-cabinet.js?v=1785665984"></script>
+<script src="js/rh.js?v=1785665984"></script>
+<script src="js/hubs.js?v=1785665984"></script>
+<script src="js/demandes-devis.js?v=1785665984"></script>
+<script src="js/support.js?v=1785665984"></script>
+<script src="js/selection.js?v=1785665984"></script>
+<script src="js/abonnements.js?v=1785665984"></script>
+<script src="js/signature.js?v=1785665984"></script>
+<script src="js/app.js?v=1785665984"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -322,6 +322,7 @@
         </div>
       </div>
     </div>
+    <div style="text-align:center;padding:8px 20px 4px"><span onclick="ouvrirEspaceSupport()" style="font-size:10px;color:#C4BCAE;cursor:pointer">Espace agent</span></div>
     <div class="pb"></div>
   </div>
 
@@ -343,6 +344,26 @@
         </div>
       </div>
       <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:16px">⚠️ Texte générique à personnaliser selon votre histoire réelle.</div>
+    </div>
+    <div class="pb"></div>
+  </div>
+
+  <!-- ESPACE SUPPORT (agents uniquement) -->
+  <div class="screen" id="screen-espace-support">
+    <div class="topbar">
+      <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+      <div class="topbar-right"><button class="back-btn" onclick="goScreen('profil',null)" style="background:rgba(255,255,255,0.15);color:#fff">←</button></div>
+    </div>
+    <div style="padding:16px 20px">
+      <div class="sec-label" style="padding:0 0 12px">🎫 Tickets support</div>
+      <div id="tickets-support-resume"></div>
+      <div class="filter-tabs" style="margin-bottom:12px">
+        <button class="ftab active" onclick="filtrerTicketsSupport('tous',this)">Tous</button>
+        <button class="ftab" onclick="filtrerTicketsSupport('nouveau',this)">Nouveaux</button>
+        <button class="ftab" onclick="filtrerTicketsSupport('en_cours',this)">En cours</button>
+        <button class="ftab" onclick="filtrerTicketsSupport('resolu',this)">Résolus</button>
+      </div>
+      <div id="tickets-support-liste"></div>
     </div>
     <div class="pb"></div>
   </div>
