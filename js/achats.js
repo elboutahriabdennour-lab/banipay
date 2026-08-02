@@ -484,6 +484,12 @@ async function sauvegarderAchat() {
   const fournisseur = (el('achat-fournisseur')?.value || '').trim();
   if (!fournisseur) { showToast('Saisissez le fournisseur', 'error'); return; }
   if (!STATE.lignesAchat.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
+  const dateAchat = el('achat-date')?.value;
+  const echeanceAchat = el('achat-echeance')?.value;
+  if (dateAchat && echeanceAchat && echeanceAchat < dateAchat) {
+    showToast('⚠️ L\'échéance ne peut pas être avant la date de la facture', 'error');
+    return;
+  }
 
   const ht = STATE.lignesAchat.reduce(function(s, l) { return s + (Number(l.qte)||0) * (Number(l.pu)||0); }, 0);
   const taux = parseFloat(el('achat-tva-taux')?.value || 20) / 100;
@@ -709,7 +715,7 @@ async function marquerAchatPaye(id) {
 async function supprimerAchat(id) {
   if (!confirm('Supprimer cette facture ?')) return;
   try {
-    await sb.delete('factures_achat', 'id=eq.' + id + '&user_id=eq.' + sb.user.id);
+    await sb.del('factures_achat', 'id=eq.' + id + '&user_id=eq.' + sb.user.id);
     STATE.achats = STATE.achats.filter(function(x) { return x.id !== id; });
     document.getElementById('achat-detail-overlay')?.remove();
     showToast('Supprimée', 'success');
