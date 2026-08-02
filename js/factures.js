@@ -309,6 +309,12 @@ async function sauvegarderFacture(isDraft = false) {
   const client = el('f-client')?.value.trim();
   if (!client) { showToast('Entrez le nom du client', 'error'); return; }
   if (!STATE.lignesF.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
+  const dateEmissionF = el('f-date')?.value;
+  const echeanceF = el('f-echeance')?.value;
+  if (dateEmissionF && echeanceF && echeanceF < dateEmissionF) {
+    showToast('⚠️ L\'échéance ne peut pas être avant la date d\'émission', 'error');
+    return;
+  }
   const ht = STATE.lignesF.reduce((s,l) => s + l.qte*l.pu, 0);
   const statut = isDraft ? 'brouillon' : (el('f-statut')?.value || 'envoyee');
   showToast('⏳ Sauvegarde...');
