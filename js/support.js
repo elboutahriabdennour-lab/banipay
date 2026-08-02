@@ -45,6 +45,112 @@ async function envoyerTicketSupport() {
 }
 
 // ============================================================
+// ESPACE AGENT SUPPORT — accès réservé, voir migration_phase31
+// ============================================================
+// PÉRIMÈTRE : la personne doit déjà avoir un compte Zelto (entreprise ou
+// comptable). Son accès à ce tableau de bord se débloque uniquement si son
+// email figure dans la table agents_support (ajout manuel via Supabase
+// Table Editor pour le premier agent — pas d'auto-inscription possible,
+// volontairement, pour éviter qu'un accès aussi sensible se donne tout
+// seul).
+
+async function ouvrirEspaceSupport() {
+  if (!sb.user?.id) {
+    showToast('Connectez-vous d\'abord avec votre compte Zelto', 'error');
+    return;
+  }
+  showToast('⏳ Vérification des droits...');
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/suis_je_agent_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const estAgent = resp.ok ? await resp.json() : false;
+    if (!estAgent) {
+      showToast('⛔ Ce compte n\'a pas accès à l\'espace support', 'error');
+      return;
+    }
+    goScreen('espace-support', null);
+    chargerTicketsSupport();
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+STATE.ticketsSupport = STATE.ticketsSupport || [];
+
+async function chargerTicketsSupport() {
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_tous_tickets_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.ticketsSupport = resp.ok ? ((await resp.json()) || []) : [];
+  } catch(e) { STATE.ticketsSupport = []; }
+  renderTicketsSupport();
+}
+
+function renderTicketsSupport() {
+  const container = el('tickets-support-liste');
+  if (!container) return;
+  const tickets = STATE.ticketsSupport || [];
+  const filtre = STATE._filtreTicketsSupport || 'tous';
+  const filtres = filtre === 'tous' ? tickets : tickets.filter(function(t) { return t.statut === filtre; });
+
+  const nbNouveaux = tickets.filter(function(t) { return t.statut === 'nouveau'; }).length;
+  const resume = el('tickets-support-resume');
+  if (resume) resume.innerHTML = '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#A67A16">🎫 ' + nbNouveaux + ' nouveau(x) ticket(s)</span></div>';
+
+  const statutLabel = { nouveau: '🆕 Nouveau', en_cours: '⏳ En cours', resolu: '✅ Résolu' };
+  const statutColor = { nouveau: '#B8860B', en_cours: '#1F6F72', resolu: '#6E8F4E' };
+
+  container.innerHTML = !filtres.length
+    ? '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket</div></div>'
+    : filtres.map(function(t) {
+        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+            '<div><div style="font-size:13px;font-weight:700">' + escapeHTML(t.sujet||'') + '</div>' +
+            '<div style="font-size:11px;color:#9C9186">' + escapeHTML(t.nom||t.email||'') + ' · ' + escapeHTML(t.email||'') + '</div></div>' +
+            '<span style="font-size:10px;font-weight:600;color:' + (statutColor[t.statut]||'#9C9186') + '">' + (statutLabel[t.statut]||t.statut) + '</span>' +
+          '</div>' +
+          '<div style="font-size:12px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px;margin-bottom:8px">' + escapeHTML(t.message||'') + '</div>' +
+          '<div style="font-size:10px;color:#9C9186;margin-bottom:8px">' + formatDateTime(t.created_at) + '</div>' +
+          '<div style="display:flex;gap:6px">' +
+            (t.statut !== 'en_cours' ? '<button onclick="changerStatutTicket(' + t.id + ',\'en_cours\')" style="flex:1;padding:7px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⏳ En cours</button>' : '') +
+            (t.statut !== 'resolu' ? '<button onclick="changerStatutTicket(' + t.id + ',\'resolu\')" style="flex:1;padding:7px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Résolu</button>' : '') +
+            '<button onclick="window.location.href=\'mailto:' + (t.email||'') + '?subject=Re: ' + encodeURIComponent(t.sujet||'') + '\'" style="flex:1;padding:7px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Répondre</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+}
+
+function filtrerTicketsSupport(filtre, btn) {
+  STATE._filtreTicketsSupport = filtre;
+  document.querySelectorAll('#screen-espace-support .ftab').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderTicketsSupport();
+}
+
+async function changerStatutTicket(ticketId, statut) {
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_ticket_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_ticket_id: ticketId, p_statut: statut })
+    });
+    if (!resp.ok) { showToast('Erreur', 'error'); return; }
+    const t = STATE.ticketsSupport.find(function(x) { return x.id === ticketId; });
+    if (t) t.statut = statut;
+    renderTicketsSupport();
+    showToast('✅ Statut mis à jour', 'success');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
+// ============================================================
 // CHATBOT FAQ — mots-clés, pas une IA (voir note en tête de fichier)
 // ============================================================
 const FAQ_ZELTO = [
