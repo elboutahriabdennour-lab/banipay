@@ -462,7 +462,7 @@ async function uploadDocumentArchive(event) {
 async function supprimerDocArchive(id) {
   if (!confirm('Supprimer ce document ?')) return;
   try {
-    await sb.delete('archive_documents', 'id=eq.' + id);
+    await sb.del('archive_documents', 'id=eq.' + id);
     STATE.archive = (STATE.archive||[]).filter(function(d) { return d.id !== id; });
     renderArchive();
     showToast('Document supprimé', 'success');
@@ -593,7 +593,7 @@ async function uploadReleve(event) {
 async function supprimerReleve(id) {
   if (!confirm('Supprimer ce relevé ?')) return;
   try {
-    await sb.delete('releves_bancaires', 'id=eq.' + id);
+    await sb.del('releves_bancaires', 'id=eq.' + id);
     STATE.releves = STATE.releves.filter(function(r) { return r.id !== id; });
     renderReleves();
     showToast('Relevé supprimé', 'success');
