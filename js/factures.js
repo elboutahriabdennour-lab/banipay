@@ -54,23 +54,6 @@ function renderDashboard() {
   setEl('hero-total', fmt(totalARecevoir) + ' MAD');
   setEl('hero-sub', facturesActives.length + ' facture' + (facturesActives.length > 1 ? 's' : '') + ' active' + (facturesActives.length > 1 ? 's' : ''));
 
-  // DIAGNOSTIC TEMPORAIRE — à retirer une fois le problème résolu. Affiche
-  // directement à l'écran ce que l'app voit réellement, sans besoin
-  // d'outils développeur (F12 indisponible pour l'utilisateur).
-  (function() {
-    let diag = document.getElementById('diag-temp-factures');
-    if (!diag) {
-      diag = document.createElement('div');
-      diag.id = 'diag-temp-factures';
-      diag.style.cssText = 'margin:8px 20px;padding:10px 14px;background:#241F1B;color:#F7EFDC;border-radius:10px;font-size:12px;font-family:monospace;white-space:pre-wrap';
-      const hero = document.querySelector('#screen-dashboard .hero');
-      if (hero && hero.parentNode) hero.parentNode.insertBefore(diag, hero.nextSibling);
-    }
-    diag.textContent = 'DIAGNOSTIC — STATE.factures: ' + (STATE.factures ? STATE.factures.length : 'undefined/null') +
-      ' | STATE.filterF: ' + JSON.stringify(STATE.filterF) +
-      ' | #facture-list existe: ' + (!!document.getElementById('facture-list'));
-  })();
-
   const nbPayee = factures.filter(function(f) { return f.statut === 'payee'; }).length;
   const nbAttente = factures.filter(function(f) { return f.statut === 'attente' || f.statut === 'envoyee'; }).length;
   const nbRetard = factures.filter(function(f) { return f.statut === 'retard'; }).length;
