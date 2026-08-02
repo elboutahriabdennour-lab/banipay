@@ -9,11 +9,19 @@
 // description du besoin).
 
 function ouvrirDemandeDevisFournisseur() {
+  // Mémorise l'écran d'où on vient pour que le bouton retour y ramène
+  // vraiment, plutôt que de toujours renvoyer vers le formulaire BC.
+  const ecranActif = document.querySelector('.screen.active');
+  window._ddfRetour = (ecranActif && ecranActif.id) ? ecranActif.id.replace('screen-', '') : 'hub-achats';
   el('ddf-fournisseur-lien') && (el('ddf-fournisseur-lien').value = '');
   el('ddf-fournisseur-nom') && (el('ddf-fournisseur-nom').value = '');
   el('ddf-fournisseur-tel') && (el('ddf-fournisseur-tel').value = '');
   el('ddf-description') && (el('ddf-description').value = '');
   goScreen('demande-devis-fournisseur', null);
+}
+
+function retourDepuisDemandeDevisFournisseur() {
+  goScreen(window._ddfRetour || 'hub-achats', null);
 }
 
 async function envoyerDemandeDevisFournisseur() {
@@ -24,6 +32,12 @@ async function envoyerDemandeDevisFournisseur() {
 
   if (!description) { showToast('Décrivez ce dont vous avez besoin', 'error'); return; }
   if (!lien && !nom) { showToast('Indiquez le fournisseur (nom ou lien Zelto)', 'error'); return; }
+  // FIX: sans lien Zelto ET sans téléphone, la demande ne peut être remise
+  // à personne — avant, ce cas passait quand même et finissait sur une
+  // tentative de copie presse-papier qui pouvait échouer silencieusement,
+  // laissant l'utilisateur sans aucun retour concret ("le bouton ne
+  // marche pas").
+  if (!lien && !tel) { showToast('Indiquez un lien Zelto ou un téléphone pour pouvoir transmettre la demande', 'error'); return; }
 
   const p = STATE.profil || {};
 
@@ -34,7 +48,8 @@ async function envoyerDemandeDevisFournisseur() {
     try {
       const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
       idUnique = url.searchParams.get('profil') || url.searchParams.get('portail');
-    } catch(e) { idUnique = lien.trim(); }
+    } catch(e) { idUnique = null; }
+    if (!idUnique) idUnique = lien.trim(); // dernier recours : le texte collé est peut-être l'id lui-même
 
     if (idUnique) {
       showToast('⏳ Envoi...');
@@ -52,27 +67,38 @@ async function envoyerDemandeDevisFournisseur() {
         });
         if (resp.ok) {
           showToast('✅ Demande envoyée au fournisseur sur Zelto', 'success');
-          goScreen('bon-commande', null);
+          goScreen(window._ddfRetour || 'bon-commande', null);
+          return;
+        }
+        // FIX: on ne masque plus l'échec en silence — si on a un tel, on
+        // bascule sur WhatsApp en le disant clairement ; sinon on arrête
+        // ici avec un message honnête plutôt que de continuer vers un
+        // repli qui pourrait lui aussi échouer sans que l'utilisateur sache.
+        if (!tel) {
+          showToast('❌ Fournisseur introuvable sur Zelto — ajoutez son téléphone pour l\'envoyer par WhatsApp à la place', 'error');
           return;
         }
         showToast('Fournisseur introuvable sur Zelto — envoi par WhatsApp à la place', 'error');
-      } catch(e) {}
+      } catch(e) {
+        if (!tel) {
+          showToast('❌ Erreur d\'envoi — ajoutez un téléphone pour envoyer par WhatsApp à la place', 'error');
+          return;
+        }
+      }
     }
   }
 
-  // CAS 2 : pas de compte Zelto — message WhatsApp classique
+  // CAS 2 : pas de compte Zelto (ou envoi Zelto raté) — message WhatsApp,
+  // avec un téléphone obligatoire à ce stade (garanti par la validation
+  // du début).
   const msg = encodeURIComponent(
     'Bonjour ' + (nom || '') + ',\n\n' +
     'Pourriez-vous nous établir un devis pour :\n' + description + '\n\n' +
     'Cordialement,\n' + (p.raison || '')
   );
-  if (tel) {
-    window.open('https://wa.me/' + tel.replace(/[^0-9+]/g,'').replace(/^0/,'212') + '?text=' + msg, '_blank');
-  } else {
-    navigator.clipboard?.writeText(decodeURIComponent(msg));
-    showToast('Numéro non renseigné — message copié, collez-le où vous voulez', 'success');
-  }
-  goScreen('bon-commande', null);
+  window.open('https://wa.me/' + tel.replace(/[^0-9+]/g,'').replace(/^0/,'212') + '?text=' + msg, '_blank');
+  showToast('✅ Ouverture de WhatsApp...', 'success');
+  goScreen(window._ddfRetour || 'bon-commande', null);
 }
 
 // ============================================================
