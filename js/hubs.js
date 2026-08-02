@@ -30,7 +30,8 @@ function renderHubAchats() {
   container.innerHTML =
     _tuileHub('🧾', 'Factures d\'achat', achats.length + ' facture(s) enregistrée(s)', fmt(totalAchats) + ' MAD', '#F5E4E1', '#8E2E24', "goScreen('achats',null)") +
     _tuileHub('📋', 'Bons de commande envoyés', bcEnvoyes.length + ' BC · ' + bcEnAttente + ' en attente de réponse', null, '#EDE6F0', '#6A4E85', "goScreen('bons-commande-list',null)") +
-    '<div style="font-size:10px;color:#9C9186;text-align:center;padding:12px">💡 Un devis d\'achat (demande de prix à un fournisseur) n\'existe pas encore comme document séparé — à construire si besoin.</div>';
+    _tuileHub('📝', 'Devis reçus acceptés', 'À convertir en bon de commande', null, '#FBF0DA', '#A67A16', "chargerDevisRecusAcceptes();goScreen('devis-recus',null)") +
+    '<div style="text-align:center;padding:4px 0"><span onclick="ouvrirDemandeDevisFournisseur()" style="font-size:11px;color:#7C5CA6;text-decoration:underline;cursor:pointer">📝 Demander un devis à un fournisseur</span></div>';
 }
 
 function renderHubVentes() {
