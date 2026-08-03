@@ -44,6 +44,40 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .screen{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;background:var(--paper);-webkit-overflow-scrolling:touch}
 .screen.active{display:block}
 
+/* ============================================================
+   CADRE DESKTOP — sur les écrans larges (ordinateur), l'app reste
+   pensée mobile mais s'affiche dans un cadre centré façon "téléphone",
+   au lieu de s'étirer sur toute la largeur du navigateur (ce qui rendait
+   les cartes, formulaires et lignes de texte disproportionnés). Aucune
+   règle mobile existante n'est modifiée — ce bloc ne s'applique qu'au
+   dessus du seuil ci-dessous.
+   ============================================================ */
+@media (min-width: 780px){
+  html,body{background:var(--charcoal)}
+  body::before{
+    content:'';
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:linear-gradient(160deg,#241F1B,#3A2F26 60%,#241F1B);
+    z-index:0;
+  }
+  .screen{
+    left:50%;right:auto;
+    width:430px;
+    transform:translateX(-50%);
+    box-shadow:0 40px 120px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06);
+    z-index:1;
+  }
+  /* Les overlays (modals, diagnostics, historiques plein-écran créés en
+     JS) doivent suivre le même cadre, sinon ils reviendraient à couvrir
+     tout le navigateur. */
+  .modal-overlay,#diag-overlay,#historique-stock-overlay{
+    left:50%!important;right:auto!important;
+    width:430px!important;
+    transform:translateX(-50%);
+  }
+  .toast{left:50%}
+}
+
 /* Titres et marque : Baloo 2, ronde et chaleureuse — c'est la signature
    typographique de l'app, utilisée avec retenue sur les éléments clés */
 .topbar-brand,.auth-logo h1,.hero-amount,.p-nom-big,.form-title,.sec-title,
@@ -126,7 +160,7 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .card-amt{font-size:14px;font-weight:700;color:var(--ink)}
 .badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase;margin-top:3px}
 .b-payee{background:var(--sauge-light);color:var(--sauge-dark)}
-.b-envoyee,.b-attente,.b-envoye{background:var(--ambre-light);color:var(--ambre)}
+.b-envoyee,.b-attente,.b-envoye,.b-en_attente{background:var(--ambre-light);color:var(--ambre)}
 .b-retard,.b-refuse{background:var(--brique-light);color:var(--brique-dark)}
 .b-accepte{background:var(--sauge-light);color:var(--sauge-dark)}
 .b-converti{background:var(--zellige-light);color:var(--zellige-dark)}
