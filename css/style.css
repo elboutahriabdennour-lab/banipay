@@ -234,7 +234,14 @@ body.forcer-tele .modal-overlay,body.forcer-tele #diag-overlay,body.forcer-tele 
 
 /* FORM */
 .form-header{background:linear-gradient(135deg,var(--charcoal),var(--safran-dark));padding:16px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;color:#fff}
-.back-btn{width:36px;height:36px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:none;font-family:inherit;flex-shrink:0}
+.back-btn{width:36px;height:36px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:none;font-family:inherit;flex-shrink:0;color:var(--ink);transition:transform 0.15s ease,background 0.15s ease}
+.back-btn:active{transform:scale(0.9)}
+/* Sur fond sombre (topbar), le bouton retour bascule automatiquement en
+   version translucide blanche — plus besoin de répéter un style en ligne
+   sur chaque bouton, écran par écran : une seule règle, cohérente
+   partout. */
+.topbar .back-btn{background:rgba(255,255,255,0.16);color:#fff;margin-right:10px}
+.topbar .back-btn:active{background:rgba(255,255,255,0.28)}
 .form-title{font-size:18px;font-weight:700;color:var(--ink)}
 .form-section{padding:0 20px 14px}
 .f-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-faint);margin-bottom:6px;display:block}
