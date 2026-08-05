@@ -70,16 +70,28 @@ async function envoyerDemandeDevisFournisseur() {
           goScreen(window._ddfRetour || 'bon-commande', null);
           return;
         }
-        // FIX: on ne masque plus l'échec en silence — si on a un tel, on
-        // bascule sur WhatsApp en le disant clairement ; sinon on arrête
-        // ici avec un message honnête plutôt que de continuer vers un
-        // repli qui pourrait lui aussi échouer sans que l'utilisateur sache.
+        // FIX: on ne masque plus l'échec en silence — on montre le détail
+        // exact de l'erreur (utile notamment si la migration SQL
+        // correspondante n'a jamais été exécutée sur la vraie base : la
+        // RPC "creer_demande_devis" renvoie alors une erreur "fonction
+        // introuvable" au lieu d'un simple échec muet).
+        const errText = await resp.text().catch(function(){ return ''; });
+        afficherDiagnostic('Échec envoi demande de devis', [
+          'id_unique testé : ' + idUnique,
+          'HTTP ' + resp.status,
+          errText || '(pas de détail renvoyé par le serveur)',
+          '',
+          'Si ça mentionne "function ... does not exist", la migration',
+          'migration_phase29_demande_devis.sql n\'a probablement pas été',
+          'exécutée sur la base Supabase.'
+        ]);
         if (!tel) {
           showToast('❌ Fournisseur introuvable sur Zelto — ajoutez son téléphone pour l\'envoyer par WhatsApp à la place', 'error');
           return;
         }
         showToast('Fournisseur introuvable sur Zelto — envoi par WhatsApp à la place', 'error');
       } catch(e) {
+        afficherDiagnostic('Erreur réseau — demande de devis', ['id_unique testé : ' + idUnique, 'Erreur : ' + e.message]);
         if (!tel) {
           showToast('❌ Erreur d\'envoi — ajoutez un téléphone pour envoyer par WhatsApp à la place', 'error');
           return;
