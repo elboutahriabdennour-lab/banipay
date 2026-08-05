@@ -364,5 +364,54 @@ function telechargerFichierBase64(dataUrl, nomSouhaite) {
 }
 
 // ============================================================
-// BROUILLONS
+// BASCULE DE FORMAT — Mobile / Ordinateur / Télé
 // ============================================================
+// La détection automatique (CSS, via pointer:fine / pointer:none) est
+// une estimation, pas une certitude — un moniteur et une télé peuvent
+// rapporter la même largeur en pixels. Ce contrôle permet de forcer le
+// format à la main ; le choix est mémorisé pour la prochaine visite.
+function appliquerFormatSauvegarde() {
+  const format = localStorage.getItem('bp_format_affichage');
+  document.body.classList.remove('forcer-mobile', 'forcer-ordinateur', 'forcer-tele');
+  if (format === 'mobile') document.body.classList.add('forcer-mobile');
+  else if (format === 'ordinateur') document.body.classList.add('forcer-ordinateur');
+  else if (format === 'tele') document.body.classList.add('forcer-tele');
+  // format vide ou 'auto' => détection automatique CSS, aucune classe forcée
+}
+
+function choisirFormatAffichage(format) {
+  if (format === 'auto') localStorage.removeItem('bp_format_affichage');
+  else localStorage.setItem('bp_format_affichage', format);
+  appliquerFormatSauvegarde();
+  renderFormatSwitcher();
+}
+
+function renderFormatSwitcher() {
+  if (window.innerWidth < 780) return; // le sélecteur n'a de sens qu'au-delà du seuil desktop
+  let zone = document.getElementById('format-switcher');
+  if (!zone) {
+    zone = document.createElement('div');
+    zone.id = 'format-switcher';
+    document.body.appendChild(zone);
+  }
+  const actuel = localStorage.getItem('bp_format_affichage') || 'auto';
+  const options = [
+    { val: 'auto', label: '⚡ Auto' },
+    { val: 'ordinateur', label: '🖥️ Ordinateur' },
+    { val: 'tele', label: '📺 Télé' },
+    { val: 'mobile', label: '📱 Mobile' },
+  ];
+  zone.innerHTML = options.map(function(o) {
+    return '<button class="' + (actuel === o.val ? 'actif' : '') + '" onclick="choisirFormatAffichage(\'' + o.val + '\')">' + o.label + '</button>';
+  }).join('');
+}
+
+// Applique le format sauvegardé dès que possible, et affiche le sélecteur
+// une fois la page chargée.
+appliquerFormatSauvegarde();
+window.addEventListener('DOMContentLoaded', function() {
+  renderFormatSwitcher();
+});
+window.addEventListener('resize', function() {
+  renderFormatSwitcher();
+});
