@@ -44,6 +44,21 @@ function showToast(msg, type) {
     t.classList.remove('show');
     setTimeout(function() { t.className = 'toast'; t.textContent = ''; }, 400);
   }, duration);
+
+  // FIX: garde-fou absolu — si showToast() est rappelée rapidement plusieurs
+  // fois de suite (ex: boucle d'envoi, plusieurs opérations qui se
+  // terminent presque en même temps), chaque appel annule le minuteur
+  // précédent et en relance un nouveau : le message peut donner
+  // l'impression de ne jamais disparaître tant que les appels s'enchaînent.
+  // Ce second minuteur, lui, n'est JAMAIS annulé — il force la disparition
+  // 8 secondes après le PREMIER message de la rafale, quoi qu'il arrive.
+  if (!window._toastDeadline) {
+    window._toastDeadline = setTimeout(function() {
+      const tt = document.getElementById('toast');
+      if (tt) { tt.classList.remove('show'); setTimeout(function() { tt.className = 'toast'; tt.textContent = ''; }, 400); }
+      window._toastDeadline = null;
+    }, 8000);
+  }
 }
 
 
