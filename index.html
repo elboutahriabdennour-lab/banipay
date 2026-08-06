@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1785959636">
+<link rel="stylesheet" href="css/style.css?v=1786024797">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -131,38 +131,38 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1785959636"></script>
-  <script src="js/utils.js?v=1785959636"></script>
-  <script src="js/auth.js?v=1785959636"></script>
-  <script src="js/nav.js?v=1785959636"></script>
-  <script src="js/factures.js?v=1785959636"></script>
-  <script src="js/devis.js?v=1785959636"></script>
-  <script src="js/clients.js?v=1785959636"></script>
-  <script src="js/produits.js?v=1785959636"></script>
-  <script src="js/pdf.js?v=1785959636"></script>
-  <script src="js/stats.js?v=1785959636"></script>
-  <script src="js/profil.js?v=1785959636"></script>
-  <script src="js/comptable.js?v=1785959636"></script>
-  <script src="js/messages.js?v=1785959636"></script>
-<script src="js/achats.js?v=1785959636"></script>
-<script src="js/stock.js?v=1785959636"></script>
-<script src="js/finance.js?v=1785959636"></script>
-<script src="js/ubl.js?v=1785959636"></script>
-<script src="js/relances.js?v=1785959636"></script>
-<script src="js/dashboard-avance.js?v=1785959636"></script>
-<script src="js/ocr-achats.js?v=1785959636"></script>
-<script src="js/equipe.js?v=1785959636"></script>
-<script src="js/equipe-cabinet.js?v=1785959636"></script>
-<script src="js/rh.js?v=1785959636"></script>
-<script src="js/hubs.js?v=1785959636"></script>
-<script src="js/demandes-devis.js?v=1785959636"></script>
-<script src="js/support.js?v=1785959636"></script>
-<script src="js/devis-recus.js?v=1785959636"></script>
-<script src="js/demande-devis-fournisseur.js?v=1785959636"></script>
-<script src="js/selection.js?v=1785959636"></script>
-<script src="js/abonnements.js?v=1785959636"></script>
-<script src="js/signature.js?v=1785959636"></script>
-<script src="js/app.js?v=1785959636"></script>
+<script src="js/config.js?v=1786024797"></script>
+  <script src="js/utils.js?v=1786024797"></script>
+  <script src="js/auth.js?v=1786024797"></script>
+  <script src="js/nav.js?v=1786024797"></script>
+  <script src="js/factures.js?v=1786024797"></script>
+  <script src="js/devis.js?v=1786024797"></script>
+  <script src="js/clients.js?v=1786024797"></script>
+  <script src="js/produits.js?v=1786024797"></script>
+  <script src="js/pdf.js?v=1786024797"></script>
+  <script src="js/stats.js?v=1786024797"></script>
+  <script src="js/profil.js?v=1786024797"></script>
+  <script src="js/comptable.js?v=1786024797"></script>
+  <script src="js/messages.js?v=1786024797"></script>
+<script src="js/achats.js?v=1786024797"></script>
+<script src="js/stock.js?v=1786024797"></script>
+<script src="js/finance.js?v=1786024797"></script>
+<script src="js/ubl.js?v=1786024797"></script>
+<script src="js/relances.js?v=1786024797"></script>
+<script src="js/dashboard-avance.js?v=1786024797"></script>
+<script src="js/ocr-achats.js?v=1786024797"></script>
+<script src="js/equipe.js?v=1786024797"></script>
+<script src="js/equipe-cabinet.js?v=1786024797"></script>
+<script src="js/rh.js?v=1786024797"></script>
+<script src="js/hubs.js?v=1786024797"></script>
+<script src="js/demandes-devis.js?v=1786024797"></script>
+<script src="js/support.js?v=1786024797"></script>
+<script src="js/devis-recus.js?v=1786024797"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786024797"></script>
+<script src="js/selection.js?v=1786024797"></script>
+<script src="js/abonnements.js?v=1786024797"></script>
+<script src="js/signature.js?v=1786024797"></script>
+<script src="js/app.js?v=1786024797"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -390,7 +390,12 @@
     </div>
     <div style="margin:14px 20px;background:#EDE6F0;border-radius:10px;padding:12px;font-size:12px;color:#6A4E85">📝 Demandez un prix à votre fournisseur avant de commander. S'il a un compte Zelto, sa demande apparaîtra directement dans son espace.</div>
     <div class="form-section"><label class="f-lbl">Lien du profil Zelto du fournisseur (si disponible)</label><input id="ddf-fournisseur-lien" class="f-inp" placeholder="Collez le lien ici..."></div>
-    <div class="form-section"><label class="f-lbl">Ou nom du fournisseur</label><input id="ddf-fournisseur-nom" class="f-inp" placeholder="Nom du fournisseur"></div>
+    <div class="form-section"><label class="f-lbl">Ou nom du fournisseur</label>
+      <div style="display:flex;gap:8px">
+        <input id="ddf-fournisseur-nom" class="f-inp" placeholder="Nom du fournisseur" style="flex:1">
+        <button type="button" onclick="ouvrirPickerFournisseur('ddf-fournisseur-nom',null)" style="flex-shrink:0;padding:0 14px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      </div>
+    </div>
     <div class="form-section"><label class="f-lbl">Téléphone (si pas sur Zelto, pour WhatsApp)</label><input id="ddf-fournisseur-tel" class="f-inp" type="tel" placeholder="+212 6XX XX XX XX"></div>
     <div class="form-section"><label class="f-lbl">Ce dont vous avez besoin *</label><textarea id="ddf-description" class="f-inp" rows="5" placeholder="Décrivez les articles ou prestations souhaités, quantités, délais..."></textarea></div>
     <div style="display:flex;gap:8px;padding:0 20px 14px">
@@ -460,7 +465,12 @@
     </div>
     <button onclick="scannerQRAchat()" style="width:100%;padding:10px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Scanner le QR code de la facture</button>
   </div>
-  <div class="form-section"><div class="form-label">Fournisseur *</div><input class="form-input" id="achat-fournisseur" placeholder="Nom du fournisseur"></div>
+  <div class="form-section"><div class="form-label">Fournisseur *</div>
+    <div style="display:flex;gap:8px">
+      <input class="form-input" id="achat-fournisseur" placeholder="Nom du fournisseur" style="flex:1">
+      <button type="button" onclick="ouvrirPickerFournisseur('achat-fournisseur','achat-fournisseur-id')" style="flex-shrink:0;padding:0 14px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+  </div>
   <div class="form-section"><div class="form-label">Référence</div><input class="form-input" id="achat-ref" placeholder="Ex: FACT-2026-001"></div>
   <div style="display:flex;gap:12px;padding:0 20px">
     <div style="flex:1;margin-bottom:14px"><div class="form-label">Date</div><input class="form-input" id="achat-date" type="date"></div>
@@ -682,7 +692,12 @@
     <div class="form-title">Facture Avoir</div>
   </div>
   <div style="margin:14px 20px;background:#F5E4E1;border-radius:10px;padding:12px;border-left:3px solid #B23A2E;font-size:12px;color:#B23A2E">↩️ Avoir = annulation ou remboursement d'une facture existante</div>
-  <div class="form-section"><label class="f-lbl">Client</label><input id="av-client" class="f-inp" placeholder="Nom du client"></div>
+  <div class="form-section"><label class="f-lbl">Client</label>
+    <div style="display:flex;gap:8px">
+      <input id="av-client" class="f-inp" placeholder="Nom du client" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('av-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+  </div>
   <div class="form-section">
     <div class="f-row">
       <div><label class="f-lbl">N° Avoir</label><input id="av-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
@@ -1978,7 +1993,12 @@
     <div class="form-title">Bon de livraison</div>
   </div>
   <div style="height:14px"></div>
-  <div class="form-section"><label class="f-lbl">Client *</label><input id="bl-client" class="f-inp" placeholder="Nom du client" list="client-datalist"></div>
+  <div class="form-section"><label class="f-lbl">Client *</label>
+    <div style="display:flex;gap:8px">
+      <input id="bl-client" class="f-inp" placeholder="Nom du client" list="client-datalist" style="flex:1">
+      <button type="button" onclick="ouvrirPickerClients('bl-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+    </div>
+  </div>
   <div class="form-section">
     <div class="f-row">
       <div><label class="f-lbl">N&#176; BL</label><input id="bl-ref" class="f-inp" readonly style="background:#EAE4DA"></div>
