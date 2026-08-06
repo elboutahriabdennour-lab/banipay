@@ -411,6 +411,31 @@ function filtrerPickerClients() {
     return c.nom.toLowerCase().includes(q) || (c.tel||'').includes(q) || (c.email||'').toLowerCase().includes(q);
   });
   renderPickerClients(filtered);
+
+  // Recherche aussi dans l'annuaire Zelto (autres entreprises), en plus de
+  // sa propre liste de clients — même principe que le picker fournisseur
+  // du bon de commande.
+  clearTimeout(window._timeoutRechercheClientAnnuaire);
+  const zoneAnnuaire = document.getElementById('clients-picker-annuaire');
+  if (zoneAnnuaire) zoneAnnuaire.innerHTML = '';
+  if (q.length < 2) return;
+  window._timeoutRechercheClientAnnuaire = setTimeout(async function() {
+    try {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?raison=ilike.*' + encodeURIComponent(q) + '*&select=id,raison,secteur,ville&limit=10', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+      });
+      const resultats = r.ok ? ((await r.json()) || []) : [];
+      const container = el('clients-picker-list');
+      if (!container || !resultats.length) return;
+      const zone = document.createElement('div');
+      zone.id = 'clients-picker-annuaire';
+      zone.innerHTML = '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
+        resultats.map(function(p) {
+          return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + "'" + (p.raison||'').replace(/'/g,"\\'") + "'" + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div></div></div>';
+        }).join('');
+      container.appendChild(zone);
+    } catch(e) {}
+  }, 400);
 }
 
 function renderPickerClients(liste) {
