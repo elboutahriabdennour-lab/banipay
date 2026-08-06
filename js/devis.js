@@ -331,15 +331,31 @@ async function sauvegarderAvoir() {
 // (existant dans l'historique / lien Zelto / recherche annuaire)
 // ============================================================
 
-function ouvrirPickerFournisseurBC() {
+// ============================================================
+// PICKER FOURNISSEUR GÉNÉRIQUE — utilisé par le Bon de commande, la
+// facture d'achat, et la demande de devis fournisseur. Combine : (1)
+// l'historique des fournisseurs déjà utilisés dans CETTE entreprise
+// (achats + BC confondus), (2) une recherche dans l'annuaire Zelto.
+window._pickerFournisseurCtx = null; // { champNom, champId }
+
+function ouvrirPickerFournisseur(champNom, champId) {
+  window._pickerFournisseurCtx = { champNom: champNom, champId: champId || null };
   el('search-fournisseur-bc') && (el('search-fournisseur-bc').value = '');
   afficherFournisseursHistoriqueBC();
   el('modal-fournisseur-bc')?.classList.add('active');
   setTimeout(function() { el('search-fournisseur-bc')?.focus(); }, 100);
 }
 
+// Conservé pour compatibilité — le BC utilisait cette fonction directement.
+function ouvrirPickerFournisseurBC() {
+  ouvrirPickerFournisseur('bc-fournisseur', 'bc-fournisseur-id');
+}
+
 function afficherFournisseursHistoriqueBC(filtreTexte) {
-  const noms = Array.from(new Set((STATE.achats || []).map(function(a) { return a.fournisseur; }).filter(Boolean)));
+  // Union des fournisseurs déjà vus dans les achats ET les bons de commande
+  const nomsAchats = (STATE.achats || []).map(function(a) { return a.fournisseur; });
+  const nomsBC = (STATE.bonsCommande || []).map(function(bc) { return bc.fournisseur; });
+  const noms = Array.from(new Set(nomsAchats.concat(nomsBC).filter(Boolean)));
   const q = (filtreTexte || '').toLowerCase();
   const filtres = q ? noms.filter(function(n) { return n.toLowerCase().includes(q); }) : noms;
   const list = el('fournisseur-bc-picker-list');
@@ -376,8 +392,13 @@ function rechercherFournisseurBC() {
 }
 
 function choisirFournisseurBC(nom, id) {
-  el('bc-fournisseur') && (el('bc-fournisseur').value = nom);
-  el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = id || '');
+  // Écrit dans le champ ciblé — soit celui du contexte générique (achat,
+  // demande de devis...), soit par défaut celui du BC pour compatibilité
+  // avec les anciens appels directs.
+  const ctx = window._pickerFournisseurCtx || { champNom: 'bc-fournisseur', champId: 'bc-fournisseur-id' };
+  el(ctx.champNom) && (el(ctx.champNom).value = nom);
+  if (ctx.champId) el(ctx.champId) && (el(ctx.champId).value = id || '');
+  window._pickerFournisseurCtx = null;
   closeAllModals();
 }
 
