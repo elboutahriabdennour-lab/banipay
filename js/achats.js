@@ -463,7 +463,7 @@ function previewAchatPJ(event) {
     // calibrer : c'est de la reconnaissance de texte + heuristiques
     // simples, pas une IA qui "comprend" la facture — à vérifier/corriger
     // systématiquement avant d'enregistrer.
-    if (isImage && typeof lireFactureParOCR === 'function') lireFactureParOCR(e.target.result);
+    if (isImage && typeof lireFactureParOCR === 'function' && (typeof aAccesFeature !== 'function' || aAccesFeature('ocr_achats'))) lireFactureParOCR(e.target.result);
   };
   reader.readAsDataURL(file);
 }
