@@ -470,18 +470,10 @@ async function toggleNotifDropdown(event) {
   panel.addEventListener('click', function(e) { gererClicNotification(e); });
   setTimeout(function() { document.addEventListener('click', _fermerNotifDropdownSiExterieur, true); }, 50);
 
-  // Marquer comme lues les notifications purement informatives (sans
-  // bouton d'action) — c'est ce qui empêchait le compteur de redescendre.
-  const aMarquer = allNotifs.filter(function(n) {
-    // FIX: n.type vaut toujours 'info' pour les notifications venant de la
-    // base (c'est juste une catégorie d'affichage) — le vrai type stocké en
-    // base est dans n.raw.type. Vérifier n.type ici marquait TOUJOURS vrai,
-    // donc TOUTES les notifications étaient marquées lues et supprimées dès
-    // l'ouverture du panneau, y compris les devis/factures reçus qui ne
-    // doivent jamais être marqués avant une vraie décision (accepter/
-    // refuser/attente).
-    return n.raw && n.id && n.raw.type !== 'facture_recue' && n.raw.type !== 'devis_recu';
-  });
+  // Ouvrir la cloche = tout marquer comme lu, sans exception. Le badge ne
+  // doit plus jamais rester affiché une fois le panneau consulté — il ne
+  // réapparaîtra que si une VRAIE nouvelle notification arrive ensuite.
+  const aMarquer = allNotifs.filter(function(n) { return n.raw && n.id; });
   for (const n of aMarquer) {
     try {
       await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
@@ -684,6 +676,7 @@ function goScreen(name) {
     'demandes-devis': function() { if (typeof loadDemandesDevis==='function') loadDemandesDevis(); },
     'support': function() { if (typeof initChatbot==='function') setTimeout(initChatbot, 100); },
     'qui-sommes-nous': function() {},
+    'mon-forfait': function() { if (typeof chargerMonForfait==='function') chargerMonForfait(); },
     'espace-support': function() {},
     'devis-recus': function() { if (typeof chargerDevisRecusAcceptes==='function') chargerDevisRecusAcceptes(); },
     'demande-devis-fournisseur': function() {},
