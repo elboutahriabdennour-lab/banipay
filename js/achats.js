@@ -464,6 +464,7 @@ function previewAchatPJ(event) {
     // simples, pas une IA qui "comprend" la facture — à vérifier/corriger
     // systématiquement avant d'enregistrer.
     if (isImage && typeof lireFactureParOCR === 'function' && (typeof aAccesFeature !== 'function' || aAccesFeature('ocr_achats'))) lireFactureParOCR(e.target.result);
+    else if (file.type === 'application/pdf' && typeof lireFacturePDF === 'function' && (typeof aAccesFeature !== 'function' || aAccesFeature('ocr_achats'))) lireFacturePDF(e.target.result);
   };
   reader.readAsDataURL(file);
 }
