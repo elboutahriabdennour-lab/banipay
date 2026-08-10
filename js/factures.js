@@ -104,23 +104,12 @@ function renderDashboard() {
 }
 
 function renderObjectifMensuel() {
-  const objectif = Number(STATE.profil?.objectif_mensuel || 0);
   const mois = new Date().getMonth();
   const annee = new Date().getFullYear();
   const caM = STATE.factures
     .filter(f => f.statut === 'payee' && new Date(f.date_emission).getMonth() === mois && new Date(f.date_emission).getFullYear() === annee)
     .reduce((s,f) => s + Number(f.ttc), 0);
-  const objEl = el('objectif-bar');
-  const objTxt = el('objectif-txt');
-  if (!objEl) return;
-  if (!objectif) {
-    objEl.style.width = '0%';
-    if (objTxt) objTxt.textContent = 'Non défini';
-    return;
-  }
-  const pct = Math.min(100, Math.round(caM / objectif * 100));
-  objEl.style.width = pct + '%';
-  if (objTxt) objTxt.textContent = `${fmtInt(caM)} / ${fmtInt(objectif)} MAD (${pct}%)`;
+  setEl('ca-mois-txt', fmt(caM) + ' MAD');
 }
 
 function renderFactureList() {
@@ -688,6 +677,7 @@ async function partagerDoc(type, id) {
 
 function autoAddClient(nom) {
   if (!nom || STATE.clients.find(c => c.nom.toLowerCase() === nom.toLowerCase())) return;
+  if (STATE.limiteClients != null && (STATE.clients || []).length >= STATE.limiteClients) return; // silencieux ici — la facture elle-même n'est pas bloquée, seul l'ajout auto du client au carnet est sauté
   sb.post('clients', { user_id: sb.user.id, nom }).then(r => {
     if (r && r.length > 0) { STATE.clients.push(r[0]); }
   }).catch(() => {});
