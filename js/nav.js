@@ -636,6 +636,7 @@ function goScreen(name) {
     'messages': function() { if (typeof loadConversations==='function') loadConversations().then(renderConversations); },
     'chat': function() {},
     'dashboard': _safe(typeof renderDashboard!=='undefined'?renderDashboard:undefined,'renderDashboard'),
+    'mes-factures': _safe(typeof renderFactureList!=='undefined'?renderFactureList:undefined,'renderFactureList'),
     'nouvelle': function() { if (typeof initNouvelle==='function') initNouvelle(); if (typeof remplirPickerBCPourDevis === 'function') { const sel = el('f-bc-lie'); if (sel) { sel.innerHTML = '<option value="">Aucun</option>' + (STATE.bonsCommande || []).map(function(bc) { return '<option value="' + bc.id + '">' + escapeHTML(bc.ref||'') + ' — ' + escapeHTML(bc.fournisseur||'') + '</option>'; }).join(''); } } },
     'devis-list': _safe(typeof renderDevisList!=='undefined'?renderDevisList:undefined,'renderDevisList'),
     'nouveau-devis': function() { if (typeof initNouveauDevis==='function') initNouveauDevis(); if (typeof remplirPickerBCPourDevis==='function') remplirPickerBCPourDevis(); },
