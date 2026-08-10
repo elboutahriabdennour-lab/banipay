@@ -68,17 +68,42 @@ function afficherBadgeForfait() {
 }
 
 // Vrai/faux — l'entreprise a-t-elle accès à cette fonctionnalité ?
+// C'est LE bon outil pour une fonctionnalité SUR-MESURE construite pour
+// UNE SEULE entreprise (jamais montrée aux autres) : on l'utilise pour
+// décider si on affiche l'élément d'interface DU TOUT, avant même de le
+// construire dans le HTML/JS — pas après coup avec un verrou visible.
+//
+// Exemple concret : un export spécifique vers un logiciel tiers, demandé
+// et payé par une seule entreprise (ex: "Dupont SARL").
+//   1. On construit normalement la fonctionnalité, avec un code unique
+//      rien que pour ce cas : ex. 'custom_dupont_export_sage'
+//   2. On ajoute une ligne dans entreprise_features_supplementaires (côté
+//      Supabase) ciblant PRÉCISÉMENT le compte de Dupont SARL
+//   3. Dans le code, on n'affiche l'élément QUE si aAccesFeature() répond
+//      vrai — exemple :
+//        if (aAccesFeature('custom_dupont_export_sage')) {
+//          html += '<button onclick="exporterVersSage()">Exporter vers Sage</button>';
+//        }
+//      Pour TOUTE autre entreprise, ce bouton n'existe simplement pas —
+//      invisible, pas juste verrouillé. Contrairement à une fonctionnalité
+//      du catalogue standard (stock, RH...), où montrer un verrou "🔒
+//      passez en Pro" donne envie de payer plus, montrer un verrou sur un
+//      bricolage sur-mesure n'aurait aucun sens pour les autres — ce
+//      serait juste du bruit dans leur interface.
 function aAccesFeature(code) {
   return (STATE.mesFeatures || []).includes(code);
 }
 
+// Version "verrou visible" — à utiliser UNIQUEMENT pour les
+// fonctionnalités du catalogue standard (celles listées dans "Mon
+// forfait"), pas pour du sur-mesure — voir la note ci-dessus.
 // À appeler en tête d'une action verrouillée (bouton, écran). Si l'accès
 // manque, affiche un message clair et bloque l'action ; sinon ne fait
 // rien et laisse la suite s'exécuter normalement.
 function verifierAccesFeature(code, nomFeature) {
   if (aAccesFeature(code)) return true;
   showToast('🔒 "' + nomFeature + '" n\'est pas inclus dans votre forfait actuel', 'error');
-  setTimeout(function() { goScreen('mon-forfait', null); }, 900);
+  window._retourMonForfait = (document.querySelector('.screen.active')||{}).id?.replace('screen-','') || 'profil'; setTimeout(function() { goScreen('mon-forfait', null); }, 900);
   return false;
 }
 
@@ -88,7 +113,7 @@ function verifierLimiteClients() {
   if (STATE.limiteClients == null) return true; // illimité, ou pas encore chargé (on ne bloque pas par précaution)
   if ((STATE.clients || []).length >= STATE.limiteClients) {
     showToast('🔒 Limite de ' + STATE.limiteClients + ' clients atteinte pour votre forfait', 'error');
-    setTimeout(function() { goScreen('mon-forfait', null); }, 900);
+    window._retourMonForfait = (document.querySelector('.screen.active')||{}).id?.replace('screen-','') || 'profil'; setTimeout(function() { goScreen('mon-forfait', null); }, 900);
     return false;
   }
   return true;
@@ -98,7 +123,7 @@ function verifierLimiteProduits() {
   if (STATE.limiteProduits == null) return true;
   if ((STATE.produits || []).length >= STATE.limiteProduits) {
     showToast('🔒 Limite de ' + STATE.limiteProduits + ' articles atteinte pour votre forfait', 'error');
-    setTimeout(function() { goScreen('mon-forfait', null); }, 900);
+    window._retourMonForfait = (document.querySelector('.screen.active')||{}).id?.replace('screen-','') || 'profil'; setTimeout(function() { goScreen('mon-forfait', null); }, 900);
     return false;
   }
   return true;
