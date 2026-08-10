@@ -79,6 +79,7 @@ async function importerClientDepuisLien() {
       c.nom === p.raison || (p.ice && c.ice === p.ice)
     );
     if (exists) { showToast('Ce client existe déjà : ' + p.raison, 'error'); return; }
+    if (typeof verifierLimiteClients === 'function' && !verifierLimiteClients()) return;
 
     const newClient = {
       user_id: sb.user.id,
@@ -178,6 +179,7 @@ function initNouveauClient() {
 async function sauvegarderClient() {
   const nom = el('cl-nom')?.value.trim();
   if (!nom) { showToast('Entrez le nom du client', 'error'); return; }
+  if (typeof verifierLimiteClients === 'function' && !verifierLimiteClients()) return;
   showToast('⏳ Sauvegarde...');
   try {
     const body = {
@@ -476,7 +478,7 @@ async function importerClientsCSV(event) {
       return '';
     };
 
-    let importes = 0, ignores = 0;
+    let importes = 0, ignores = 0, bloquesParLimite = 0;
     showToast('⏳ Import de ' + rows.length + ' ligne(s)...');
 
     for (const r of rows) {
@@ -485,6 +487,11 @@ async function importerClientsCSV(event) {
 
       const existe = STATE.clients.find(function(c) { return c.nom.toLowerCase() === nom.toLowerCase(); });
       if (existe) { ignores++; continue; }
+
+      if (STATE.limiteClients != null && (STATE.clients || []).length >= STATE.limiteClients) {
+        bloquesParLimite += (rows.length - importes - ignores - bloquesParLimite);
+        break;
+      }
 
       const body = {
         user_id: sb.user.id,
@@ -509,7 +516,7 @@ async function importerClientsCSV(event) {
     updateClientDatalist();
     renderClients();
     document.getElementById('scanner-overlay')?.remove();
-    showToast('✅ ' + importes + ' client(s) importé(s)' + (ignores ? ', ' + ignores + ' ignoré(s)' : ''), 'success');
+    showToast('✅ ' + importes + ' client(s) importé(s)' + (ignores ? ', ' + ignores + ' ignoré(s)' : '') + (bloquesParLimite ? ', ' + bloquesParLimite + ' bloqué(s) par la limite de votre forfait' : ''), bloquesParLimite ? 'error' : 'success');
     logAudit('client', null, 'creation', importes + ' clients importés via CSV');
   } catch(e) {
     showToast('Erreur import: ' + e.message, 'error');
