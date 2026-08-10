@@ -111,8 +111,13 @@ function afficherParametresRelance() {
 }
 
 async function sauvegarderParametresRelance() {
+  const activationDemandee = !!el('param-relance-activee')?.checked;
+  if (activationDemandee && typeof verifierAccesFeature === 'function' && !verifierAccesFeature('relances_auto', 'Relances automatiques')) {
+    el('param-relance-activee') && (el('param-relance-activee').checked = false);
+    return;
+  }
   const maj = {
-    relance_activee: !!el('param-relance-activee')?.checked,
+    relance_activee: activationDemandee,
     relance_jours_avant: parseInt(el('param-relance-jours')?.value) || 3,
     relance_msg_avant: el('param-relance-msg-avant')?.value || '',
     relance_msg_jour: el('param-relance-msg-jour')?.value || '',
