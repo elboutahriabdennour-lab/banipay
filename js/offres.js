@@ -14,6 +14,7 @@
 
 STATE.mesFeatures = STATE.mesFeatures || [];
 STATE.toutesOffres = STATE.toutesOffres || [];
+STATE.limiteClients = STATE.limiteClients || null; // null = illimité ou pas encore chargé
 
 async function chargerMesFeatures() {
   try {
@@ -25,6 +26,15 @@ async function chargerMesFeatures() {
     const data = resp.ok ? ((await resp.json()) || []) : [];
     STATE.mesFeatures = data.map(function(x) { return x.code; });
   } catch(e) { STATE.mesFeatures = []; }
+
+  try {
+    const respL = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_ma_limite_clients', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.limiteClients = respL.ok ? (await respL.json()) : null;
+  } catch(e) { STATE.limiteClients = null; }
 }
 
 // Vrai/faux — l'entreprise a-t-elle accès à cette fonctionnalité ?
@@ -40,6 +50,18 @@ function verifierAccesFeature(code, nomFeature) {
   showToast('🔒 "' + nomFeature + '" n\'est pas inclus dans votre forfait actuel', 'error');
   setTimeout(function() { goScreen('mon-forfait', null); }, 900);
   return false;
+}
+
+// Vérifie la limite de clients (nombre, pas juste oui/non). Retourne true
+// si on peut ajouter un client de plus.
+function verifierLimiteClients() {
+  if (STATE.limiteClients == null) return true; // illimité, ou pas encore chargé (on ne bloque pas par précaution)
+  if ((STATE.clients || []).length >= STATE.limiteClients) {
+    showToast('🔒 Limite de ' + STATE.limiteClients + ' clients atteinte pour votre forfait', 'error');
+    setTimeout(function() { goScreen('mon-forfait', null); }, 900);
+    return false;
+  }
+  return true;
 }
 
 // ============================================================
