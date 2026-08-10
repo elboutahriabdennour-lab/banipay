@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786370178">
+<link rel="stylesheet" href="css/style.css?v=1786390391">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -48,7 +48,7 @@
     <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#F7EFDC">📝</div><div class="qa-lbl">Devis</div></div>
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
     <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
-    <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock</div></div>
+    <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){window._retourRapportStock='dashboard';goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock</div></div>
   </div>
   <div style="height:8px"></div>
   <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
@@ -132,39 +132,39 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786370178"></script>
-  <script src="js/utils.js?v=1786370178"></script>
-  <script src="js/auth.js?v=1786370178"></script>
-  <script src="js/nav.js?v=1786370178"></script>
-  <script src="js/factures.js?v=1786370178"></script>
-  <script src="js/devis.js?v=1786370178"></script>
-  <script src="js/clients.js?v=1786370178"></script>
-  <script src="js/produits.js?v=1786370178"></script>
-  <script src="js/pdf.js?v=1786370178"></script>
-  <script src="js/stats.js?v=1786370178"></script>
-  <script src="js/profil.js?v=1786370178"></script>
-  <script src="js/comptable.js?v=1786370178"></script>
-  <script src="js/messages.js?v=1786370178"></script>
-<script src="js/achats.js?v=1786370178"></script>
-<script src="js/stock.js?v=1786370178"></script>
-<script src="js/finance.js?v=1786370178"></script>
-<script src="js/ubl.js?v=1786370178"></script>
-<script src="js/relances.js?v=1786370178"></script>
-<script src="js/dashboard-avance.js?v=1786370178"></script>
-<script src="js/ocr-achats.js?v=1786370178"></script>
-<script src="js/equipe.js?v=1786370178"></script>
-<script src="js/equipe-cabinet.js?v=1786370178"></script>
-<script src="js/rh.js?v=1786370178"></script>
-<script src="js/hubs.js?v=1786370178"></script>
-<script src="js/demandes-devis.js?v=1786370178"></script>
-<script src="js/offres.js?v=1786370178"></script>
-<script src="js/support.js?v=1786370178"></script>
-<script src="js/devis-recus.js?v=1786370178"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786370178"></script>
-<script src="js/selection.js?v=1786370178"></script>
-<script src="js/abonnements.js?v=1786370178"></script>
-<script src="js/signature.js?v=1786370178"></script>
-<script src="js/app.js?v=1786370178"></script>
+<script src="js/config.js?v=1786390391"></script>
+  <script src="js/utils.js?v=1786390391"></script>
+  <script src="js/auth.js?v=1786390391"></script>
+  <script src="js/nav.js?v=1786390391"></script>
+  <script src="js/factures.js?v=1786390391"></script>
+  <script src="js/devis.js?v=1786390391"></script>
+  <script src="js/clients.js?v=1786390391"></script>
+  <script src="js/produits.js?v=1786390391"></script>
+  <script src="js/pdf.js?v=1786390391"></script>
+  <script src="js/stats.js?v=1786390391"></script>
+  <script src="js/profil.js?v=1786390391"></script>
+  <script src="js/comptable.js?v=1786390391"></script>
+  <script src="js/messages.js?v=1786390391"></script>
+<script src="js/achats.js?v=1786390391"></script>
+<script src="js/stock.js?v=1786390391"></script>
+<script src="js/finance.js?v=1786390391"></script>
+<script src="js/ubl.js?v=1786390391"></script>
+<script src="js/relances.js?v=1786390391"></script>
+<script src="js/dashboard-avance.js?v=1786390391"></script>
+<script src="js/ocr-achats.js?v=1786390391"></script>
+<script src="js/equipe.js?v=1786390391"></script>
+<script src="js/equipe-cabinet.js?v=1786390391"></script>
+<script src="js/rh.js?v=1786390391"></script>
+<script src="js/hubs.js?v=1786390391"></script>
+<script src="js/demandes-devis.js?v=1786390391"></script>
+<script src="js/offres.js?v=1786390391"></script>
+<script src="js/support.js?v=1786390391"></script>
+<script src="js/devis-recus.js?v=1786390391"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786390391"></script>
+<script src="js/selection.js?v=1786390391"></script>
+<script src="js/abonnements.js?v=1786390391"></script>
+<script src="js/signature.js?v=1786390391"></script>
+<script src="js/app.js?v=1786390391"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -296,7 +296,7 @@
     <!-- SUPPORT -->
   <div class="screen" id="screen-support">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
+      <button class="back-btn" onclick="goScreen(window._retourSupport||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
     </div>
     <div style="padding:16px 20px">
       <div class="sec-label" style="padding:0 0 12px">🆘 Support</div>
@@ -332,7 +332,7 @@
   <!-- QUI SOMMES-NOUS -->
   <div class="screen" id="screen-qui-sommes-nous">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
+      <button class="back-btn" onclick="goScreen(window._retourQuiSommesNous||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
     </div>
     <div style="padding:20px">
       <div style="text-align:center;margin-bottom:20px">
@@ -353,7 +353,7 @@
   <!-- MON FORFAIT -->
   <div class="screen" id="screen-mon-forfait">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
+      <button class="back-btn" onclick="goScreen(window._retourMonForfait||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
     </div>
     <div style="padding:16px 20px">
       <div class="sec-label" style="padding:0 0 12px">📦 Mon forfait</div>
@@ -365,7 +365,7 @@
   <!-- ESPACE SUPPORT (agents uniquement) -->
   <div class="screen" id="screen-espace-support">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
+      <button class="back-btn" onclick="goScreen('support',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
     </div>
     <div style="padding:16px 20px">
       <div class="sec-label" style="padding:0 0 12px">🎫 Tickets support</div>
@@ -749,7 +749,7 @@
       
     </div>
   </div>
-  <div id="valeur-stock-card" onclick="goScreen('rapport-stock',null)" style="margin:12px 20px;background:#EEF3E4;border-radius:12px;padding:12px 16px;display:none;justify-content:space-between;align-items:center;cursor:pointer">
+  <div id="valeur-stock-card" onclick="window._retourRapportStock='produits';goScreen('rapport-stock',null)" style="margin:12px 20px;background:#EEF3E4;border-radius:12px;padding:12px 16px;display:none;justify-content:space-between;align-items:center;cursor:pointer">
     <span style="font-size:12px;font-weight:600;color:#55702E">📦 Valeur totale du stock</span>
     <span id="valeur-stock-montant" style="font-size:16px;font-weight:800;color:#55702E">0 MAD</span>
   </div>
@@ -876,8 +876,8 @@
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
     <button class="p-btn" onclick="goScreen('mon-forfait',null)" style="color:#C9971F">📦 Mon forfait</button>
-    <button class="p-btn" onclick="goScreen('support',null)" style="color:#1F6F72">🆘 Support</button>
-    <button class="p-btn" onclick="goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
+    <button class="p-btn" onclick="window._retourSupport='profil';window._retourQuiSommesNous='profil';goScreen('support',null)" style="color:#1F6F72">🆘 Support</button>
+    <button class="p-btn" onclick="window._retourQuiSommesNous='profil';goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
     <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#7C5CA6">🔐 Lien accès comptable</button>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
@@ -1903,7 +1903,7 @@
   </div>
 
   <div class="screen" id="screen-rapport-stock">
-    <div class="topbar"><button class="back-btn" onclick="goScreen('produits',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+    <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourRapportStock||'dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📦 Valorisation du stock</div>
       <div id="rapport-stock-content"></div>
@@ -2053,9 +2053,9 @@
     <div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard')">&#8592;</button></div>
   </div>
   <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center">
-    <span>Alertes</span>
-    <button onclick="marquerToutesNotificationsLues()" style="background:none;color:#1F6F72;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Tout marquer comme lu</button>
+    <span>⚠️ Alertes</span>
   </div>
+  <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Disparaissent automatiquement une fois le problème réglé — pas besoin de les marquer comme lues.</div>
   <div style="padding:0 20px" id="notif-list"></div>
   <div style="padding:12px 20px">
     <button onclick="typeof genNotifications==='function' && genNotifications().then(function(){afficherDiagnostic('Diagnostic notifications', window._dernierDiagNotifications || ['Aucune donnée — clique une première fois puis reclique.']);})" style="width:100%;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Diagnostic de chargement</button>
@@ -2211,8 +2211,8 @@
 
   <!-- Actions -->
   <div style="margin:0 20px 20px;display:flex;flex-direction:column;gap:8px">
-    <button onclick="goScreen('support',null)" style="width:100%;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🆘 Support</button>
-    <button onclick="goScreen('qui-sommes-nous',null)" style="width:100%;padding:12px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">ℹ️ Qui sommes-nous</button>
+    <button onclick="window._retourSupport='comptable-profil';window._retourQuiSommesNous='comptable-profil';goScreen('support',null)" style="width:100%;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🆘 Support</button>
+    <button onclick="window._retourQuiSommesNous='comptable-profil';goScreen('qui-sommes-nous',null)" style="width:100%;padding:12px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">ℹ️ Qui sommes-nous</button>
     <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
   </div>
   <div class="pb"></div>
