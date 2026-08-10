@@ -15,6 +15,8 @@
 STATE.mesFeatures = STATE.mesFeatures || [];
 STATE.toutesOffres = STATE.toutesOffres || [];
 STATE.limiteClients = STATE.limiteClients || null; // null = illimité ou pas encore chargé
+STATE.limiteProduits = STATE.limiteProduits || null;
+STATE.nomForfaitActuel = STATE.nomForfaitActuel || null;
 
 async function chargerMesFeatures() {
   try {
@@ -35,6 +37,34 @@ async function chargerMesFeatures() {
     });
     STATE.limiteClients = respL.ok ? (await respL.json()) : null;
   } catch(e) { STATE.limiteClients = null; }
+
+  try {
+    const respP = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_ma_limite_produits', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.limiteProduits = respP.ok ? (await respP.json()) : null;
+  } catch(e) { STATE.limiteProduits = null; }
+
+  // Nom du forfait actuel — pour l'affichage du badge (Profil, etc.)
+  try {
+    const respO = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + sb.user.id + '&select=offre_id,offres(nom)', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    const dataO = respO.ok ? ((await respO.json()) || []) : [];
+    STATE.nomForfaitActuel = dataO[0]?.offres?.nom || null;
+  } catch(e) { STATE.nomForfaitActuel = null; }
+
+  afficherBadgeForfait();
+}
+
+// Affiche "Forfait : XXX" partout où un emplacement existe pour ça
+// (actuellement : Profil). Ne fait rien si l'élément n'existe pas sur
+// l'écran courant.
+function afficherBadgeForfait() {
+  const badge = el('badge-forfait-actuel');
+  if (badge) badge.textContent = STATE.nomForfaitActuel ? '📦 Forfait ' + STATE.nomForfaitActuel : '';
 }
 
 // Vrai/faux — l'entreprise a-t-elle accès à cette fonctionnalité ?
@@ -58,6 +88,16 @@ function verifierLimiteClients() {
   if (STATE.limiteClients == null) return true; // illimité, ou pas encore chargé (on ne bloque pas par précaution)
   if ((STATE.clients || []).length >= STATE.limiteClients) {
     showToast('🔒 Limite de ' + STATE.limiteClients + ' clients atteinte pour votre forfait', 'error');
+    setTimeout(function() { goScreen('mon-forfait', null); }, 900);
+    return false;
+  }
+  return true;
+}
+
+function verifierLimiteProduits() {
+  if (STATE.limiteProduits == null) return true;
+  if ((STATE.produits || []).length >= STATE.limiteProduits) {
+    showToast('🔒 Limite de ' + STATE.limiteProduits + ' articles atteinte pour votre forfait', 'error');
     setTimeout(function() { goScreen('mon-forfait', null); }, 900);
     return false;
   }
