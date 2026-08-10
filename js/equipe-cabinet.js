@@ -10,6 +10,48 @@
 
 STATE.membresCabinet = STATE.membresCabinet || [];
 
+STATE.mesInvitationsCabinet = STATE.mesInvitationsCabinet || [];
+
+async function chargerMesInvitationsCabinet() {
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_invitations_cabinet', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.mesInvitationsCabinet = resp.ok ? ((await resp.json()) || []) : [];
+  } catch(e) { STATE.mesInvitationsCabinet = []; }
+  renderMesInvitationsCabinet();
+}
+
+function renderMesInvitationsCabinet() {
+  const zone = el('mes-invitations-cabinet');
+  if (!zone) return;
+  const invitations = STATE.mesInvitationsCabinet || [];
+  if (!invitations.length) { zone.innerHTML = ''; return; }
+  zone.innerHTML = invitations.map(function(inv) {
+    return '<div style="background:#FBF0DA;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E8D9AE">' +
+      '<div style="font-size:12px;font-weight:700;color:#A67A16;margin-bottom:8px">🤝 Invitation en attente — rôle : ' + escapeHTML(inv.role||'') + '</div>' +
+      '<button onclick="accepterMonInvitationCabinet(' + inv.id + ')" style="width:100%;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter et rejoindre le cabinet</button>' +
+    '</div>';
+  }).join('');
+}
+
+async function accepterMonInvitationCabinet(membreId) {
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/accepter_invitation_cabinet', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_membre_id: membreId })
+    });
+    if (!resp.ok) { showToast('Erreur — invitation introuvable ou déjà traitée', 'error'); return; }
+    showToast('✅ Vous avez rejoint le cabinet !', 'success');
+    chargerMesInvitationsCabinet();
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 async function chargerEquipeCabinet() {
   try {
     STATE.membresCabinet = (await sb.get('membres_cabinet', 'cabinet_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
