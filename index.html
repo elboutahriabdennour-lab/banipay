@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786390391">
+<link rel="stylesheet" href="css/style.css?v=1786391185">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -132,39 +132,39 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786390391"></script>
-  <script src="js/utils.js?v=1786390391"></script>
-  <script src="js/auth.js?v=1786390391"></script>
-  <script src="js/nav.js?v=1786390391"></script>
-  <script src="js/factures.js?v=1786390391"></script>
-  <script src="js/devis.js?v=1786390391"></script>
-  <script src="js/clients.js?v=1786390391"></script>
-  <script src="js/produits.js?v=1786390391"></script>
-  <script src="js/pdf.js?v=1786390391"></script>
-  <script src="js/stats.js?v=1786390391"></script>
-  <script src="js/profil.js?v=1786390391"></script>
-  <script src="js/comptable.js?v=1786390391"></script>
-  <script src="js/messages.js?v=1786390391"></script>
-<script src="js/achats.js?v=1786390391"></script>
-<script src="js/stock.js?v=1786390391"></script>
-<script src="js/finance.js?v=1786390391"></script>
-<script src="js/ubl.js?v=1786390391"></script>
-<script src="js/relances.js?v=1786390391"></script>
-<script src="js/dashboard-avance.js?v=1786390391"></script>
-<script src="js/ocr-achats.js?v=1786390391"></script>
-<script src="js/equipe.js?v=1786390391"></script>
-<script src="js/equipe-cabinet.js?v=1786390391"></script>
-<script src="js/rh.js?v=1786390391"></script>
-<script src="js/hubs.js?v=1786390391"></script>
-<script src="js/demandes-devis.js?v=1786390391"></script>
-<script src="js/offres.js?v=1786390391"></script>
-<script src="js/support.js?v=1786390391"></script>
-<script src="js/devis-recus.js?v=1786390391"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786390391"></script>
-<script src="js/selection.js?v=1786390391"></script>
-<script src="js/abonnements.js?v=1786390391"></script>
-<script src="js/signature.js?v=1786390391"></script>
-<script src="js/app.js?v=1786390391"></script>
+<script src="js/config.js?v=1786391185"></script>
+  <script src="js/utils.js?v=1786391185"></script>
+  <script src="js/auth.js?v=1786391185"></script>
+  <script src="js/nav.js?v=1786391185"></script>
+  <script src="js/factures.js?v=1786391185"></script>
+  <script src="js/devis.js?v=1786391185"></script>
+  <script src="js/clients.js?v=1786391185"></script>
+  <script src="js/produits.js?v=1786391185"></script>
+  <script src="js/pdf.js?v=1786391185"></script>
+  <script src="js/stats.js?v=1786391185"></script>
+  <script src="js/profil.js?v=1786391185"></script>
+  <script src="js/comptable.js?v=1786391185"></script>
+  <script src="js/messages.js?v=1786391185"></script>
+<script src="js/achats.js?v=1786391185"></script>
+<script src="js/stock.js?v=1786391185"></script>
+<script src="js/finance.js?v=1786391185"></script>
+<script src="js/ubl.js?v=1786391185"></script>
+<script src="js/relances.js?v=1786391185"></script>
+<script src="js/dashboard-avance.js?v=1786391185"></script>
+<script src="js/ocr-achats.js?v=1786391185"></script>
+<script src="js/equipe.js?v=1786391185"></script>
+<script src="js/equipe-cabinet.js?v=1786391185"></script>
+<script src="js/rh.js?v=1786391185"></script>
+<script src="js/hubs.js?v=1786391185"></script>
+<script src="js/demandes-devis.js?v=1786391185"></script>
+<script src="js/offres.js?v=1786391185"></script>
+<script src="js/support.js?v=1786391185"></script>
+<script src="js/devis-recus.js?v=1786391185"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786391185"></script>
+<script src="js/selection.js?v=1786391185"></script>
+<script src="js/abonnements.js?v=1786391185"></script>
+<script src="js/signature.js?v=1786391185"></script>
+<script src="js/app.js?v=1786391185"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -1570,6 +1570,7 @@
       <div class="p-card-title">👥 Équipe</div>
       <div style="padding:14px 16px">
         <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des membres et leur attribuer un rôle, mais les écrans de l'app (factures, achats...) ne leur montrent pas encore vos données — cette partie arrive dans une prochaine mise à jour.</div>
+        <div id="mes-invitations-equipe"></div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
           <input id="equipe-email" class="f-inp" placeholder="Email du membre" style="flex:1">
           <select id="equipe-role" class="f-inp" style="width:110px">
@@ -2197,6 +2198,7 @@
   <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
     <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:8px">👥 Équipe du cabinet</div>
     <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des collaborateurs avec un rôle, mais ils ne voient pas encore le portefeuille d'entreprises du cabinet avec leur propre compte — cette partie arrive dans une prochaine mise à jour.</div>
+    <div id="mes-invitations-cabinet"></div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <input id="equipe-cabinet-email" class="f-inp" placeholder="Email du collaborateur" style="flex:1">
       <select id="equipe-cabinet-role" class="f-inp" style="width:130px">
