@@ -317,6 +317,29 @@ async function sauvegarderAvoir() {
       }
     }
     showToast('✅ Avoir émis !', 'success');
+
+    // NOUVEAU : si ce client a un compte Zelto lié, il est prévenu qu'un
+    // avoir a été émis sur sa facture — avant, aucune notification n'était
+    // envoyée dans ce cas.
+    const clientInfo = STATE.clients.find(function(c) { return c.nom === client; });
+    if (clientInfo && clientInfo.reference_id) {
+      try {
+        const p = STATE.profil || {};
+        await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            p_user_id: clientInfo.reference_id,
+            p_destinataire_email: clientInfo.email || '',
+            p_type: 'avoir_recu',
+            p_titre: '↩️ Avoir reçu — ' + (p.raison || sb.user?.email),
+            p_corps: (p.raison || sb.user?.email) + ' vous a envoyé un avoir de ' + fmt(ht * 1.2) + ' MAD.',
+            p_meta: JSON.stringify({ emetteur_raison: p.raison || '' })
+          })
+        });
+      } catch(eNotifAvoir) {}
+    }
+
     // Aller vers la liste des avoirs
     setTimeout(() => goScreen('avoir-list'), 800);
   } catch(e){showToast('❌ '+e.message,'error');}
@@ -881,6 +904,28 @@ async function sauvegarderBonLivraison() {
       STATE.bonsLivraison.unshift(result[0] || bl);
       showToast('✅ Bon de livraison enregistré' + (factureLiee ? ' et lié à ' + factureLiee.ref : ''), 'success');
       genBonLivraisonPDF(factureLiee ? factureLiee.ref : '', (result[0]||bl).id);
+
+      // NOUVEAU : si ce client a un compte Zelto lié, il est prévenu
+      // qu'un bon de livraison a été créé — avant, aucune notification.
+      const clientInfo = STATE.clients.find(function(c) { return c.nom === client; });
+      if (clientInfo && clientInfo.reference_id) {
+        try {
+          const p = STATE.profil || {};
+          await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              p_user_id: clientInfo.reference_id,
+              p_destinataire_email: clientInfo.email || '',
+              p_type: 'bl_recu',
+              p_titre: '📦 Bon de livraison — ' + (p.raison || sb.user?.email),
+              p_corps: (p.raison || sb.user?.email) + ' a créé un bon de livraison ' + bl.ref + ' pour vous.',
+              p_meta: JSON.stringify({ emetteur_raison: p.raison || '' })
+            })
+          });
+        } catch(eNotifBL) {}
+      }
+
       goScreen('bons-livraison-list', null);
     }
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
