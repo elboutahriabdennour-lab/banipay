@@ -1440,7 +1440,7 @@ function switchCptNav(tab) {
 
     renderListeEntreprises();
     content.addEventListener('click', function(e) {
-      if (e.target.closest('.btn-go-profil-cpt')) { renderComptableProfil(); if (typeof chargerEquipeCabinet === 'function') chargerEquipeCabinet(); goScreen('comptable-profil', null); }
+      if (e.target.closest('.btn-go-profil-cpt')) { renderComptableProfil(); if (typeof chargerEquipeCabinet === 'function') chargerEquipeCabinet(); if (typeof chargerMesInvitationsCabinet === 'function') chargerMesInvitationsCabinet(); goScreen('comptable-profil', null); }
       if (e.target.closest('.btn-tri-action')) { trierEntreprises('action'); }
       if (e.target.closest('.btn-tri-lettrage')) { trierEntreprises('lettrage'); }
       if (e.target.closest('.btn-tri-nom')) { trierEntreprises('nom'); }
@@ -2303,6 +2303,21 @@ async function renderNotificationsComptable() {
   if (!content) return;
 
   const { invitations, notifs } = await chargerNotificationsComptable();
+
+  // Ouvrir cet onglet = tout marquer comme lu, même principe que côté
+  // entreprise : le badge ne doit plus rester affiché une fois consulté.
+  const aMarquer = notifs.filter(function(n) { return n.id && !n.lue; });
+  for (const n of aMarquer) {
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_id: n.id })
+      });
+    } catch(eMarq) {}
+  }
+  const badgeCpt = document.getElementById('cpt-notif-badge');
+  if (badgeCpt && aMarquer.length) { badgeCpt.textContent = ''; badgeCpt.style.display = 'none'; }
 
   content.innerHTML =
     '<div style="padding:16px">' +
