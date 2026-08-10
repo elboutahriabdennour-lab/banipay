@@ -1,71 +1,16 @@
 // ZELTO — nav.js
 
+// ============================================================
+// NOTIFICATIONS (événements réels, stockés en base, vraiment marquables
+// comme lus) — séparé des ALERTES (état de l'activité, recalculé à
+// chaque fois, voir genAlertes() plus bas). Les deux étaient mélangés
+// avant : une alerte de stock bas revenait à chaque ouverture même après
+// "tout marquer comme lu", puisqu'elle n'a pas de statut lu en base — ce
+// n'est pas un événement ponctuel, c'est un état actuel.
+// ============================================================
 async function genNotifications() {
   STATE.notifications = [];
   const email = sb.user?.email;
-  const uid = sb.user?.id;
-
-  (STATE.factures || []).filter(f => f.statut === 'retard').forEach(f => {
-    STATE.notifications.push({ type: 'danger', icon: '⚠️', title: 'Facture ' + f.ref + ' en retard', body: 'Client: ' + f.client });
-  });
-
-  (STATE.devis || []).filter(d => d.statut === 'accepte' && !d.notif_lue).forEach(d => {
-    STATE.notifications.push({ type: 'success', icon: '✅', title: 'Devis ' + d.ref + ' accepté', body: 'Client: ' + d.client });
-  });
-
-  // NOUVEAU: facture bientôt en retard (échéance dans les 3 prochains jours,
-  // pas encore payée) — pour agir avant que ça devienne un vrai retard.
-  const dansTroisJours = new Date();
-  dansTroisJours.setDate(dansTroisJours.getDate() + 3);
-  const aujourdHui = new Date();
-  (STATE.factures || []).filter(function(f) {
-    if (f.statut === 'payee' || f.statut === 'retard' || !f.echeance) return false;
-    const ech = new Date(f.echeance);
-    return ech >= aujourdHui && ech <= dansTroisJours;
-  }).forEach(function(f) {
-    STATE.notifications.push({ type: 'warning', icon: '⏰', title: 'Échéance proche — ' + f.ref, body: 'Client: ' + f.client + ' · Échéance le ' + f.echeance });
-  });
-
-  // NOUVEAU: stock bas (seuil d'alerte configuré et atteint)
-  (STATE.produits || []).filter(function(p) {
-    return p.stock != null && p.seuil_alerte != null && Number(p.stock) <= Number(p.seuil_alerte);
-  }).forEach(function(p) {
-    STATE.notifications.push({ type: 'warning', icon: '📦', title: 'Stock bas — ' + p.nom, body: (p.stock) + ' ' + (p.unite||'u') + ' restant(s) (seuil: ' + p.seuil_alerte + ')' });
-  });
-
-  // NOUVEAU: abonnement (facturation récurrente) à générer sous 3 jours
-  if (STATE.abonnements && STATE.abonnements.length) {
-    (STATE.abonnements || []).filter(function(a) {
-      if (a.statut !== 'actif' || !a.prochaine_date) return false;
-      const prochaine = new Date(a.prochaine_date);
-      return prochaine >= aujourdHui && prochaine <= dansTroisJours;
-    }).forEach(function(a) {
-      STATE.notifications.push({ type: 'info', icon: '🔁', title: 'Facturation récurrente proche — ' + a.client, body: 'Prochaine génération le ' + a.prochaine_date });
-    });
-  }
-
-  // NOUVEAU: relances factures configurables (avant échéance / jour J /
-  // retard), avec message personnalisable — remplace/complète l'alerte
-  // générique "en retard" par une vraie proposition d'action.
-  if (typeof ajouterNotificationsRelances === 'function') ajouterNotificationsRelances();
-
-  // NOUVEAU: relance devis envoyé depuis plus de 7 jours sans réponse — rien
-  // ne signalait jusqu'ici qu'un devis dormait sans qu'on y pense.
-  const ilYA7Jours = new Date();
-  ilYA7Jours.setDate(ilYA7Jours.getDate() - 7);
-  (STATE.devis || []).filter(function(d) {
-    return (d.statut === 'envoye' || d.statut === 'en_attente') && d.date_emission && new Date(d.date_emission) <= ilYA7Jours;
-  }).forEach(function(d) {
-    STATE.notifications.push({ type: 'warning', icon: '📝', title: 'Devis sans réponse — ' + d.ref, body: 'Envoyé le ' + d.date_emission + ' à ' + d.client + ' — pensez à relancer' });
-  });
-
-  // NOUVEAU: relance bon de commande envoyé depuis plus de 7 jours sans
-  // confirmation du fournisseur.
-  (STATE.bonsCommande || []).filter(function(bc) {
-    return bc.statut === 'envoye' && bc.date_commande && new Date(bc.date_commande) <= ilYA7Jours;
-  }).forEach(function(bc) {
-    STATE.notifications.push({ type: 'warning', icon: '📋', title: 'Bon de commande sans réponse — ' + bc.ref, body: 'Envoyé le ' + bc.date_commande + ' à ' + bc.fournisseur + ' — pensez à relancer' });
-  });
 
   if (email) {
     try {
@@ -94,6 +39,64 @@ async function genNotifications() {
   }
 
   mettreAJourBadgeNotif();
+  if (typeof genAlertes === 'function') genAlertes();
+}
+
+// ============================================================
+// ALERTES (état actuel de l'activité — pas des événements, pas de statut
+// lu en base : chacune disparaît d'elle-même une fois le problème réglé,
+// ex. la facture payée, le stock réapprovisionné). Vues séparément de la
+// cloche, dans l'écran "Alertes" dédié.
+// ============================================================
+function genAlertes() {
+  STATE.alertes = [];
+  const dansTroisJours = new Date();
+  dansTroisJours.setDate(dansTroisJours.getDate() + 3);
+  const aujourdHui = new Date();
+
+  (STATE.factures || []).filter(f => f.statut === 'retard').forEach(f => {
+    STATE.alertes.push({ type: 'danger', icon: '⚠️', title: 'Facture ' + f.ref + ' en retard', body: 'Client: ' + f.client });
+  });
+
+  (STATE.factures || []).filter(function(f) {
+    if (f.statut === 'payee' || f.statut === 'retard' || !f.echeance) return false;
+    const ech = new Date(f.echeance);
+    return ech >= aujourdHui && ech <= dansTroisJours;
+  }).forEach(function(f) {
+    STATE.alertes.push({ type: 'warning', icon: '⏰', title: 'Échéance proche — ' + f.ref, body: 'Client: ' + f.client + ' · Échéance le ' + f.echeance });
+  });
+
+  (STATE.produits || []).filter(function(p) {
+    return p.stock != null && p.seuil_alerte != null && Number(p.stock) <= Number(p.seuil_alerte);
+  }).forEach(function(p) {
+    STATE.alertes.push({ type: 'warning', icon: '📦', title: 'Stock bas — ' + p.nom, body: (p.stock) + ' ' + (p.unite||'u') + ' restant(s) (seuil: ' + p.seuil_alerte + ')' });
+  });
+
+  if (STATE.abonnements && STATE.abonnements.length) {
+    (STATE.abonnements || []).filter(function(a) {
+      if (a.statut !== 'actif' || !a.prochaine_date) return false;
+      const prochaine = new Date(a.prochaine_date);
+      return prochaine >= aujourdHui && prochaine <= dansTroisJours;
+    }).forEach(function(a) {
+      STATE.alertes.push({ type: 'info', icon: '🔁', title: 'Facturation récurrente proche — ' + a.client, body: 'Prochaine génération le ' + a.prochaine_date });
+    });
+  }
+
+  if (typeof ajouterNotificationsRelances === 'function') ajouterNotificationsRelances();
+
+  const ilYA7Jours = new Date();
+  ilYA7Jours.setDate(ilYA7Jours.getDate() - 7);
+  (STATE.devis || []).filter(function(d) {
+    return (d.statut === 'envoye' || d.statut === 'en_attente') && d.date_emission && new Date(d.date_emission) <= ilYA7Jours;
+  }).forEach(function(d) {
+    STATE.alertes.push({ type: 'warning', icon: '📝', title: 'Devis sans réponse — ' + d.ref, body: 'Envoyé le ' + d.date_emission + ' à ' + d.client + ' — pensez à relancer' });
+  });
+
+  (STATE.bonsCommande || []).filter(function(bc) {
+    return bc.statut === 'envoye' && bc.date_commande && new Date(bc.date_commande) <= ilYA7Jours;
+  }).forEach(function(bc) {
+    STATE.alertes.push({ type: 'warning', icon: '📋', title: 'Bon de commande sans réponse — ' + bc.ref, body: 'Envoyé le ' + bc.date_commande + ' à ' + bc.fournisseur + ' — pensez à relancer' });
+  });
 }
 
 function mettreAJourBadgeNotif() {
@@ -188,7 +191,7 @@ function tempsRelatif(dateStr) {
 
 function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
-  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋', demande_devis:'📥' };
+  const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋', demande_devis:'📥', devis_reponse:'✅', facture_reponse:'✅' };
   // NOUVEAU: séparateur visuel avant la première notification déjà lue —
   // rend l'historique explicite plutôt que de mélanger silencieusement
   // non-lues et déjà traitées dans la même liste.
@@ -200,17 +203,26 @@ function htmlListeNotifications(allNotifs) {
       separateurAjoute = true;
       separateur = '<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase">Historique</div>';
     }
-    // FIX: même bug que plus haut — n.type est toujours 'info' pour les
-    // notifications de la base, le vrai type est dans n.raw.type. Cette
-    // vérification étant toujours fausse, AUCUNE notification n'a jamais
-    // été traitée comme "document à ouvrir" : ni la classe cliquable, ni
-    // les boutons Accepter/Attente/Refuser ne s'affichaient jamais.
-    const isDoc = n.raw && (n.raw.type === 'facture_recue' || n.raw.type === 'devis_recu');
+    const typeReel = n.raw && n.raw.type;
+    // isDoc : devis/facture REÇU(E) — ouvre le document avec Accepter/
+    // Attente/Refuser (comportement déjà en place).
+    const isDoc = typeReel === 'facture_recue' || typeReel === 'devis_recu';
+    // isReponse : NOUVEAU — l'émetteur est notifié que SON devis/facture a
+    // été accepté(e)/refusé(e)/mis(e) en attente. Si accepté ET que c'est
+    // un devis : bouton direct pour le convertir en facture.
+    const isReponse = typeReel === 'devis_reponse' || typeReel === 'facture_reponse';
+    // isDemande : NOUVEAU — un client a demandé un devis. Ouvre l'écran
+    // dédié qui montre le message complet (pas tronqué) + bouton "Créer
+    // le devis".
+    const isDemande = typeReel === 'demande_devis';
+    const estCliquable = isDoc || isReponse || isDemande;
     let meta = {};
     try { meta = JSON.parse((n.raw && n.raw.meta) || '{}'); } catch(e3) {}
-    return separateur + '<div class="notif-item' + (estLue ? '' : ' notif-unread') + (isDoc ? ' notif-doc-view' : '') + '" ' + (isDoc ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="cursor:pointer"' : '') + '>' +
+    return separateur + '<div class="notif-item' + (estLue ? '' : ' notif-unread') +
+      (isDoc ? ' notif-doc-view' : '') + (isReponse ? ' notif-reponse-view' : '') + (isDemande ? ' notif-demande-view' : '') +
+      '" ' + (estCliquable ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" data-nid="' + (n.id||'') + '" style="cursor:pointer"' : '') + '>' +
       (!estLue ? '<div style="width:9px;height:9px;border-radius:50%;background:#1F6F72;flex-shrink:0;margin-top:6px"></div>' : '<div style="width:9px;flex-shrink:0"></div>') +
-      '<div class="notif-ico">' + (typeIco[n.raw && n.raw.type] || n.icon || '🔔') + '</div>' +
+      '<div class="notif-ico">' + (typeIco[typeReel] || n.icon || '🔔') + '</div>' +
       '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
       '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
       (n.raw && n.raw.created_at ? '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + tempsRelatif(n.raw.created_at) + '</div>' : '') +
@@ -219,6 +231,8 @@ function htmlListeNotifications(allNotifs) {
         '<button class="btn-doc-attente" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F7EFDC;color:#B8860B;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">⏳ Attente</button>' +
         '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
       '</div>' : '') +
+      (isReponse && meta.action === 'accepter' && meta.doc_type === 'devis' ? '<button class="btn-convertir-facture" data-docid="' + (meta.doc_id||'') + '" style="margin-top:8px;width:100%;padding:7px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Convertir en facture</button>' : '') +
+      (isDemande ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir la demande complète et y répondre</div>' : '') +
       (n._relanceFactureId ? '<button class="btn-envoyer-relance" data-facture-id="' + n._relanceFactureId + '" data-type-relance="' + n._relanceType + '" style="margin-top:8px;width:100%;padding:6px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📤 Envoyer la relance</button>' : '') +
       '</div></div>';
   }).join('');
@@ -354,6 +368,39 @@ async function gererClicNotification(e) {
     return true;
   }
 
+  // NOUVEAU : bouton "Convertir en facture" sur une notification de
+  // réponse (devis accepté).
+  const btnConv = e.target.closest('.btn-convertir-facture');
+  if (btnConv) {
+    const docId = parseInt(btnConv.dataset.docid);
+    fermerNotifDropdown();
+    if (docId && typeof convertirEnFacture === 'function') convertirEnFacture(docId);
+    return true;
+  }
+
+  // NOUVEAU : toucher une notification "demande de devis" ouvre l'écran
+  // dédié — message complet (pas tronqué à 100 caractères comme dans
+  // l'aperçu de la notification) + bouton "Créer le devis".
+  const notifDemande = e.target.closest('.notif-demande-view');
+  if (notifDemande && !e.target.closest('button')) {
+    fermerNotifDropdown();
+    if (typeof loadDemandesDevis === 'function') loadDemandesDevis();
+    goScreen('demandes-devis', null);
+    return true;
+  }
+
+  // NOUVEAU : toucher une notification de réponse (hors bouton) ouvre le
+  // document concerné, pour voir son détail complet.
+  const notifReponse = e.target.closest('.notif-reponse-view');
+  if (notifReponse && !e.target.closest('button')) {
+    const t = notifReponse.dataset.type;
+    const docId = notifReponse.dataset.docid;
+    fermerNotifDropdown();
+    if (t === 'devis' && docId) { goScreen('devis-list', null); setTimeout(function() { if (typeof openDetailDevis === 'function') openDetailDevis(parseInt(docId)); }, 150); }
+    else if (t === 'facture' && docId) { goScreen('mes-factures', null); setTimeout(function() { if (typeof openDetail === 'function') openDetail(parseInt(docId)); }, 150); }
+    return true;
+  }
+
   // Toucher la notification elle-même (hors boutons, vérifié après) ouvre
   // le PDF — c'est LE point demandé : cliquer sur la notif emmène vers le
   // contenu (devis/facture), avec les boutons Accepter/Attente/Refuser.
@@ -378,19 +425,20 @@ async function renderNotifScreen() {
   const list = el('notif-list');
   if (!list) return;
 
-  const invitationsCpt = await chargerInvitationsComptableEnAttente();
-  const allNotifs = STATE.notifications || [];
+  if (typeof genAlertes === 'function') genAlertes();
+  const alertes = STATE.alertes || [];
 
-  if (!allNotifs.length && !invitationsCpt.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>';
+  if (!alertes.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">✅</div><div class="empty-title">Aucune alerte</div><div>Tout est à jour — rien qui demande votre attention pour le moment</div></div>';
     return;
   }
 
-  list.innerHTML = htmlInvitationsCpt(invitationsCpt) + htmlListeNotifications(allNotifs);
+  // Les alertes n'ont pas de statut "lu" en base (ce ne sont pas des
+  // événements ponctuels) — htmlListeNotifications gère très bien ce cas
+  // (n.raw absent => jamais "lue", pas de bouton d'action), donc on la
+  // réutilise telle quelle plutôt que de dupliquer le HTML.
+  list.innerHTML = htmlListeNotifications(alertes);
 
-  // FIX: n'attacher l'écouteur qu'une seule fois sur ce noeud persistant.
-  // Auparavant { once: true } ne géraient qu'un seul clic total sur tout
-  // l'écran (accepter OU refuser UNE fois, plus rien ensuite).
   if (list.dataset.clickBound === '1') return;
   list.dataset.clickBound = '1';
   list.addEventListener('click', function(e) { gererClicNotification(e); });
@@ -464,7 +512,7 @@ async function toggleNotifDropdown(event) {
       '</div>' +
     '</div>' +
     (allNotifs.length || invitationsCpt.length ? contenu : '<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>') +
-    '<div style="padding:10px 16px;border-top:1px solid #E3DCCF"><button onclick="fermerNotifDropdown();goScreen(\'notifications\',null)" style="width:100%;padding:8px;background:none;color:#9C9186;border:none;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">Voir tout / diagnostic</button></div>';
+    '<div style="padding:10px 16px;border-top:1px solid #E3DCCF"><button onclick="fermerNotifDropdown();goScreen(\'notifications\',null)" style="width:100%;padding:8px;background:none;color:#9C9186;border:none;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">⚠️ Voir les alertes (retards, stock bas...)</button></div>';
 
   document.body.appendChild(panel);
   panel.addEventListener('click', function(e) { gererClicNotification(e); });
