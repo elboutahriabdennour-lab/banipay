@@ -1224,6 +1224,17 @@ async function traiterActionDocument(docId, type, action, signatureData) {
     // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
     try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : action === 'refuser' ? 'refus' : 'mise en attente', d.ref || ''); } catch(eAudit) {}
 
+    // FIX: envoie une VRAIE notification stockée à l'émetteur (fournisseur)
+    // — avant, seul un recalcul local sans bouton signalait qu'un devis
+    // était accepté, et rien n'existait pour les factures.
+    try {
+      await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_reponse_document', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_doc_type: isFacture ? 'facture' : 'devis', p_doc_id: docId, p_action: action })
+      });
+    } catch(eNotif) {}
+
     // Page de confirmation
     const messageFinal = action === 'accepter'
       ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.'
