@@ -78,6 +78,7 @@ function calcPrixTTC() {
 async function sauvegarderProduit() {
   const nom = el('p-nom')?.value.trim();
   if(!nom){showToast("Entrez le nom de l'article",'error');return;}
+  if (typeof verifierLimiteProduits === 'function' && !verifierLimiteProduits()) return;
   showToast('⏳...');
   try {
     const r = await sb.post('produits',{
@@ -223,7 +224,7 @@ async function importerProduitsCSV(event) {
     };
     const catValides = ['service', 'produit', 'main-oeuvre', 'transport', 'materiaux', 'autre'];
 
-    let importes = 0, ignores = 0;
+    let importes = 0, ignores = 0, bloquesParLimite = 0;
     showToast('⏳ Import de ' + rows.length + ' ligne(s)...');
 
     for (const r of rows) {
@@ -232,6 +233,11 @@ async function importerProduitsCSV(event) {
 
       const existe = STATE.produits.find(function(p) { return p.nom.toLowerCase() === nom.toLowerCase(); });
       if (existe) { ignores++; continue; }
+
+      if (STATE.limiteProduits != null && (STATE.produits || []).length >= STATE.limiteProduits) {
+        bloquesParLimite += (rows.length - importes - ignores - bloquesParLimite);
+        break;
+      }
 
       let categorie = (getVal(r, ['categorie', 'catégorie', 'category']) || 'service').toLowerCase();
       if (!catValides.includes(categorie)) categorie = 'autre';
@@ -257,7 +263,7 @@ async function importerProduitsCSV(event) {
 
     STATE.produits.sort(function(a, b) { return a.nom.localeCompare(b.nom); });
     renderProduits();
-    showToast('✅ ' + importes + ' article(s) importé(s)' + (ignores ? ', ' + ignores + ' ignoré(s)' : ''), 'success');
+    showToast('✅ ' + importes + ' article(s) importé(s)' + (ignores ? ', ' + ignores + ' ignoré(s)' : '') + (bloquesParLimite ? ', ' + bloquesParLimite + ' bloqué(s) par la limite de votre forfait' : ''), bloquesParLimite ? 'error' : 'success');
     logAudit('produit', null, 'creation', importes + ' articles importés via CSV');
   } catch(e) {
     showToast('Erreur import: ' + e.message, 'error');
