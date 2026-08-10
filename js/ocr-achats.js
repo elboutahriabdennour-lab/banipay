@@ -81,6 +81,102 @@ async function lireFactureParOCR(imageDataUrl) {
   }
 }
 
+// ============================================================
+// LECTURE DE PDF — factures électroniques (Maroc Telecom, Orange, et
+// autres fournisseurs qui envoient un PDF généré par ordinateur, pas
+// scanné). Contrairement à la photo, on ne fait PAS d'OCR ici : ces PDF
+// contiennent déjà le texte en tant que tel (pas une image du texte), donc
+// on l'extrait directement — plus fiable et plus rapide qu'une OCR sur un
+// rendu de page. Réutilise les mêmes heuristiques de détection que la
+// photo (_extraireSuggestionsFacture), donc les mêmes limites
+// s'appliquent : suggestions à vérifier, jamais enregistrées telles
+// quelles.
+// PÉRIMÈTRE HONNÊTE : ceci ne se connecte à AUCUN compte Maroc Telecom /
+// Orange / autre — pas d'accès API chez ces fournisseurs. L'utilisateur
+// doit lui-même récupérer le PDF (email, espace client) et l'importer ici
+// manuellement.
+let _pdfjsChargement = null;
+function _chargerPdfJs() {
+  if (typeof pdfjsLib !== 'undefined') return Promise.resolve();
+  if (_pdfjsChargement) return _pdfjsChargement;
+  _pdfjsChargement = new Promise(function(resolve, reject) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload = function() {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve();
+    };
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return _pdfjsChargement;
+}
+
+async function lireFacturePDF(pdfDataUrl) {
+  try {
+    await _chargerPdfJs();
+  } catch(e) {
+    console.warn('PDF.js n\'a pas pu être chargé — lecture automatique du PDF indisponible');
+    return;
+  }
+
+  const zoneStatut = document.createElement('div');
+  zoneStatut.id = 'ocr-statut';
+  zoneStatut.style.cssText = 'margin-top:8px;padding:8px 12px;background:#F7EFDC;color:#B8860B;border-radius:8px;font-size:11px;font-weight:600';
+  zoneStatut.textContent = '🔍 Lecture du PDF en cours...';
+  const preview = el('achat-pj-preview');
+  if (preview) preview.appendChild(zoneStatut);
+
+  try {
+    // data:application/pdf;base64,XXXX -> ArrayBuffer attendu par pdf.js
+    const base64 = pdfDataUrl.split(',')[1];
+    const binaire = atob(base64);
+    const octets = new Uint8Array(binaire.length);
+    for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+
+    const doc = await pdfjsLib.getDocument({ data: octets }).promise;
+    let texte = '';
+    // On se limite aux 3 premières pages — largement suffisant pour une
+    // facture (le total/fournisseur/date sont quasi toujours sur la
+    // première page), et ça évite de traiter un PDF de 50 pages inutilement.
+    const nbPages = Math.min(doc.numPages, 3);
+    for (let p = 1; p <= nbPages; p++) {
+      const page = await doc.getPage(p);
+      const contenu = await page.getTextContent();
+      texte += contenu.items.map(function(it) { return it.str; }).join('\n') + '\n';
+    }
+
+    const suggestions = _extraireSuggestionsFacture(texte);
+
+    if (zoneStatut) {
+      const nbTrouve = Object.values(suggestions).filter(Boolean).length;
+      zoneStatut.style.background = nbTrouve ? '#EEF3E4' : '#F5E4E1';
+      zoneStatut.style.color = nbTrouve ? '#55702E' : '#B23A2E';
+      zoneStatut.textContent = nbTrouve
+        ? '✅ Lecture du PDF : ' + nbTrouve + ' info(s) suggérée(s) — à vérifier avant d\'enregistrer'
+        : '⚠️ Lecture du PDF : aucune info fiable détectée — remplissez manuellement';
+    }
+
+    if (suggestions.fournisseur && el('achat-fournisseur') && !el('achat-fournisseur').value) {
+      el('achat-fournisseur').value = suggestions.fournisseur;
+      el('achat-fournisseur').style.background = '#FBF0DA';
+    }
+    if (suggestions.date && el('achat-date') && !el('achat-date').value) {
+      el('achat-date').value = suggestions.date;
+    }
+    if (suggestions.montantTTC && !STATE.lignesAchat.length) {
+      STATE.lignesAchat.push({ desc: 'Ligne suggérée par lecture automatique du PDF (à vérifier)', qte: 1, pu: suggestions.montantTTC, unite: 'u', produit_id: null });
+      if (typeof renderLignesAchat === 'function') renderLignesAchat();
+    }
+  } catch(e) {
+    if (zoneStatut) {
+      zoneStatut.style.background = '#F5E4E1';
+      zoneStatut.style.color = '#B23A2E';
+      zoneStatut.textContent = '❌ Lecture du PDF indisponible (' + e.message + ') — remplissez manuellement. Si le PDF est un scan (image), la lecture automatique ne fonctionne que sur les PDF texte.';
+    }
+  }
+}
+
 // Heuristiques simples sur le texte brut extrait par l'OCR
 function _extraireSuggestionsFacture(texte) {
   const suggestions = { fournisseur: null, date: null, montantTTC: null };
