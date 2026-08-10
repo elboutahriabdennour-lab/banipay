@@ -37,6 +37,7 @@ function renderEquipe() {
 }
 
 async function inviterMembreEquipe() {
+  if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('multi_utilisateurs', 'Équipe multi-utilisateurs')) return;
   const email = (el('equipe-email')?.value || '').trim();
   const role = el('equipe-role')?.value || 'lecture';
   if (!email || !email.includes('@')) { showToast('Entrez un email valide', 'error'); return; }
