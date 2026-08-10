@@ -107,6 +107,7 @@ ${lignesXML}
 
 // Télécharge le XML UBL d'une facture (préparation DGI)
 function telechargerXMLUBLFacture(factureId) {
+  if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('export_ubl', 'Export UBL / préparation DGI')) return;
   const f = (STATE.factures || []).find(function(x) { return x.id === factureId; });
   if (!f) { showToast('Facture introuvable', 'error'); return; }
   const clientInfo = (STATE.clients || []).find(function(c) { return c.nom === f.client; });
