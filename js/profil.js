@@ -602,6 +602,7 @@ async function supprimerReleve(id) {
 
 
 async function inviterComptable() {
+  if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('comptable_lie', 'Accès comptable')) return;
   // Ouvrir modal invitation
   const overlay = document.createElement('div');
   overlay.id = 'modal-inv-cpt';
