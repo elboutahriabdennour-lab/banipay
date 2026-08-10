@@ -128,6 +128,7 @@ async function decrementerStockDepuisLignes(lignes, refFacture) {
 window._stockCtx = null;
 
 function ouvrirAjustementStock(produitId) {
+  if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('stock', 'Gestion de stock avancée')) return;
   const p = STATE.produits.find(function(x) { return x.id === produitId; });
   if (!p) return;
   window._stockCtx = { produitId };
