@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786439448">
+<link rel="stylesheet" href="css/style.css?v=1786439921">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -132,39 +132,39 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786439448"></script>
-  <script src="js/utils.js?v=1786439448"></script>
-  <script src="js/auth.js?v=1786439448"></script>
-  <script src="js/nav.js?v=1786439448"></script>
-  <script src="js/factures.js?v=1786439448"></script>
-  <script src="js/devis.js?v=1786439448"></script>
-  <script src="js/clients.js?v=1786439448"></script>
-  <script src="js/produits.js?v=1786439448"></script>
-  <script src="js/pdf.js?v=1786439448"></script>
-  <script src="js/stats.js?v=1786439448"></script>
-  <script src="js/profil.js?v=1786439448"></script>
-  <script src="js/comptable.js?v=1786439448"></script>
-  <script src="js/messages.js?v=1786439448"></script>
-<script src="js/achats.js?v=1786439448"></script>
-<script src="js/stock.js?v=1786439448"></script>
-<script src="js/finance.js?v=1786439448"></script>
-<script src="js/ubl.js?v=1786439448"></script>
-<script src="js/relances.js?v=1786439448"></script>
-<script src="js/dashboard-avance.js?v=1786439448"></script>
-<script src="js/ocr-achats.js?v=1786439448"></script>
-<script src="js/equipe.js?v=1786439448"></script>
-<script src="js/equipe-cabinet.js?v=1786439448"></script>
-<script src="js/rh.js?v=1786439448"></script>
-<script src="js/hubs.js?v=1786439448"></script>
-<script src="js/demandes-devis.js?v=1786439448"></script>
-<script src="js/offres.js?v=1786439448"></script>
-<script src="js/support.js?v=1786439448"></script>
-<script src="js/devis-recus.js?v=1786439448"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786439448"></script>
-<script src="js/selection.js?v=1786439448"></script>
-<script src="js/abonnements.js?v=1786439448"></script>
-<script src="js/signature.js?v=1786439448"></script>
-<script src="js/app.js?v=1786439448"></script>
+<script src="js/config.js?v=1786439921"></script>
+  <script src="js/utils.js?v=1786439921"></script>
+  <script src="js/auth.js?v=1786439921"></script>
+  <script src="js/nav.js?v=1786439921"></script>
+  <script src="js/factures.js?v=1786439921"></script>
+  <script src="js/devis.js?v=1786439921"></script>
+  <script src="js/clients.js?v=1786439921"></script>
+  <script src="js/produits.js?v=1786439921"></script>
+  <script src="js/pdf.js?v=1786439921"></script>
+  <script src="js/stats.js?v=1786439921"></script>
+  <script src="js/profil.js?v=1786439921"></script>
+  <script src="js/comptable.js?v=1786439921"></script>
+  <script src="js/messages.js?v=1786439921"></script>
+<script src="js/achats.js?v=1786439921"></script>
+<script src="js/stock.js?v=1786439921"></script>
+<script src="js/finance.js?v=1786439921"></script>
+<script src="js/ubl.js?v=1786439921"></script>
+<script src="js/relances.js?v=1786439921"></script>
+<script src="js/dashboard-avance.js?v=1786439921"></script>
+<script src="js/ocr-achats.js?v=1786439921"></script>
+<script src="js/equipe.js?v=1786439921"></script>
+<script src="js/equipe-cabinet.js?v=1786439921"></script>
+<script src="js/rh.js?v=1786439921"></script>
+<script src="js/hubs.js?v=1786439921"></script>
+<script src="js/demandes-devis.js?v=1786439921"></script>
+<script src="js/offres.js?v=1786439921"></script>
+<script src="js/support.js?v=1786439921"></script>
+<script src="js/devis-recus.js?v=1786439921"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786439921"></script>
+<script src="js/selection.js?v=1786439921"></script>
+<script src="js/abonnements.js?v=1786439921"></script>
+<script src="js/signature.js?v=1786439921"></script>
+<script src="js/app.js?v=1786439921"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -365,7 +365,7 @@
   <!-- ESPACE SUPPORT (agents uniquement) -->
   <div class="screen" id="screen-espace-support">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('support',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
+      <button class="back-btn" onclick="if(window._modeConnexionAdmin){doLogout();}else{goScreen('support',null);}">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
     </div>
     <div style="padding:16px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">🛠️ Espace support</div>
@@ -394,6 +394,7 @@
       <div id="support-agents-content"></div>
     </div>
 
+    <div style="padding:20px"><button onclick="doLogout()" style="width:100%;padding:12px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button></div>
     <div class="pb"></div>
   </div>
 
@@ -1003,7 +1004,11 @@
     </div>
     <div class="auth-card">
       <div id="aw-normal">
-        <div class="auth-title">Connexion</div>
+        <div class="auth-title" id="auth-titre-connexion">Connexion</div>
+        <div id="bandeau-mode-admin" style="display:none;background:#EDE6F0;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#6A4E85;display:flex;justify-content:space-between;align-items:center">
+          <span>🛠️ Connexion à l'espace support/admin</span>
+          <span onclick="basculerModeConnexionAdmin(false)" style="cursor:pointer;text-decoration:underline;font-weight:600">Annuler</span>
+        </div>
         <label class="a-lbl">Email</label>
         <input id="login-email" class="a-inp" type="email" placeholder="votre@email.com" autocomplete="email">
         <label class="a-lbl">Mot de passe</label>
@@ -1019,6 +1024,7 @@
         <button class="a-btn a-btn-blue" onclick="doLogin()">Se connecter</button>
         <div class="a-link" style="margin-top:10px"><a onclick="doForgotPassword()">Mot de passe oublié ?</a></div>
         <div class="a-link">Pas de compte ? <a onclick="switchTab('signup')">Créer un compte</a></div>
+        <div style="text-align:center;margin-top:18px"><span onclick="basculerModeConnexionAdmin(true)" style="font-size:10px;color:#C4BCAE;cursor:pointer">🛠️ Espace Support / Admin</span></div>
       </div>
       <div id="aw-signup" style="display:none">
         <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
