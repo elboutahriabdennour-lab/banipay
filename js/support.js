@@ -71,14 +71,42 @@ async function ouvrirEspaceSupport() {
       showToast('⛔ Ce compte n\'a pas accès à l\'espace support', 'error');
       return;
     }
+    const respRole = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_role_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.monRoleSupport = respRole.ok ? await respRole.json() : 'agent';
     goScreen('espace-support', null);
-    chargerTicketsSupport();
+    switchOngletSupport('tickets');
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
   }
 }
 
 STATE.ticketsSupport = STATE.ticketsSupport || [];
+STATE.statsSupport = STATE.statsSupport || null;
+STATE.agentsSupport = STATE.agentsSupport || [];
+STATE._ongletSupport = STATE._ongletSupport || 'tickets';
+
+// ============================================================
+// VUE À ONGLETS — Tickets / Statistiques / Agents (Agents visible par
+// tous les agents, gestion réservée aux admins — voir migration_phase39)
+// ============================================================
+function switchOngletSupport(onglet) {
+  STATE._ongletSupport = onglet;
+  document.querySelectorAll('#screen-espace-support .support-tab').forEach(function(b) {
+    b.style.background = b.dataset.onglet === onglet ? '#1F6F72' : '#EAE4DA';
+    b.style.color = b.dataset.onglet === onglet ? '#fff' : '#6B5F54';
+  });
+  if (onglet === 'tickets') { chargerTicketsSupport(); }
+  else if (onglet === 'stats') { chargerStatsSupport(); }
+  else if (onglet === 'agents') { chargerAgentsSupport(); }
+  ['tickets', 'stats', 'agents'].forEach(function(o) {
+    const zone = el('support-vue-' + o);
+    if (zone) zone.style.display = (o === onglet) ? 'block' : 'none';
+  });
+}
 
 async function chargerTicketsSupport() {
   try {
@@ -98,10 +126,6 @@ function renderTicketsSupport() {
   const tickets = STATE.ticketsSupport || [];
   const filtre = STATE._filtreTicketsSupport || 'tous';
   const filtres = filtre === 'tous' ? tickets : tickets.filter(function(t) { return t.statut === filtre; });
-
-  const nbNouveaux = tickets.filter(function(t) { return t.statut === 'nouveau'; }).length;
-  const resume = el('tickets-support-resume');
-  if (resume) resume.innerHTML = '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#A67A16">🎫 ' + nbNouveaux + ' nouveau(x) ticket(s)</span></div>';
 
   const statutLabel = { nouveau: '🆕 Nouveau', en_cours: '⏳ En cours', resolu: '✅ Résolu' };
   const statutColor = { nouveau: '#B8860B', en_cours: '#1F6F72', resolu: '#6E8F4E' };
@@ -133,6 +157,119 @@ function filtrerTicketsSupport(filtre, btn) {
   renderTicketsSupport();
 }
 
+// ============================================================
+// ONGLET STATISTIQUES
+// ============================================================
+async function chargerStatsSupport() {
+  const zone = el('support-stats-content');
+  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_stats_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.statsSupport = resp.ok ? await resp.json() : null;
+  } catch(e) { STATE.statsSupport = null; }
+  renderStatsSupport();
+}
+
+function renderStatsSupport() {
+  const zone = el('support-stats-content');
+  if (!zone) return;
+  const s = STATE.statsSupport;
+  if (!s) { zone.innerHTML = '<div class="empty"><div class="empty-ico">📊</div><div class="empty-title">Statistiques indisponibles</div></div>'; return; }
+  const cartes = [
+    { label: 'Total', val: s.total, couleur: '#2A2420' },
+    { label: 'Nouveaux', val: s.nouveau, couleur: '#B8860B' },
+    { label: 'En cours', val: s.en_cours, couleur: '#1F6F72' },
+    { label: 'Résolus', val: s.resolu, couleur: '#6E8F4E' },
+  ];
+  zone.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+    cartes.map(function(c) {
+      return '<div style="background:#fff;border-radius:14px;padding:16px;text-align:center;border:1px solid #E3DCCF">' +
+        '<div style="font-size:24px;font-weight:800;color:' + c.couleur + '">' + c.val + '</div>' +
+        '<div style="font-size:11px;color:#9C9186;margin-top:4px">' + c.label + '</div>' +
+      '</div>';
+    }).join('') +
+  '</div>';
+}
+
+// ============================================================
+// ONGLET AGENTS — visible par tous les agents, gestion (ajout/retrait)
+// réservée aux admins.
+// ============================================================
+async function chargerAgentsSupport() {
+  const zone = el('support-agents-content');
+  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_agents_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.agentsSupport = resp.ok ? ((await resp.json()) || []) : [];
+  } catch(e) { STATE.agentsSupport = []; }
+  renderAgentsSupport();
+}
+
+function renderAgentsSupport() {
+  const zone = el('support-agents-content');
+  if (!zone) return;
+  const estAdmin = STATE.monRoleSupport === 'admin';
+  const agents = (STATE.agentsSupport || []).filter(function(a) { return a.actif; });
+
+  let html = estAdmin
+    ? '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid #E3DCCF">' +
+        '<div style="font-size:12px;font-weight:700;margin-bottom:10px">➕ Ajouter un agent</div>' +
+        '<input id="nouvel-agent-email" class="f-inp" placeholder="Email" style="margin-bottom:8px">' +
+        '<input id="nouvel-agent-nom" class="f-inp" placeholder="Nom (optionnel)" style="margin-bottom:8px">' +
+        '<select id="nouvel-agent-role" class="f-inp" style="margin-bottom:10px"><option value="agent">Agent</option><option value="admin">Admin</option></select>' +
+        '<button onclick="ajouterAgentSupport()" style="width:100%;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ajouter</button>' +
+      '</div>'
+    : '';
+
+  html += agents.map(function(a) {
+    return '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid #E3DCCF;display:flex;justify-content:space-between;align-items:center">' +
+      '<div><div style="font-size:12px;font-weight:700">' + escapeHTML(a.nom||a.email) + '</div>' +
+      '<div style="font-size:10px;color:#9C9186">' + escapeHTML(a.email) + ' · ' + (a.role === 'admin' ? '👑 Admin' : 'Agent') + '</div></div>' +
+      (estAdmin ? '<button onclick="retirerAgentSupport(' + a.id + ')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">Retirer</button>' : '') +
+    '</div>';
+  }).join('');
+
+  zone.innerHTML = html || '<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun agent</div></div>';
+}
+
+async function ajouterAgentSupport() {
+  const email = (el('nouvel-agent-email')?.value || '').trim();
+  const nom = (el('nouvel-agent-nom')?.value || '').trim();
+  const role = el('nouvel-agent-role')?.value || 'agent';
+  if (!email || !email.includes('@')) { showToast('Entrez un email valide', 'error'); return; }
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/ajouter_agent_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: email, p_nom: nom, p_role: role })
+    });
+    if (!resp.ok) { showToast('Erreur — droits insuffisants ?', 'error'); return; }
+    showToast('✅ Agent ajouté', 'success');
+    chargerAgentsSupport();
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
+
+async function retirerAgentSupport(agentId) {
+  if (!confirm('Retirer cet agent ?')) return;
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/retirer_agent_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_agent_id: agentId })
+    });
+    if (!resp.ok) { showToast('Erreur — droits insuffisants ?', 'error'); return; }
+    showToast('Agent retiré', 'success');
+    chargerAgentsSupport();
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
 async function changerStatutTicket(ticketId, statut) {
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_ticket_support', {
