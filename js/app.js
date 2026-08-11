@@ -541,10 +541,57 @@ async function afficherDocumentPublic(docId) {
 }
 
 
+// NOUVEAU : appelée depuis l'écran "Définir mon mot de passe", atteint
+// via un lien d'invitation/récupération Supabase (voir app.js).
+async function definirMotDePasseInvite() {
+  const pwd = el('def-mdp-nouveau')?.value;
+  const confirm2 = el('def-mdp-confirmer')?.value;
+  const errEl = el('def-mdp-err');
+  if (errEl) errEl.textContent = '';
+  if (!window._jetonDefinitionMdp) { if(errEl) errEl.textContent = 'Lien invalide ou expiré — redemandez une invitation'; return; }
+  if (!pwd || pwd.length < 8) { if(errEl) errEl.textContent = '8 caractères minimum'; return; }
+  if (!/[A-Z]/.test(pwd)) { if(errEl) errEl.textContent = 'Au moins une majuscule'; return; }
+  if (!/[0-9]/.test(pwd)) { if(errEl) errEl.textContent = 'Au moins un chiffre'; return; }
+  if (pwd !== confirm2) { if(errEl) errEl.textContent = 'Mots de passe différents'; return; }
+  if (errEl) errEl.textContent = '⏳ Enregistrement...';
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${window._jetonDefinitionMdp}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    if (!r.ok) { const d = await r.json().catch(function(){return{};}); throw new Error(d.msg || d.error_description || 'Erreur de mise à jour'); }
+    window._jetonDefinitionMdp = null;
+    if (errEl) errEl.textContent = '';
+    showToast('✅ Mot de passe défini — connectez-vous maintenant', 'success');
+    goScreen('auth', null);
+    switchTab('login');
+  } catch(e) { if(errEl) errEl.textContent = '❌ ' + e.message; }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   goScreen('auth'); // Défaut: page de connexion
   applyDarkMode();
   loadSavedCredentials();
+
+  // NOUVEAU : lien d'invitation ou de réinitialisation envoyé par
+  // Supabase — le jeton arrive dans le HASH de l'URL (#access_token=...),
+  // pas dans les paramètres normaux (?xxx=...), donc il fallait une
+  // détection séparée. Avant ce correctif, ce jeton n'était jamais lu :
+  // la personne tombait simplement sur l'écran de connexion normal, sans
+  // aucun moyen de définir son mot de passe.
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const accessTokenInvite = hashParams.get('access_token');
+  const typeInvite = hashParams.get('type');
+  if (accessTokenInvite && (typeInvite === 'invite' || typeInvite === 'recovery' || typeInvite === 'signup')) {
+    window._jetonDefinitionMdp = accessTokenInvite;
+    // Nettoie l'URL (le jeton ne doit pas rester visible/partageable dans
+    // l'historique du navigateur une fois utilisé).
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    goScreen('definir-mot-passe', null);
+    return;
+  }
+
   const params = new URLSearchParams(window.location.search);
   const inviteToken = params.get('invite');
   const comptableEmail = params.get('comptable');
