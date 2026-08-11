@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786439921">
+<link rel="stylesheet" href="css/style.css?v=1786457174">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -132,39 +132,39 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786439921"></script>
-  <script src="js/utils.js?v=1786439921"></script>
-  <script src="js/auth.js?v=1786439921"></script>
-  <script src="js/nav.js?v=1786439921"></script>
-  <script src="js/factures.js?v=1786439921"></script>
-  <script src="js/devis.js?v=1786439921"></script>
-  <script src="js/clients.js?v=1786439921"></script>
-  <script src="js/produits.js?v=1786439921"></script>
-  <script src="js/pdf.js?v=1786439921"></script>
-  <script src="js/stats.js?v=1786439921"></script>
-  <script src="js/profil.js?v=1786439921"></script>
-  <script src="js/comptable.js?v=1786439921"></script>
-  <script src="js/messages.js?v=1786439921"></script>
-<script src="js/achats.js?v=1786439921"></script>
-<script src="js/stock.js?v=1786439921"></script>
-<script src="js/finance.js?v=1786439921"></script>
-<script src="js/ubl.js?v=1786439921"></script>
-<script src="js/relances.js?v=1786439921"></script>
-<script src="js/dashboard-avance.js?v=1786439921"></script>
-<script src="js/ocr-achats.js?v=1786439921"></script>
-<script src="js/equipe.js?v=1786439921"></script>
-<script src="js/equipe-cabinet.js?v=1786439921"></script>
-<script src="js/rh.js?v=1786439921"></script>
-<script src="js/hubs.js?v=1786439921"></script>
-<script src="js/demandes-devis.js?v=1786439921"></script>
-<script src="js/offres.js?v=1786439921"></script>
-<script src="js/support.js?v=1786439921"></script>
-<script src="js/devis-recus.js?v=1786439921"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786439921"></script>
-<script src="js/selection.js?v=1786439921"></script>
-<script src="js/abonnements.js?v=1786439921"></script>
-<script src="js/signature.js?v=1786439921"></script>
-<script src="js/app.js?v=1786439921"></script>
+<script src="js/config.js?v=1786457174"></script>
+  <script src="js/utils.js?v=1786457174"></script>
+  <script src="js/auth.js?v=1786457174"></script>
+  <script src="js/nav.js?v=1786457174"></script>
+  <script src="js/factures.js?v=1786457174"></script>
+  <script src="js/devis.js?v=1786457174"></script>
+  <script src="js/clients.js?v=1786457174"></script>
+  <script src="js/produits.js?v=1786457174"></script>
+  <script src="js/pdf.js?v=1786457174"></script>
+  <script src="js/stats.js?v=1786457174"></script>
+  <script src="js/profil.js?v=1786457174"></script>
+  <script src="js/comptable.js?v=1786457174"></script>
+  <script src="js/messages.js?v=1786457174"></script>
+<script src="js/achats.js?v=1786457174"></script>
+<script src="js/stock.js?v=1786457174"></script>
+<script src="js/finance.js?v=1786457174"></script>
+<script src="js/ubl.js?v=1786457174"></script>
+<script src="js/relances.js?v=1786457174"></script>
+<script src="js/dashboard-avance.js?v=1786457174"></script>
+<script src="js/ocr-achats.js?v=1786457174"></script>
+<script src="js/equipe.js?v=1786457174"></script>
+<script src="js/equipe-cabinet.js?v=1786457174"></script>
+<script src="js/rh.js?v=1786457174"></script>
+<script src="js/hubs.js?v=1786457174"></script>
+<script src="js/demandes-devis.js?v=1786457174"></script>
+<script src="js/offres.js?v=1786457174"></script>
+<script src="js/support.js?v=1786457174"></script>
+<script src="js/devis-recus.js?v=1786457174"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786457174"></script>
+<script src="js/selection.js?v=1786457174"></script>
+<script src="js/abonnements.js?v=1786457174"></script>
+<script src="js/signature.js?v=1786457174"></script>
+<script src="js/app.js?v=1786457174"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -1097,6 +1097,26 @@
         <div id="comptable-error" class="a-err"></div>
         <button class="a-btn a-btn-green" onclick="accederComptable()">Accéder →</button>
       </div>
+    </div>
+    <div class="a-footer">Données sécurisées · Zelto v2.0</div>
+  </div>
+</div>
+
+<!-- DÉFINIR MOT DE PASSE (via lien d'invitation/récupération) -->
+<div class="screen" id="screen-definir-mot-passe">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <h1 style="margin:2px 0">Zel<span>to</span></h1>
+    </div>
+    <div class="auth-card">
+      <div class="auth-title">Choisissez votre mot de passe</div>
+      <div style="font-size:12px;color:#6B5F54;margin-bottom:16px">Dernière étape avant d'accéder à votre compte.</div>
+      <label class="a-lbl">Nouveau mot de passe</label>
+      <input id="def-mdp-nouveau" class="a-inp" type="password" placeholder="8 car. min, 1 majuscule, 1 chiffre">
+      <label class="a-lbl">Confirmer</label>
+      <input id="def-mdp-confirmer" class="a-inp" type="password" placeholder="Retapez le mot de passe">
+      <div id="def-mdp-err" class="a-err"></div>
+      <button class="a-btn a-btn-blue" onclick="definirMotDePasseInvite()">Valider et continuer</button>
     </div>
     <div class="a-footer">Données sécurisées · Zelto v2.0</div>
   </div>
