@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786392268">
+<link rel="stylesheet" href="css/style.css?v=1786439448">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -132,39 +132,39 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786392268"></script>
-  <script src="js/utils.js?v=1786392268"></script>
-  <script src="js/auth.js?v=1786392268"></script>
-  <script src="js/nav.js?v=1786392268"></script>
-  <script src="js/factures.js?v=1786392268"></script>
-  <script src="js/devis.js?v=1786392268"></script>
-  <script src="js/clients.js?v=1786392268"></script>
-  <script src="js/produits.js?v=1786392268"></script>
-  <script src="js/pdf.js?v=1786392268"></script>
-  <script src="js/stats.js?v=1786392268"></script>
-  <script src="js/profil.js?v=1786392268"></script>
-  <script src="js/comptable.js?v=1786392268"></script>
-  <script src="js/messages.js?v=1786392268"></script>
-<script src="js/achats.js?v=1786392268"></script>
-<script src="js/stock.js?v=1786392268"></script>
-<script src="js/finance.js?v=1786392268"></script>
-<script src="js/ubl.js?v=1786392268"></script>
-<script src="js/relances.js?v=1786392268"></script>
-<script src="js/dashboard-avance.js?v=1786392268"></script>
-<script src="js/ocr-achats.js?v=1786392268"></script>
-<script src="js/equipe.js?v=1786392268"></script>
-<script src="js/equipe-cabinet.js?v=1786392268"></script>
-<script src="js/rh.js?v=1786392268"></script>
-<script src="js/hubs.js?v=1786392268"></script>
-<script src="js/demandes-devis.js?v=1786392268"></script>
-<script src="js/offres.js?v=1786392268"></script>
-<script src="js/support.js?v=1786392268"></script>
-<script src="js/devis-recus.js?v=1786392268"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786392268"></script>
-<script src="js/selection.js?v=1786392268"></script>
-<script src="js/abonnements.js?v=1786392268"></script>
-<script src="js/signature.js?v=1786392268"></script>
-<script src="js/app.js?v=1786392268"></script>
+<script src="js/config.js?v=1786439448"></script>
+  <script src="js/utils.js?v=1786439448"></script>
+  <script src="js/auth.js?v=1786439448"></script>
+  <script src="js/nav.js?v=1786439448"></script>
+  <script src="js/factures.js?v=1786439448"></script>
+  <script src="js/devis.js?v=1786439448"></script>
+  <script src="js/clients.js?v=1786439448"></script>
+  <script src="js/produits.js?v=1786439448"></script>
+  <script src="js/pdf.js?v=1786439448"></script>
+  <script src="js/stats.js?v=1786439448"></script>
+  <script src="js/profil.js?v=1786439448"></script>
+  <script src="js/comptable.js?v=1786439448"></script>
+  <script src="js/messages.js?v=1786439448"></script>
+<script src="js/achats.js?v=1786439448"></script>
+<script src="js/stock.js?v=1786439448"></script>
+<script src="js/finance.js?v=1786439448"></script>
+<script src="js/ubl.js?v=1786439448"></script>
+<script src="js/relances.js?v=1786439448"></script>
+<script src="js/dashboard-avance.js?v=1786439448"></script>
+<script src="js/ocr-achats.js?v=1786439448"></script>
+<script src="js/equipe.js?v=1786439448"></script>
+<script src="js/equipe-cabinet.js?v=1786439448"></script>
+<script src="js/rh.js?v=1786439448"></script>
+<script src="js/hubs.js?v=1786439448"></script>
+<script src="js/demandes-devis.js?v=1786439448"></script>
+<script src="js/offres.js?v=1786439448"></script>
+<script src="js/support.js?v=1786439448"></script>
+<script src="js/devis-recus.js?v=1786439448"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786439448"></script>
+<script src="js/selection.js?v=1786439448"></script>
+<script src="js/abonnements.js?v=1786439448"></script>
+<script src="js/signature.js?v=1786439448"></script>
+<script src="js/app.js?v=1786439448"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -367,9 +367,16 @@
     <div class="topbar">
       <button class="back-btn" onclick="goScreen('support',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
     </div>
-    <div style="padding:16px 20px">
-      <div class="sec-label" style="padding:0 0 12px">🎫 Tickets support</div>
-      <div id="tickets-support-resume"></div>
+    <div style="padding:16px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">🛠️ Espace support</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button class="support-tab" data-onglet="tickets" onclick="switchOngletSupport('tickets')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#1F6F72;color:#fff">🎫 Tickets</button>
+        <button class="support-tab" data-onglet="stats" onclick="switchOngletSupport('stats')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 Stats</button>
+        <button class="support-tab" data-onglet="agents" onclick="switchOngletSupport('agents')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#6B5F54">👥 Agents</button>
+      </div>
+    </div>
+
+    <div id="support-vue-tickets" style="padding:0 20px">
       <div class="filter-tabs" style="margin-bottom:12px">
         <button class="ftab active" onclick="filtrerTicketsSupport('tous',this)">Tous</button>
         <button class="ftab" onclick="filtrerTicketsSupport('nouveau',this)">Nouveaux</button>
@@ -378,6 +385,15 @@
       </div>
       <div id="tickets-support-liste"></div>
     </div>
+
+    <div id="support-vue-stats" style="padding:0 20px;display:none">
+      <div id="support-stats-content"></div>
+    </div>
+
+    <div id="support-vue-agents" style="padding:0 20px;display:none">
+      <div id="support-agents-content"></div>
+    </div>
+
     <div class="pb"></div>
   </div>
 
