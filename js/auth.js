@@ -39,6 +39,8 @@ async function doLogout() {
   localStorage.removeItem('bp_remember_v2');
   sb.logout();
   Object.assign(STATE, { factures:[], devis:[], clients:[], produits:[], avoirs:[], paiements:[], profil:{}, notifications:[], abonnements:[] });
+  window._modeConnexionAdmin = false;
+  if (typeof basculerModeConnexionAdmin === 'function') basculerModeConnexionAdmin(false);
   goScreen('auth');
 }
 
@@ -150,6 +152,17 @@ async function _essai(fn, nom) {
   }
 }
 
+// NOUVEAU : interface dédiée support/admin — bascule l'écran de
+// connexion normal en mode "admin", sans dupliquer les champs email/mot
+// de passe. Le vrai routage se fait dans doLogin() une fois connecté.
+function basculerModeConnexionAdmin(actif) {
+  window._modeConnexionAdmin = actif;
+  const bandeau = el('bandeau-mode-admin');
+  const titre = el('auth-titre-connexion');
+  if (bandeau) bandeau.style.display = actif ? 'flex' : 'none';
+  if (titre) titre.textContent = actif ? 'Connexion — Support/Admin' : 'Connexion';
+}
+
 async function doLogin() {
   const email = el('login-email')?.value.trim();
   const pwd = el('login-password')?.value;
@@ -174,6 +187,40 @@ async function doLogin() {
     }
     // Email confirmation désactivée dans Supabase - pas de vérification
     // const confirmed = sb.user?.email_confirmed_at || sb.user?.confirmed_at;
+    // NOUVEAU : interface dédiée support/admin — si on est venu par ce
+    // chemin d'accès spécifique, on vérifie les droits agent support et on
+    // route directement vers l'espace support, sans jamais passer par le
+    // dashboard entreprise/comptable classique.
+    if (window._modeConnexionAdmin) {
+      try {
+        const respAgent = await fetch(SUPABASE_URL + '/rest/v1/rpc/suis_je_agent_support', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const estAgent = respAgent.ok ? await respAgent.json() : false;
+        if (!estAgent) {
+          if (errEl) errEl.textContent = '⛔ Ce compte n\'a pas accès à l\'interface support/admin';
+          sb.logout();
+          return;
+        }
+        const respRole = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_role_support', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        STATE.monRoleSupport = respRole.ok ? await respRole.json() : 'agent';
+        if (errEl) errEl.textContent = '';
+        goScreen('espace-support', null);
+        switchOngletSupport('tickets');
+        showToast('✅ Bienvenue dans l\'espace support', 'success');
+      } catch(eAdmin) {
+        if (errEl) errEl.textContent = '❌ ' + eAdmin.message;
+        sb.logout();
+      }
+      return;
+    }
+
     // Se souvenir de l'email
     if (remember) {
       localStorage.setItem('bp_saved_email', email);
