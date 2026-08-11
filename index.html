@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786458076">
+<link rel="stylesheet" href="css/style.css?v=1786475031">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -132,39 +132,41 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786458076"></script>
-  <script src="js/utils.js?v=1786458076"></script>
-  <script src="js/auth.js?v=1786458076"></script>
-  <script src="js/nav.js?v=1786458076"></script>
-  <script src="js/factures.js?v=1786458076"></script>
-  <script src="js/devis.js?v=1786458076"></script>
-  <script src="js/clients.js?v=1786458076"></script>
-  <script src="js/produits.js?v=1786458076"></script>
-  <script src="js/pdf.js?v=1786458076"></script>
-  <script src="js/stats.js?v=1786458076"></script>
-  <script src="js/profil.js?v=1786458076"></script>
-  <script src="js/comptable.js?v=1786458076"></script>
-  <script src="js/messages.js?v=1786458076"></script>
-<script src="js/achats.js?v=1786458076"></script>
-<script src="js/stock.js?v=1786458076"></script>
-<script src="js/finance.js?v=1786458076"></script>
-<script src="js/ubl.js?v=1786458076"></script>
-<script src="js/relances.js?v=1786458076"></script>
-<script src="js/dashboard-avance.js?v=1786458076"></script>
-<script src="js/ocr-achats.js?v=1786458076"></script>
-<script src="js/equipe.js?v=1786458076"></script>
-<script src="js/equipe-cabinet.js?v=1786458076"></script>
-<script src="js/rh.js?v=1786458076"></script>
-<script src="js/hubs.js?v=1786458076"></script>
-<script src="js/demandes-devis.js?v=1786458076"></script>
-<script src="js/offres.js?v=1786458076"></script>
-<script src="js/support.js?v=1786458076"></script>
-<script src="js/devis-recus.js?v=1786458076"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786458076"></script>
-<script src="js/selection.js?v=1786458076"></script>
-<script src="js/abonnements.js?v=1786458076"></script>
-<script src="js/signature.js?v=1786458076"></script>
-<script src="js/app.js?v=1786458076"></script>
+<script src="js/config.js?v=1786475031"></script>
+  <script src="js/utils.js?v=1786475031"></script>
+  <script src="js/auth.js?v=1786475031"></script>
+  <script src="js/nav.js?v=1786475031"></script>
+  <script src="js/factures.js?v=1786475031"></script>
+  <script src="js/devis.js?v=1786475031"></script>
+  <script src="js/clients.js?v=1786475031"></script>
+  <script src="js/produits.js?v=1786475031"></script>
+  <script src="js/pdf.js?v=1786475031"></script>
+  <script src="js/stats.js?v=1786475031"></script>
+  <script src="js/profil.js?v=1786475031"></script>
+  <script src="js/comptable.js?v=1786475031"></script>
+  <script src="js/messages.js?v=1786475031"></script>
+<script src="js/achats.js?v=1786475031"></script>
+<script src="js/stock.js?v=1786475031"></script>
+<script src="js/finance.js?v=1786475031"></script>
+<script src="js/ubl.js?v=1786475031"></script>
+<script src="js/relances.js?v=1786475031"></script>
+<script src="js/dashboard-avance.js?v=1786475031"></script>
+<script src="js/ocr-achats.js?v=1786475031"></script>
+<script src="js/equipe.js?v=1786475031"></script>
+<script src="js/equipe-cabinet.js?v=1786475031"></script>
+<script src="js/rh.js?v=1786475031"></script>
+<script src="js/hubs.js?v=1786475031"></script>
+<script src="js/demandes-devis.js?v=1786475031"></script>
+<script src="js/chat-ticket.js?v=1786475031"></script>
+<script src="js/partage-ecran.js?v=1786475031"></script>
+<script src="js/offres.js?v=1786475031"></script>
+<script src="js/support.js?v=1786475031"></script>
+<script src="js/devis-recus.js?v=1786475031"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786475031"></script>
+<script src="js/selection.js?v=1786475031"></script>
+<script src="js/abonnements.js?v=1786475031"></script>
+<script src="js/signature.js?v=1786475031"></script>
+<script src="js/app.js?v=1786475031"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -294,6 +296,35 @@
 <!-- ACHATS -->
   <!-- RUBRIQUE ACHATS (hub) -->
     <!-- SUPPORT -->
+  <!-- CHAT TICKET (partagé agent <-> utilisateur) -->
+  <div class="screen" id="screen-chat-ticket">
+    <div class="topbar">
+      <button class="back-btn" onclick="fermerChatTicket()">←</button><div class="topbar-brand" style="flex:1" id="chat-ticket-titre">Discussion</div>
+      <div class="topbar-right"><span onclick="demanderPartageEcranDepuisChat()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.12);border-radius:14px">🖥️ Partager l'écran</span></div>
+    </div>
+    <div id="zone-video-partage" style="display:none;background:#000;padding:8px">
+      <video id="video-partage-ecran" autoplay playsinline style="width:100%;border-radius:8px;display:block"></video>
+    </div>
+    <div id="partage-ecran-statut" style="font-size:11px;color:#9C9186;text-align:center;padding:4px"></div>
+    <div id="chat-ticket-messages" style="flex:1;overflow-y:auto;padding:16px 20px"></div>
+    <div style="display:flex;gap:8px;padding:12px 20px;border-top:1px solid #E3DCCF;background:#fff">
+      <input id="chat-ticket-input" class="f-inp" placeholder="Votre message..." style="flex:1" onkeypress="if(event.key==='Enter')envoyerMessageTicket()">
+      <button onclick="envoyerMessageTicket()" style="padding:0 16px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:inherit">➤</button>
+    </div>
+  </div>
+
+  <!-- MES TICKETS (côté utilisateur, entreprise ou comptable) -->
+  <div class="screen" id="screen-mes-tickets-support">
+    <div class="topbar">
+      <button class="back-btn" onclick="goScreen('support',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
+    </div>
+    <div style="padding:16px 20px">
+      <div class="sec-label" style="padding:0 0 12px">🎫 Mes tickets</div>
+      <div id="mes-tickets-liste"></div>
+    </div>
+    <div class="pb"></div>
+  </div>
+
   <div class="screen" id="screen-support">
     <div class="topbar">
       <button class="back-btn" onclick="goScreen(window._retourSupport||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
@@ -312,6 +343,7 @@
           <input id="sup-sujet" class="f-inp" placeholder="Sujet" style="margin-bottom:10px">
           <textarea id="sup-message" class="f-inp" rows="4" placeholder="Décrivez votre problème ou question..." style="margin-bottom:10px"></textarea>
           <button onclick="envoyerTicketSupport()" style="width:100%;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Envoyer</button>
+          <div style="text-align:center;margin-top:10px"><span onclick="chargerMesTicketsSupport();goScreen('mes-tickets-support',null)" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">🎫 Voir mes tickets et discuter avec le support</span></div>
         </div>
       </div>
 
