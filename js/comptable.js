@@ -2277,7 +2277,7 @@ async function chargerNotificationsComptable() {
     // FIX: fonction RPC SECURITY DEFINER — même correctif que nav.js.
     const respN = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
     });
     const notifs = respN.ok ? ((await respN.json()) || []) : [];
@@ -2311,7 +2311,7 @@ async function renderNotificationsComptable() {
     try {
       await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
         method: 'POST',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_id: n.id })
       });
     } catch(eMarq) {}
