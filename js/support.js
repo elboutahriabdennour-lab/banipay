@@ -221,11 +221,11 @@ function renderAgentsSupport() {
 
   let html = estAdmin
     ? '<div style="background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;border:1px solid #E3DCCF">' +
-        '<div style="font-size:12px;font-weight:700;margin-bottom:10px">➕ Ajouter un agent</div>' +
+        '<div style="font-size:12px;font-weight:700;margin-bottom:10px">📧 Inviter un agent par email</div>' +
         '<input id="nouvel-agent-email" class="f-inp" placeholder="Email" style="margin-bottom:8px">' +
         '<input id="nouvel-agent-nom" class="f-inp" placeholder="Nom (optionnel)" style="margin-bottom:8px">' +
         '<select id="nouvel-agent-role" class="f-inp" style="margin-bottom:10px"><option value="agent">Agent</option><option value="admin">Admin</option></select>' +
-        '<button onclick="ajouterAgentSupport()" style="width:100%;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ajouter</button>' +
+        '<button onclick="ajouterAgentSupport()" style="width:100%;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📤 Envoyer l\'invitation</button>' +
       '</div>'
     : '';
 
@@ -245,14 +245,21 @@ async function ajouterAgentSupport() {
   const nom = (el('nouvel-agent-nom')?.value || '').trim();
   const role = el('nouvel-agent-role')?.value || 'agent';
   if (!email || !email.includes('@')) { showToast('Entrez un email valide', 'error'); return; }
+  showToast('⏳ Envoi de l\'invitation...');
   try {
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/ajouter_agent_support', {
+    // Passe par la fonction Edge (invite-support-agent) plutôt que
+    // d'ajouter directement en base — ça envoie une vraie invitation par
+    // email, pas juste un ajout silencieux dans la liste blanche.
+    const resp = await fetch(SUPABASE_URL + '/functions/v1/invite-support-agent', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_email: email, p_nom: nom, p_role: role })
+      body: JSON.stringify({ email, nom, role })
     });
-    if (!resp.ok) { showToast('Erreur — droits insuffisants ?', 'error'); return; }
-    showToast('✅ Agent ajouté', 'success');
+    const data = await resp.json().catch(function(){ return {}; });
+    if (!resp.ok) { showToast('❌ ' + (data.error || 'Erreur — droits insuffisants ?'), 'error'); return; }
+    el('nouvel-agent-email') && (el('nouvel-agent-email').value = '');
+    el('nouvel-agent-nom') && (el('nouvel-agent-nom').value = '');
+    showToast('✅ Invitation envoyée par email à ' + email, 'success');
     chargerAgentsSupport();
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
