@@ -639,7 +639,7 @@ async function voirDocumentDepuisNotification(type, docId) {
 
 
 function goScreen(name) {
-  const publicScreens = ['auth'];
+  const publicScreens = ['auth', 'definir-mot-passe'];
   if (!publicScreens.includes(name) && !sb.token && !['portail','profil-public'].includes(name)) {
     if (name !== 'auth') { goScreen('auth'); return; }
   }
