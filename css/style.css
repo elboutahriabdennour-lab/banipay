@@ -43,6 +43,10 @@
 html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 .screen{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;background:var(--paper);-webkit-overflow-scrolling:touch}
 .screen.active{display:block}
+/* Écran de chat ticket : disposition en colonne pour que la zone de
+   saisie reste fixée en bas et que les messages remplissent l'espace
+   restant, au lieu du simple défilement de page utilisé partout ailleurs. */
+#screen-chat-ticket.active{display:flex;flex-direction:column}
 
 
 
