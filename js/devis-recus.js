@@ -21,7 +21,7 @@ async function chargerDevisRecusAcceptes() {
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
     });
     if (!resp.ok) {
