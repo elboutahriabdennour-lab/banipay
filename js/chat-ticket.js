@@ -15,11 +15,17 @@ function ouvrirChatTicket(ticketId, sujet) {
   chargerMessagesTicket();
   clearInterval(STATE._chatPollTimer);
   STATE._chatPollTimer = setInterval(chargerMessagesTicket, 4000);
+  // NOUVEAU : écoute passive des demandes de partage d'écran/appel vocal
+  // — sans ça, il fallait que les deux côtés cliquent le même bouton
+  // dans le bon ordre pour que quoi que ce soit se passe.
+  if (typeof demarrerEcouteDemandesAppel === 'function') demarrerEcouteDemandesAppel(ticketId);
+  el('proposition-appel') && (el('proposition-appel').style.display = 'none');
 }
 
 function fermerChatTicket() {
   clearInterval(STATE._chatPollTimer);
-  if (STATE._partageEcran?.pc) arreterPartageEcran();
+  if (typeof arreterEcouteDemandesAppel === 'function') arreterEcouteDemandesAppel();
+  if (STATE._appelEnCours) terminerAppel();
   goScreen(STATE.monRoleSupport ? 'espace-support' : 'mes-tickets-support', null);
   if (STATE.monRoleSupport) switchOngletSupport('tickets');
 }
@@ -40,6 +46,11 @@ async function chargerMessagesTicket() {
 function renderMessagesTicket() {
   const zone = el('chat-ticket-messages');
   if (!zone) return;
+  // NOUVEAU : ne force le défilement vers le bas que si on y était déjà
+  // (à quelques pixels près) — avant, chaque actualisation (toutes les 4s)
+  // ramenait de force en bas, rendant impossible la lecture de
+  // l'historique remonté manuellement.
+  const etaitEnBas = zone.scrollHeight - zone.scrollTop - zone.clientHeight < 60;
   const msgs = STATE._chatMessages || [];
   const monLabel = STATE.monRoleSupport ? 'agent' : 'user';
   zone.innerHTML = !msgs.length
@@ -52,7 +63,7 @@ function renderMessagesTicket() {
             escapeHTML(m.contenu||'') +
           '</div></div>';
       }).join('');
-  zone.scrollTop = zone.scrollHeight;
+  if (etaitEnBas) zone.scrollTop = zone.scrollHeight;
 }
 
 async function envoyerMessageTicket() {
@@ -70,20 +81,10 @@ async function envoyerMessageTicket() {
   } catch(e) { showToast('Erreur envoi: ' + e.message, 'error'); }
 }
 
-// ============================================================
-// PARTAGE D'ÉCRAN — boutons appelés depuis l'écran de chat
-// ============================================================
-function demanderPartageEcranDepuisChat() {
-  if (!STATE._chatTicketId) return;
-  if (STATE.monRoleSupport) {
-    // L'agent se met en attente que l'utilisateur partage
-    rejoindrePartageEcran(STATE._chatTicketId, 'video-partage-ecran');
-    el('zone-video-partage') && (el('zone-video-partage').style.display = 'block');
-  } else {
-    // L'utilisateur démarre le partage de son propre écran
-    demarrerPartageEcran(STATE._chatTicketId);
-  }
-}
+// NOTE : demanderPartageEcranDepuisChat() et demanderAppelVocalDepuisChat()
+// sont maintenant définies dans partage-ecran.js (nouveau flux demande/
+// acceptation explicite, plus fiable que l'ancienne version où les deux
+// côtés devaient cliquer le même bouton dans le bon ordre).
 
 // ============================================================
 // "MES TICKETS" — écran utilisateur (pas agent)
