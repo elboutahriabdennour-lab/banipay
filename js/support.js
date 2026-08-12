@@ -117,6 +117,20 @@ async function chargerTicketsSupport() {
     });
     STATE.ticketsSupport = resp.ok ? ((await resp.json()) || []) : [];
   } catch(e) { STATE.ticketsSupport = []; }
+
+  // NOUVEAU : compteurs de messages, pour voir l'historique de
+  // discussion d'un coup d'œil sans ouvrir chaque ticket.
+  try {
+    const respC = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_compteurs_messages_tickets', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const compteurs = respC.ok ? ((await respC.json()) || []) : [];
+    STATE._compteursMessagesTickets = {};
+    compteurs.forEach(function(c) { STATE._compteursMessagesTickets[c.ticket_id] = c; });
+  } catch(e) { STATE._compteursMessagesTickets = {}; }
+
   renderTicketsSupport();
 }
 
@@ -140,6 +154,11 @@ function renderTicketsSupport() {
             '<span style="font-size:10px;font-weight:600;color:' + (statutColor[t.statut]||'#9C9186') + '">' + (statutLabel[t.statut]||t.statut) + '</span>' +
           '</div>' +
           '<div style="font-size:12px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px;margin-bottom:8px">' + escapeHTML(t.message||'') + '</div>' +
+          (function() {
+            const c = (STATE._compteursMessagesTickets || {})[t.id];
+            if (!c) return '';
+            return '<div style="font-size:11px;color:#1F6F72;background:#E9F4F3;padding:6px 8px;border-radius:8px;margin-bottom:8px">💬 ' + c.nb_messages + ' message(s) — dernier (' + (c.dernier_auteur === 'agent' ? 'vous' : 'client') + ') : "' + escapeHTML((c.dernier_message||'').slice(0,60)) + (c.dernier_message && c.dernier_message.length > 60 ? '…' : '') + '"</div>';
+          })() +
           '<div style="font-size:10px;color:#9C9186;margin-bottom:8px">' + formatDateTime(t.created_at) + '</div>' +
           '<div style="display:flex;gap:6px">' +
             (t.statut !== 'en_cours' ? '<button onclick="changerStatutTicket(' + t.id + ',\'en_cours\')" style="flex:1;padding:7px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⏳ En cours</button>' : '') +
