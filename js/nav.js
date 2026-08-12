@@ -563,7 +563,7 @@ async function voirDocumentDepuisNotification(type, docId) {
   try {
     const table = type === 'devis' ? 'devis' : 'factures';
     const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY) }
     });
     const data = await r.json();
     const doc = data && data[0];
@@ -612,15 +612,15 @@ async function voirDocumentDepuisNotification(type, docId) {
         const bAcc = document.createElement('button');
         bAcc.textContent = '✅ Accepter';
         bAcc.style.cssText = 'flex:1;padding:12px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-        bAcc.onclick = function() { traiterActionDocument(docId, type, 'accepter'); };
+        bAcc.onclick = function() { traiterActionDocument(docId, type, 'accepter', null, doc.token_public); };
         const bAtt = document.createElement('button');
         bAtt.textContent = '⏳ Attente';
         bAtt.style.cssText = 'flex:1;padding:12px 4px;background:#B8860B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-        bAtt.onclick = function() { traiterActionDocument(docId, type, 'attente'); };
+        bAtt.onclick = function() { traiterActionDocument(docId, type, 'attente', null, doc.token_public); };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
         bRef.style.cssText = 'flex:1;padding:12px 4px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-        bRef.onclick = function() { traiterActionDocument(docId, type, 'refuser'); };
+        bRef.onclick = function() { traiterActionDocument(docId, type, 'refuser', null, doc.token_public); };
         btnBar.appendChild(bAcc);
         btnBar.appendChild(bAtt);
         btnBar.appendChild(bRef);
