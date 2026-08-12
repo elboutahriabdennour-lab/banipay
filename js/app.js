@@ -218,12 +218,12 @@ async function refuserInvitationEmail(emailEnc, entrepriseId) {
 // NOUVEAU: vue publique du bon de commande — le fournisseur (sans compte
 // Zelto forcément) peut le consulter et confirmer/refuser, symétrique au
 // cycle d'acceptation des devis/factures.
-async function afficherBonCommandePublic(bcId) {
+async function afficherBonCommandePublic(bcId, token) {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_commande_public', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_bc_id: bcId })
+      body: JSON.stringify({ p_bc_id: bcId, p_token: token })
     });
     const data = r.ok ? (await r.json()) : [];
     const bc = data && data[0];
@@ -263,8 +263,8 @@ async function afficherBonCommandePublic(bcId) {
           '<button id="btn-bc-confirme" style="flex:1;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ Confirmer</button>' +
           '<button id="btn-bc-refuse" style="flex:1;padding:12px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">❌ Refuser</button>';
         screen.appendChild(btnBar);
-        document.getElementById('btn-bc-confirme').onclick = function() { repondreBonCommandePublic(bcId, 'confirme', bc); };
-        document.getElementById('btn-bc-refuse').onclick = function() { repondreBonCommandePublic(bcId, 'refuse', bc); };
+        document.getElementById('btn-bc-confirme').onclick = function() { repondreBonCommandePublic(bcId, 'confirme', bc, token); };
+        document.getElementById('btn-bc-refuse').onclick = function() { repondreBonCommandePublic(bcId, 'refuse', bc, token); };
       }, 400);
     }
   } catch(e) {
@@ -272,12 +272,12 @@ async function afficherBonCommandePublic(bcId) {
   }
 }
 
-async function repondreBonCommandePublic(bcId, reponse, bc) {
+async function repondreBonCommandePublic(bcId, reponse, bc, token) {
   try {
     await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_bon_commande', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_bc_id: bcId, p_reponse: reponse })
+      body: JSON.stringify({ p_bc_id: bcId, p_token: token, p_reponse: reponse })
     });
     const icon = reponse === 'confirme' ? '✅' : '❌';
     document.body.innerHTML = `
@@ -306,12 +306,12 @@ async function repondreBonCommandePublic(bcId, reponse, bc) {
 // NOUVEAU: vue publique de consultation d'un bon de livraison (via son
 // propre QR ou celui affiché sur le devis/la facture liée) — consultation
 // seule, pas d'action à faire dessus contrairement au BC/devis/facture.
-async function afficherBonLivraisonPublic(blId) {
+async function afficherBonLivraisonPublic(blId, token) {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_livraison_public', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_bl_id: blId })
+      body: JSON.stringify({ p_bl_id: blId, p_token: token })
     });
     const data = r.ok ? (await r.json()) : [];
     const bl = data && data[0];
@@ -340,32 +340,23 @@ async function afficherBonLivraisonPublic(blId) {
   }
 }
 
-async function afficherDocumentPublic(docId) {
+async function afficherDocumentPublic(docId, token) {
   const urlParams = new URLSearchParams(window.location.search);
   const docType = urlParams.get('type'); // 'devis' ou null
 
   try {
     let doc = null;
     let profil = {};
-    let isDevis = false;
+    let isDevis = docType === 'devis';
 
-    if (docType === 'devis') {
-      // Chercher dans devis UNIQUEMENT
-      const r = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + docId + '&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data = await r.json();
-      doc = data && data[0];
-      isDevis = true;
-    } else {
-      // Chercher dans factures UNIQUEMENT
-      const r = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + docId + '&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-      });
-      const data = await r.json();
-      doc = data && data[0];
-      isDevis = false;
-    }
+    // FIX SÉCURITÉ : remplace le fetch REST direct (filtré uniquement par
+    // id, donc devinable) par la RPC sécurisée qui exige aussi le jeton.
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_document_public', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: isDevis ? 'devis' : 'facture' })
+    });
+    doc = r.ok ? (await r.json()) : null;
 
     if (!doc) {
       document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Document introuvable</h2></div>';
@@ -400,7 +391,7 @@ async function afficherDocumentPublic(docId) {
         if (rBC.ok) {
           const bcData = (await rBC.json()) || [];
           const bc = bcData[0];
-          if (bc) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: base + '?bc=' + bc.id });
+          if (bc) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: base + '?bc=' + bc.id + '&t=' + (bc.token_public||'') });
         }
       } catch(eBC) {}
     }
@@ -415,7 +406,7 @@ async function afficherDocumentPublic(docId) {
         if (rBLref.ok) {
           const blsRef = (await rBLref.json()) || [];
           blTrouve = blsRef[0] || null;
-          if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id });
+          if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id + '&t=' + (blTrouve.token_public||'') });
         }
       } catch(eBLref) {}
     }
@@ -504,15 +495,15 @@ async function afficherDocumentPublic(docId) {
         // Accepter vaut signature électronique automatique — plus besoin de
         // faire dessiner quoi que ce soit au client, un tampon horodaté est
         // généré automatiquement (voir traiterActionDocument).
-        bAcc.onclick = function() { traiterActionDocument(docId, typeDoc, 'accepter'); };
+        bAcc.onclick = function() { traiterActionDocument(docId, typeDoc, 'accepter', null, token); };
         const bAtt = document.createElement('button');
         bAtt.textContent = '⏳ Attente';
         bAtt.style.cssText = 'flex:1;padding:12px 4px;background:#B8860B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-        bAtt.onclick = function() { traiterActionDocument(docId, typeDoc, 'attente'); };
+        bAtt.onclick = function() { traiterActionDocument(docId, typeDoc, 'attente', null, token); };
         const bRef = document.createElement('button');
         bRef.textContent = '❌ Refuser';
         bRef.style.cssText = 'flex:1;padding:12px 4px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-        bRef.onclick = function() { traiterActionDocument(docId, typeDoc, 'refuser'); };
+        bRef.onclick = function() { traiterActionDocument(docId, typeDoc, 'refuser', null, token); };
         btnBar.appendChild(bAcc);
         btnBar.appendChild(bAtt);
         btnBar.appendChild(bRef);
@@ -619,29 +610,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Action sur un devis ou une facture (accepter/refuser via lien)
+  const tokenLien = params.get('t');
   const devisId = params.get('devis');
   const factureIdAction = params.get('facture');
   const docAction = params.get('action');
   if (devisId && (docAction === 'accepter' || docAction === 'refuser')) {
-    await traiterActionDocument(devisId, 'devis', docAction);
+    await traiterActionDocument(devisId, 'devis', docAction, null, tokenLien);
     return;
   }
   if (factureIdAction && (docAction === 'accepter' || docAction === 'refuser')) {
-    await traiterActionDocument(factureIdAction, 'facture', docAction);
+    await traiterActionDocument(factureIdAction, 'facture', docAction, null, tokenLien);
     return;
   }
 
   // Lien direct vers une facture/devis via QR code
   const docId = params.get('doc');
   if (docId) {
-    await afficherDocumentPublic(docId);
+    await afficherDocumentPublic(docId, tokenLien);
     return;
   }
 
   // NOUVEAU: lien public vers un bon de commande (le fournisseur confirme/refuse)
   const bcId = params.get('bc');
   if (bcId) {
-    await afficherBonCommandePublic(bcId);
+    await afficherBonCommandePublic(bcId, tokenLien);
     return;
   }
 
@@ -649,7 +641,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // le QR généré sur le devis/la facture/le BL lui-même)
   const blIdParam = params.get('bl');
   if (blIdParam) {
-    await afficherBonLivraisonPublic(blIdParam);
+    await afficherBonLivraisonPublic(blIdParam, tokenLien);
     return;
   }
 
