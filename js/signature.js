@@ -1,10 +1,10 @@
 // ZELTO — signature.js — Signature tactile pour Accepter devis/facture
 
-window._signatureCtx = null; // { docId, type }
+window._signatureCtx = null; // { docId, type, token }
 window._sigHasDrawn = false;
 
-function ouvrirModalSignature(docId, type) {
-  window._signatureCtx = { docId, type };
+function ouvrirModalSignature(docId, type, token) {
+  window._signatureCtx = { docId, type, token };
   window._sigHasDrawn = false;
   el('modal-signature')?.classList.add('active');
   setTimeout(initSignatureCanvas, 50);
@@ -75,7 +75,7 @@ async function confirmerSignatureEtAccepter() {
   const canvas = document.getElementById('sig-canvas');
   const dataUrl = canvas.toDataURL('image/png');
   el('modal-signature')?.classList.remove('active');
-  await traiterActionDocument(ctx.docId, ctx.type, 'accepter', dataUrl);
+  await traiterActionDocument(ctx.docId, ctx.type, 'accepter', dataUrl, ctx.token);
   window._signatureCtx = null;
 }
 
@@ -88,7 +88,7 @@ async function accepterSansSignature() {
   const ctx = window._signatureCtx;
   if (!ctx) return;
   el('modal-signature')?.classList.remove('active');
-  await traiterActionDocument(ctx.docId, ctx.type, 'accepter');
+  await traiterActionDocument(ctx.docId, ctx.type, 'accepter', null, ctx.token);
   window._signatureCtx = null;
 }
 
