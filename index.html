@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786475031">
+<link rel="stylesheet" href="css/style.css?v=1786476090">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -132,41 +132,41 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786475031"></script>
-  <script src="js/utils.js?v=1786475031"></script>
-  <script src="js/auth.js?v=1786475031"></script>
-  <script src="js/nav.js?v=1786475031"></script>
-  <script src="js/factures.js?v=1786475031"></script>
-  <script src="js/devis.js?v=1786475031"></script>
-  <script src="js/clients.js?v=1786475031"></script>
-  <script src="js/produits.js?v=1786475031"></script>
-  <script src="js/pdf.js?v=1786475031"></script>
-  <script src="js/stats.js?v=1786475031"></script>
-  <script src="js/profil.js?v=1786475031"></script>
-  <script src="js/comptable.js?v=1786475031"></script>
-  <script src="js/messages.js?v=1786475031"></script>
-<script src="js/achats.js?v=1786475031"></script>
-<script src="js/stock.js?v=1786475031"></script>
-<script src="js/finance.js?v=1786475031"></script>
-<script src="js/ubl.js?v=1786475031"></script>
-<script src="js/relances.js?v=1786475031"></script>
-<script src="js/dashboard-avance.js?v=1786475031"></script>
-<script src="js/ocr-achats.js?v=1786475031"></script>
-<script src="js/equipe.js?v=1786475031"></script>
-<script src="js/equipe-cabinet.js?v=1786475031"></script>
-<script src="js/rh.js?v=1786475031"></script>
-<script src="js/hubs.js?v=1786475031"></script>
-<script src="js/demandes-devis.js?v=1786475031"></script>
-<script src="js/chat-ticket.js?v=1786475031"></script>
-<script src="js/partage-ecran.js?v=1786475031"></script>
-<script src="js/offres.js?v=1786475031"></script>
-<script src="js/support.js?v=1786475031"></script>
-<script src="js/devis-recus.js?v=1786475031"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786475031"></script>
-<script src="js/selection.js?v=1786475031"></script>
-<script src="js/abonnements.js?v=1786475031"></script>
-<script src="js/signature.js?v=1786475031"></script>
-<script src="js/app.js?v=1786475031"></script>
+<script src="js/config.js?v=1786476090"></script>
+  <script src="js/utils.js?v=1786476090"></script>
+  <script src="js/auth.js?v=1786476090"></script>
+  <script src="js/nav.js?v=1786476090"></script>
+  <script src="js/factures.js?v=1786476090"></script>
+  <script src="js/devis.js?v=1786476090"></script>
+  <script src="js/clients.js?v=1786476090"></script>
+  <script src="js/produits.js?v=1786476090"></script>
+  <script src="js/pdf.js?v=1786476090"></script>
+  <script src="js/stats.js?v=1786476090"></script>
+  <script src="js/profil.js?v=1786476090"></script>
+  <script src="js/comptable.js?v=1786476090"></script>
+  <script src="js/messages.js?v=1786476090"></script>
+<script src="js/achats.js?v=1786476090"></script>
+<script src="js/stock.js?v=1786476090"></script>
+<script src="js/finance.js?v=1786476090"></script>
+<script src="js/ubl.js?v=1786476090"></script>
+<script src="js/relances.js?v=1786476090"></script>
+<script src="js/dashboard-avance.js?v=1786476090"></script>
+<script src="js/ocr-achats.js?v=1786476090"></script>
+<script src="js/equipe.js?v=1786476090"></script>
+<script src="js/equipe-cabinet.js?v=1786476090"></script>
+<script src="js/rh.js?v=1786476090"></script>
+<script src="js/hubs.js?v=1786476090"></script>
+<script src="js/demandes-devis.js?v=1786476090"></script>
+<script src="js/chat-ticket.js?v=1786476090"></script>
+<script src="js/partage-ecran.js?v=1786476090"></script>
+<script src="js/offres.js?v=1786476090"></script>
+<script src="js/support.js?v=1786476090"></script>
+<script src="js/devis-recus.js?v=1786476090"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786476090"></script>
+<script src="js/selection.js?v=1786476090"></script>
+<script src="js/abonnements.js?v=1786476090"></script>
+<script src="js/signature.js?v=1786476090"></script>
+<script src="js/app.js?v=1786476090"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -300,8 +300,13 @@
   <div class="screen" id="screen-chat-ticket">
     <div class="topbar">
       <button class="back-btn" onclick="fermerChatTicket()">←</button><div class="topbar-brand" style="flex:1" id="chat-ticket-titre">Discussion</div>
-      <div class="topbar-right"><span onclick="demanderPartageEcranDepuisChat()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.12);border-radius:14px">🖥️ Partager l'écran</span></div>
+      <div class="topbar-right" style="display:flex;gap:6px">
+        <span onclick="demanderAppelVocalDepuisChat()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.12);border-radius:14px">🎙️</span>
+        <span onclick="demanderPartageEcranDepuisChat()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.12);border-radius:14px">🖥️</span>
+        <span onclick="terminerAppel()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(178,58,46,0.35);border-radius:14px">⏹️</span>
+      </div>
     </div>
+    <div id="proposition-appel" style="display:none;align-items:center;gap:8px;background:#F7EFDC;padding:10px 16px"></div>
     <div id="zone-video-partage" style="display:none;background:#000;padding:8px">
       <video id="video-partage-ecran" autoplay playsinline style="width:100%;border-radius:8px;display:block"></video>
     </div>
