@@ -8,14 +8,14 @@ function construireRefsQRFacture(f) {
   const base = window.location.origin + window.location.pathname;
   if (f.devis_ref) {
     const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === f.devis_ref; });
-    refsQR.push({ icon: '📝', label: 'Devis', ref: f.devis_ref, url: devisTrouve ? base + '?doc=' + devisTrouve.id + '&type=devis' : '' });
+    refsQR.push({ icon: '📝', label: 'Devis', ref: f.devis_ref, url: devisTrouve ? base + '?doc=' + devisTrouve.id + '&type=devis' + '&t=' + (devisTrouve.token_public||'') : '' });
   }
   if (f.bc_id) {
     const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === f.bc_id; });
-    if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: base + '?bc=' + bcTrouve.id });
+    if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: base + '?bc=' + bcTrouve.id + '&t=' + (bcTrouve.token_public||'') });
   }
   const blTrouve = (STATE.bonsLivraison || []).find(function(bl) { return bl.facture_id === f.id; });
-  if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id });
+  if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id + '&t=' + (blTrouve.token_public||'') });
   return refsQR;
 }
 
@@ -24,7 +24,7 @@ function exportPDF(id) {
   const profil = STATE.profil || {};
   const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : (f.lignes||[]);
   // Lien public de la facture
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (f.token_public||'');
   genDocPDF({
     type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#C9971F',
     emetteur: profil,
