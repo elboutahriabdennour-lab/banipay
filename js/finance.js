@@ -1,4 +1,4 @@
-// BANIPAY — finance.js — Position financière consolidée
+// ZELTO — finance.js — Position financière consolidée
 // Combine factures impayées (à recevoir), achats impayés (à payer) et
 // valeur du stock pour donner une photo de trésorerie en un coup d'œil.
 
@@ -52,7 +52,7 @@ function renderPositionFinanciere() {
         '<div style="font-size:18px;font-weight:800;color:#A67A16">' + fmt(valeurStock) + ' MAD</div>' +
       '</div>' : '') +
 
-    '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans BaniPay — ne remplace pas un état de trésorerie comptable complet.</div>' +
+    '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans Zelto — ne remplace pas un état de trésorerie comptable complet.</div>' +
     '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>' +
     '<button onclick="goScreen(\'rapprochement\',null)" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Rapprocher mes paiements</button>';
 }
@@ -152,56 +152,90 @@ const COMPTES_CGNC = {
   banque: '5141',
 };
 
-function exporterEcrituresComptables(factures, achats, paiements, profil) {
-  const lignes = [];
-  const raison = (profil && profil.raison) || 'Entreprise';
+let _sheetjsChargement = null;
+function _chargerSheetJS() {
+  if (typeof XLSX !== 'undefined') return Promise.resolve();
+  if (_sheetjsChargement) return _sheetjsChargement;
+  _sheetjsChargement = new Promise(function(resolve, reject) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  return _sheetjsChargement;
+}
 
+async function exporterEcrituresComptables(factures, achats, paiements, profil) {
+  const raison = (profil && profil.raison) || 'Entreprise';
+  const headers = ['Date', 'Journal', 'N° Compte', 'Libellé Compte', 'Libellé Écriture', 'Référence Pièce', 'Débit', 'Crédit'];
+
+  const lignesVentes = [];
   (factures || []).forEach(function(f) {
     if (!f.date_emission) return;
     const ht = Number(f.ht) || 0;
     const tva = Number(f.tva) || 0;
     const ttc = Number(f.ttc) || 0;
     const libelle = 'Facture ' + (f.ref || '') + ' — ' + (f.client || '');
-    lignes.push([f.date_emission, 'VE', COMPTES_CGNC.clients, 'Clients', libelle, f.ref || '', ttc.toFixed(2), '']);
-    lignes.push([f.date_emission, 'VE', COMPTES_CGNC.ventes, 'Ventes de biens et services produits', libelle, f.ref || '', '', ht.toFixed(2)]);
-    if (tva > 0) lignes.push([f.date_emission, 'VE', COMPTES_CGNC.tvaCollectee, 'État, TVA facturée', libelle, f.ref || '', '', tva.toFixed(2)]);
+    lignesVentes.push([f.date_emission, 'VE', COMPTES_CGNC.clients, 'Clients', libelle, f.ref || '', ttc.toFixed(2), '']);
+    lignesVentes.push([f.date_emission, 'VE', COMPTES_CGNC.ventes, 'Ventes de biens et services produits', libelle, f.ref || '', '', ht.toFixed(2)]);
+    if (tva > 0) lignesVentes.push([f.date_emission, 'VE', COMPTES_CGNC.tvaCollectee, 'État, TVA facturée', libelle, f.ref || '', '', tva.toFixed(2)]);
   });
 
+  const lignesAchats = [];
   (achats || []).forEach(function(a) {
     if (!a.date_achat) return;
     const ht = Number(a.ht) || 0;
     const tva = Number(a.tva) || 0;
     const ttc = Number(a.ttc) || 0;
     const libelle = 'Achat ' + (a.ref_fournisseur || '') + ' — ' + (a.fournisseur || '');
-    lignes.push([a.date_achat, 'AC', COMPTES_CGNC.achats, 'Achats de marchandises', libelle, a.ref_fournisseur || '', ht.toFixed(2), '']);
-    if (tva > 0) lignes.push([a.date_achat, 'AC', COMPTES_CGNC.tvaDeductible, 'État, TVA récupérable', libelle, a.ref_fournisseur || '', tva.toFixed(2), '']);
-    lignes.push([a.date_achat, 'AC', COMPTES_CGNC.fournisseurs, 'Fournisseurs', libelle, a.ref_fournisseur || '', '', ttc.toFixed(2)]);
+    lignesAchats.push([a.date_achat, 'AC', COMPTES_CGNC.achats, 'Achats de marchandises', libelle, a.ref_fournisseur || '', ht.toFixed(2), '']);
+    if (tva > 0) lignesAchats.push([a.date_achat, 'AC', COMPTES_CGNC.tvaDeductible, 'État, TVA récupérable', libelle, a.ref_fournisseur || '', tva.toFixed(2), '']);
+    lignesAchats.push([a.date_achat, 'AC', COMPTES_CGNC.fournisseurs, 'Fournisseurs', libelle, a.ref_fournisseur || '', '', ttc.toFixed(2)]);
   });
 
+  const lignesReglements = [];
   (paiements || []).forEach(function(p) {
     if (!p.date) return;
     const montant = Number(p.montant) || 0;
     const facture = (factures || []).find(function(f) { return f.id === p.facture_id; });
     const libelle = 'Règlement client — ' + (facture ? facture.ref : ('facture #' + p.facture_id));
-    lignes.push([p.date, 'BQ', COMPTES_CGNC.banque, 'Banques', libelle, facture ? facture.ref : '', montant.toFixed(2), '']);
-    lignes.push([p.date, 'BQ', COMPTES_CGNC.clients, 'Clients', libelle, facture ? facture.ref : '', '', montant.toFixed(2)]);
+    lignesReglements.push([p.date, 'BQ', COMPTES_CGNC.banque, 'Banques', libelle, facture ? facture.ref : '', montant.toFixed(2), '']);
+    lignesReglements.push([p.date, 'BQ', COMPTES_CGNC.clients, 'Clients', libelle, facture ? facture.ref : '', '', montant.toFixed(2)]);
   });
 
-  if (!lignes.length) { showToast('Aucune écriture à exporter', 'error'); return; }
+  const toutesLignes = lignesVentes.concat(lignesAchats).concat(lignesReglements);
+  if (!toutesLignes.length) { showToast('Aucune écriture à exporter', 'error'); return; }
 
-  lignes.sort(function(a, b) { return (a[0] || '').localeCompare(b[0] || ''); });
+  const nomFichier = 'ecritures_comptables_' + raison.replace(/\s+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
 
-  const headers = ['Date', 'Journal', 'N° Compte', 'Libellé Compte', 'Libellé Écriture', 'Référence Pièce', 'Débit', 'Crédit'];
-  const csv = [headers].concat(lignes).map(function(r) {
-    return r.map(function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
-  }).join('\n');
-
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'ecritures_comptables_' + raison.replace(/\s+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
-  showToast('✅ Export comptable téléchargé (' + lignes.length + ' lignes)', 'success');
+  try {
+    await _chargerSheetJS();
+    const wb = XLSX.utils.book_new();
+    // Un onglet "Toutes écritures" (le plus utile pour un import direct
+    // dans un logiciel comptable qui attend une seule feuille), plus des
+    // onglets séparés par journal pour une lecture plus facile à l'œil.
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(toutesLignes.sort(function(a,b){return (a[0]||'').localeCompare(b[0]||'');}))), 'Toutes écritures');
+    if (lignesVentes.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(lignesVentes)), 'Ventes (VE)');
+    if (lignesAchats.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(lignesAchats)), 'Achats (AC)');
+    if (lignesReglements.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(lignesReglements)), 'Règlements (BQ)');
+    XLSX.writeFile(wb, nomFichier);
+    showToast('✅ Export Excel téléchargé (' + toutesLignes.length + ' lignes)', 'success');
+  } catch(e) {
+    // Repli CSV si le chargement de la bibliothèque Excel échoue (ex:
+    // pas de connexion au moment du clic) — mieux vaut un CSV qui
+    // fonctionne qu'un échec total.
+    console.warn('Export Excel indisponible, repli CSV:', e.message);
+    const csv = [headers].concat(toutesLignes).map(function(r) {
+      return r.map(function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomFichier.replace('.xlsx', '.csv');
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+    showToast('✅ Export téléchargé en CSV (Excel indisponible)', 'success');
+  }
 }
