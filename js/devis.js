@@ -622,7 +622,7 @@ async function envoyerBonCommande(id) {
     } catch(e3) {}
   }
 
-  const lien = window.location.origin + window.location.pathname + '?bc=' + id;
+  const lien = window.location.origin + window.location.pathname + '?bc=' + id + '&t=' + (bc.token_public||'');
   if (navigator.share) {
     try { await navigator.share({ title: 'Bon de commande ' + (bc.ref||''), text: 'Bon de commande ' + (bc.ref||'') + ' — merci de confirmer la réception : ' + lien }); }
     catch(e2) { navigator.clipboard?.writeText(lien); showToast('Lien copié', 'success'); }
@@ -840,7 +840,7 @@ function confirmerLigneBL() {
   closeAllModals();renderLignesBL();
 }
 
-function genBonLivraisonPDF(refFactureLiee, blIdPourQR) {
+function genBonLivraisonPDF(refFactureLiee, blIdPourQR, blTokenPourQR) {
   const client = el('bl-client')?.value.trim();
   if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
 
@@ -851,15 +851,15 @@ function genBonLivraisonPDF(refFactureLiee, blIdPourQR) {
   if (factureLiee) {
     if (factureLiee.devis_ref) {
       const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === factureLiee.devis_ref; });
-      refsQR.push({ icon: '📝', label: 'Devis', ref: factureLiee.devis_ref, url: devisTrouve ? (window.location.origin + window.location.pathname + '?doc=' + devisTrouve.id + '&type=devis') : '' });
+      refsQR.push({ icon: '📝', label: 'Devis', ref: factureLiee.devis_ref, url: devisTrouve ? (window.location.origin + window.location.pathname + '?doc=' + devisTrouve.id + '&type=devis' + '&t=' + (devisTrouve.token_public||'')) : '' });
     }
     if (factureLiee.bc_id) {
       const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === factureLiee.bc_id; });
-      if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: window.location.origin + window.location.pathname + '?bc=' + bcTrouve.id });
+      if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: window.location.origin + window.location.pathname + '?bc=' + bcTrouve.id + '&t=' + (bcTrouve.token_public||'') });
     }
   }
   if (blIdPourQR) {
-    refsQR.push({ icon: '📦', label: 'Ce bon de livraison', ref: el('bl-ref')?.value, url: window.location.origin + window.location.pathname + '?bl=' + blIdPourQR });
+    refsQR.push({ icon: '📦', label: 'Ce bon de livraison', ref: el('bl-ref')?.value, url: window.location.origin + window.location.pathname + '?bl=' + blIdPourQR + '&t=' + (blTokenPourQR||'') });
   }
 
   genDocPDF({
@@ -903,7 +903,7 @@ async function sauvegarderBonLivraison() {
       STATE.bonsLivraison = STATE.bonsLivraison || [];
       STATE.bonsLivraison.unshift(result[0] || bl);
       showToast('✅ Bon de livraison enregistré' + (factureLiee ? ' et lié à ' + factureLiee.ref : ''), 'success');
-      genBonLivraisonPDF(factureLiee ? factureLiee.ref : '', (result[0]||bl).id);
+      genBonLivraisonPDF(factureLiee ? factureLiee.ref : '', (result[0]||bl).id, (result[0]||bl).token_public);
 
       // NOUVEAU : si ce client a un compte Zelto lié, il est prévenu
       // qu'un bon de livraison a été créé — avant, aucune notification.
@@ -966,7 +966,7 @@ function voirBonLivraison(id) {
   renderPickerFactureBL();
   renderLignesBL();
   const facture = bl.facture_id ? (STATE.factures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
-  genBonLivraisonPDF(facture ? facture.ref : '', bl.id);
+  genBonLivraisonPDF(facture ? facture.ref : '', bl.id, bl.token_public);
 }
 
 // NOUVEAU: création directe depuis une facture — pré-remplit client +
@@ -1005,9 +1005,9 @@ function exportDevisPDF(id) {
     ht: d.ht, tva: d.tva, ttc: d.ttc,
     devise: d.devise || 'MAD',
     doc_id: id,
-    doc_url: window.location.origin + window.location.pathname + '?doc=' + id,
+    doc_url: window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (d.token_public||''),
     signatureClient: d.signature_data || null,
-    refsQR: bc ? [{ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: window.location.origin + window.location.pathname + '?bc=' + bc.id }] : [],
+    refsQR: bc ? [{ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: window.location.origin + window.location.pathname + '?bc=' + bc.id + '&t=' + (bc.token_public||'') }] : [],
   });
 }
 
@@ -1027,7 +1027,7 @@ function previewDevisPDF() {
     ht, tva: ht*0.2, ttc: ht*1.2,
     devise: STATE.deviseF || 'MAD',
     doc_id: STATE.currentDevis?.id || '',
-    doc_url: STATE.currentDevis?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentDevis.id) : '',
+    doc_url: STATE.currentDevis?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentDevis.id + '&t=' + (STATE.currentDevis.token_public||'')) : '',
   });
 }
 function previewAvoirPDF() {
@@ -1125,7 +1125,7 @@ function partagerDevisWhatsApp(id) {
   if (!d) return;
   const p = STATE.profil || {};
   // Lien vers le DEVIS (pas la facture) avec paramètre type=devis
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&type=devis';
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&type=devis' + '&t=' + (d.token_public||'');
   const validiteDate = d.date_emission ? (() => {
     const dt = new Date(d.date_emission);
     dt.setDate(dt.getDate() + (d.validite || 30));
@@ -1149,8 +1149,8 @@ async function partagerDevisNatif(id) {
   const d = STATE.devis.find(x => x.id === id);
   if (!d) return;
   const p = STATE.profil || {};
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id;
-  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter';
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (d.token_public||'');
+  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter' + '&t=' + (d.token_public||'');
 
   const texte = 'Devis ' + d.ref + ' - ' + (d.client||'') + '\n' +
     'Montant: ' + fmt(d.ttc) + ' MAD TTC\n\n' +
@@ -1192,7 +1192,7 @@ async function verifierExpirationDevis() {
   }
 }
 
-async function traiterActionDocument(docId, type, action, signatureData) {
+async function traiterActionDocument(docId, type, action, signatureData, token) {
   const isFacture = type === 'facture';
   const table = isFacture ? 'factures' : 'devis';
   const champ = isFacture ? 'reponse_client' : 'statut';
@@ -1213,12 +1213,14 @@ async function traiterActionDocument(docId, type, action, signatureData) {
   `;
 
   try {
-    // Charger le document
-    const r = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    // FIX SÉCURITÉ : remplace le fetch REST direct (filtré uniquement par
+    // id, donc devinable) par la RPC sécurisée qui exige aussi le jeton.
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_document_public', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: type })
     });
-    const data = await r.json();
-    const d = data && data[0];
+    const d = r.ok ? (await r.json()) : null;
     if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">' + (isFacture ? 'Facture' : 'Devis') + ' introuvable</div>'; return; }
 
     // FIX: un document déjà accepté ou refusé ne doit plus jamais changer
@@ -1244,26 +1246,16 @@ async function traiterActionDocument(docId, type, action, signatureData) {
     }
 
     // Mettre à jour le statut / la réponse client
-    const nouvelleValeur = action === 'accepter' ? valeurAcceptee : action === 'refuser' ? valeurRefusee : valeurAttente;
-    const patchBody = { notif_lue: false };
-    patchBody[champ] = nouvelleValeur;
-    if (action === 'accepter') {
-      // L'acceptation vaut signature électronique — si le client a dessiné
-      // une signature (canal facultatif, encore utilisable ailleurs), on la
-      // garde ; sinon un tampon horodaté est généré automatiquement, sans
-      // aucune action requise du client.
-      patchBody.signature_data = signatureData || ('TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' }));
-    }
-
-    await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(patchBody)
+    // FIX SÉCURITÉ : remplace le PATCH direct (filtré uniquement par id,
+    // donc n'importe qui pouvait accepter/refuser n'importe quel document
+    // en devinant son identifiant) par la RPC sécurisée qui exige le jeton.
+    const signatureFinale = action === 'accepter'
+      ? (signatureData || ('TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })))
+      : null;
+    await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_document_public', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: type, p_action: action, p_signature: signatureFinale })
     });
 
     // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
