@@ -638,7 +638,7 @@ function relancerWhatsApp(id) {
     '\u2022 Date : ' + (f.date_emission||'') + '\n' +
     (f.echeance ? '\u2022 \u00c9ch\u00e9ance : ' + f.echeance + '\n' : '') +
     (f.chantier ? '\u2022 Projet : ' + f.chantier + '\n' : '') +
-    '\n\u{1F4CE} *Voir la facture :*\n' + (window.location.origin + window.location.pathname + '?doc=' + id) + '\n\n' +
+    '\n\u{1F4CE} *Voir la facture :*\n' + (window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (f.token_public||'')) + '\n\n' +
     '\u{1F517} *Notre profil :*\n' + lienProfil + '\n\n' +
     'Merci de r\u00e9gulariser dans les meilleurs d\u00e9lais.\n\n' +
     'Cordialement,\n' + (p.raison||'') + '\n\u{1F4DE} ' + (p.tel||'') + (p.email ? '\n\u2709\ufe0f ' + p.email : '')
@@ -656,7 +656,7 @@ async function partagerDoc(type, id) {
   if (type === 'facture') {
     doc = STATE.factures.find(f => f.id === id);
     titre = `Facture ${doc?.ref}`;
-    const facUrl = window.location.origin + window.location.pathname + '?doc=' + id;
+    const facUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (doc?.token_public||'');
     texte = `*Facture ${doc?.ref}*\nClient: ${doc?.client}\nMontant: ${fmt(doc?.ttc)} ${doc?.devise||'MAD'} TTC\nDate: ${doc?.date_emission||''}\n\n📎 Voir: ${facUrl}\n\n${p.raison||''}\n${p.tel||''} · ${p.email||''}`;
   } else {
     doc = STATE.devis.find(d => d.id === id);
