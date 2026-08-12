@@ -87,7 +87,7 @@ function partagerSelection() {
   const base = window.location.origin + window.location.pathname;
   const paramType = STATE.selectionMode === 'bc' ? 'bc' : STATE.selectionMode === 'devis' ? 'doc' : 'doc';
   const lignes = items.map(function(it) {
-    const lien = STATE.selectionMode === 'bc' ? base + '?bc=' + it.id : base + '?doc=' + it.id + (STATE.selectionMode === 'devis' ? '&type=devis' : '');
+    const lien = (STATE.selectionMode === 'bc' ? base + '?bc=' + it.id : base + '?doc=' + it.id + (STATE.selectionMode === 'devis' ? '&type=devis' : '')) + '&t=' + (it.token_public||'');
     return '• ' + (it.ref || '') + (it.client || it.fournisseur ? ' — ' + (it.client || it.fournisseur) : '') + '\n  ' + lien;
   });
   const texte = 'Voici ' + items.length + ' document(s) :\n\n' + lignes.join('\n\n');
