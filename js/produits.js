@@ -298,7 +298,7 @@ function envoyerVia(canal) {
   const { type, id, doc } = ctx;
   const p = STATE.profil || {};
   const isBC = type === 'bon-commande';
-  const docUrl = window.location.origin + window.location.pathname + (isBC ? '?bc=' + id : '?doc=' + id + (type === 'devis' ? '&type=devis' : ''));
+  const docUrl = window.location.origin + window.location.pathname + (isBC ? '?bc=' + id : '?doc=' + id + (type === 'devis' ? '&type=devis' : '')) + '&t=' + (doc?.token_public||'');
   const libelleDest = isBC ? (doc.fournisseur || '') : (doc.client || '');
   const libelleDoc = type === 'facture' ? 'facture' : isBC ? 'bon de commande' : 'devis';
 
