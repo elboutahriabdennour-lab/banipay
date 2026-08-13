@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#1F6F72">
 <meta name="description" content="Zelto — Gestion de factures et devis pour PME marocaines">
 <title>Zelto — Gestion Factures &amp; Devis</title>
-<link rel="stylesheet" href="css/style.css?v=1786537834">
+<link rel="stylesheet" href="css/style.css?v=1786618543">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -132,41 +132,41 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1786537834"></script>
-  <script src="js/utils.js?v=1786537834"></script>
-  <script src="js/auth.js?v=1786537834"></script>
-  <script src="js/nav.js?v=1786537834"></script>
-  <script src="js/factures.js?v=1786537834"></script>
-  <script src="js/devis.js?v=1786537834"></script>
-  <script src="js/clients.js?v=1786537834"></script>
-  <script src="js/produits.js?v=1786537834"></script>
-  <script src="js/pdf.js?v=1786537834"></script>
-  <script src="js/stats.js?v=1786537834"></script>
-  <script src="js/profil.js?v=1786537834"></script>
-  <script src="js/comptable.js?v=1786537834"></script>
-  <script src="js/messages.js?v=1786537834"></script>
-<script src="js/achats.js?v=1786537834"></script>
-<script src="js/stock.js?v=1786537834"></script>
-<script src="js/finance.js?v=1786537834"></script>
-<script src="js/ubl.js?v=1786537834"></script>
-<script src="js/relances.js?v=1786537834"></script>
-<script src="js/dashboard-avance.js?v=1786537834"></script>
-<script src="js/ocr-achats.js?v=1786537834"></script>
-<script src="js/equipe.js?v=1786537834"></script>
-<script src="js/equipe-cabinet.js?v=1786537834"></script>
-<script src="js/rh.js?v=1786537834"></script>
-<script src="js/hubs.js?v=1786537834"></script>
-<script src="js/demandes-devis.js?v=1786537834"></script>
-<script src="js/chat-ticket.js?v=1786537834"></script>
-<script src="js/partage-ecran.js?v=1786537834"></script>
-<script src="js/offres.js?v=1786537834"></script>
-<script src="js/support.js?v=1786537834"></script>
-<script src="js/devis-recus.js?v=1786537834"></script>
-<script src="js/demande-devis-fournisseur.js?v=1786537834"></script>
-<script src="js/selection.js?v=1786537834"></script>
-<script src="js/abonnements.js?v=1786537834"></script>
-<script src="js/signature.js?v=1786537834"></script>
-<script src="js/app.js?v=1786537834"></script>
+<script src="js/config.js?v=1786618543"></script>
+  <script src="js/utils.js?v=1786618543"></script>
+  <script src="js/auth.js?v=1786618543"></script>
+  <script src="js/nav.js?v=1786618543"></script>
+  <script src="js/factures.js?v=1786618543"></script>
+  <script src="js/devis.js?v=1786618543"></script>
+  <script src="js/clients.js?v=1786618543"></script>
+  <script src="js/produits.js?v=1786618543"></script>
+  <script src="js/pdf.js?v=1786618543"></script>
+  <script src="js/stats.js?v=1786618543"></script>
+  <script src="js/profil.js?v=1786618543"></script>
+  <script src="js/comptable.js?v=1786618543"></script>
+  <script src="js/messages.js?v=1786618543"></script>
+<script src="js/achats.js?v=1786618543"></script>
+<script src="js/stock.js?v=1786618543"></script>
+<script src="js/finance.js?v=1786618543"></script>
+<script src="js/ubl.js?v=1786618543"></script>
+<script src="js/relances.js?v=1786618543"></script>
+<script src="js/dashboard-avance.js?v=1786618543"></script>
+<script src="js/ocr-achats.js?v=1786618543"></script>
+<script src="js/equipe.js?v=1786618543"></script>
+<script src="js/equipe-cabinet.js?v=1786618543"></script>
+<script src="js/rh.js?v=1786618543"></script>
+<script src="js/hubs.js?v=1786618543"></script>
+<script src="js/demandes-devis.js?v=1786618543"></script>
+<script src="js/chat-ticket.js?v=1786618543"></script>
+<script src="js/partage-ecran.js?v=1786618543"></script>
+<script src="js/offres.js?v=1786618543"></script>
+<script src="js/support.js?v=1786618543"></script>
+<script src="js/devis-recus.js?v=1786618543"></script>
+<script src="js/demande-devis-fournisseur.js?v=1786618543"></script>
+<script src="js/selection.js?v=1786618543"></script>
+<script src="js/abonnements.js?v=1786618543"></script>
+<script src="js/signature.js?v=1786618543"></script>
+<script src="js/app.js?v=1786618543"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -886,11 +886,16 @@
   <div class="profil-hero">
     <button onclick="partagerProfil()" style="position:absolute;top:60px;right:16px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     <div class="profil-av" id="pv-initiales">?</div>
-    <div>
+    <div style="flex:1">
       <div class="p-nom-big" id="pv-nom">Mon Entreprise</div>
       <div class="p-id" id="pv-rc-label">RC — · IF — · ICE —</div>
-      <div class="p-badge" id="pv-badge" style="background:rgba(239,68,68,0.2);color:#C96F63">⚠️ Profil incomplet</div>
-      <div id="badge-forfait-actuel" onclick="goScreen('mon-forfait',null)" style="display:inline-block;margin-top:6px;margin-left:6px;background:rgba(255,255,255,0.18);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;cursor:pointer"></div>
+      <div id="pv-completude" style="margin-top:8px;max-width:220px">
+        <div style="height:6px;background:rgba(255,255,255,0.15);border-radius:3px;overflow:hidden;margin-bottom:4px">
+          <div id="pv-completude-barre" style="height:100%;width:0%;border-radius:3px;transition:width 0.4s;background:#E4C77A"></div>
+        </div>
+        <div id="pv-badge" style="font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,0.28);display:inline-block;padding:3px 9px;border-radius:6px">⚠️ Profil incomplet</div>
+      </div>
+      <div id="badge-forfait-actuel" onclick="goScreen('mon-forfait',null)" style="display:inline-block;margin-top:6px;background:rgba(255,255,255,0.18);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;cursor:pointer"></div>
     </div>
   </div>
   <!-- QR -->
