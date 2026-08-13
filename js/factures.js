@@ -291,6 +291,7 @@ async function sauvegarderFacture(isDraft = false) {
   const statut = isDraft ? 'brouillon' : (el('f-statut')?.value || 'envoyee');
   showToast('⏳ Sauvegarde...');
   try {
+    const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === client; });
     const body = {
       user_id: sb.user.id,
       ref: el('f-ref')?.value,
@@ -304,6 +305,7 @@ async function sauvegarderFacture(isDraft = false) {
       lignes: STATE.lignesF,
       devise: STATE.deviseF,
       montant_recu: 0,
+      destinataire_id: clientConnu?.reference_id || null,
     };
     const r = await sb.post('factures', body);
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
