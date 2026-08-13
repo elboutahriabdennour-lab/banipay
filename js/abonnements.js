@@ -242,6 +242,9 @@ async function genererFactureDepuisAbonnement(a) {
   if (r && r.length > 0) {
     STATE.factures.unshift(r[0]);
     logAudit('facture', r[0].id, 'creation', ref + ' — générée automatiquement depuis abonnement ' + a.client);
+    // FIX: même trou que les autres chemins de création de facture — la
+    // facturation récurrente ne décrémentait jamais le stock.
+    if (typeof decrementerStockDepuisLignes === 'function') await decrementerStockDepuisLignes(lignes, ref);
   }
   return r && r[0];
 }
