@@ -15,8 +15,11 @@ function renderProfil() {
   const badge = el('pv-badge');
   if (badge) {
     badge.textContent = pct===100 ? '✅ Profil complet' : `${pct}% complété — ${required.length-filled} champ(s) manquant(s)`;
-    badge.style.background = pct===100 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)';
-    badge.style.color = pct===100 ? '#7FA05C' : '#B23A2E';
+  }
+  const barre = el('pv-completude-barre');
+  if (barre) {
+    barre.style.width = pct + '%';
+    barre.style.background = pct === 100 ? '#8FBF6B' : pct >= 50 ? '#E4C77A' : '#D98066';
   }
   // Info rows
   const fields = [
