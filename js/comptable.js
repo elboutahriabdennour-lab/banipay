@@ -2274,8 +2274,10 @@ async function chargerNotificationsComptable() {
     );
     const invitations = await resp.json() || [];
 
-    // FIX: fonction RPC SECURITY DEFINER — même correctif que nav.js.
-    const respN = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
+    // FIX: remplace get_mes_notifications (générique) par une RPC dédiée
+    // qui ne renvoie que les types liés au métier de comptable — évite
+    // tout mélange avec des notifications qui ne le concernent pas.
+    const respN = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications_comptable', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
