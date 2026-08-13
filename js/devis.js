@@ -242,6 +242,11 @@ async function convertirEnFacture(id) {
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
     await sb.patch('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`,{statut:'converti',facture_ref:ref});
     d.statut='converti'; d.facture_ref=ref;
+    // FIX: la conversion devis→facture ne décrémentait jamais le stock,
+    // contrairement à la création directe d'une facture — deux chemins
+    // vers le même résultat (une facture avec des lignes liées au
+    // catalogue), un seul des deux mettait le stock à jour.
+    if (typeof decrementerStockDepuisLignes === 'function') await decrementerStockDepuisLignes(d.lignes, ref);
     showToast('🎉 Facture '+ref+' créée !','success');
     setTimeout(()=>goScreen('dashboard'),1200);
   } catch(e){showToast('❌ '+e.message,'error');}
@@ -694,7 +699,7 @@ async function convertirBCEnFacture(bcId) {
       date_emission: today(),
       paiement: 'virement',
       statut: 'envoyee',
-      lignes: (bc.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u' }; }),
+      lignes: (bc.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u', produit_id: l.produit_id || null }; }),
       ht: ht, tva: ht*0.2, ttc: ht*1.2,
       bc_id: bc.id,
       devise: 'MAD', montant_recu: 0,
@@ -705,6 +710,9 @@ async function convertirBCEnFacture(bcId) {
     if (r && r.length) {
       STATE.factures.unshift(r[0]);
       bc.facture_generee_id = r[0].id;
+      // FIX: même trou que convertirEnFacture — la facturation d'un BC
+      // reçu ne décrémentait jamais le stock.
+      if (typeof decrementerStockDepuisLignes === 'function') await decrementerStockDepuisLignes(facture.lignes, facture.ref);
       // Persiste le marquage côté BC (le fournisseur n'est pas propriétaire
       // de cette ligne, d'où la RPC dédiée plutôt qu'un simple patch).
       try {
