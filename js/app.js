@@ -340,6 +340,42 @@ async function afficherBonLivraisonPublic(blId, token) {
   }
 }
 
+// NOUVEAU : ce document est verrouillé à un compte Zelto précis (le
+// client a été choisi dans l'annuaire à l'envoi) — la personne qui ouvre
+// le lien n'est pas connectée avec ce compte-là. Plutôt que de laisser
+// n'importe qui avec le lien agir dessus, on explique la situation et on
+// propose de contacter l'émetteur directement.
+async function afficherEcranAccesReserve(docId, type) {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t');
+  let emetteur = {};
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_emetteur_document', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: type })
+    });
+    emetteur = r.ok ? ((await r.json()) || {}) : {};
+  } catch(e) {}
+
+  const lienWhatsapp = emetteur.tel
+    ? 'https://wa.me/' + emetteur.tel.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Bonjour, je souhaite accéder à mon ' + type + ' (réf. document Zelto) — pouvez-vous me confirmer mon accès ?')
+    : null;
+
+  document.body.innerHTML = `
+    <div style="font-family:Arial,sans-serif;max-width:440px;margin:60px auto;padding:24px;text-align:center">
+      <div style="font-size:44px;margin-bottom:16px">🔒</div>
+      <h2 style="color:#2A2420;margin-bottom:10px">Accès réservé</h2>
+      <p style="color:#6B5F54;font-size:14px;line-height:1.6;margin-bottom:24px">
+        Ce${type === 'facture' ? 'tte facture est réservée' : ' devis est réservé'} au compte Zelto du destinataire prévu par ${escapeHTML(emetteur.raison || "l'entreprise émettrice")}.
+        Si vous pensez qu'il vous est destiné, connectez-vous avec le bon compte, ou contactez directement l'émetteur.
+      </p>
+      ${lienWhatsapp ? `<a href="${lienWhatsapp}" target="_blank" style="display:inline-block;padding:12px 24px;background:#25D366;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;margin-bottom:12px">💬 Contacter par WhatsApp</a><br>` : ''}
+      <a href="${window.location.origin}${window.location.pathname}" style="display:inline-block;margin-top:8px;color:#1F6F72;font-size:13px;text-decoration:underline">Se connecter avec un autre compte</a>
+    </div>
+  `;
+}
+
 async function afficherDocumentPublic(docId, token) {
   const urlParams = new URLSearchParams(window.location.search);
   const docType = urlParams.get('type'); // 'devis' ou null
@@ -351,12 +387,20 @@ async function afficherDocumentPublic(docId, token) {
 
     // FIX SÉCURITÉ : remplace le fetch REST direct (filtré uniquement par
     // id, donc devinable) par la RPC sécurisée qui exige aussi le jeton.
+    // Utilise la session réelle si la personne est connectée (nécessaire
+    // pour la vérification "c'est bien le bon destinataire"), sinon la
+    // clé anonyme comme avant pour les documents non verrouillés.
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_document_public', {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: isDevis ? 'devis' : 'facture' })
     });
     doc = r.ok ? (await r.json()) : null;
+
+    if (doc && doc._verrouille) {
+      afficherEcranAccesReserve(docId, isDevis ? 'devis' : 'facture');
+      return;
+    }
 
     if (!doc) {
       document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Document introuvable</h2></div>';
