@@ -116,6 +116,10 @@ async function sauvegarderDevis() {
   const ht = STATE.lignesD.reduce((s,l)=>s+l.qte*l.pu,0);
   showToast('⏳ Sauvegarde...');
   try {
+    // NOUVEAU : si ce client est un compte Zelto déjà connu (choisi dans
+    // l'annuaire, pas juste tapé), on verrouille le devis à SON compte —
+    // lui seul (connecté) pourra l'ouvrir/agir dessus via le lien public.
+    const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === client; });
     const r = await sb.post('devis', {
       user_id: sb.user.id,
       ref: el('d-ref')?.value,
@@ -126,6 +130,7 @@ async function sauvegarderDevis() {
       bc_id: el('d-bc-lie')?.value ? parseInt(el('d-bc-lie').value) : null,
       statut: 'envoye', ht, tva:ht*0.2, ttc:ht*1.2,
       lignes: STATE.lignesD, devise: STATE.deviseD,
+      destinataire_id: clientConnu?.reference_id || null,
     });
     if (r && r.length > 0) { STATE.devis.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
     autoAddClient(client);
@@ -237,7 +242,8 @@ async function convertirEnFacture(id) {
       date_emission: today(), paiement: 'virement', statut: 'envoyee',
       lignes: d.lignes, ht, tva: ht*0.2, ttc: ht*1.2, devis_ref: d.ref,
       bc_id: d.bc_id || null,
-      devise: d.devise||'MAD', montant_recu: 0
+      devise: d.devise||'MAD', montant_recu: 0,
+      destinataire_id: d.destinataire_id || null,
     });
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
     await sb.patch('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`,{statut:'converti',facture_ref:ref});
@@ -1223,12 +1229,15 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
   try {
     // FIX SÉCURITÉ : remplace le fetch REST direct (filtré uniquement par
     // id, donc devinable) par la RPC sécurisée qui exige aussi le jeton.
+    // Utilise la session réelle si connectée, nécessaire pour vérifier
+    // "c'est bien le bon destinataire" sur un document verrouillé.
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_document_public', {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: type })
     });
     const d = r.ok ? (await r.json()) : null;
+    if (d && d._verrouille) { if (typeof afficherEcranAccesReserve === 'function') afficherEcranAccesReserve(docId, type); return; }
     if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">' + (isFacture ? 'Facture' : 'Devis') + ' introuvable</div>'; return; }
 
     // FIX: un document déjà accepté ou refusé ne doit plus jamais changer
