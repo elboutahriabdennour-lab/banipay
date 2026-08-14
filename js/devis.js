@@ -709,7 +709,12 @@ async function convertirBCEnFacture(bcId) {
       ht: ht, tva: ht*0.2, ttc: ht*1.2,
       bc_id: bc.id,
       devise: 'MAD', montant_recu: 0,
-      note: 'Générée à partir du bon de commande ' + (bc.ref||'')
+      note: 'Générée à partir du bon de commande ' + (bc.ref||''),
+      // FIX (même trou que le décrément de stock trouvé plus tôt) : cette
+      // facture concerne un BC reçu d'une AUTRE entreprise Zelto — son
+      // compte réel (bc.user_id) est connu avec certitude, donc on
+      // verrouille directement dessus.
+      destinataire_id: bc.user_id || null,
     };
 
     const r = await sb.post('factures', facture);
