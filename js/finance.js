@@ -114,7 +114,7 @@ async function toggleRapprochementFacture(factureId) {
   if (!f) return;
   const nouvelleValeur = !f.rapproche;
   try {
-    await sb.patch('factures', 'id=eq.' + factureId + '&user_id=eq.' + sb.user.id, {
+    await sb.patch('factures', 'id=eq.' + factureId + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
       rapproche: nouvelleValeur,
       rapproche_at: nouvelleValeur ? new Date().toISOString() : null
     });
