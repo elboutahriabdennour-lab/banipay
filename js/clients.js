@@ -82,7 +82,7 @@ async function importerClientDepuisLien() {
     if (typeof verifierLimiteClients === 'function' && !verifierLimiteClients()) return;
 
     const newClient = {
-      user_id: sb.user.id,
+      user_id: (STATE.entrepriseId || sb.user.id),
       nom: p.raison || '',
       tel: p.tel || '',
       email: p.email || '',
@@ -203,7 +203,7 @@ async function sauvegarderClient() {
   showToast('⏳ Sauvegarde...');
   try {
     const body = {
-      user_id: sb.user.id, nom,
+      user_id: (STATE.entrepriseId || sb.user.id), nom,
       tel: el('cl-tel')?.value.trim(),
       email: el('cl-email')?.value.trim(),
       adresse: el('cl-adresse')?.value.trim(),
@@ -515,7 +515,7 @@ async function importerClientsCSV(event) {
       }
 
       const body = {
-        user_id: sb.user.id,
+        user_id: (STATE.entrepriseId || sb.user.id),
         nom: nom,
         tel: getVal(r, ['tel', 'telephone', 'téléphone', 'phone']),
         email: getVal(r, ['email', 'mail']),
