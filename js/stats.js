@@ -212,10 +212,26 @@ let _annuaireData = [];
 let _annuaireSecteur = '';
 async function loadAnnuaire() {
   try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=raison,secteur,ville,tel,email,id_unique&raison=not.is.null&order=raison.asc&limit=100', {
+    const rEnt = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=raison,secteur,ville,tel,email,id_unique&raison=not.is.null&order=raison.asc&limit=100', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
-    _annuaireData = await r.json() || [];
+    const entreprises = ((await rEnt.json()) || []).map(function(e) { return Object.assign({}, e, { _type: 'entreprise' }); });
+
+    // NOUVEAU : les comptables apparaissent aussi dans l'annuaire —
+    // avant, seules les entreprises y étaient. Les comptes support
+    // n'apparaissent jamais ici, par construction (ils n'ont ni ligne
+    // profils_entreprise ni profils_comptable).
+    let comptables = [];
+    try {
+      const rCpt = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?select=nom,cabinet,tel,email&nom=not.is.null&order=nom.asc&limit=100', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      comptables = ((await rCpt.json()) || []).map(function(c) {
+        return { raison: c.cabinet || c.nom, secteur: 'Comptabilité', ville: '', tel: c.tel, email: c.email, id_unique: null, _type: 'comptable', _nomPerso: c.nom };
+      });
+    } catch(eCpt) {}
+
+    _annuaireData = entreprises.concat(comptables);
     filtrerAnnuaire();
   } catch(e) {
     showToast('Erreur chargement annuaire', 'error');
@@ -241,14 +257,14 @@ function filtrerAnnuaire() {
     list.innerHTML = '<div class="empty"><div class="empty-ico">🏢</div><div class="empty-title">Aucune entreprise trouvée</div></div>';
     return;
   }
-  const secteurEmoji = { 'BTP & Construction':'🏗️', 'Commerce & Négoce':'🛒', 'Transport & Logistique':'🚛', 'Conseil & Expertise':'💼', 'Informatique & Tech':'💻', 'Santé & Médical':'🏥', 'Immobilier':'🏠', 'Artisanat':'🪡' };
+  const secteurEmoji = { 'BTP & Construction':'🏗️', 'Commerce & Négoce':'🛒', 'Transport & Logistique':'🚛', 'Conseil & Expertise':'💼', 'Informatique & Tech':'💻', 'Santé & Médical':'🏥', 'Immobilier':'🏠', 'Artisanat':'🪡', 'Comptabilité':'🧮' };
   list.innerHTML = data.map(e => `
-    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="voirProfilEntreprise('${e.id_unique||''}')">
+    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `return false` : `voirProfilEntreprise('${e.id_unique||''}')`}">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700">${escapeHTML(e.raison||'')}</div>
-          <div style="font-size:11px;color:#64748B;margin-top:2px">${e.secteur||''} ${e.ville?'· 📍'+e.ville:''}</div>
+          <div style="font-size:11px;color:#64748B;margin-top:2px">${e._type === 'comptable' ? '🧮 Cabinet comptable' + (e._nomPerso ? ' · ' + escapeHTML(e._nomPerso) : '') : (e.secteur||'') + (e.ville?' · 📍'+e.ville:'')}</div>
           ${e.tel?`<div style="font-size:11px;color:#94A3B8">📞 ${e.tel}</div>`:''}
         </div>
         <div style="font-size:18px;color:#94A3B8">›</div>
