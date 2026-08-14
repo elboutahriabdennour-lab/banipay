@@ -714,7 +714,7 @@ function goScreen(name) {
     'cpt-entreprise': function() {},
     'brouillons': _safe(typeof renderBrouillons!=='undefined'?renderBrouillons:undefined,'renderBrouillons'),
     'relances': _safe(typeof renderRelances!=='undefined'?renderRelances:undefined,'renderRelances'),
-    'parametres': function() { if (typeof renderParametres==='function') renderParametres(); if (typeof afficherStatutDGI === 'function') afficherStatutDGI(); if (typeof afficherParametresRelance === 'function') afficherParametresRelance(); if (typeof chargerEquipe === 'function') chargerEquipe(); if (typeof chargerMesInvitationsEquipe === 'function') chargerMesInvitationsEquipe(); },
+    'parametres': function() { if (typeof renderParametres==='function') renderParametres(); if (typeof afficherStatutDGI === 'function') afficherStatutDGI(); if (typeof afficherParametresRelance === 'function') afficherParametresRelance(); if (typeof chargerEquipe === 'function') chargerEquipe(); if (typeof chargerMesInvitationsEquipe === 'function') chargerMesInvitationsEquipe(); if (typeof appliquerLangueInterface === 'function') appliquerLangueInterface(); },
     'historique-paiements': function() {},
     'acomptes': function() {},
     'employes': function() { if (typeof loadEmployes==='function') loadEmployes(); },
