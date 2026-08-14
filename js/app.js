@@ -1,7 +1,7 @@
 // ZELTO — app.js
 
 async function loadAll() {
-  const uid = sb.user?.id;
+  const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
   try {
     const [f, dv, cl, pr, av, pf] = await Promise.all([
@@ -694,6 +694,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     window._inviteToken = inviteToken;
     // Need to login first, then process invitation
     if (sb.restoreSession()) {
+      // NOUVEAU : même résolution que les autres chemins — voir doLogin()
+      try {
+        const rEnt = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        STATE.entrepriseId = rEnt.ok ? (await rEnt.json()) : sb.user.id;
+      } catch(eEnt) { STATE.entrepriseId = sb.user.id; }
       await loadAll();
       verifierChangementsDevis();
       verifierRappels();
@@ -748,6 +757,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadComptableApp();
         goScreen('comptable');
       } else {
+        // NOUVEAU : même résolution que dans doLogin() — sans ça, un
+        // membre d'équipe perdait l'accès aux données de son entreprise
+        // à chaque rechargement de page (ce chemin de restauration de
+        // session est séparé de celui de la connexion initiale).
+        try {
+          const rEnt = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+          STATE.entrepriseId = rEnt.ok ? (await rEnt.json()) : sb.user.id;
+        } catch(eEnt) { STATE.entrepriseId = sb.user.id; }
         await loadAll();
         verifierChangementsDevis();
         verifierRappels();
