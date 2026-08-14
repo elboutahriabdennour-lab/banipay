@@ -293,7 +293,7 @@ async function sauvegarderFacture(isDraft = false) {
   try {
     const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === client; });
     const body = {
-      user_id: sb.user.id,
+      user_id: (STATE.entrepriseId || sb.user.id),
       ref: el('f-ref')?.value,
       client, chantier: el('f-chantier')?.value.trim(),
       date_emission: el('f-date')?.value,
@@ -339,7 +339,7 @@ async function resoudreManuellementFacture(id, nouvelleReponse) {
   const libelle = nouvelleReponse === 'acceptee' ? 'acceptée' : 'refusée';
   if (!confirm('Marquer cette facture comme ' + libelle + ' ?')) return;
   try {
-    await sb.patch('factures', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { reponse_client: nouvelleReponse });
+    await sb.patch('factures', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { reponse_client: nouvelleReponse });
     f.reponse_client = nouvelleReponse;
     showToast('✅ Facture marquée ' + libelle, 'success');
     if (typeof logAudit === 'function') logAudit('facture', id, nouvelleReponse === 'acceptee' ? 'acceptation' : 'refus', (f.ref||'') + ' (manuel)');
@@ -551,7 +551,7 @@ async function confirmerPaiement() {
   f.montant_recu = newRecu; f.statut = newStatut;
   // Save paiement record
   try {
-    await sb.post('paiements', { user_id: sb.user.id, facture_id: f.id, montant, date: el('pp-date')?.value, mode: el('pp-mode')?.value || 'virement' });
+    await sb.post('paiements', { user_id: (STATE.entrepriseId || sb.user.id), facture_id: f.id, montant, date: el('pp-date')?.value, mode: el('pp-mode')?.value || 'virement' });
   } catch(e) {}
   closeAllModals();
   renderDetail();
@@ -680,7 +680,7 @@ async function partagerDoc(type, id) {
 function autoAddClient(nom) {
   if (!nom || STATE.clients.find(c => c.nom.toLowerCase() === nom.toLowerCase())) return;
   if (STATE.limiteClients != null && (STATE.clients || []).length >= STATE.limiteClients) return; // silencieux ici — la facture elle-même n'est pas bloquée, seul l'ajout auto du client au carnet est sauté
-  sb.post('clients', { user_id: sb.user.id, nom }).then(r => {
+  sb.post('clients', { user_id: (STATE.entrepriseId || sb.user.id), nom }).then(r => {
     if (r && r.length > 0) { STATE.clients.push(r[0]); }
   }).catch(() => {});
 }
@@ -837,7 +837,7 @@ async function confirmerAcompte() {
       montant_recu: newRecu, statut: newStatut
     });
     await sb.post('paiements', {
-      user_id: sb.user.id,
+      user_id: (STATE.entrepriseId || sb.user.id),
       facture_id: f.id,
       montant,
       date: el('ac-date')?.value,
