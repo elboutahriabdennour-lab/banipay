@@ -82,7 +82,7 @@ async function sauvegarderProduit() {
   showToast('⏳...');
   try {
     const r = await sb.post('produits',{
-      user_id:sb.user.id, nom,
+      user_id: (STATE.entrepriseId || sb.user.id), nom,
       description:el('p-desc')?.value.trim(),
       reference:el('p-ref')?.value.trim(),
       prix_ht:parseFloat(el('p-prix')?.value)||0,
@@ -243,7 +243,7 @@ async function importerProduitsCSV(event) {
       if (!catValides.includes(categorie)) categorie = 'autre';
 
       const body = {
-        user_id: sb.user.id,
+        user_id: (STATE.entrepriseId || sb.user.id),
         nom: nom,
         description: getVal(r, ['description', 'desc']),
         reference: getVal(r, ['reference', 'référence', 'ref']),
@@ -355,7 +355,7 @@ async function _marquerBCEnvoye(id, notifierMaintenant) {
   // Réutilise la logique déjà écrite (statut + notification RPC) sans
   // dupliquer le partage, puisqu'on vient de le faire nous-mêmes ci-dessus.
   try {
-    await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: 'envoye' });
+    await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'envoye' });
     const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
     if (bc) bc.statut = 'envoye';
     if (bc && bc.fournisseur_id) {
