@@ -112,21 +112,7 @@ async function saveProfil() {
   // NOUVEAU : contraintes de saisie imposées par la DGI — l'ICE doit
   // faire EXACTEMENT 15 chiffres (aucune exception, c'est le format
   // officiel), RC et IF doivent être numériques s'ils sont renseignés.
-  const iceVal = el('pe-ice')?.value.trim() || '';
-  if (iceVal && !/^\d{15}$/.test(iceVal)) {
-    showToast('❌ L\'ICE doit contenir exactement 15 chiffres (' + iceVal.length + ' saisi(s))', 'error');
-    return;
-  }
-  const rcVal = el('pe-rc')?.value.trim() || '';
-  if (rcVal && !/^\d+$/.test(rcVal)) {
-    showToast('❌ Le RC ne doit contenir que des chiffres', 'error');
-    return;
-  }
-  const ifVal = el('pe-if')?.value.trim() || '';
-  if (ifVal && !/^\d+$/.test(ifVal)) {
-    showToast('❌ L\'identifiant fiscal (IF) ne doit contenir que des chiffres', 'error');
-    return;
-  }
+  if (typeof validerIdentifiantsLegaux === 'function' && !validerIdentifiantsLegaux(el('pe-ice')?.value.trim(), el('pe-rc')?.value.trim(), el('pe-if')?.value.trim())) return;
 
   showToast('⏳ Sauvegarde...');
   try {
