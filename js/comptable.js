@@ -35,7 +35,12 @@ async function loadComptableApp() {
 
     if (CPT.entreprises.length === 0) {
       diag.push('→ Aucune entreprise liée : normal si tu n\'as encore accepté aucune invitation. Si tu en as accepté une, vérifie que son statut est bien "acceptee" dans invitations_comptable.');
-      afficherDiagnosticComptable(diag);
+      // FIX: zéro entreprise liée est un état parfaitement normal pour un
+      // nouveau compte comptable (jamais encore invité) — ce n'est pas
+      // une erreur, donc plus d'affichage automatique intrusif à chaque
+      // connexion. Le diagnostic reste consultable manuellement via le
+      // bouton dédié sur le dashboard.
+      window._dernierDiagComptable = diag;
       renderComptableDashboard();
       chargerNotificationsComptable();
       return;
