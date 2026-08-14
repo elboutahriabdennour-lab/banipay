@@ -9,7 +9,7 @@ STATE.relancesEnvoyees = STATE.relancesEnvoyees || [];
 
 async function loadRelancesEnvoyees() {
   try {
-    STATE.relancesEnvoyees = (await sb.get('relances_envoyees', 'user_id=eq.' + sb.user.id)) || [];
+    STATE.relancesEnvoyees = (await sb.get('relances_envoyees', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id))) || [];
   } catch(e) { STATE.relancesEnvoyees = []; }
 }
 
@@ -92,7 +92,7 @@ async function envoyerRelance(factureId, type) {
 
   try {
     await sb.post('relances_envoyees', {
-      user_id: sb.user.id, facture_id: factureId, type_relance: type, date_envoi: new Date().toISOString().split('T')[0]
+      user_id: (STATE.entrepriseId || sb.user.id), facture_id: factureId, type_relance: type, date_envoi: new Date().toISOString().split('T')[0]
     });
     STATE.relancesEnvoyees.push({ facture_id: factureId, type_relance: type, date_envoi: new Date().toISOString().split('T')[0] });
   } catch(e) { /* silencieux — l'envoi a déjà eu lieu, on ne bloque pas l'utilisateur pour une écriture de log */ }
