@@ -6,7 +6,7 @@
 // Met à jour le stock, le coût moyen pondéré, crée un lot (pour FIFO/LIFO)
 // et journalise le mouvement avec son coût unitaire.
 async function enregistrerEntreeStock(produitId, quantite, coutUnitaire, motif, reference) {
-  const uid = sb.user?.id;
+  const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid || !produitId || !(quantite > 0)) return;
   const produit = STATE.produits.find(function(p) { return p.id === produitId; });
   if (!produit) return;
@@ -52,7 +52,7 @@ async function enregistrerEntreeStock(produitId, quantite, coutUnitaire, motif, 
 // méthode de valorisation choisie par l'entreprise (CMUP/FIFO/LIFO)
 // ============================================================
 async function enregistrerSortieStock(produitId, quantite, motif, reference) {
-  const uid = sb.user?.id;
+  const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid || !produitId || !(quantite > 0)) return 0;
   const produit = STATE.produits.find(function(p) { return p.id === produitId; });
   if (!produit) return 0;
@@ -169,10 +169,10 @@ async function confirmerAjustementStock() {
       await enregistrerSortieStock(p.id, quantite, motif || 'Sortie manuelle');
     } else {
       const stockActuel = Number(p.stock) || 0;
-      await sb.patch('produits', 'id=eq.' + p.id + '&user_id=eq.' + sb.user.id, { stock: quantite });
+      await sb.patch('produits', 'id=eq.' + p.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { stock: quantite });
       p.stock = quantite;
       await sb.post('mouvements_stock', {
-        user_id: sb.user.id,
+        user_id: (STATE.entrepriseId || sb.user.id),
         produit_id: p.id,
         type: 'ajustement',
         quantite: quantite - stockActuel,
