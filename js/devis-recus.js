@@ -50,7 +50,7 @@ async function chargerDevisRecusAcceptes() {
         if (d.statut !== 'accepte') continue;
 
         const dejaConverti = (STATE.bonsCommande || []).some(function(bc) { return bc.devis_source_id === d.id; });
-        resultats.push({ devis: d, dejaConverti, emetteurRaison: meta.emetteur_raison || '' });
+        resultats.push({ devis: d, dejaConverti, emetteurRaison: meta.emetteur_raison || '', notifId: n.id });
       } catch(e2) { window._diagDevisRecus.push('❌ Erreur réseau en lisant le devis #' + meta.doc_id + ' : ' + e2.message); }
     }
     STATE.devisRecusAcceptes = resultats;
@@ -85,9 +85,27 @@ function renderDevisRecusAcceptes() {
           '</div>' +
           (x.dejaConverti
             ? '<div style="font-size:11px;color:#6E8F4E;font-weight:600">✅ Déjà converti en bon de commande</div>'
-            : '<button onclick="convertirDevisRecuEnBC(' + d.id + ')" style="width:100%;padding:9px;background:#7C5CA6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📋 Convertir en bon de commande</button>') +
+            : '<button onclick="convertirDevisRecuEnBC(' + d.id + ')" style="width:100%;padding:9px;background:#7C5CA6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">📋 Convertir en bon de commande</button>') +
+          '<button onclick="supprimerDevisRecu(\'' + x.notifId + '\')" style="width:100%;padding:7px;background:none;color:#B23A2E;border:1px solid #F5E4E1;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer de la liste</button>' +
         '</div>';
       }).join('');
+}
+
+// Point 8 : un devis reçu peut être retiré de cette liste — supprime
+// juste la notification source, pas le devis lui-même (qui appartient à
+// l'autre entreprise).
+async function supprimerDevisRecu(notifId) {
+  if (!confirm('Retirer ce devis de la liste ?')) return;
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_id: notifId })
+    });
+    STATE.devisRecusAcceptes = (STATE.devisRecusAcceptes || []).filter(function(x) { return x.notifId !== notifId; });
+    renderDevisRecusAcceptes();
+    showToast('Retiré de la liste', 'success');
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
 
 async function convertirDevisRecuEnBC(devisId) {
