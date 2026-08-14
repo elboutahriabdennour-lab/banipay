@@ -279,6 +279,21 @@ async function doLogin() {
       // Reset données avant chargement nouveau compte
       STATE.factures = []; STATE.devis = []; STATE.clients = [];
       STATE.produits = []; STATE.avoirs = []; STATE.achats = []; STATE.abonnements = [];
+      // NOUVEAU : résout "pour quelle entreprise je travaille" — moi-même
+      // si je suis titulaire, ou celui qui m'a invité si je suis un
+      // membre d'équipe. DOIT se faire AVANT tous les chargements
+      // ci-dessous, sinon un membre invité verrait ses tout premiers
+      // chargements (factures, clients...) filtrés par erreur sur son
+      // propre compte au lieu de celui de l'entreprise.
+      try {
+        const rEnt = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        STATE.entrepriseId = rEnt.ok ? (await rEnt.json()) : sb.user.id;
+      } catch(eEnt) { STATE.entrepriseId = sb.user.id; }
+
       // FIX MAJEUR: chacun de ces chargements passe maintenant par _essai()
       // — avant, si UNE SEULE de ces étapes plantait (par exemple une table
       // pas encore migrée), toute la suite s'arrêtait et l'écran restait
@@ -305,18 +320,37 @@ async function doLogin() {
         const inv = window._pendingInviteCpt;
         window._pendingInviteCpt = null;
         try {
-          await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(inv.emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(inv.pourEmail), {
-            method: 'PATCH',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ statut: 'acceptee', entreprise_id: sb.user.id })
+          // FIX: cherche l'id de l'invitation d'abord, puis passe par la
+          // RPC sécurisée (qui vérifie le plafond de 10 entreprises pour
+          // un cabinet gratuit) — un PATCH direct le contournait.
+          const rFind = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(inv.emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(inv.pourEmail) + '&select=id', {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
           });
-          showToast('✅ Invitation acceptée ! Votre comptable a maintenant accès.', 'success');
+          const trouve = (await rFind.json()) || [];
+          if (trouve[0]?.id) {
+            await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + trouve[0].id, {
+              method: 'PATCH',
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ entreprise_id: sb.user.id })
+            });
+            const respAccept = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_invitation_comptable', {
+              method: 'POST',
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ p_invitation_id: trouve[0].id, p_reponse: 'acceptee' })
+            });
+            if (respAccept.ok) {
+              showToast('✅ Invitation acceptée ! Votre comptable a maintenant accès.', 'success');
+            } else {
+              showToast('⚠️ Le cabinet comptable a atteint son plafond — contactez-le directement.', 'error');
+            }
+          }
         } catch(e2) {}
       }
 
       if (errEl) errEl.textContent = '';
       goScreen('dashboard');
       showToast('✅ Bienvenue !', 'success');
+      if (typeof afficherOnboarding === 'function') setTimeout(afficherOnboarding, 600);
     }
   } catch(e) {
     if (errEl) errEl.textContent = '❌ ' + (e.message || 'Email ou mot de passe incorrect');
