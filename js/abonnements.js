@@ -9,7 +9,7 @@ STATE.lignesAB = STATE.lignesAB || [];
 
 async function loadAbonnements() {
   try {
-    const uid = sb.user?.id;
+    const uid = STATE.entrepriseId || sb.user?.id;
     if (!uid) return;
     const r = await sb.get('abonnements', 'user_id=eq.' + uid + '&order=created_at.desc');
     STATE.abonnements = r || [];
@@ -131,7 +131,7 @@ async function sauvegarderAbonnement() {
   showToast('⏳ Sauvegarde...');
   try {
     const r = await sb.post('abonnements', {
-      user_id: sb.user.id,
+      user_id: (STATE.entrepriseId || sb.user.id),
       client,
       chantier: el('ab-chantier')?.value.trim(),
       lignes: STATE.lignesAB,
@@ -198,7 +198,7 @@ function renderDetailAbonnement() {
 }
 
 async function changerStatutAbonnement(id, statut) {
-  await sb.patch('abonnements', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: statut });
+  await sb.patch('abonnements', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: statut });
   const a = STATE.abonnements.find(function(x) { return x.id === id; });
   if (a) a.statut = statut;
   STATE.currentAbonnement = a;
@@ -209,7 +209,7 @@ async function changerStatutAbonnement(id, statut) {
 
 async function supprimerAbonnement(id) {
   if (!confirm('Supprimer définitivement cet abonnement ?')) return;
-  await sb.del('abonnements', 'id=eq.' + id + '&user_id=eq.' + sb.user.id);
+  await sb.del('abonnements', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
   STATE.abonnements = STATE.abonnements.filter(function(x) { return x.id !== id; });
   showToast('Abonnement supprimé', 'success');
   logAudit('abonnement', id, 'suppression', '');
@@ -226,7 +226,7 @@ async function genererFactureDepuisAbonnement(a) {
   const ref = getRef('FAC', STATE.factures);
 
   const r = await sb.post('factures', {
-    user_id: sb.user.id,
+    user_id: (STATE.entrepriseId || sb.user.id),
     ref: ref,
     client: a.client,
     chantier: a.chantier || '',
@@ -256,7 +256,7 @@ async function genererFactureImmediate(id) {
   try {
     const facture = await genererFactureDepuisAbonnement(a);
     const prochaine = calculerProchaineDateAbonnement(a.prochaine_date, a.frequence, a.jour_generation);
-    await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + sb.user.id, {
+    await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
       prochaine_date: prochaine,
       derniere_generation: today()
     });
@@ -285,7 +285,7 @@ async function verifierAbonnements() {
     try {
       const facture = await genererFactureDepuisAbonnement(a);
       const prochaine = calculerProchaineDateAbonnement(a.prochaine_date, a.frequence, a.jour_generation);
-      await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + sb.user.id, {
+      await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
         prochaine_date: prochaine,
         derniere_generation: todayStr
       });
