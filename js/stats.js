@@ -259,7 +259,7 @@ function filtrerAnnuaire() {
   }
   const secteurEmoji = { 'BTP & Construction':'🏗️', 'Commerce & Négoce':'🛒', 'Transport & Logistique':'🚛', 'Conseil & Expertise':'💼', 'Informatique & Tech':'💻', 'Santé & Médical':'🏥', 'Immobilier':'🏠', 'Artisanat':'🪡', 'Comptabilité':'🧮' };
   list.innerHTML = data.map(e => `
-    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `return false` : `voirProfilEntreprise('${e.id_unique||''}')`}">
+    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic('${(e.email||'').replace(/'/g,"\\'")}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${(e.tel||'').replace(/'/g,"\\'")}')` : `voirProfilEntreprise('${e.id_unique||''}')`}">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
         <div style="flex:1">
@@ -276,6 +276,25 @@ function voirProfilEntreprise(idUnique) {
   if (!idUnique) return;
   const url = window.location.origin + window.location.pathname + '?profil=' + idUnique;
   window.open(url, '_blank');
+}
+
+// Point 4 (complément) : les comptables n'ont pas de page publique dédiée
+// comme les entreprises (pas d'id_unique) — une petite fiche contact
+// suffit, avec un accès WhatsApp direct.
+function voirProfilComptablePublic(email, raison, tel) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:18px;padding:24px;max-width:320px;width:100%;text-align:center">' +
+      '<div style="font-size:36px;margin-bottom:10px">🧮</div>' +
+      '<div style="font-size:16px;font-weight:700;margin-bottom:4px">' + escapeHTML(raison) + '</div>' +
+      '<div style="font-size:12px;color:#9C9186;margin-bottom:18px">Cabinet comptable</div>' +
+      (tel ? '<a href="https://wa.me/' + tel.replace(/[^0-9]/g,'') + '" target="_blank" style="display:block;padding:12px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px">💬 Contacter par WhatsApp</a>' : '') +
+      (email ? '<a href="mailto:' + email + '" style="display:block;padding:12px;background:#F1EEE8;color:#2A2420;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px">✉️ ' + escapeHTML(email) + '</a>' : '') +
+      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:10px;background:none;border:none;color:#9C9186;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
+    '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 // ============================================================
 // STATS AVANCÉES — CA mensuel, courbe, top clients (renderStatsDashboard,
