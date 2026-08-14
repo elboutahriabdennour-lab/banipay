@@ -176,10 +176,30 @@ function initNouveauClient() {
   });
 }
 
+// Point 2 (complément) : validation ICE/RC/IF réutilisable — la même
+// règle s'applique partout où ces identifiants sont saisis (profil
+// entreprise, client, fournisseur), pas seulement au profil.
+function validerIdentifiantsLegaux(ice, rc, identifiantFiscal) {
+  if (ice && !/^\d{15}$/.test(ice)) {
+    showToast('❌ L\'ICE doit contenir exactement 15 chiffres (' + ice.length + ' saisi(s))', 'error');
+    return false;
+  }
+  if (rc && !/^\d+$/.test(rc)) {
+    showToast('❌ Le RC ne doit contenir que des chiffres', 'error');
+    return false;
+  }
+  if (identifiantFiscal && !/^\d+$/.test(identifiantFiscal)) {
+    showToast('❌ L\'identifiant fiscal (IF) ne doit contenir que des chiffres', 'error');
+    return false;
+  }
+  return true;
+}
+
 async function sauvegarderClient() {
   const nom = el('cl-nom')?.value.trim();
   if (!nom) { showToast('Entrez le nom du client', 'error'); return; }
   if (typeof verifierLimiteClients === 'function' && !verifierLimiteClients()) return;
+  if (!validerIdentifiantsLegaux(el('cl-ice')?.value.trim(), null, el('cl-if')?.value.trim())) return;
   showToast('⏳ Sauvegarde...');
   try {
     const body = {
@@ -326,6 +346,7 @@ async function sauvegarderModifClient() {
   if (!c) return;
   const nom = el('mc-nom')?.value.trim();
   if (!nom) { showToast('Le nom est obligatoire', 'error'); return; }
+  if (typeof validerIdentifiantsLegaux === 'function' && !validerIdentifiantsLegaux(el('mc-ice')?.value.trim(), null, el('mc-if')?.value.trim())) return;
   const data = {
     nom, tel: el('mc-tel')?.value.trim(),
     email: el('mc-email')?.value.trim(),
