@@ -108,6 +108,26 @@ async function saveProfil() {
     data.id_unique = 'BP-'+uid6();
     STATE.profil.id_unique = data.id_unique;
   }
+
+  // NOUVEAU : contraintes de saisie imposées par la DGI — l'ICE doit
+  // faire EXACTEMENT 15 chiffres (aucune exception, c'est le format
+  // officiel), RC et IF doivent être numériques s'ils sont renseignés.
+  const iceVal = el('pe-ice')?.value.trim() || '';
+  if (iceVal && !/^\d{15}$/.test(iceVal)) {
+    showToast('❌ L\'ICE doit contenir exactement 15 chiffres (' + iceVal.length + ' saisi(s))', 'error');
+    return;
+  }
+  const rcVal = el('pe-rc')?.value.trim() || '';
+  if (rcVal && !/^\d+$/.test(rcVal)) {
+    showToast('❌ Le RC ne doit contenir que des chiffres', 'error');
+    return;
+  }
+  const ifVal = el('pe-if')?.value.trim() || '';
+  if (ifVal && !/^\d+$/.test(ifVal)) {
+    showToast('❌ L\'identifiant fiscal (IF) ne doit contenir que des chiffres', 'error');
+    return;
+  }
+
   showToast('⏳ Sauvegarde...');
   try {
     await sb.upsert('profils_entreprise', data);
@@ -706,6 +726,25 @@ async function renderMonComptable() {
 
   const uid = sb.user?.id;
   const emailEnt = sb.user?.email;
+
+  // FIX: si la personne qui consulte cette fiche EST elle-même un
+  // compte comptable (gère sa propre entreprise comme son "premier
+  // client" — voir assurerAutoClientComptable), proposer "Inviter mon
+  // comptable" n'a aucun sens : elle EST le comptable.
+  try {
+    const rProfilCpt = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?id=eq.' + uid + '&select=id', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    const estComptable = rProfilCpt.ok && ((await rProfilCpt.json()) || []).length > 0;
+    if (estComptable) {
+      container.innerHTML =
+        '<div style="text-align:center;padding:20px;background:#F1EEE8;border-radius:14px">' +
+          '<div style="font-size:32px;margin-bottom:10px">🧑‍💼</div>' +
+          '<div style="font-size:13px;color:#6B5F54">Vous êtes vous-même comptable — cette section ne s\'applique pas à votre propre profil.</div>' +
+        '</div>';
+      return;
+    }
+  } catch(eCheck) {}
 
   try {
     // Chercher une invitation acceptée
