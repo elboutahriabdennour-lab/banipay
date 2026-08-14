@@ -2434,11 +2434,20 @@ async function renderNotificationsComptable() {
 }
 async function accepterInvitationComptable(invId, entrepriseId) {
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
-      method: 'PATCH',
+    // FIX: passe par la RPC dédiée (qui vérifie le plafond de 10
+    // entreprises pour un cabinet gratuit) au lieu d'un PATCH direct qui
+    // contournait totalement cette limite.
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_invitation_comptable', {
+      method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'acceptee' })
+      body: JSON.stringify({ p_invitation_id: invId, p_reponse: 'acceptee' })
     });
+    if (!resp.ok) {
+      const err = await resp.json().catch(function(){return{};});
+      const estPlafond = (err.message || '').includes('Plafond');
+      showToast(estPlafond ? '⛔ Plafond de 10 entreprises atteint (cabinet gratuit)' : '❌ ' + (err.message || 'Erreur'), 'error');
+      return;
+    }
 
     if (entrepriseId) {
       await ajouterEntrepriseCommeClient(entrepriseId);
@@ -2537,7 +2546,7 @@ async function ajouterEntrepriseCommeClient(entrepriseId) {
     if (!profil) return;
 
     const existResp = await fetch(
-      SUPABASE_URL + '/rest/v1/clients?user_id=eq.' + sb.user.id + '&reference_id=eq.' + entrepriseId + '&limit=1',
+      SUPABASE_URL + '/rest/v1/clients?user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&reference_id=eq.' + entrepriseId + '&limit=1',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     const exist = await existResp.json() || [];
@@ -2552,7 +2561,7 @@ async function ajouterEntrepriseCommeClient(entrepriseId) {
         'Prefer': 'return=minimal'
       },
       body: JSON.stringify({
-        user_id: sb.user.id,
+        user_id: (STATE.entrepriseId || sb.user.id),
         nom: profil.raison || profil.email || '',
         email: profil.email || '',
         tel: profil.tel || '',
