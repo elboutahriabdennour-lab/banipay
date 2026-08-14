@@ -224,6 +224,10 @@ async function genererFactureDepuisAbonnement(a) {
   const lignes = typeof a.lignes === 'string' ? JSON.parse(a.lignes || '[]') : (a.lignes || []);
   const ht = lignes.reduce(function(s, l) { return s + (Number(l.qte)||0) * (Number(l.pu)||0); }, 0);
   const ref = getRef('FAC', STATE.factures);
+  // FIX (même trou que les autres chemins de facturation) : si le client
+  // de cet abonnement est un compte Zelto connu, verrouille la facture
+  // générée à son compte réel.
+  const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === a.client; });
 
   const r = await sb.post('factures', {
     user_id: (STATE.entrepriseId || sb.user.id),
@@ -238,6 +242,7 @@ async function genererFactureDepuisAbonnement(a) {
     devise: a.devise || 'MAD',
     montant_recu: 0,
     note: a.note ? '(Facturation récurrente) ' + a.note : '(Facturation récurrente)',
+    destinataire_id: clientConnu?.reference_id || null,
   });
   if (r && r.length > 0) {
     STATE.factures.unshift(r[0]);
