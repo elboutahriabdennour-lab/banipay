@@ -10,7 +10,7 @@ STATE.lignesAchat = STATE.lignesAchat || [];
 
 async function loadAchats() {
   try {
-    const uid = sb.user?.id;
+    const uid = STATE.entrepriseId || sb.user?.id;
     if (!uid) return;
     const r = await sb.get('factures_achat', 'user_id=eq.' + uid + '&order=date_achat.desc');
     STATE.achats = r || [];
@@ -312,7 +312,7 @@ async function traiterLienScanne(texte) {
 // et que le client l'accepte (depuis ses propres notifications, donc avec sa
 // session authentifiée), l'achat s'enregistre tout seul, sans aucune saisie.
 async function enregistrerAchatDepuisFactureAcceptee(factureId) {
-  const uid = sb.user?.id;
+  const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
   try {
     // Éviter les doublons si la notification est traitée deux fois
@@ -705,7 +705,7 @@ async function marquerAchatPaye(id) {
   const a = STATE.achats.find(function(x) { return x.id === id; });
   if (!a || a.statut === 'payee') return;
   try {
-    await sb.patch('factures_achat', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: 'payee' });
+    await sb.patch('factures_achat', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'payee' });
     a.statut = 'payee';
     showToast('\u2705 Facture marquée payée', 'success');
     document.getElementById('achat-detail-overlay')?.remove();
@@ -716,7 +716,7 @@ async function marquerAchatPaye(id) {
 async function supprimerAchat(id) {
   if (!confirm('Supprimer cette facture ?')) return;
   try {
-    await sb.del('factures_achat', 'id=eq.' + id + '&user_id=eq.' + sb.user.id);
+    await sb.del('factures_achat', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
     STATE.achats = STATE.achats.filter(function(x) { return x.id !== id; });
     document.getElementById('achat-detail-overlay')?.remove();
     showToast('Supprimée', 'success');
