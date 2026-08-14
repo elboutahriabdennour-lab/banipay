@@ -121,7 +121,7 @@ async function sauvegarderDevis() {
     // lui seul (connecté) pourra l'ouvrir/agir dessus via le lien public.
     const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === client; });
     const r = await sb.post('devis', {
-      user_id: sb.user.id,
+      user_id: (STATE.entrepriseId || sb.user.id),
       ref: el('d-ref')?.value,
       client, chantier: el('d-chantier')?.value.trim(),
       date_emission: el('d-date')?.value,
@@ -149,7 +149,7 @@ async function resoudreManuellementDevis(id, nouveauStatut) {
   const libelle = nouveauStatut === 'accepte' ? 'accepté' : 'refusé';
   if (!confirm('Marquer ce devis comme ' + libelle + ' ?')) return;
   try {
-    await sb.patch('devis', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: nouveauStatut });
+    await sb.patch('devis', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: nouveauStatut });
     d.statut = nouveauStatut;
     showToast('✅ Devis marqué ' + libelle, 'success');
     logAudit('devis', id, nouveauStatut === 'accepte' ? 'acceptation' : 'refus', (d.ref||'') + ' (manuel)');
@@ -238,7 +238,7 @@ async function convertirEnFacture(id) {
   try {
     const ht = d.ht; const ref = getRef('FAC', STATE.factures);
     const r = await sb.post('factures', {
-      user_id: sb.user.id, ref, client: d.client, chantier: d.chantier,
+      user_id: (STATE.entrepriseId || sb.user.id), ref, client: d.client, chantier: d.chantier,
       date_emission: today(), paiement: 'virement', statut: 'envoyee',
       lignes: d.lignes, ht, tva: ht*0.2, ttc: ht*1.2, devis_ref: d.ref,
       bc_id: d.bc_id || null,
@@ -309,7 +309,7 @@ async function sauvegarderAvoir() {
   showToast('⏳ Émission...');
   try {
     const r = await sb.post('avoirs',{
-      user_id:sb.user.id, ref:el('av-ref')?.value,
+      user_id: (STATE.entrepriseId || sb.user.id), ref:el('av-ref')?.value,
       client, ht, tva:ht*0.2, ttc:ht*1.2,
       date_emission:el('av-date')?.value,
       motif:el('av-motif')?.value,
@@ -323,7 +323,7 @@ async function sauvegarderAvoir() {
       const f = STATE.factures.find(x => String(x.id) === factureId);
       if (f && el('av-motif')?.value === 'annulation') {
         // Annulation totale : marquer la facture comme annulée (pas payée)
-        await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + sb.user.id, { statut: 'annulee' });
+        await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'annulee' });
         f.statut = 'annulee';
       }
     }
@@ -555,7 +555,7 @@ async function sauvegarderBonCommande() {
 // l'entreprise émettrice du devis — même principe que l'achat
 // auto-enregistré à l'acceptation d'une facture (achats.js).
 async function enregistrerBCDepuisDevisAccepte(devisId) {
-  const uid = sb.user?.id;
+  const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
   try {
     // Éviter les doublons si la notification est traitée deux fois
@@ -617,7 +617,7 @@ async function envoyerBonCommande(id) {
   const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
   if (!bc) return;
   try {
-    await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + sb.user.id, { statut: 'envoye' });
+    await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'envoye' });
     bc.statut = 'envoye';
   } catch(e) {}
 
@@ -699,7 +699,7 @@ async function convertirBCEnFacture(bcId) {
     const ht = (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
 
     const facture = {
-      user_id: sb.user.id,
+      user_id: (STATE.entrepriseId || sb.user.id),
       ref: getRef('FAC', STATE.factures || []),
       client: client.raison || 'Client Zelto',
       date_emission: today(),
@@ -739,7 +739,7 @@ async function convertirBCEnFacture(bcId) {
 
 async function loadBonsCommande() {
   try {
-    STATE.bonsCommande = (await sb.get('bons_commande', 'user_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
+    STATE.bonsCommande = (await sb.get('bons_commande', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || [];
   } catch(e) { STATE.bonsCommande = []; }
   renderBonsCommandeListe();
 }
@@ -777,7 +777,7 @@ function renderBonsCommandeListe() {
 async function supprimerBonCommande(id) {
   if (!confirm('Supprimer ce bon de commande ?')) return;
   try {
-    await sb.del('bons_commande', 'id=eq.' + id + '&user_id=eq.' + sb.user.id);
+    await sb.del('bons_commande', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
     STATE.bonsCommande = (STATE.bonsCommande || []).filter(function(x) { return x.id !== id; });
     renderBonsCommandeListe();
     showToast('✅ Bon de commande supprimé', 'success');
@@ -947,7 +947,7 @@ async function sauvegarderBonLivraison() {
 
 async function loadBonsLivraison() {
   try {
-    STATE.bonsLivraison = (await sb.get('bons_livraison', 'user_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
+    STATE.bonsLivraison = (await sb.get('bons_livraison', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || [];
   } catch(e) { STATE.bonsLivraison = []; }
   renderBonsLivraisonListe();
 }
@@ -1200,7 +1200,7 @@ async function verifierExpirationDevis() {
 
   for (const d of aExpirer) {
     try {
-      await sb.patch('devis', 'id=eq.' + d.id + '&user_id=eq.' + sb.user.id, { statut: 'expire' });
+      await sb.patch('devis', 'id=eq.' + d.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'expire' });
       d.statut = 'expire';
     } catch(e) { console.warn('verifierExpirationDevis:', e); }
   }
