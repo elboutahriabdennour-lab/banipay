@@ -10,7 +10,7 @@ STATE.employes = STATE.employes || [];
 
 async function loadEmployes() {
   try {
-    STATE.employes = (await sb.get('employes', 'user_id=eq.' + sb.user.id + '&order=date_entree.desc')) || [];
+    STATE.employes = (await sb.get('employes', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=date_entree.desc')) || [];
   } catch(e) { STATE.employes = []; }
   renderEmployes();
 }
@@ -85,7 +85,7 @@ async function sauvegarderEmploye() {
   const joursCoches = Array.from(document.querySelectorAll('.emp-jour:checked')).map(function(cb) { return cb.value; });
 
   const data = {
-    user_id: sb.user.id,
+    user_id: (STATE.entrepriseId || sb.user.id),
     nom: nom,
     poste: el('emp-poste')?.value.trim() || '',
     telephone: el('emp-tel')?.value.trim() || '',
@@ -98,7 +98,7 @@ async function sauvegarderEmploye() {
 
   try {
     if (STATE._employeEnEdition) {
-      await sb.patch('employes', 'id=eq.' + STATE._employeEnEdition + '&user_id=eq.' + sb.user.id, data);
+      await sb.patch('employes', 'id=eq.' + STATE._employeEnEdition + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), data);
       const idx = STATE.employes.findIndex(function(x) { return x.id === STATE._employeEnEdition; });
       if (idx > -1) Object.assign(STATE.employes[idx], data);
       showToast('✅ Fiche mise à jour', 'success');
@@ -117,7 +117,7 @@ async function supprimerEmploye() {
   if (!STATE._employeEnEdition) return;
   if (!confirm('Retirer cet employé du registre ?')) return;
   try {
-    await sb.del('employes', 'id=eq.' + STATE._employeEnEdition + '&user_id=eq.' + sb.user.id);
+    await sb.del('employes', 'id=eq.' + STATE._employeEnEdition + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
     STATE.employes = STATE.employes.filter(function(x) { return x.id !== STATE._employeEnEdition; });
     showToast('Employé retiré', 'success');
     goScreen('employes', null);
