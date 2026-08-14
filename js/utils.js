@@ -377,3 +377,21 @@ function telechargerFichierBase64(dataUrl, nomSouhaite) {
     showToast('Erreur téléchargement: ' + e.message, 'error');
   }
 }
+
+// Point 6 : sélecteur de langue — pour l'instant, seul le sens de
+// lecture (RTL) est géré, pas la traduction complète du texte (chantier
+// séparé, plus large).
+function changerLangueInterface() {
+  const langue = el('param-langue')?.value || 'fr';
+  localStorage.setItem('bp_langue', langue);
+  appliquerLangueInterface();
+}
+
+function appliquerLangueInterface() {
+  const langue = localStorage.getItem('bp_langue') || 'fr';
+  document.documentElement.setAttribute('dir', langue === 'ar' ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('lang', langue);
+  const select = el('param-langue');
+  if (select) select.value = langue;
+}
+appliquerLangueInterface();
