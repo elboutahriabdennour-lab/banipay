@@ -286,6 +286,7 @@ function renderListeEntreprises(filtre) {
           '<div style="font-size:9px;color:#9C9186">TVA</div>' +
         '</div>' +
       '</div>' +
+      '<button onclick="event.stopPropagation();retirerEntrepriseComptable(\'' + inv.id + '\',\'' + escapeHTML(nomAffiche).replace(/'/g,"\\\\'") + '\')" style="width:100%;margin-top:10px;padding:8px;background:none;color:#B23A2E;border:1px solid #F5E4E1;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">\u2715 Retirer cette entreprise</button>' +
     '</div>';
   }).join('');
 }
@@ -1239,6 +1240,22 @@ function renderHistorique() {
 
 CPT.triActuel = 'action';
 
+// Point 5 : retirer une entreprise du portefeuille comptable
+async function retirerEntrepriseComptable(invitationId, nomEntreprise) {
+  if (!confirm('Retirer "' + nomEntreprise + '" de votre portefeuille ? Vous perdrez l\'accès à ses documents.')) return;
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/retirer_entreprise_comptable', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_invitation_id: invitationId })
+    });
+    if (!resp.ok) { showToast('Erreur lors du retrait', 'error'); return; }
+    CPT.entreprises = (CPT.entreprises || []).filter(function(e) { return e.id !== invitationId; });
+    renderListeEntreprises();
+    showToast('✅ ' + nomEntreprise + ' retirée', 'success');
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
+
 function trierEntreprises(critere) {
   CPT.triActuel = critere;
   const sorted = CPT.entreprises.slice().sort(function(a, b) {
@@ -1298,7 +1315,7 @@ async function ouvrirGestionEntreprises() {
     '<div style="font-size:17px;font-weight:700;margin-bottom:16px">🏢 Mes entreprises</div>' +
     '<div style="background:#FBF0DA;border-radius:14px;padding:16px;margin-bottom:16px">' +
       '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1F6F72;margin-bottom:10px">Inviter une entreprise</div>' +
-      '<input id="invite-ent-email" style="width:100%;padding:10px;border:1.5px solid #E8D9AE;border-radius:10px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px" type="email" placeholder="email@entreprise.ma">' +
+      '<input id="invite-ent-email" style="width:100%;padding:10px;border:1.5px solid #E8D9AE;border-radius:10px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px" type="text" placeholder="Lien Zelto, nom de l\'entreprise, ou email">' +
       '<button id="btn-send-invite-ent" style="width:100%;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📧 Envoyer l\'invitation</button>' +
     '</div>' +
     '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">Portefeuille (' + invites.length + ')</div>' +
@@ -1340,9 +1357,39 @@ async function ouvrirGestionEntreprises() {
 }
 
 async function envoyerInvitationEntreprise() {
-  const emailEnt = (document.getElementById('invite-ent-email')?.value || '').trim().toLowerCase();
-  if (!emailEnt || !emailEnt.includes('@')) { showToast('Email invalide', 'error'); return; }
+  const saisie = (document.getElementById('invite-ent-email')?.value || '').trim();
+  if (!saisie) { showToast('Renseignez un lien, un nom, ou un email', 'error'); return; }
   const emailCpt = sb.user?.email;
+  let emailEnt = null;
+
+  // NOUVEAU : accepte 3 formats — lien Zelto, nom d'entreprise (recherché
+  // dans l'annuaire), ou email direct.
+  if (saisie.includes('@') && !saisie.includes('http') && !saisie.includes('?')) {
+    emailEnt = saisie.toLowerCase();
+  } else if (saisie.includes('http') || saisie.includes('?profil=') || saisie.includes('?portail=')) {
+    try {
+      const url = new URL(saisie.startsWith('http') ? saisie : 'https://x.com?' + saisie);
+      const idUnique = url.searchParams.get('profil') || url.searchParams.get('portail');
+      if (idUnique) {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + encodeURIComponent(idUnique) + '&select=email', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+        });
+        const data = (await r.json()) || [];
+        emailEnt = data[0]?.email || null;
+      }
+    } catch(eLien) {}
+    if (!emailEnt) { showToast('Lien invalide ou entreprise introuvable', 'error'); return; }
+  } else {
+    // Traité comme un nom — recherche dans l'annuaire
+    try {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?raison=ilike.*' + encodeURIComponent(saisie) + '*&select=email,raison&limit=1', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+      });
+      const data = (await r.json()) || [];
+      emailEnt = data[0]?.email || null;
+    } catch(eNom) {}
+    if (!emailEnt) { showToast('Aucune entreprise trouvée avec ce nom — essayez son email ou son lien Zelto', 'error'); return; }
+  }
 
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
@@ -2343,17 +2390,27 @@ async function renderNotificationsComptable() {
         }).join('') : '') +
 
       (notifs.length ? '<div style="font-size:12px;font-weight:700;color:#9C9186;text-transform:uppercase;margin:14px 0 10px">Autres notifications</div>' +
-        notifs.map(function(n) {
-          return '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid #E3DCCF;margin-bottom:8px">' +
-            '<div style="font-size:13px;font-weight:600;margin-bottom:4px">' + escapeHTML(n.titre||'') + '</div>' +
-            '<div style="font-size:12px;color:#6B5F54">' + escapeHTML(n.corps||'') + '</div>' +
-          '</div>';
-        }).join('') : '') +
+        '<div id="cpt-autres-notifs"></div>' : '') +
 
       (!invitations.length && !notifs.length ?
         '<div style="text-align:center;padding:40px;color:#9C9186"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:14px;font-weight:600">Aucune notification</div></div>' : '') +
 
     '</div>';
+
+  // NOUVEAU : mêmes style et comportement que côté entreprise — chaque
+  // notification s'ouvre pour voir son contenu complet, avec les mêmes
+  // boutons d'action selon son type.
+  const zoneAutres = document.getElementById('cpt-autres-notifs');
+  if (zoneAutres && typeof htmlListeNotifications === 'function') {
+    const enveloppees = notifs.map(function(n) {
+      return { type: 'info', icon: '🔔', title: n.titre || '', body: n.corps || '', id: n.id, raw: n };
+    });
+    zoneAutres.innerHTML = htmlListeNotifications(enveloppees);
+    if (zoneAutres.dataset.clickBound !== '1') {
+      zoneAutres.dataset.clickBound = '1';
+      zoneAutres.addEventListener('click', function(e) { if (typeof gererClicNotification === 'function') gererClicNotification(e); });
+    }
+  }
 
   // FIX: garde au lieu de {once:true} — content.innerHTML est réécrit à chaque
   // appel mais le noeud content lui-même persiste ; sans garde, un listener
