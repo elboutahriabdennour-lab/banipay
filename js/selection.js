@@ -71,7 +71,7 @@ async function supprimerSelection() {
   let reussies = 0;
   for (const id of STATE.selectionIds.slice()) {
     try {
-      await sb.del(cfg.table, 'id=eq.' + id + '&user_id=eq.' + sb.user.id);
+      await sb.del(cfg.table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
       STATE[cfg.stateKey] = (STATE[cfg.stateKey] || []).filter(function(x) { return x.id !== id; });
       reussies++;
     } catch(e) { console.warn('Suppression échouée pour', id, e); }
