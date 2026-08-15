@@ -137,6 +137,11 @@ function renderFactureList() {
         <div class="card-name">${escapeHTML(f.client)}</div>
         <div class="card-ref">${f.ref} · ${f.date_emission||''}</div>
         ${recu > 0 && f.statut !== 'payee' ? `<div style="margin-top:4px;height:3px;background:#E3DCCF;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#6E8F4E;border-radius:2px"></div></div>` : ''}
+        ${(function() {
+          const n = (STATE._compteursNotesFactures || {})[f.id];
+          if (!n) return '';
+          return '<div style="margin-top:4px;font-size:10px;color:#1F6F72;background:#E9F4F3;display:inline-block;padding:2px 7px;border-radius:8px">💬 ' + n.nb_notes + '</div>';
+        })()}
       </div>
       <div class="card-end">
         <div class="card-amt">${fmt(f.ttc)} ${f.devise||'MAD'}</div>
@@ -354,6 +359,7 @@ function openDetail(id) {
   if (!STATE.currentFacture) return;
   renderDetail();
   goScreen('detail');
+  if (typeof ouvrirNotesFacture === 'function') ouvrirNotesFacture(id);
 }
 
 function renderDetail() {
