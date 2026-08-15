@@ -25,6 +25,21 @@ async function loadAll() {
     // Load paiements
     const pays = await sb.get('paiements', `user_id=eq.${uid}&order=created_at.desc`);
     STATE.paiements = pays || [];
+
+    // NOUVEAU : compteurs de notes échangées avec le comptable, pour un
+    // badge visible directement dans la liste des factures — sans avoir
+    // à ouvrir chacune pour savoir s'il y a une discussion en cours.
+    try {
+      const respNotes = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_compteurs_notes_factures', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const compteurs = respNotes.ok ? ((await respNotes.json()) || []) : [];
+      STATE._compteursNotesFactures = {};
+      compteurs.forEach(function(c) { STATE._compteursNotesFactures[c.facture_id] = c; });
+    } catch(eNotes) { STATE._compteursNotesFactures = {}; }
+
     await genNotifications();
   } catch(e) { console.error('loadAll:', e); showToast('Erreur de chargement', 'error'); }
 }
