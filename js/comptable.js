@@ -1916,13 +1916,6 @@ async function ouvrirFactureComptable(factureId) {
   }
 
   let remarques = [];
-  try {
-    const resp = await fetch(
-      SUPABASE_URL + '/rest/v1/remarques_comptable?facture_id=eq.' + factureId + '&order=created_at.desc',
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
-    );
-    remarques = await resp.json() || [];
-  } catch(e2) {}
 
   const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
   const ctrlFresh = (CPT.currentControles || []).find(function(c3) { return String(c3.facture_id) === String(factureId); }) || {};
@@ -1962,22 +1955,7 @@ async function ouvrirFactureComptable(factureId) {
       '</div>' +
     '</div>' +
 
-    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
-      '<div style="font-size:13px;font-weight:700;margin-bottom:10px">Remarques</div>' +
-      '<div id="remarques-list-ov">' +
-        (remarques.length ? remarques.map(function(rem) {
-          return '<div style="background:' + (rem.statut === 'resolue' ? '#EEF3E4' : '#F7EFDC') + ';border-radius:10px;padding:10px;margin-bottom:8px">' +
-            '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
-              '<span style="font-size:11px;font-weight:600;color:' + (rem.statut === 'resolue' ? '#6E8F4E' : '#B8860B') + '">' + escapeHTML(rem.comptable_nom || '') + '</span>' +
-              (rem.statut !== 'resolue' ? '<button class="btn-resoudre" data-rid="' + rem.id + '" style="background:#6E8F4E;color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit">Resoudre</button>' : '<span style="font-size:10px;color:#6E8F4E">Resolu</span>') +
-            '</div>' +
-            '<div style="font-size:12px">' + escapeHTML(rem.contenu) + '</div>' +
-          '</div>';
-        }).join('') : '<div style="text-align:center;color:#9C9186;font-size:12px;padding:8px">Aucune remarque</div>') +
-      '</div>' +
-      '<textarea id="nouvelle-remarque" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:10px;font-size:13px;font-family:inherit;resize:none;margin-top:10px;box-sizing:border-box" rows="2" placeholder="Ajouter une remarque..."></textarea>' +
-      '<button class="btn-ajouter-remarque" style="width:100%;margin-top:8px;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Ajouter</button>' +
-    '</div>' +
+    '<div style="margin:0 14px 14px" id="notes-facture-zone"></div>' +
     '<div style="height:40px"></div>';
 
   document.body.appendChild(overlay);
@@ -1987,12 +1965,7 @@ async function ouvrirFactureComptable(factureId) {
   if (_btnL) _btnL.onclick = function() { toggleLettrage(factureId); };
   var _btnT = overlay.querySelector('.btn-tva-ov');
   if (_btnT) _btnT.onclick = function() { toggleTVA(factureId); };
-  overlay.addEventListener('click', function(ev) {
-    var _br = ev.target.closest('.btn-resoudre');
-    if (_br) resoudreRemarque(_br.dataset.rid);
-    var _ba = ev.target.closest('.btn-ajouter-remarque');
-    if (_ba) ajouterRemarque(factureId);
-  });
+  if (typeof ouvrirNotesFacture === 'function') ouvrirNotesFacture(factureId);
 }
 
 // ============================================================
