@@ -332,28 +332,6 @@ function lireFichierTexte(file) {
 }
 
 // ============================================================
-// PANNEAU DE DIAGNOSTIC VISIBLE (générique, réutilisable partout)
-// ============================================================
-// Affiche un panneau persistant et copiable à l'écran — pas besoin d'ouvrir
-// la console F12. Utilisé chaque fois qu'une opération réseau échoue de
-// façon peu claire (RLS, RPC manquante, etc.).
-function afficherDiagnostic(titre, lignes) {
-  document.getElementById('diag-overlay')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'diag-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:999999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML =
-    '<div style="background:#fff;border-radius:16px;padding:20px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;font-family:monospace">' +
-      '<div style="font-size:15px;font-weight:700;color:#2A2420;margin-bottom:4px;font-family:\'Baloo 2\',sans-serif">🔍 ' + escapeHTML(titre) + '</div>' +
-      '<div style="font-size:11px;color:#9C9186;margin-bottom:14px">Copie-colle ce texte si tu demandes de l\'aide</div>' +
-      '<div style="background:#F1EEE8;border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:#2A2420;white-space:pre-wrap">' +
-        lignes.map(function(l) { return escapeHTML(l); }).join('\n') +
-      '</div>' +
-      '<button onclick="document.getElementById(\'diag-overlay\').remove()" style="width:100%;margin-top:14px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Karla\',sans-serif">Fermer</button>' +
-    '</div>';
-  document.body.appendChild(overlay);
-}
-
 // Télécharge un fichier stocké en base64 (data URL) — utilisé pour les
 // relevés bancaires, pièces jointes d'achats, etc.
 function telechargerFichierBase64(dataUrl, nomSouhaite) {
