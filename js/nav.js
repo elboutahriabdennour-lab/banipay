@@ -26,16 +26,11 @@ async function genNotifications() {
       if (!resp.ok) {
         const errText = await resp.text().catch(function(){return '';});
         console.warn('get_mes_notifications a échoué', resp.status, errText);
-        window._dernierDiagNotifications = ['Email : ' + email, 'HTTP ' + resp.status, errText || '(pas de détail)'];
-      } else {
-        window._dernierDiagNotifications = ['Email : ' + email, '✅ ' + notifs.length + ' notification(s) trouvée(s) (non lues + historique)'];
       }
       notifs.forEach(function(n) {
         STATE.notifications.push({ type: 'info', icon: n.type === 'invitation_comptable' ? '🤝' : '🔔', title: n.titre || '', body: n.corps || '', id: n.id, raw: n });
       });
-    } catch(e2) {
-      window._dernierDiagNotifications = ['Email : ' + email, 'Exception JS : ' + e2.message];
-    }
+    } catch(e2) {}
   }
 
   mettreAJourBadgeNotif();
@@ -540,10 +535,7 @@ async function toggleNotifDropdown(event) {
   }
   } catch(e) {
     console.error('toggleNotifDropdown: exception', e);
-    afficherDiagnostic('Erreur ouverture du panneau notifications', [
-      'Message : ' + e.message,
-      e.stack ? e.stack.split('\n').slice(0,5).join('\n') : ''
-    ]);
+    showToast('❌ Erreur lors de l\'ouverture des notifications', 'error');
   }
 }
 
@@ -552,11 +544,7 @@ async function toggleNotifDropdown(event) {
 // avec les mêmes boutons Accepter/Attente/Refuser que le lien public.
 async function voirDocumentDepuisNotification(type, docId) {
   if (!type || !docId) {
-    afficherDiagnostic('Impossible d\'ouvrir la notification', [
-      'type reçu : "' + type + '"',
-      'docId reçu : "' + docId + '"',
-      '→ Un des deux est vide : le champ "meta" de la notification ne contient probablement pas doc_type/doc_id (notification créée avant ce correctif, ou d\'un type sans document associé comme une invitation ou une remarque).'
-    ]);
+    showToast('❌ Impossible d\'ouvrir cette notification', 'error');
     return;
   }
   showToast('⏳ Chargement du document...');
@@ -567,7 +555,7 @@ async function voirDocumentDepuisNotification(type, docId) {
     });
     const data = await r.json();
     const doc = data && data[0];
-    if (!doc) { afficherDiagnostic('Document introuvable', ['table : ' + table, 'docId : ' + docId, '→ Aucune ligne trouvée avec cet id dans ' + table]); return; }
+    if (!doc) { showToast('❌ Document introuvable', 'error'); return; }
 
     const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + doc.user_id + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -629,11 +617,7 @@ async function voirDocumentDepuisNotification(type, docId) {
     }
   } catch(e) {
     console.error('voirDocumentDepuisNotification: exception', e);
-    afficherDiagnostic('Erreur lors de l\'ouverture du document', [
-      'type : ' + type + ' · docId : ' + docId,
-      'Message : ' + e.message,
-      e.stack ? e.stack.split('\n').slice(0,4).join('\n') : ''
-    ]);
+    showToast('❌ Erreur lors de l\'ouverture du document', 'error');
   }
 }
 
