@@ -157,9 +157,6 @@ function setFilter(f, btn) {
   document.querySelectorAll('#screen-dashboard .ftab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderFactureList();
-  // DIAGNOSTIC TEMPORAIRE — voir la note dans renderDashboard()
-  const diag = document.getElementById('diag-temp-factures');
-  if (diag) diag.textContent = 'DIAGNOSTIC (après clic) — filtre: ' + f + ' | STATE.factures: ' + (STATE.factures ? STATE.factures.length : 'undefined/null') + ' | résultat affiché dans #facture-list: ' + (document.getElementById('facture-list')?.children.length || 0) + ' carte(s)';
 }
 
 // ============================================================
@@ -370,6 +367,19 @@ function renderDetail() {
   const restant = Math.max(0, Number(f.ttc) - recu);
   const pct = f.ttc > 0 ? Math.min(100, Math.round(recu / f.ttc * 100)) : 0;
 
+  const clientTrouve = (STATE.clients || []).find(function(c) { return c.nom === f.client; });
+  const detailClientEl = document.getElementById('detail-client');
+  if (detailClientEl) {
+    if (clientTrouve) {
+      detailClientEl.style.cursor = 'pointer';
+      detailClientEl.style.textDecoration = 'underline';
+      detailClientEl.onclick = function() { openDetailClient(clientTrouve.id); };
+    } else {
+      detailClientEl.style.cursor = '';
+      detailClientEl.style.textDecoration = '';
+      detailClientEl.onclick = null;
+    }
+  }
   setEl('detail-client', f.client);
   setEl('detail-amount', fmt(f.ttc) + ' ' + dv + ' TTC');
   const metaParts = [f.ref, f.date_emission||'', f.echeance ? 'Éch: '+f.echeance : '', f.paiement||''].filter(Boolean);
