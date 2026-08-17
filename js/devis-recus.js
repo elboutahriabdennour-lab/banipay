@@ -12,8 +12,7 @@ STATE.devisRecusAcceptes = STATE.devisRecusAcceptes || [];
 
 async function chargerDevisRecusAcceptes() {
   const email = sb.user?.email;
-  window._diagDevisRecus = ['Email utilisé : ' + (email || '(aucun)')];
-  if (!email) { window._diagDevisRecus.push('❌ Arrêt : pas d\'email sur le compte connecté'); return; }
+  if (!email) return;
 
   const zone = el('devis-recus-liste');
   if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
@@ -24,20 +23,14 @@ async function chargerDevisRecusAcceptes() {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
     });
-    if (!resp.ok) {
-      const errText = await resp.text().catch(function(){return '';});
-      window._diagDevisRecus.push('❌ get_mes_notifications a échoué : HTTP ' + resp.status + ' — ' + (errText || '(pas de détail)'));
-    }
     const notifs = resp.ok ? ((await resp.json()) || []) : [];
-    window._diagDevisRecus.push('Notifications reçues (toutes) : ' + notifs.length);
     const notifsDevis = notifs.filter(function(n) { return n.type === 'devis_recu'; });
-    window._diagDevisRecus.push('Dont type "devis_recu" : ' + notifsDevis.length);
 
     const resultats = [];
     for (const n of notifsDevis) {
       let meta = {};
-      try { meta = typeof n.meta === 'string' ? JSON.parse(n.meta || '{}') : (n.meta || {}); } catch(e) { window._diagDevisRecus.push('⚠️ meta illisible pour notif #' + n.id + ' : ' + n.meta); }
-      if (!meta.doc_id) { window._diagDevisRecus.push('⚠️ Notif #' + n.id + ' sans doc_id dans meta — ignorée'); continue; }
+      try { meta = typeof n.meta === 'string' ? JSON.parse(n.meta || '{}') : (n.meta || {}); } catch(e) {}
+      if (!meta.doc_id) continue;
 
       try {
         const r = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + meta.doc_id + '&select=*', {
@@ -45,19 +38,16 @@ async function chargerDevisRecusAcceptes() {
         });
         const data = await r.json();
         const d = data && data[0];
-        if (!d) { window._diagDevisRecus.push('⚠️ Devis #' + meta.doc_id + ' introuvable (HTTP ' + r.status + ') — RLS bloque probablement la lecture publique par id'); continue; }
-        window._diagDevisRecus.push('Devis #' + meta.doc_id + ' trouvé, statut = "' + d.statut + '"');
+        if (!d) continue;
         if (d.statut !== 'accepte') continue;
 
         const dejaConverti = (STATE.bonsCommande || []).some(function(bc) { return bc.devis_source_id === d.id; });
         resultats.push({ devis: d, dejaConverti, emetteurRaison: meta.emetteur_raison || '', notifId: n.id });
-      } catch(e2) { window._diagDevisRecus.push('❌ Erreur réseau en lisant le devis #' + meta.doc_id + ' : ' + e2.message); }
+      } catch(e2) {}
     }
     STATE.devisRecusAcceptes = resultats;
-    window._diagDevisRecus.push('✅ Résultat final : ' + resultats.length + ' devis accepté(s) affiché(s)');
   } catch(e) {
     STATE.devisRecusAcceptes = [];
-    window._diagDevisRecus.push('❌ Exception : ' + e.message);
   }
   renderDevisRecusAcceptes();
 }
