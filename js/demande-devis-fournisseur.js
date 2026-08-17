@@ -76,22 +76,14 @@ async function envoyerDemandeDevisFournisseur() {
         // RPC "creer_demande_devis" renvoie alors une erreur "fonction
         // introuvable" au lieu d'un simple échec muet).
         const errText = await resp.text().catch(function(){ return ''; });
-        afficherDiagnostic('Échec envoi demande de devis', [
-          'id_unique testé : ' + idUnique,
-          'HTTP ' + resp.status,
-          errText || '(pas de détail renvoyé par le serveur)',
-          '',
-          'Si ça mentionne "function ... does not exist", la migration',
-          'migration_phase29_demande_devis.sql n\'a probablement pas été',
-          'exécutée sur la base Supabase.'
-        ]);
+        console.warn('Échec envoi demande de devis:', resp.status, errText);
         if (!tel) {
           showToast('❌ Fournisseur introuvable sur Zelto — ajoutez son téléphone pour l\'envoyer par WhatsApp à la place', 'error');
           return;
         }
         showToast('Fournisseur introuvable sur Zelto — envoi par WhatsApp à la place', 'error');
       } catch(e) {
-        afficherDiagnostic('Erreur réseau — demande de devis', ['id_unique testé : ' + idUnique, 'Erreur : ' + e.message]);
+        console.warn('Erreur réseau — demande de devis:', e.message);
         if (!tel) {
           showToast('❌ Erreur d\'envoi — ajoutez un téléphone pour envoyer par WhatsApp à la place', 'error');
           return;
