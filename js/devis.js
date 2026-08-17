@@ -170,6 +170,19 @@ function renderDetailDevis() {
   const d = STATE.currentDevis;
   if (!d) return;
   const dv = d.devise||'MAD';
+  const clientTrouveDv = (STATE.clients || []).find(function(c) { return c.nom === d.client; });
+  const dvClientEl = document.getElementById('dv-client');
+  if (dvClientEl) {
+    if (clientTrouveDv) {
+      dvClientEl.style.cursor = 'pointer';
+      dvClientEl.style.textDecoration = 'underline';
+      dvClientEl.onclick = function() { openDetailClient(clientTrouveDv.id); };
+    } else {
+      dvClientEl.style.cursor = '';
+      dvClientEl.style.textDecoration = '';
+      dvClientEl.onclick = null;
+    }
+  }
   setEl('dv-client', d.client);
   setEl('dv-amount', fmt(d.ttc)+' '+dv+' TTC');
   setEl('dv-ref', `${d.ref} · ${d.date_emission||''} · Validité: ${d.validite||30}j`);
