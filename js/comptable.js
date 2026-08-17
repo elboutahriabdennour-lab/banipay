@@ -26,7 +26,6 @@ async function loadComptableApp() {
     );
     if (!invResp.ok) {
       diag.push('❌ Lecture invitations_comptable a échoué (HTTP ' + invResp.status + ') : ' + (await invResp.text().catch(function(){return '';})));
-      afficherDiagnosticComptable(diag);
     }
     const invitations = invResp.ok ? await invResp.json() : [];
     diag.push((invResp.ok ? '✅' : '⚠️') + ' Invitations acceptées trouvées : ' + (invitations ? invitations.length : 0));
@@ -40,7 +39,6 @@ async function loadComptableApp() {
       // une erreur, donc plus d'affichage automatique intrusif à chaque
       // connexion. Le diagnostic reste consultable manuellement via le
       // bouton dédié sur le dashboard.
-      window._dernierDiagComptable = diag;
       renderComptableDashboard();
       chargerNotificationsComptable();
       return;
@@ -50,7 +48,7 @@ async function loadComptableApp() {
     diag.push('Identifiants entreprise extraits : ' + ids.length + (ids.length ? ' (' + ids.join(', ') + ')' : ''));
     if (!ids.length) {
       diag.push('→ Les invitations existent mais entreprise_id est vide/null sur chacune d\'elles — vérifie la colonne entreprise_id dans invitations_comptable.');
-      afficherDiagnosticComptable(diag);
+      console.warn(diag.join('\n'));
       renderComptableDashboard();
       chargerNotificationsComptable();
       return;
@@ -146,9 +144,9 @@ async function loadComptableApp() {
     // échoué — pour ne pas gêner l'usage normal une fois que tout marche.
     // Accessible manuellement à tout moment via le bouton dédié (voir plus
     // bas, section "Mes entreprises").
-    window._dernierDiagComptable = diag;
     if (diag.some(function(l) { return l.startsWith('❌'); })) {
-      afficherDiagnosticComptable(diag);
+      console.warn('Diagnostic chargement comptable:\n' + diag.join('\n'));
+      showToast('⚠️ Certaines données n\'ont pas pu être chargées', 'error');
     }
 
     CPT.allFactures = [];
@@ -163,26 +161,6 @@ async function loadComptableApp() {
     console.error('loadComptableApp:', e);
     showToast('Erreur chargement', 'error');
   }
-}
-
-// ============================================================
-// PANNEAU DE DIAGNOSTIC VISIBLE (pas besoin d'ouvrir la console F12)
-// ============================================================
-function afficherDiagnosticComptable(lignes) {
-  document.getElementById('diag-comptable-overlay')?.remove();
-  const overlay = document.createElement('div');
-  overlay.id = 'diag-comptable-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:999999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML =
-    '<div style="background:#fff;border-radius:16px;padding:20px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;font-family:monospace">' +
-      '<div style="font-size:15px;font-weight:700;color:#2A2420;margin-bottom:4px;font-family:\'Baloo 2\',sans-serif">🔍 Diagnostic chargement comptable</div>' +
-      '<div style="font-size:11px;color:#9C9186;margin-bottom:14px">Copie-colle ce texte si tu demandes de l\'aide</div>' +
-      '<div style="background:#F1EEE8;border-radius:10px;padding:12px;font-size:12px;line-height:1.7;color:#2A2420;white-space:pre-wrap">' +
-        lignes.map(function(l) { return escapeHTML(l); }).join('\n') +
-      '</div>' +
-      '<button onclick="document.getElementById(\'diag-comptable-overlay\').remove()" style="width:100%;margin-top:14px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:\'Karla\',sans-serif">Fermer</button>' +
-    '</div>';
-  document.body.appendChild(overlay);
 }
 
 // Retrouve le nom d'affichage (raison sociale) d'une entreprise déjà chargée
@@ -811,7 +789,8 @@ async function toggleControleAchatRapide(achatId, champ, btn) {
     });
     if (!resp.ok) {
       const errText = await resp.text().catch(function(){return '';});
-      afficherDiagnosticComptable(['❌ Échec contrôle achat', 'Achat : ' + achatId + ' · Champ : ' + champ, 'HTTP ' + resp.status, errText]);
+      console.warn('Échec contrôle achat:', resp.status, errText);
+      showToast('❌ Erreur lors de la mise à jour', 'error');
       return;
     }
     const resultat = await resp.json();
@@ -827,7 +806,7 @@ async function toggleControleAchatRapide(achatId, champ, btn) {
 
     showToast(champ === 'lettre' ? 'Lettrage mis à jour' : 'TVA mise à jour', 'success');
   } catch(e) {
-    afficherDiagnosticComptable(['❌ Erreur contrôle achat', e.message]);
+    showToast('❌ Erreur lors de la mise à jour', 'error');
   }
 }
 
@@ -1510,7 +1489,6 @@ function switchCptNav(tab) {
       '<div id="cpt-entreprises-list" style="padding:0 16px"></div>' +
       '<div style="padding:12px 16px">' +
         '<button onclick="ouvrirGestionEntreprises()" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">➕ Inviter une entreprise</button>' +
-        '<button onclick="window._dernierDiagComptable ? afficherDiagnosticComptable(window._dernierDiagComptable) : loadComptableApp()" style="width:100%;margin-top:8px;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Voir le diagnostic de chargement</button>' +
       '</div>';
     renderListeEntreprises();
 
@@ -1840,8 +1818,8 @@ async function renderCptReleves() {
     });
     if (!resp.ok) {
       const errText = await resp.text().catch(function(){return '';});
-      afficherDiagnosticComptable(['❌ RPC get_releves_entreprise a échoué', 'HTTP ' + resp.status, errText]);
-      list.innerHTML = '<div style="text-align:center;padding:40px;color:#B23A2E">Erreur de chargement (voir diagnostic)</div>';
+      console.warn('RPC get_releves_entreprise a échoué:', resp.status, errText);
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:#B23A2E">Erreur de chargement</div>';
       return;
     }
     const releves = (await resp.json()) || [];
@@ -2005,17 +1983,9 @@ async function sauvegarderControle(factureId, data) {
       const errText = await resp.text().catch(function() { return ''; });
       console.error('sauvegarderControle (RPC) a échoué:', resp.status, errText);
       if (resp.status === 404) {
-        showToast('⛔ Fonction RPC introuvable — exécute migration_phase8_rpc_controles.sql', 'error');
+        showToast('⛔ Fonction non disponible — contacte le support', 'error');
       } else {
-        // FIX: panneau persistant et copiable plutôt qu'un toast qui
-        // disparaît en 2 secondes — pour pouvoir transmettre l'erreur SQL
-        // exacte telle quelle si le problème persiste.
-        afficherDiagnosticComptable([
-          '❌ Échec de l\'enregistrement du contrôle (lettrage/TVA)',
-          'Facture : ' + factureId + ' · Champ : ' + champ + ' · Valeur : ' + valeur,
-          'HTTP ' + resp.status,
-          errText || '(pas de détail renvoyé par le serveur)'
-        ]);
+        showToast('❌ Erreur lors de l\'enregistrement', 'error');
       }
       return;
     }
@@ -2460,24 +2430,14 @@ function voirFactureComptable(facId) {
   try {
     const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(facId); });
     if (!fac) {
-      afficherDiagnosticComptable([
-        '❌ Facture introuvable',
-        'id demandé : ' + facId,
-        'CPT.currentFactures contient ' + (CPT.currentFactures||[]).length + ' élément(s)',
-        'ids disponibles : ' + (CPT.currentFactures||[]).map(function(f){return f.id;}).join(', ')
-      ]);
+      showToast('❌ Facture introuvable', 'error');
       return;
     }
     ouvrirPDFComptable(fac, CPT.currentProfil || {});
     setTimeout(function() { attacherControlsToViewer(facId); }, 300);
   } catch(e) {
     console.error('voirFactureComptable: exception', e);
-    afficherDiagnosticComptable([
-      '❌ Erreur lors de l\'ouverture de la facture',
-      'id : ' + facId,
-      'Message : ' + e.message,
-      e.stack ? e.stack.split('\n').slice(0,4).join('\n') : ''
-    ]);
+    showToast('❌ Erreur lors de l\'ouverture de la facture', 'error');
   }
 }
 
