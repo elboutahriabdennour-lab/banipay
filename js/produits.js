@@ -415,16 +415,12 @@ async function envoyerVersCompteZelto(destinataireId, destinataireNom, destinata
     if (!resp.ok) {
       const errText = await resp.text().catch(function() { return ''; });
       console.error('envoyerVersCompteZelto: échec envoi notification', resp.status, errText);
-      afficherDiagnostic('Échec envoi notification Zelto', [
-        'Destinataire : ' + destinataireNom + ' (' + destinataireEmail + ')',
-        'HTTP ' + resp.status,
-        errText || '(pas de détail renvoyé par le serveur)'
-      ]);
+      showToast('❌ Échec de l\'envoi à ' + destinataireNom, 'error');
       return;
     }
     showToast('✅ Envoyé à ' + destinataireNom + ' sur Zelto !', 'success');
     closeAllModals();
   } catch(e) {
-    afficherDiagnostic('Erreur envoi notification Zelto', ['Exception JS : ' + e.message]);
+    showToast('❌ Erreur d\'envoi', 'error');
   }
 }
