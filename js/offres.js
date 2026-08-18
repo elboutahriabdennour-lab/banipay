@@ -97,8 +97,14 @@ function aAccesFeature(code) {
 
 // NOUVEAU : badge cadenas visible AVANT le clic — plutôt que de laisser
 // la personne cliquer et découvrir après coup qu'elle n'a pas accès.
-// Retourne une chaîne vide si elle a accès (rien à afficher).
+// FIX (audit) : distingue "pas encore chargé" (STATE.mesFeatures est
+// undefined) de "chargé et vraiment vide" (tableau vide) — sans ça, un
+// utilisateur payant qui navigue très vite après connexion pouvait voir
+// un cadenas pendant la fraction de seconde où le réseau n'avait pas
+// encore répondu. Dans le doute, on n'affiche rien plutôt qu'un cadenas
+// à tort.
 function htmlBadgeVerrou(code) {
+  if (STATE.mesFeatures === undefined) return '';
   if (aAccesFeature(code)) return '';
   return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;background:#F1EEE8;color:#9C9186;padding:2px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">🔒 Pro</span>';
 }
