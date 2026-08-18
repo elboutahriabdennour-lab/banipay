@@ -152,28 +152,11 @@ function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
 function isValidPhone(p) { return /^[\+\d\s\-]{8,15}$/.test(p); }
 
-function isValidICE(v) { return /^\d{15}$/.test(v); }
-
-function getStatusBadge(type, statut) {
-  const config = {
-    facture: {
-      payee:    { bg:'#EEF3E4', color:'#6E8F4E', label:'Payée' },
-      envoyee:  { bg:'#F7EFDC', color:'#B8860B', label:'Envoyée' },
-      attente:  { bg:'#F7EFDC', color:'#B8860B', label:'En attente' },
-      retard:   { bg:'#F5E4E1', color:'#B23A2E', label:'En retard' },
-      brouillon:{ bg:'#EAE4DA', color:'#6B5F54', label:'Brouillon' },
-    },
-    devis: {
-      envoye:   { bg:'#F7EFDC', color:'#B8860B', label:'Envoyé' },
-      accepte:  { bg:'#EEF3E4', color:'#6E8F4E', label:'Accepté' },
-      refuse:   { bg:'#F5E4E1', color:'#B23A2E', label:'Refusé' },
-      converti: { bg:'#E9F4F3', color:'#C9971F', label:'→ Facture' },
-      expire:   { bg:'#EAE4DA', color:'#6B5F54', label:'Expiré' },
-    }
-  };
-  const cfg = config[type]?.[statut] || { bg:'#EAE4DA', color:'#6B5F54', label: statut };
-  return `<span style="display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;text-transform:uppercase;background:${cfg.bg};color:${cfg.color}">${cfg.label}</span>`;
-}
+// NOTE (audit 2026) : isValidICE(), getStatusBadge(), calculateDueDate(),
+// validateInvoice(), validateClient(), validateProduct() ont été retirées
+// — c'était du scaffolding jamais branché ; la validation ICE réelle vit
+// dans validerIdentifiantsLegaux() (profil.js/clients.js), les badges de
+// statut sont construits en ligne dans chaque écran de liste.
 
 function isOverdue(facture) {
   if (facture.statut === 'payee') return false;
@@ -185,36 +168,6 @@ function getDaysLate(facture) {
   if (!facture.echeance || !isOverdue(facture)) return 0;
   const diff = new Date() - new Date(facture.echeance);
   return Math.floor(diff / (1000 * 60 * 60 * 24));
-}
-
-function calculateDueDate(dateEmission, delaiJours) {
-  const d = new Date(dateEmission || today());
-  d.setDate(d.getDate() + (delaiJours || 30));
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
-}
-
-function validateInvoice(data) {
-  const errors = [];
-  if (!data.client?.trim()) errors.push('Le nom du client est obligatoire');
-  if (!data.lignes?.length) errors.push('Ajoutez au moins une prestation');
-  if (!data.date_emission) errors.push('La date est obligatoire');
-  return errors;
-}
-
-function validateClient(data) {
-  const errors = [];
-  if (!data.nom?.trim()) errors.push('Le nom est obligatoire');
-  if (data.email && !isValidEmail(data.email)) errors.push('Email invalide');
-  if (data.tel && !isValidPhone(data.tel)) errors.push('Téléphone invalide');
-  return errors;
-}
-
-function validateProduct(data) {
-  const errors = [];
-  if (!data.nom?.trim()) errors.push('Le nom est obligatoire');
-  if (!data.prix_ht || Number(data.prix_ht) < 0) errors.push('Le prix doit être positif');
-  return errors;
 }
 
 // ============================================================
