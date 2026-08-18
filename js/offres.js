@@ -57,6 +57,7 @@ async function chargerMesFeatures() {
   } catch(e) { STATE.nomForfaitActuel = null; }
 
   afficherBadgeForfait();
+  if (typeof appliquerVerrousVisuels === 'function') appliquerVerrousVisuels();
 }
 
 // Affiche "Forfait : XXX" partout où un emplacement existe pour ça
@@ -92,6 +93,41 @@ function afficherBadgeForfait() {
 //      serait juste du bruit dans leur interface.
 function aAccesFeature(code) {
   return (STATE.mesFeatures || []).includes(code);
+}
+
+// NOUVEAU : badge cadenas visible AVANT le clic — plutôt que de laisser
+// la personne cliquer et découvrir après coup qu'elle n'a pas accès.
+// Retourne une chaîne vide si elle a accès (rien à afficher).
+function htmlBadgeVerrou(code) {
+  if (aAccesFeature(code)) return '';
+  return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;background:#F1EEE8;color:#9C9186;padding:2px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">🔒 Pro</span>';
+}
+
+// Applique le cadenas visuel directement sur des éléments DOM déjà en
+// place dans la page statique (contrairement à htmlBadgeVerrou, qui sert
+// pour du HTML construit dynamiquement en JS).
+function appliquerVerrousVisuels() {
+  const cibles = [
+    { id: 'verrou-stock-dashboard', code: 'stock' },
+    { id: 'verrou-rh-profil', code: 'rh' },
+    { id: 'verrou-equipe-inviter', code: 'multi_utilisateurs' },
+    { id: 'verrou-relances-auto', code: 'relances_auto' },
+  ];
+  cibles.forEach(function(c) {
+    const el2 = document.getElementById(c.id);
+    if (!el2) return;
+    el2.innerHTML = htmlBadgeVerrou(c.code);
+  });
+
+  // Cas particulier : la zone d'upload OCR n'est pas un bouton avec du
+  // texte, un simple badge inline ne suffit pas à expliquer ce qui est
+  // verrouillé — message dédié à la place.
+  const zoneOcr = document.getElementById('verrou-ocr-achats');
+  if (zoneOcr) {
+    zoneOcr.innerHTML = aAccesFeature('ocr_achats')
+      ? ''
+      : '<span style="font-size:10px;color:#9C9186">🔒 La lecture automatique du montant/fournisseur nécessite le forfait Pro</span>';
+  }
 }
 
 // Version "verrou visible" — à utiliser UNIQUEMENT pour les
