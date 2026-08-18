@@ -68,10 +68,54 @@ function previewPDF() {
     devis_ref: STATE.currentFacture?.devis_ref||'',
     bl_ref: STATE.currentFacture?.bl_ref||'',
     doc_id: STATE.currentFacture?.id||'',
+    // FIX sécurité (trouvé en revue finale) : si on prévisualise une
+    // facture DÉJÀ enregistrée (édition), le lien doit inclure son jeton
+    // — sinon un lien sans jeton (non fonctionnel avec le verrouillage
+    // mis en place) se glissait dans le PDF. Un tout nouveau brouillon
+    // n'a pas encore de jeton (rien à lier avant la sauvegarde), donc pas
+    // de lien affiché dans ce cas, ce qui est normal.
+    doc_url: STATE.currentFacture?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentFacture.id + '&t=' + (STATE.currentFacture.token_public||'')) : '',
   });
 }
 
 
+
+// NOUVEAU : traduction des libellés fixes du PDF (facture/devis/BC/BL/avoir)
+// selon la langue choisie dans Paramètres. Le montant en lettres
+// ("cinq cents dirhams") reste en français pour l'instant — sa
+// conversion correcte en arabe (accords grammaticaux) est un chantier à
+// part, pas encore fait.
+const _TRAD_PDF = {
+  fr: {
+    date: 'Date', echeance: 'Échéance', validite: 'Validité', jours: 'jours', paiement: 'Paiement',
+    devisRef: 'Devis réf.', blRef: 'BL réf.', refSuffixe: 'réf.',
+    avoirPour: 'Avoir pour', destinataire: 'Destinataire', factureA: 'Facturé à',
+    projet: 'Projet', emetteur: 'Émetteur',
+    designation: 'Désignation', qte: 'Qté', puHt: 'P.U. HT', totalHt: 'Total HT',
+    sousTotalHt: 'Sous-total HT', tva: 'TVA (20%)', dejaRecu: 'Déjà reçu',
+    totalTtc: 'TOTAL TTC', resteAPayer: 'Reste à payer',
+    arreteA: 'Arrêté à la somme de', juridiction: 'Juridiction : Maroc.',
+    note: 'Note', motif: 'Motif',
+    coordBancaires: 'Coordonnées bancaires', conditions: 'Conditions', conditionsPaiement: 'Conditions de paiement',
+    cachetSignature: 'Cachet & Signature émetteur', bonPourAccord: 'Bon pour accord — Client',
+    typeLabels: { FACTURE:'FACTURE', DEVIS:'DEVIS', DEV:'DEVIS', AVOIR:'AVOIR', BC:'BON DE COMMANDE', BL:'BON DE LIVRAISON' },
+  },
+  ar: {
+    date: 'التاريخ', echeance: 'تاريخ الاستحقاق', validite: 'صالح لمدة', jours: 'يوم', paiement: 'طريقة الأداء',
+    devisRef: 'رقم عرض الثمن', blRef: 'رقم وصل التسليم', refSuffixe: 'رقم',
+    avoirPour: 'إشعار دائن لـ', destinataire: 'المرسل إليه', factureA: 'فاتورة إلى',
+    projet: 'المشروع', emetteur: 'المُصدر',
+    designation: 'البيان', qte: 'الكمية', puHt: 'سعر الوحدة', totalHt: 'المجموع',
+    sousTotalHt: 'المجموع قبل الضريبة', tva: 'ضريبة القيمة المضافة (20%)', dejaRecu: 'المبلغ المستلم',
+    totalTtc: 'المجموع الإجمالي', resteAPayer: 'المبلغ المتبقي',
+    arreteA: 'أوقف على مبلغ', juridiction: 'الاختصاص القضائي: المغرب.',
+    note: 'ملاحظة', motif: 'السبب',
+    coordBancaires: 'المعلومات البنكية', conditions: 'الشروط', conditionsPaiement: 'شروط الأداء',
+    cachetSignature: 'ختم وتوقيع المُصدر', bonPourAccord: 'موافق عليه — العميل',
+    typeLabels: { FACTURE:'فاتورة', DEVIS:'عرض ثمن', DEV:'عرض ثمن', AVOIR:'إشعار دائن', BC:'أمر شراء', BL:'وصل تسليم' },
+  },
+};
+function _langPDF() { return (typeof localStorage !== 'undefined' && localStorage.getItem('bp_langue') === 'ar') ? 'ar' : 'fr'; }
 
 function genDocPDF(opts) {
   const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false,refsQR=[]} = opts;
@@ -83,6 +127,10 @@ function genDocPDF(opts) {
   const colorHeader = isAvoir?'#8E2E24':isDevis?'#B8860B':isBC?'#7C5CA6':isBL?'#6E8F4E':(color||'#C9971F');
   const paye = Number(montant_recu)||0;
   const restant = Math.max(0, ttc - paye);
+  const langue = _langPDF();
+  const t = _TRAD_PDF[langue];
+  const typeAffiche = t.typeLabels[type] || type;
+  const estRTL = langue === 'ar';
 
   // Lien public de la facture
   const docUrl = opts.doc_url || (doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '');
@@ -99,8 +147,8 @@ function genDocPDF(opts) {
     </tr>`;
   }).join('');
 
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-<title>${type} ${ref}<\/title>
+  const html = `<!DOCTYPE html><html lang="${langue}" dir="${estRTL ? 'rtl' : 'ltr'}"><head><meta charset="UTF-8">
+<title>${typeAffiche} ${ref}<\/title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap');
@@ -160,13 +208,13 @@ tbody td{border-bottom:1px solid #EAE4DA}
     <div class="h-company">${escapeHTML(p.raison||'Mon Entreprise')}</div>
   </div>
   <div class="h-right">
-    <div class="h-doc-label">${type}</div>
+    <div class="h-doc-label">${typeAffiche}</div>
     <div class="h-ref">${ref}</div>
     <div class="h-meta">
-      Date : ${date||'—'}<br>
-      ${echeance?'Échéance : '+echeance+'<br>':''}
-      ${validite?'Validité : '+validite+' jours<br>':''}
-      Paiement : ${paiement||'—'}
+      ${t.date} : ${date||'—'}<br>
+      ${echeance?t.echeance+' : '+echeance+'<br>':''}
+      ${validite?t.validite+' : '+validite+' '+t.jours+'<br>':''}
+      ${t.paiement} : ${paiement||'—'}
     </div>
   </div>
 </div>
@@ -174,10 +222,10 @@ tbody td{border-bottom:1px solid #EAE4DA}
 <div style="height:12px"></div>
 
 ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wrap;align-items:center">
-  ${devis_ref?`<span>📝 Devis réf. : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
-  ${bl_ref?`<span>📦 BL réf. : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
+  ${devis_ref?`<span>📝 ${t.devisRef} : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
+  ${bl_ref?`<span>📦 ${t.blRef} : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
   ${refsQR.map(function(r) {
-    return '<span style="display:inline-flex;align-items:center;gap:6px">' + (r.icon||'🔗') + ' ' + r.label + ' réf. : <strong>' + escapeHTML(String(r.ref||'')) + '</strong>' +
+    return '<span style="display:inline-flex;align-items:center;gap:6px">' + (r.icon||'🔗') + ' ' + r.label + ' ' + t.refSuffixe + ' : <strong>' + escapeHTML(String(r.ref||'')) + '</strong>' +
       (r.url ? '<img src="https://api.qrserver.com/v1/create-qr-code/?size=44x44&data=' + encodeURIComponent(r.url) + '" width="30" height="30" style="border-radius:3px;vertical-align:middle">' : '') +
     '</span>';
   }).join('')}
@@ -185,17 +233,17 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
 
 <div class="blocs">
   <div class="bloc">
-    <div class="bloc-hd">${isAvoir?'Avoir pour':isDevis?'Destinataire':'Facturé à'}</div>
+    <div class="bloc-hd">${isAvoir?t.avoirPour:isDevis?t.destinataire:t.factureA}</div>
     <div class="bloc-bd">
       <div class="main">${escapeHTML(destinataire.nom||'—')}</div>
-      ${destinataire.chantier?`<div class="line">📋 Projet : ${escapeHTML(destinataire.chantier)}</div>`:''}
+      ${destinataire.chantier?`<div class="line">📋 ${t.projet} : ${escapeHTML(destinataire.chantier)}</div>`:''}
       ${destinataire.adresse?`<div class="line">📍 ${escapeHTML(destinataire.adresse||'')}</div>`:''}
       ${destinataire.ice?`<div class="line">ICE : ${destinataire.ice}</div>`:''}
       ${destinataire.tel?`<div class="line">📞 ${destinataire.tel}</div>`:''}
     </div>
   </div>
   <div class="bloc">
-    <div class="bloc-hd">Émetteur</div>
+    <div class="bloc-hd">${t.emetteur}</div>
     <div class="bloc-bd">
       <div class="main">${escapeHTML(p.raison||'—')}</div>
       ${p.adresse?`<div class="line">📍 ${escapeHTML(p.adresse||'')}${p.ville?', '+p.ville:''}</div>`:''}
@@ -208,9 +256,9 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
 <div class="table-section">
 <table>
 <thead><tr>
-  <th style="width:44%">Désignation</th>
-  <th style="width:10%;text-align:center">Qté</th>
-  ${showPrices?`<th style="width:22%;text-align:right">P.U. HT (${devise})</th><th style="width:24%;text-align:right">Total HT (${devise})</th>`:''}
+  <th style="width:44%">${t.designation}</th>
+  <th style="width:10%;text-align:center">${t.qte}</th>
+  ${showPrices?`<th style="width:22%;text-align:right">${t.puHt} (${devise})</th><th style="width:24%;text-align:right">${t.totalHt} (${devise})</th>`:''}
 </tr></thead>
 <tbody>${lignesHtml}</tbody>
 </table>
@@ -218,28 +266,28 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
 
 ${showPrices?`
 <div class="totaux"><div class="totaux-box">
-  <div class="tot-row"><span>Sous-total HT</span><span style="font-weight:600;color:#2A2420">${fmt(ht)} ${devise}</span></div>
-  <div class="tot-row" style="background:#F7EFDC"><span>TVA (20%)</span><span style="font-weight:600;color:#2A2420">${fmt(tva)} ${devise}</span></div>
-  ${paye>0?`<div class="tot-row" style="background:#EEF3E4"><span>Déjà reçu</span><span style="font-weight:600;color:#6E8F4E">- ${fmt(paye)} ${devise}</span></div>`:''}
-  <div class="tot-main"><span class="tot-main-lbl">TOTAL TTC</span><span class="tot-main-val">${fmt(ttc)} ${devise}</span></div>
-  ${paye>0&&restant>0?`<div class="tot-row" style="background:#F5E4E1"><span style="font-weight:700;color:#B23A2E">Reste à payer</span><span style="font-weight:700;color:#B23A2E">${fmt(restant)} ${devise}</span></div>`:''}
+  <div class="tot-row"><span>${t.sousTotalHt}</span><span style="font-weight:600;color:#2A2420">${fmt(ht)} ${devise}</span></div>
+  <div class="tot-row" style="background:#F7EFDC"><span>${t.tva}</span><span style="font-weight:600;color:#2A2420">${fmt(tva)} ${devise}</span></div>
+  ${paye>0?`<div class="tot-row" style="background:#EEF3E4"><span>${t.dejaRecu}</span><span style="font-weight:600;color:#6E8F4E">- ${fmt(paye)} ${devise}</span></div>`:''}
+  <div class="tot-main"><span class="tot-main-lbl">${t.totalTtc}</span><span class="tot-main-val">${fmt(ttc)} ${devise}</span></div>
+  ${paye>0&&restant>0?`<div class="tot-row" style="background:#F5E4E1"><span style="font-weight:700;color:#B23A2E">${t.resteAPayer}</span><span style="font-weight:700;color:#B23A2E">${fmt(restant)} ${devise}</span></div>`:''}
 </div></div>
 <div style="height:6px"></div>
-<div class="arrete">Arrêté à la somme de <strong>${ttcEnLettres(ttc)}</strong>. Juridiction : Maroc.</div>
+<div class="arrete">${t.arreteA} <strong>${ttcEnLettres(ttc)}</strong>. ${t.juridiction}</div>
 `:''}
 
-${note?`<div style="margin:4px 24px;background:#F7EFDC;border-left:3px solid #B8860B;border-radius:0 6px 6px 0;padding:5px 8px;font-size:9px;color:#7A5A0E"><strong>Note :</strong> ${escapeHTML(note)}</div>`:''}
-${motif?`<div style="margin:6px 28px;background:#F5E4E1;border-left:3px solid #B23A2E;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#7A2E24"><strong>Motif :</strong> ${escapeHTML(motif)}</div>`:''}
+${note?`<div style="margin:4px 24px;background:#F7EFDC;border-left:3px solid #B8860B;border-radius:0 6px 6px 0;padding:5px 8px;font-size:9px;color:#7A5A0E"><strong>${t.note} :</strong> ${escapeHTML(note)}</div>`:''}
+${motif?`<div style="margin:6px 28px;background:#F5E4E1;border-left:3px solid #B23A2E;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#7A2E24"><strong>${t.motif} :</strong> ${escapeHTML(motif)}</div>`:''}
 
 ${(p.banque||p.rib)?`<div class="bank-box">
-  🏦 Coordonnées bancaires — ${p.banque||''}${p.rib?' · RIB/IBAN : <strong>'+p.rib+'</strong>':''}
-  ${p.conditions?'<br>⏱️ Conditions : '+p.conditions:''}
-</div>`:`${p.conditions?`<div class="bank-box" style="background:#E9F4F3;border-color:#CFE3E2;color:#A67A16">⏱️ Conditions de paiement : ${p.conditions}</div>`:''}`}
+  🏦 ${t.coordBancaires} — ${p.banque||''}${p.rib?' · RIB/IBAN : <strong>'+p.rib+'</strong>':''}
+  ${p.conditions?'<br>⏱️ '+t.conditions+' : '+p.conditions:''}
+</div>`:`${p.conditions?`<div class="bank-box" style="background:#E9F4F3;border-color:#CFE3E2;color:#A67A16">⏱️ ${t.conditionsPaiement} : ${p.conditions}</div>`:''}`}
 
 <div style="flex:1;min-height:20px"></div>
 <div class="sig-zone">
-  <div class="sig-item"><div class="sig-lbl">Cachet & Signature émetteur</div>${signatureEmetteur?`<img src="${signatureEmetteur}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
-  <div class="sig-item"><div class="sig-lbl">Bon pour accord — Client</div>${signatureClient ? (signatureClient.startsWith('TEXTE:') ? `<div style="font-size:10px;color:#55702E;font-style:italic;margin-top:6px;line-height:1.4">✅ ${escapeHTML(signatureClient.slice(6))}</div>` : `<img src="${signatureClient}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`) : ''}</div>
+  <div class="sig-item"><div class="sig-lbl">${t.cachetSignature}</div>${signatureEmetteur?`<img src="${signatureEmetteur}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
+  <div class="sig-item"><div class="sig-lbl">${t.bonPourAccord}</div>${signatureClient ? (signatureClient.startsWith('TEXTE:') ? `<div style="font-size:10px;color:#55702E;font-style:italic;margin-top:6px;line-height:1.4">✅ ${escapeHTML(signatureClient.slice(6))}</div>` : `<img src="${signatureClient}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`) : ''}</div>
 </div>
 
 <div style="flex:1"></div>
