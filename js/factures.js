@@ -492,7 +492,7 @@ function renderDetail() {
   }
   // PDF actions
   actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#E9F4F3">👁️</div>Aperçu PDF</button>`);
-  actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="typeof telechargerXMLUBLFacture==='function' && telechargerXMLUBLFacture(${f.id})"><div class="action-ico" style="background:#F7EFDC">🧬</div>Export XML UBL (préparation DGI)</button>`);
+  actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="typeof telechargerXMLUBLFacture==='function' && telechargerXMLUBLFacture(${f.id})"><div class="action-ico" style="background:#F7EFDC">🧬</div>Export XML UBL (préparation DGI)${typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('export_ubl') : ''}</button>`);
   actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#E9F4F3">💾</div>Enregistrer PDF</button>`);
   // FIX: bouton "Partager la facture" retiré — redondant avec "Envoyer"
   // (déjà en premier dans cette liste), qui couvre WhatsApp/Email/Lien/Zelto.
