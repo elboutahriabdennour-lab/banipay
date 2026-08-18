@@ -48,7 +48,7 @@
     <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#F7EFDC">📝</div><div class="qa-lbl">Devis</div></div>
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
     <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
-    <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){window._retourRapportStock='dashboard';goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock</div></div>
+    <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){window._retourRapportStock='dashboard';goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock<span id="verrou-stock-dashboard"></span></div></div>
   </div>
   <div style="height:8px"></div>
   <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
@@ -132,43 +132,43 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/config.js?v=1787042935"></script>
-  <script src="js/utils.js?v=1787042935"></script>
-  <script src="js/auth.js?v=1787042935"></script>
-  <script src="js/nav.js?v=1787042935"></script>
-  <script src="js/factures.js?v=1787042935"></script>
-  <script src="js/devis.js?v=1787042935"></script>
-  <script src="js/clients.js?v=1787042935"></script>
-  <script src="js/produits.js?v=1787042935"></script>
-  <script src="js/pdf.js?v=1787042935"></script>
-  <script src="js/stats.js?v=1787042935"></script>
-  <script src="js/profil.js?v=1787042935"></script>
-  <script src="js/comptable.js?v=1787042935"></script>
-  <script src="js/messages.js?v=1787042935"></script>
-<script src="js/achats.js?v=1787042935"></script>
-<script src="js/stock.js?v=1787042935"></script>
-<script src="js/finance.js?v=1787042935"></script>
-<script src="js/ubl.js?v=1787042935"></script>
-<script src="js/relances.js?v=1787042935"></script>
-<script src="js/dashboard-avance.js?v=1787042935"></script>
-<script src="js/ocr-achats.js?v=1787042935"></script>
-<script src="js/equipe.js?v=1787042935"></script>
-<script src="js/equipe-cabinet.js?v=1787042935"></script>
-<script src="js/rh.js?v=1787042935"></script>
-<script src="js/hubs.js?v=1787042935"></script>
-<script src="js/demandes-devis.js?v=1787042935"></script>
-<script src="js/chat-ticket.js?v=1787042935"></script>
-<script src="js/partage-ecran.js?v=1787042935"></script>
-<script src="js/offres.js?v=1787042935"></script>
-<script src="js/onboarding.js?v=1787042935"></script>
-<script src="js/notes-facture.js?v=1787042935"></script>
-<script src="js/support.js?v=1787042935"></script>
-<script src="js/devis-recus.js?v=1787042935"></script>
-<script src="js/demande-devis-fournisseur.js?v=1787042935"></script>
-<script src="js/selection.js?v=1787042935"></script>
-<script src="js/abonnements.js?v=1787042935"></script>
-<script src="js/signature.js?v=1787042935"></script>
-<script src="js/app.js?v=1787042935"></script>
+<script src="js/config.js?v=1787045414"></script>
+  <script src="js/utils.js?v=1787045414"></script>
+  <script src="js/auth.js?v=1787045414"></script>
+  <script src="js/nav.js?v=1787045414"></script>
+  <script src="js/factures.js?v=1787045414"></script>
+  <script src="js/devis.js?v=1787045414"></script>
+  <script src="js/clients.js?v=1787045414"></script>
+  <script src="js/produits.js?v=1787045414"></script>
+  <script src="js/pdf.js?v=1787045414"></script>
+  <script src="js/stats.js?v=1787045414"></script>
+  <script src="js/profil.js?v=1787045414"></script>
+  <script src="js/comptable.js?v=1787045414"></script>
+  <script src="js/messages.js?v=1787045414"></script>
+<script src="js/achats.js?v=1787045414"></script>
+<script src="js/stock.js?v=1787045414"></script>
+<script src="js/finance.js?v=1787045414"></script>
+<script src="js/ubl.js?v=1787045414"></script>
+<script src="js/relances.js?v=1787045414"></script>
+<script src="js/dashboard-avance.js?v=1787045414"></script>
+<script src="js/ocr-achats.js?v=1787045414"></script>
+<script src="js/equipe.js?v=1787045414"></script>
+<script src="js/equipe-cabinet.js?v=1787045414"></script>
+<script src="js/rh.js?v=1787045414"></script>
+<script src="js/hubs.js?v=1787045414"></script>
+<script src="js/demandes-devis.js?v=1787045414"></script>
+<script src="js/chat-ticket.js?v=1787045414"></script>
+<script src="js/partage-ecran.js?v=1787045414"></script>
+<script src="js/offres.js?v=1787045414"></script>
+<script src="js/onboarding.js?v=1787045414"></script>
+<script src="js/notes-facture.js?v=1787045414"></script>
+<script src="js/support.js?v=1787045414"></script>
+<script src="js/devis-recus.js?v=1787045414"></script>
+<script src="js/demande-devis-fournisseur.js?v=1787045414"></script>
+<script src="js/selection.js?v=1787045414"></script>
+<script src="js/abonnements.js?v=1787045414"></script>
+<script src="js/signature.js?v=1787045414"></script>
+<script src="js/app.js?v=1787045414"></script>
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
@@ -564,7 +564,7 @@
   <div class="form-section"><div class="form-label">Catégorie</div><select class="form-input" id="achat-categorie"><option value="materiel">Matériel</option><option value="services">Services</option><option value="fournitures">Fournitures</option><option value="transport">Transport</option><option value="autre">Autre</option></select></div>
   <div class="form-section"><div class="form-label">Statut</div><select class="form-input" id="achat-statut"><option value="attente">En attente</option><option value="payee">Payée</option></select></div>
   <div class="form-section"><div class="form-label">Note</div><textarea class="form-input" id="achat-note" rows="2" placeholder="Notes..."></textarea></div>
-  <div style="margin:0 20px 14px"><div class="form-label">Photo de la facture</div><label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">📷 Prendre en photo<input type="file" id="achat-pj" accept="image/*" capture="environment" style="display:none" onchange="previewAchatPJ(event)"></label><label style="display:block;margin-top:6px;text-align:center;font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Choisir depuis la galerie / un PDF<input type="file" id="achat-pj-galerie" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div id="achat-pj-preview" style="margin-top:8px"></div></div>
+  <div style="margin:0 20px 14px"><div class="form-label">Photo de la facture</div><label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">📷 Prendre en photo<input type="file" id="achat-pj" accept="image/*" capture="environment" style="display:none" onchange="previewAchatPJ(event)"></label><label style="display:block;margin-top:6px;text-align:center;font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Choisir depuis la galerie / un PDF<input type="file" id="achat-pj-galerie" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div style="text-align:center;margin-top:6px" id="verrou-ocr-achats"></div><div id="achat-pj-preview" style="margin-top:8px"></div></div>
   <input type="hidden" id="achat-fournisseur-id" value=""><input type="hidden" id="achat-fournisseur-banipay" value="0">
   <div style="padding:0 20px 20px"><button class="a-btn" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#B23A2E,#8E2E24);color:#fff">💾 Enregistrer</button></div>
   <div class="pb"></div>
@@ -922,7 +922,7 @@
     <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
     <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#C9971F">📁 Archive documents</button>
     <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
-    <button class="p-btn" onclick="if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}" style="color:#1F6F72">👥 Registre du personnel</button>
+    <button class="p-btn" onclick="if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}" style="color:#1F6F72">👥 Registre du personnel<span id="verrou-rh-profil"></span></button>
     <button class="p-btn" onclick="loadBCRecus();goScreen('bc-recus',null)" style="color:#7C5CA6">📋 Bons de commande reçus</button>
     <button class="p-btn" onclick="renderHubVentes();goScreen('hub-ventes',null)" style="color:#55702E">💰 Rubrique Ventes</button>
     <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
@@ -1673,7 +1673,7 @@
             <option value="admin">Admin</option>
           </select>
         </div>
-        <button onclick="inviterMembreEquipe()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter</button>
+        <button onclick="inviterMembreEquipe()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter<span id="verrou-equipe-inviter"></span></button>
         <div id="equipe-liste"></div>
       </div>
     </div>
@@ -1683,7 +1683,7 @@
       <div style="padding:14px 16px">
         <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#6B5F54">
           <input type="checkbox" id="param-relance-activee" style="width:16px;height:16px">
-          Activer les relances automatiques
+          Activer les relances automatiques<span id="verrou-relances-auto"></span>
         </label>
         <label class="f-lbl">Relancer combien de jours avant l'échéance ?</label>
         <input id="param-relance-jours" class="f-inp" type="number" min="1" max="30" value="3" style="margin-bottom:10px">
