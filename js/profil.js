@@ -745,7 +745,7 @@ async function renderMonComptable() {
         '<div style="text-align:center;padding:20px;background:#F1EEE8;border-radius:14px">' +
           '<div style="font-size:32px;margin-bottom:10px">👤</div>' +
           '<div style="font-size:14px;font-weight:600;color:#6B5F54;margin-bottom:12px">Aucun comptable lié</div>' +
-          '<button onclick="inviterComptable()" style="padding:11px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🤝 Inviter mon comptable</button>' +
+          '<button onclick="inviterComptable()" style="padding:11px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🤝 Inviter mon comptable' + (typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('comptable_lie') : '') + '</button>' +
         '</div>';
       return;
     }
@@ -779,7 +779,7 @@ async function renderMonComptable() {
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px">' +
-        '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer</button>' +
+        '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer' + (typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('comptable_lie') : '') + '</button>' +
         '<button onclick="revoquerComptable(\'' + inv.id + '\')" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🚫 Révoquer</button>' +
       '</div>';
 
