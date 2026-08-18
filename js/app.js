@@ -643,7 +643,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const inviteToken = params.get('invite');
   const comptableEmail = params.get('comptable');
   const portailId = params.get('portail');
   const profilId = params.get('profil');
@@ -704,47 +703,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Handle invitation link
-  if (inviteToken) {
-    window._inviteToken = inviteToken;
-    // Need to login first, then process invitation
-    if (sb.restoreSession()) {
-      // NOUVEAU : même résolution que les autres chemins — voir doLogin()
-      try {
-        const rEnt = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
-        });
-        STATE.entrepriseId = rEnt.ok ? (await rEnt.json()) : sb.user.id;
-      } catch(eEnt) { STATE.entrepriseId = sb.user.id; }
-      await loadAll();
-      verifierChangementsDevis();
-      verifierRappels();
-      await traiterInvitation(inviteToken);
-      await loadAchats();
-      if (typeof loadBonsCommande === 'function') await loadBonsCommande();
-      if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
-      if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
-      if (typeof loadEmployes === 'function') await loadEmployes();
-      if (typeof loadDemandesDevis === 'function') await loadDemandesDevis();
-    await loadConversations();
-      if (typeof loadAbonnements === 'function') await loadAbonnements();
-      if (typeof verifierAbonnements === 'function') await verifierAbonnements();
-      if (window._pendingDocId) {
-          const _pf = STATE.factures.find(x => x.id === window._pendingDocId);
-          window._pendingDocId = null;
-  goScreen('dashboard');
-          if (_pf) setTimeout(() => openDetail(_pf.id), 400);
-        } else {
-          goScreen('dashboard');
-        }
-    } else {
-      goScreen('auth');
-      showToast('Connectez-vous pour accepter l\'invitation');
-    }
-    return;
-  }
+  // NOTE: l'ancien système d'invitation par lien (?invite=xxx) a été
+  // retiré (2026) — jamais généré nulle part dans l'app actuelle,
+  // remplacé par membres_entreprise (vérification automatique par email
+  // à la connexion, voir equipe.js).
 
   if (comptableEmail) {
     window._comptableEmail = decodeURIComponent(comptableEmail);
