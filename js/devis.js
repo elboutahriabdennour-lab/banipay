@@ -1148,53 +1148,10 @@ function exportAvoirPDF(id) {
 
 
 
-// ============================================================
-// PARTAGE DEVIS WHATSAPP
-// ============================================================
-
-function partagerDevisWhatsApp(id) {
-  const d = STATE.devis.find(x => x.id === id);
-  if (!d) return;
-  const p = STATE.profil || {};
-  // Lien vers le DEVIS (pas la facture) avec paramètre type=devis
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&type=devis' + '&t=' + (d.token_public||'');
-  const validiteDate = d.date_emission ? (() => {
-    const dt = new Date(d.date_emission);
-    dt.setDate(dt.getDate() + (d.validite || 30));
-    return dt.toLocaleDateString('fr-FR');
-  })() : '';
-
-  const msg = encodeURIComponent(
-    'Bonjour ' + (d.client||'') + ',\n\n' +
-    'Veuillez trouver notre devis *' + d.ref + '*' + (d.chantier ? ' pour ' + d.chantier : '') + '.\n\n' +
-    '• Montant TTC : *' + fmt(d.ttc) + ' MAD*\n' +
-    (validiteDate ? '• Valide jusqu\'au : ' + validiteDate + '\n' : '') +
-    '\n📎 Consulter et répondre :\n' + docUrl + '\n\n' +
-    'Cordialement,\n' +
-    (p.raison||'') +
-    (p.tel ? '\n📞 ' + p.tel : '')
-  );
-  window.open('https://wa.me/?text=' + msg, '_blank');
-}
-
-async function partagerDevisNatif(id) {
-  const d = STATE.devis.find(x => x.id === id);
-  if (!d) return;
-  const p = STATE.profil || {};
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (d.token_public||'');
-  const acceptUrl = window.location.origin + window.location.pathname + '?devis=' + id + '&action=accepter' + '&t=' + (d.token_public||'');
-
-  const texte = 'Devis ' + d.ref + ' - ' + (d.client||'') + '\n' +
-    'Montant: ' + fmt(d.ttc) + ' MAD TTC\n\n' +
-    'Voir: ' + docUrl + '\n' +
-    'Accepter: ' + acceptUrl;
-
-  if (navigator.share) {
-    try { await navigator.share({ title: 'Devis ' + d.ref, text: texte }); return; }
-    catch(e) { if (e.name === 'AbortError') return; }
-  }
-  navigator.clipboard?.writeText(texte).then(() => showToast('✅ Lien copié !', 'success'));
-}
+// NOTE : les anciennes fonctions dédiées partagerDevisWhatsApp() et
+// partagerDevisNatif() ont été retirées (2026) — remplacées depuis par
+// la fonction générique envoyerVia() (produits.js), qui gère devis/BC/
+// facture de façon uniforme (WhatsApp, email, lien, compte Zelto).
 
 // ============================================================
 // ACCEPTER / REFUSER — DEVIS ET FACTURES (via lien public)
