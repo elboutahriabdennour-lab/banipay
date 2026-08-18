@@ -338,6 +338,20 @@ async function sauvegarderAvoir() {
         // Annulation totale : marquer la facture comme annulée (pas payée)
         await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'annulee' });
         f.statut = 'annulee';
+        // FIX (audit) : l'avoir n'a pas de lignes détaillées (juste un
+        // montant global), donc on ne peut pas savoir QUOI restaurer en
+        // général — mais pour une annulation TOTALE d'une facture liée,
+        // on connaît ses vraies lignes (avec produit_id) : on restaure le
+        // stock sur celles-ci. Sans ça, annuler une facture ne rendait
+        // jamais les articles vendus au stock.
+        try {
+          const lignesOrigine = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
+          for (const ligne of lignesOrigine) {
+            if (ligne.produit_id && typeof enregistrerEntreeStock === 'function') {
+              await enregistrerEntreeStock(ligne.produit_id, Number(ligne.qte) || 0, Number(ligne.pu) || 0, 'Annulation facture ' + (f.ref || ''), r[0]?.ref || '');
+            }
+          }
+        } catch(eStock) { console.warn('Restauration stock après annulation:', eStock.message); }
       }
     }
     showToast('✅ Avoir émis !', 'success');
