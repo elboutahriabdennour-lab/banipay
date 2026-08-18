@@ -1079,19 +1079,10 @@ function quitterComptable() {
   if (confirm('Se déconnecter ?')) { sb.logout(); goScreen('auth'); }
 }
 
-// Fonctions legacy
+// Fonctions legacy retirées (2026) — anciennes coquilles vides d'un
+// système d'invitation par lien remplacé depuis par membres_entreprise
+// (vérification automatique par email, voir equipe.js).
 function renderDashboardComptable() { renderComptableDashboard(); }
-function cptFilterF() {}
-function genTokenInvitation() {}
-function getLienInvitation() {}
-function ouvrirInvitation() {}
-function copierLienInvitation() {}
-function partagerInvitationWhatsApp() {}
-async function traiterInvitation() {}
-async function refuserInvitation() {}
-function renderClientPortal() {}
-function acceptClientQuote() {}
-function refuseClientQuote() {}
 
 // ============================================================
 // VUE "À TRAITER" — GLOBALE
@@ -1714,91 +1705,6 @@ async function declarerTVAMois(mois) {
 
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
-  }
-}
-
-// ============================================================
-// REMARQUES COMPTABLE
-// ============================================================
-
-async function ajouterRemarque(factureId) {
-  const contenu = (el('nouvelle-remarque')?.value || '').trim();
-  if (!contenu) { showToast('Écrivez une remarque', 'error'); return; }
-
-  const uid = sb.user?.id;
-  const email = sb.user?.email;
-  const nom = sb.user?.user_metadata?.nom || email?.split('@')[0] || 'Comptable';
-
-  try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/remarques_comptable', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + sb.token,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify({
-        facture_id: factureId,
-        entreprise_id: CPT.currentEntrepriseId,
-        comptable_id: uid,
-        comptable_email: email,
-        comptable_nom: nom,
-        contenu: contenu,
-        statut: 'ouverte'
-      })
-    });
-
-    if (r.ok) {
-      const fac = (CPT.currentFactures || []).find(function(f) { return f.id === factureId; });
-      // FIX: destinataire_email manquant ici aussi
-      const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
-      const destinataireEmail = inv?.entreprise_email || '';
-
-      await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          p_user_id: CPT.currentEntrepriseId,
-          p_destinataire_email: destinataireEmail || '',
-          p_type: 'remarque_comptable',
-          p_titre: 'Remarque comptable',
-          p_corps: 'Votre comptable a ajouté une remarque sur la facture ' + (fac?.ref || '')
-        })
-      });
-      ajouterHistorique('Remarque ajoutée — ', factureId);
-      if (el('nouvelle-remarque')) el('nouvelle-remarque').value = '';
-      showToast('✅ Remarque ajoutée', 'success');
-      document.getElementById('fac-comptable-overlay')?.remove();
-      await ouvrirFactureComptable(factureId);
-    }
-  } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
-  }
-}
-
-async function resoudreRemarque(remarqueId) {
-  try {
-    await fetch(SUPABASE_URL + '/rest/v1/remarques_comptable?id=eq.' + remarqueId, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + sb.token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ statut: 'resolue' })
-    });
-    ajouterHistorique('Remarque résolue', '');
-    showToast('✅ Remarque résolue', 'success');
-    const factureId = CPT.currentFactureId;
-    document.getElementById('fac-comptable-overlay')?.remove();
-    await ouvrirFactureComptable(factureId);
-  } catch(e) {
-    showToast('Erreur', 'error');
   }
 }
 
