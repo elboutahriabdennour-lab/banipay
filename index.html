@@ -27,8 +27,9 @@
     border-bottom:1px solid var(--ligne);
   }
   .header-inner{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;max-width:1080px;margin:0 auto}
-  .logo{font-family:'Fraunces',serif;font-weight:700;font-size:22px;color:var(--encre)}
-  .logo span{color:var(--safran)}
+  .logo-arcs{display:flex;flex-direction:column;align-items:center;line-height:1;gap:1px}
+  .logo-arcs .logo-word{font-family:'Fraunces',serif;font-weight:700;font-size:19px;color:var(--encre);margin:1px 0}
+  .logo-arcs .logo-word span{color:var(--safran)}
   .nav-links{display:flex;gap:28px;font-size:14px;font-weight:500}
   .nav-links a{text-decoration:none;color:var(--encre-douce);transition:color 0.15s}
   .nav-links a:hover{color:var(--teal)}
@@ -128,7 +129,29 @@
 
 <header>
   <div class="header-inner">
-    <div class="logo">Zel<span>to</span></div>
+    <div class="logo-arcs">
+      <svg width="88" height="11" viewBox="20 18 260 30" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gradSafranHeader" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#A67A16"/>
+            <stop offset="100%" stop-color="#E0AE5C"/>
+          </linearGradient>
+        </defs>
+        <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="url(#gradSafranHeader)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+      </svg>
+      <div class="logo-word">Zel<span>to</span></div>
+      <svg width="88" height="11" viewBox="20 132 260 30" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gradZelligeHeader" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#154F52"/>
+            <stop offset="100%" stop-color="#7FB8BA"/>
+          </linearGradient>
+        </defs>
+        <path d="M 270 146 Q 150 160 30 146" fill="none" stroke="url(#gradZelligeHeader)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
+      </svg>
+    </div>
     <nav class="nav-links">
       <a href="#fonctionnalites">Fonctionnalités</a>
       <a href="#forfaits">Tarifs</a>
@@ -255,7 +278,17 @@
 </section>
 
 <footer>
-  <div class="footer-logo">Zel<span>to</span></div>
+  <div class="logo-arcs" style="margin:0 auto 8px">
+    <svg width="110" height="14" viewBox="20 18 260 30" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="url(#gradSafranHeader)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+    </svg>
+    <div class="logo-word" style="font-size:20px">Zel<span>to</span></div>
+    <svg width="110" height="14" viewBox="20 132 260 30" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 270 146 Q 150 160 30 146" fill="none" stroke="url(#gradZelligeHeader)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
+    </svg>
+  </div>
   <div class="footer-links">
     <a href="app.html">Se connecter</a>
     <a href="#fonctionnalites">Fonctionnalités</a>
