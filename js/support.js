@@ -6,8 +6,8 @@
 // correspondance n'est trouvée. À ajuster : email/téléphone de support
 // (placeholders ci-dessous, à remplacer par les vraies coordonnées).
 
-const SUPPORT_EMAIL = 'support@zelto.ma'; // ⚠️ À remplacer par la vraie adresse
-const SUPPORT_TEL = '+212600000000'; // ⚠️ À remplacer par le vrai numéro
+const SUPPORT_EMAIL = 'elboutahriabdennour@gmail.com';
+const SUPPORT_TEL = '+212643655520';
 
 function contacterSupportEmail() {
   const sujet = encodeURIComponent('Support Zelto');
