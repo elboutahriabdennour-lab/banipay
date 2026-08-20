@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zelto — Facturation, devis et gestion pour PME marocaines</title>
+<title>Zelto : facturation, devis et gestion pour PME marocaines</title>
 <meta name="description" content="Zelto simplifie la facturation, les devis et le suivi de stock pour les PME et artisans marocains. Gratuit pour commencer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -89,9 +89,15 @@
   .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;max-width:1080px;margin:40px auto 0}
   .feature-card{
     background:var(--papier-carte);border-radius:16px;padding:24px;border:1px solid var(--ligne);
-    transition:border-color 0.15s;
+    transition:border-color 0.15s;cursor:pointer;
   }
   .feature-card:hover{border-color:var(--teal)}
+  .feature-card-top{display:flex;justify-content:space-between;align-items:flex-start}
+  .feature-chevron{font-size:12px;color:var(--encre-douce);transition:transform 0.2s;flex-shrink:0;margin-top:6px}
+  .feature-card.ouverte .feature-chevron{transform:rotate(180deg)}
+  .feature-detail{max-height:0;overflow:hidden;transition:max-height 0.25s ease}
+  .feature-card.ouverte .feature-detail{max-height:220px;margin-top:12px}
+  .feature-detail ol{padding-left:18px;font-size:12.5px;color:var(--encre-douce);line-height:1.8}
   .feature-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px}
   .feature-card h3{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:6px}
   .feature-card p{font-size:13px;color:var(--encre-douce);line-height:1.6}
@@ -173,9 +179,9 @@
     <path d="M 60 100 Q 600 10 1140 100" fill="none" stroke="url(#gradHero)" stroke-width="90" stroke-linecap="round"/>
   </svg>
   <div class="hero-content">
-    <div class="eyebrow">Fait pour les PME et artisans marocains</div>
+    <div class="eyebrow">La gestion, enfin simple</div>
     <h1>La gestion qui vous suit, <em>pas le cahier qui se perd</em></h1>
-    <p>Factures, devis, stock et lien direct avec votre comptable — sur votre téléphone, sans jargon, gratuit pour commencer.</p>
+    <p>Facturation, devis, suivi de stock et accès direct pour votre comptable, réunis dans une seule application mobile.</p>
     <div class="hero-ctas">
       <a href="app.html" class="btn-primaire">Commencer gratuitement</a>
       <a href="#fonctionnalites" class="btn-secondaire">Voir comment ça marche</a>
@@ -196,84 +202,172 @@
 
 <section class="section probleme">
   <div class="section-narrow">
-    <div class="section-title">Le quotidien qu'on connaît trop bien</div>
-    <div class="section-sub">Ce n'est pas un problème d'organisation. C'est un problème d'outils.</div>
+    <div class="section-title">Comment fonctionne Zelto</div>
+    <div class="section-sub">Quatre étapes, du devis au paiement.</div>
   </div>
   <div class="probleme-grid">
     <div class="probleme-item">
-      <div class="probleme-ico">📋</div>
-      <h3>Factures qui se perdent</h3>
-      <p>Un cahier, un tableur, une photo WhatsApp — jamais au même endroit deux fois.</p>
+      <div class="probleme-ico">📝</div>
+      <h3>1. Devis</h3>
+      <p>Vous créez un devis et l'envoyez au client depuis l'application.</p>
     </div>
     <div class="probleme-item">
-      <div class="probleme-ico">📞</div>
-      <h3>Le comptable qu'on appelle sans cesse</h3>
-      <p>Pour la moindre question, il faut décrocher le téléphone.</p>
+      <div class="probleme-ico">✅</div>
+      <h3>2. Acceptation</h3>
+      <p>Le client accepte le devis. Il devient une facture en un clic.</p>
     </div>
     <div class="probleme-item">
       <div class="probleme-ico">📦</div>
-      <h3>Le stock qu'on découvre vide</h3>
-      <p>Un client commande, et c'est là qu'on réalise qu'il ne reste rien.</p>
+      <h3>3. Stock</h3>
+      <p>Le stock des articles vendus est mis à jour automatiquement.</p>
     </div>
     <div class="probleme-item">
-      <div class="probleme-ico">⏰</div>
-      <h3>Les relances qu'on oublie</h3>
-      <p>Le temps de s'en souvenir, le client a déjà oublié de payer.</p>
+      <div class="probleme-ico">🤝</div>
+      <h3>4. Comptable</h3>
+      <p>Votre comptable voit la facture directement, sans envoi manuel.</p>
     </div>
   </div>
 </section>
 
 <section class="section" id="fonctionnalites">
-  <div class="section-title">Tout ce qu'il faut, rien de plus</div>
-  <div class="section-sub">Pas de fonctionnalités qu'on n'utilisera jamais.</div>
+  <div class="section-title">Les fonctionnalités</div>
+  <div class="section-sub">Six modules, réunis dans une seule application. Cliquez pour le détail.</div>
   <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-ico" style="background:var(--teal-clair)">🧾</div>
-      <h3>Facturation & devis</h3>
-      <p>Créez, envoyez, suivez — un devis accepté devient une facture en un clic.</p>
+
+    <div class="feature-card" onclick="toggleFeature(this)">
+      <div class="feature-card-top">
+        <div>
+          <div class="feature-ico" style="background:var(--teal-clair)">🧾</div>
+          <h3>Facturation & devis</h3>
+          <p>Création, envoi et suivi. Un devis accepté se convertit en facture en un clic.</p>
+        </div>
+        <div class="feature-chevron">▾</div>
+      </div>
+      <div class="feature-detail">
+        <ol>
+          <li>Création du devis avec les lignes de prestation</li>
+          <li>Envoi au client par WhatsApp, email ou lien direct</li>
+          <li>Le client accepte depuis son téléphone, sans compte requis</li>
+          <li>Conversion en facture en un clic, numérotée automatiquement</li>
+        </ol>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-ico" style="background:var(--safran-clair)">📦</div>
-      <h3>Stock automatique</h3>
-      <p>Chaque vente et chaque achat mettent le stock à jour tout seuls.</p>
+
+    <div class="feature-card" onclick="toggleFeature(this)">
+      <div class="feature-card-top">
+        <div>
+          <div class="feature-ico" style="background:var(--safran-clair)">📦</div>
+          <h3>Stock automatique</h3>
+          <p>Chaque vente et chaque achat mettent à jour le stock automatiquement.</p>
+        </div>
+        <div class="feature-chevron">▾</div>
+      </div>
+      <div class="feature-detail">
+        <ol>
+          <li>Chaque article vendu réduit le stock au moment de la facture</li>
+          <li>Chaque achat enregistré augmente le stock correspondant</li>
+          <li>Une alerte signale les articles sous un seuil défini</li>
+          <li>Historique complet des mouvements, article par article</li>
+        </ol>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-ico" style="background:#EEF3E4">🤝</div>
-      <h3>Accès comptable direct</h3>
-      <p>Votre comptable voit ce qu'il faut, sans que vous ayez à lui envoyer quoi que ce soit.</p>
+
+    <div class="feature-card" onclick="toggleFeature(this)">
+      <div class="feature-card-top">
+        <div>
+          <div class="feature-ico" style="background:#EEF3E4">🤝</div>
+          <h3>Accès comptable direct</h3>
+          <p>Votre comptable consulte vos documents directement, sans envoi manuel.</p>
+        </div>
+        <div class="feature-chevron">▾</div>
+      </div>
+      <div class="feature-detail">
+        <ol>
+          <li>Vous invitez votre comptable depuis l'application</li>
+          <li>Il accède à vos factures, devis et TVA avec son propre compte</li>
+          <li>Notes échangées directement sur chaque facture</li>
+          <li>Aucun fichier à envoyer par email ou WhatsApp</li>
+        </ol>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-ico" style="background:#EDE6F0">⏰</div>
-      <h3>Relances automatiques</h3>
-      <p>Zelto rappelle vos clients à votre place, au bon moment.</p>
+
+    <div class="feature-card" onclick="toggleFeature(this)">
+      <div class="feature-card-top">
+        <div>
+          <div class="feature-ico" style="background:#EDE6F0">⏰</div>
+          <h3>Relances automatiques</h3>
+          <p>L'application relance vos clients à votre place, au moment défini.</p>
+        </div>
+        <div class="feature-chevron">▾</div>
+      </div>
+      <div class="feature-detail">
+        <ol>
+          <li>Définissez le délai avant relance (ex. 3 jours avant échéance)</li>
+          <li>Message envoyé automatiquement par WhatsApp</li>
+          <li>Trois messages distincts : avant, le jour même, et en retard</li>
+          <li>Historique des relances envoyées, par facture</li>
+        </ol>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-ico" style="background:#F5E4E1">🛒</div>
-      <h3>Achats & fournisseurs</h3>
-      <p>Bons de commande, réception, factures d'achat — tout au même endroit.</p>
+
+    <div class="feature-card" onclick="toggleFeature(this)">
+      <div class="feature-card-top">
+        <div>
+          <div class="feature-ico" style="background:#F5E4E1">🛒</div>
+          <h3>Achats & fournisseurs</h3>
+          <p>Bons de commande, réception et factures d'achat au même endroit.</p>
+        </div>
+        <div class="feature-chevron">▾</div>
+      </div>
+      <div class="feature-detail">
+        <ol>
+          <li>Bon de commande envoyé au fournisseur</li>
+          <li>Réception confirmée à la livraison</li>
+          <li>Facture d'achat enregistrée, stock mis à jour</li>
+          <li>Suivi des dépenses par fournisseur et par catégorie</li>
+        </ol>
+      </div>
     </div>
-    <div class="feature-card">
-      <div class="feature-ico" style="background:var(--teal-clair)">🆘</div>
-      <h3>Un vrai support</h3>
-      <p>Une question ? Un chat en direct avec une vraie personne.</p>
+
+    <div class="feature-card" onclick="toggleFeature(this)">
+      <div class="feature-card-top">
+        <div>
+          <div class="feature-ico" style="background:var(--teal-clair)">🆘</div>
+          <h3>Un vrai support</h3>
+          <p>Une question ? Un chat en direct avec une vraie personne.</p>
+        </div>
+        <div class="feature-chevron">▾</div>
+      </div>
+      <div class="feature-detail">
+        <ol>
+          <li>Chat en direct accessible depuis l'application</li>
+          <li>Réponse par une personne, pas un robot</li>
+          <li>Partage d'écran possible en cas de besoin</li>
+          <li>Suivi de chaque demande jusqu'à sa résolution</li>
+        </ol>
+      </div>
     </div>
+
   </div>
 </section>
 
+<script>
+function toggleFeature(carte) {
+  carte.classList.toggle('ouverte');
+}
+</script>
 <section class="section forfait" id="forfaits">
   <div class="section-title">Commencez gratuitement</div>
   <div class="forfait-badge">Aujourd'hui, tout est gratuit</div>
-  <p>Zelto grandit avec vous. Pas de carte bancaire, pas d'engagement — juste un compte, et vous êtes prêt.</p>
-  <p style="font-size:12px;color:var(--safran);font-weight:700;margin-top:-14px">Tarifs prévus à partir du <span style="text-decoration:underline;text-decoration-style:dashed">[DATE À DÉFINIR]</span></p>
+  <p>Zelto grandit avec vous. Pas de carte bancaire, pas d'engagement. Un compte suffit pour commencer.</p>
   <a href="app.html" class="btn-primaire" style="background:var(--safran);color:var(--encre)">Créer mon compte</a>
 </section>
 
 <section class="section" id="histoire">
   <div class="fondateur">
     <div class="section-title" style="margin-bottom:24px">D'où vient Zelto</div>
-    <p>Le fondateur de Zelto dirige une entreprise de BTP et de négoce au Maroc. Factures qui se perdent, stock qu'on ne suit jamais assez précisément, comptable qu'on doit appeler pour la moindre question — le quotidien classique de beaucoup de patrons de PME marocaines.</p>
-    <p>À cela s'ajoute un parcours tourné vers la finance et la gestion : audit et contrôle de gestion, un doctorat en sciences de gestion, une expérience chez Euronext Paris sur les systèmes financiers. Cette double perspective a mené à une conviction simple : les outils de gestion existants ne sont pas pensés pour les gens qui en ont le plus besoin.</p>
-    <div class="fondateur-signature">Zelto est construit avec les gens qui l'utilisent vraiment.</div>
+    <p>Zelto est développé par une équipe avec un parcours en gestion d'entreprise, audit et finance. L'application est construite à partir d'une connaissance directe des besoins des PME marocaines.</p>
+    <div class="fondateur-signature">Zelto est construit avec les gens qui l'utilisent.</div>
   </div>
 </section>
 
@@ -289,12 +383,13 @@
       <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
     </svg>
   </div>
+  <div style="font-size:12px;color:var(--encre-douce);font-style:italic;margin-bottom:8px">La gestion, enfin simple</div>
   <div class="footer-links">
     <a href="app.html">Se connecter</a>
     <a href="#fonctionnalites">Fonctionnalités</a>
     <a href="#histoire">Notre histoire</a>
   </div>
-  <p>© 2026 Zelto — Fait au Maroc</p>
+  <p>© 2026 Zelto. Fait au Maroc</p>
 </footer>
 
 </body>
