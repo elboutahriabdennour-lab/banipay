@@ -11,11 +11,15 @@ function switchTab(tab) {
 async function doForgotPassword() {
   const email = el('login-email')?.value.trim();
   if (!email) { const e = el('login-err'); if(e) e.textContent = 'Entrez votre email'; return; }
-  await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+  // FIX (audit workflow) : même anti-pattern trouvé partout dans cet audit
+  // — sans vérifier r.ok, la personne voyait "Lien envoyé" même en cas
+  // d'échec, et attendrait indéfiniment un email qui n'arrive jamais.
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
     method: 'POST',
     headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, redirect_to: window.location.href })
   });
+  if (!r.ok) { showToast('❌ Erreur — vérifiez votre email et réessayez', 'error'); return; }
   showToast('✅ Lien envoyé sur ' + email, 'success');
 }
 
