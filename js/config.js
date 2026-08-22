@@ -41,13 +41,24 @@ const sb = {
   post: (t, d) => sb.req('POST', t, d),
   patch: (t, q, d) => sb.req('PATCH', `${t}?${q}`, d),
   del: (t, q) => sb.req('DELETE', `${t}?${q}`),
+  // FIX (audit workflow — important) : contrairement à get/post/patch/del
+  // (qui passent par req() et vérifient bien les erreurs), upsert()
+  // renvoyait le JSON tel quel sans jamais vérifier si la requête avait
+  // réussi. Concrètement : chaque écran qui utilise sb.upsert() (profil,
+  // logo, paramètres, code comptable...) affichait "✅ Enregistré" même
+  // en cas d'échec réel côté serveur. Un seul correctif ici répare tous
+  // les appelants d'un coup.
   upsert: async (t, d) => {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/${t}`, {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${sb.token}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
       body: JSON.stringify(d)
     });
-    return r.json().catch(() => null);
+    const resultat = await r.json().catch(() => null);
+    if (!r.ok || (resultat && resultat.code && resultat.message)) {
+      throw new Error((resultat && resultat.message) || 'Erreur lors de l\'enregistrement');
+    }
+    return resultat;
   },
 
   async login(email, pwd) {
