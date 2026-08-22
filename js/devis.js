@@ -239,7 +239,9 @@ function renderDetailDevis() {
 }
 
 async function changerStatutDevis(id, statut) {
-  await sb.patch('devis', `id=eq.${id}&user_id=eq.${sb.user.id}`, {statut});
+  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
+  // pouvait jamais changer le statut d'un devis créé sous l'id entreprise.
+  await sb.patch('devis', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, {statut});
   const d = STATE.devis.find(x=>x.id===id); if(d) d.statut=statut;
   STATE.currentDevis = d; renderDetailDevis();
   showToast('Statut mis à jour');
@@ -259,7 +261,7 @@ async function convertirEnFacture(id) {
       destinataire_id: d.destinataire_id || null,
     });
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
-    await sb.patch('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`,{statut:'converti',facture_ref:ref});
+    await sb.patch('devis',`id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`,{statut:'converti',facture_ref:ref});
     d.statut='converti'; d.facture_ref=ref;
     // FIX: la conversion devis→facture ne décrémentait jamais le stock,
     // contrairement à la création directe d'une facture — deux chemins
@@ -274,7 +276,9 @@ async function convertirEnFacture(id) {
 async function supprimerDevis(id) {
   if (!confirm('Supprimer ce devis ?')) return;
   const d = STATE.devis.find(x=>x.id===id);
-  await sb.del('devis',`id=eq.${id}&user_id=eq.${sb.user.id}`);
+  // FIX (audit) : même bug — la suppression échouait silencieusement
+  // pour un membre d'équipe (clause WHERE ne correspondant jamais).
+  await sb.del('devis',`id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
   STATE.devis = STATE.devis.filter(x=>x.id!==id);
   showToast('Supprimé'); goScreen('devis-list');
   logAudit('devis', id, 'suppression', d?.ref || '');
@@ -553,7 +557,10 @@ async function sauvegarderBonCommande() {
   const fournisseur = el('bc-fournisseur')?.value.trim();
   if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
   const bc = {
-    user_id: sb.user?.id,
+    // FIX (audit) : même bug que sauvegarderAchat — sans ce fallback, un
+    // bon de commande créé par un membre d'équipe serait invisible pour
+    // le reste de l'entreprise.
+    user_id: (STATE.entrepriseId || sb.user?.id),
     ref: el('bc-ref')?.value,
     fournisseur: fournisseur,
     fournisseur_id: el('bc-fournisseur-id')?.value || null,
@@ -934,7 +941,9 @@ async function sauvegarderBonLivraison() {
   const factureLiee = factureId ? (STATE.factures || []).find(function(f) { return f.id === factureId; }) : null;
 
   const bl = {
-    user_id: sb.user?.id,
+    // FIX (audit) : même bug — bon de livraison invisible pour le reste
+    // de l'entreprise sans ce fallback.
+    user_id: (STATE.entrepriseId || sb.user?.id),
     ref: el('bl-ref')?.value,
     client: client,
     facture_id: factureId,
@@ -1258,11 +1267,29 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
     const signatureFinale = action === 'accepter'
       ? (signatureData || ('TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })))
       : null;
-    await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_document_public', {
+    const rReponse = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_document_public', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: type, p_action: action, p_signature: signatureFinale })
     });
+    // FIX (audit workflow — important) : avant, cette réponse n'était
+    // jamais vérifiée. fetch() ne lève une exception qu'en cas d'échec
+    // réseau, PAS en cas d'erreur HTTP (400/403/500) — donc si la RPC
+    // refusait silencieusement (jeton limite, politique de sécurité, panne
+    // passagère), le client voyait quand même l'écran "Accepté !" alors
+    // que rien n'était enregistré côté entreprise. Un vrai risque de litige
+    // commercial ("j'ai pourtant accepté ce devis").
+    if (!rReponse.ok) {
+      document.body.innerHTML = `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+          <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+          <h2 style="color:#B23A2E;margin-bottom:8px">Votre réponse n'a pas pu être enregistrée</h2>
+          <p style="color:#6B5F54;font-size:13px;margin-bottom:20px">Une erreur s'est produite. Merci de réessayer dans un instant, ou de contacter directement l'entreprise si le problème persiste.</p>
+          <button onclick="window.location.reload()" style="padding:12px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Réessayer</button>
+        </div>
+      `;
+      return;
+    }
 
     // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
     try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : action === 'refuser' ? 'refus' : 'mise en attente', d.ref || ''); } catch(eAudit) {}
