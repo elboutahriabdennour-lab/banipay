@@ -12,19 +12,16 @@ function renderStats() {
   const now = new Date();
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
-  // ── KPIs globaux ──────────────────────────────────────────
   const caTotal = f.reduce((s,x) => s + (Number(x.ttc)||0), 0);
   const caEncaisse = f.filter(x=>x.statut==='payee').reduce((s,x) => s + (Number(x.ttc)||0), 0);
   const caEnAttente = f.filter(x=>['attente','envoyee'].includes(x.statut)).reduce((s,x) => s + (Number(x.ttc)||0), 0);
   const caEnRetard = f.filter(x=>x.statut==='retard').reduce((s,x) => s + (Number(x.ttc)||0), 0);
   const txRecouvrement = caTotal > 0 ? Math.round(caEncaisse/caTotal*100) : 0;
-  // ── Mois en cours ──────────────────────────────────────────
   const fMois = f.filter(x => {
     const dt = new Date(x.date_emission||'');
     return dt.getMonth()===thisMonth && dt.getFullYear()===thisYear;
   });
   const caMois = fMois.reduce((s,x) => s + (Number(x.ttc)||0), 0);
-  // ── 12 mois ──────────────────────────────────────────────
   const months = [];
   for (let i = 11; i >= 0; i--) {
     const dt = new Date(thisYear, thisMonth - i, 1);
@@ -40,7 +37,6 @@ function renderStats() {
     if (m) { m.ca += Number(fac.ttc)||0; if(fac.statut==='payee') m.paye += Number(fac.ttc)||0; }
   });
   const maxCA = Math.max(...months.map(m=>m.ca), 1);
-  // ── Top clients ───────────────────────────────────────────
   const clientMap = {};
   f.forEach(fac => {
     if (!fac.client) return;
@@ -50,7 +46,6 @@ function renderStats() {
   });
   const topClients = Object.values(clientMap).sort((a,b)=>b.ca-a.ca).slice(0,5);
   const maxClient = topClients[0]?.ca || 1;
-  // ── Render ────────────────────────────────────────────────
   const grid = el('stats-grid');
   if (grid) grid.innerHTML = `
     <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;grid-column:span 2">
@@ -82,7 +77,6 @@ function renderStats() {
       <div style="font-size:10px;color:#94A3B8;margin-top:4px;text-align:right">Taux recouvrement: ${txRecouvrement}%</div>
     </div>
   `;
-  // Courbe mensuelle
   const monthly = el('sa-monthly');
   if (monthly) {
     const W=300, H=100, PX=24, PY=16;
@@ -120,7 +114,6 @@ function renderStats() {
         </div>
       </div>`;
   }
-  // Top clients
   const topEl = el('sa-top-clients');
   if (topEl && topClients.length) {
     topEl.innerHTML = `
@@ -143,7 +136,6 @@ function renderStats() {
         `).join('')}
       </div>`;
   }
-  // Répartition
   const repEl = el('sa-repartition');
   if (repEl) {
     const payees = f.filter(x=>x.statut==='payee').length;
@@ -175,9 +167,6 @@ function renderStats() {
       </div>`;
   }
 }
-// ============================================================
-// RECHERCHE GLOBALE (fonction dupliquée retirée — voir nav.js)
-// ============================================================
 function renderSearchResults(q) {
   const res = el('search-results');
   if (!res) return;
@@ -205,32 +194,31 @@ function renderSearchResults(q) {
   }
   res.innerHTML = html;
 }
-// ============================================================
-// ANNUAIRE BANIPAY
-// ============================================================
 let _annuaireData = [];
 let _annuaireSecteur = '';
 async function loadAnnuaire() {
   try {
-    const rEnt = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=raison,secteur,ville,tel,email,id_unique&raison=not.is.null&order=raison.asc&limit=100', {
+    // NOUVEAU (audit) : on récupère aussi annuaire_contact_visible pour
+    // savoir si l'entreprise a choisi de masquer son téléphone/email dans
+    // l'annuaire public. Par défaut (valeur NULL ou true), le contact
+    // reste visible — comportement inchangé pour les comptes existants.
+    const rEnt = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=raison,secteur,ville,tel,email,id_unique,annuaire_contact_visible&raison=not.is.null&order=raison.asc&limit=100', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
-    const entreprises = ((await rEnt.json()) || []).map(function(e) { return Object.assign({}, e, { _type: 'entreprise' }); });
-
-    // NOUVEAU : les comptables apparaissent aussi dans l'annuaire —
-    // avant, seules les entreprises y étaient. Les comptes support
-    // n'apparaissent jamais ici, par construction (ils n'ont ni ligne
-    // profils_entreprise ni profils_comptable).
+    const entreprises = ((await rEnt.json()) || []).map(function(e) {
+      const visible = e.annuaire_contact_visible !== false;
+      return Object.assign({}, e, { _type: 'entreprise', tel: visible ? e.tel : '', email: visible ? e.email : '' });
+    });
     let comptables = [];
     try {
-      const rCpt = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?select=nom,cabinet,tel,email&nom=not.is.null&order=nom.asc&limit=100', {
+      const rCpt = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?select=nom,cabinet,tel,email,annuaire_contact_visible&nom=not.is.null&order=nom.asc&limit=100', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
       comptables = ((await rCpt.json()) || []).map(function(c) {
-        return { raison: c.cabinet || c.nom, secteur: 'Comptabilité', ville: '', tel: c.tel, email: c.email, id_unique: null, _type: 'comptable', _nomPerso: c.nom };
+        const visible = c.annuaire_contact_visible !== false;
+        return { raison: c.cabinet || c.nom, secteur: 'Comptabilité', ville: '', tel: visible ? c.tel : '', email: visible ? c.email : '', id_unique: null, _type: 'comptable', _nomPerso: c.nom };
       });
     } catch(eCpt) {}
-
     _annuaireData = entreprises.concat(comptables);
     filtrerAnnuaire();
   } catch(e) {
@@ -259,13 +247,13 @@ function filtrerAnnuaire() {
   }
   const secteurEmoji = { 'BTP & Construction':'🏗️', 'Commerce & Négoce':'🛒', 'Transport & Logistique':'🚛', 'Conseil & Expertise':'💼', 'Informatique & Tech':'💻', 'Santé & Médical':'🏥', 'Immobilier':'🏠', 'Artisanat':'🪡', 'Comptabilité':'🧮' };
   list.innerHTML = data.map(e => `
-    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic('${(e.email||'').replace(/'/g,"\\'")}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${(e.tel||'').replace(/'/g,"\\'")}')` : `voirProfilEntreprise('${e.id_unique||''}')`}">
+    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic('${escapeHTML(e.email||'').replace(/'/g,"\\'")}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${escapeHTML(e.tel||'').replace(/'/g,"\\'")}')` : `voirProfilEntreprise('${e.id_unique||''}')`}">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700">${escapeHTML(e.raison||'')}</div>
-          <div style="font-size:11px;color:#64748B;margin-top:2px">${e._type === 'comptable' ? '🧮 Cabinet comptable' + (e._nomPerso ? ' · ' + escapeHTML(e._nomPerso) : '') : (e.secteur||'') + (e.ville?' · 📍'+e.ville:'')}</div>
-          ${e.tel?`<div style="font-size:11px;color:#94A3B8">📞 ${e.tel}</div>`:''}
+          <div style="font-size:11px;color:#64748B;margin-top:2px">${e._type === 'comptable' ? '🧮 Cabinet comptable' + (e._nomPerso ? ' · ' + escapeHTML(e._nomPerso) : '') : escapeHTML(e.secteur||'') + (e.ville?' · 📍'+escapeHTML(e.ville):'')}</div>
+          ${e.tel?`<div style="font-size:11px;color:#94A3B8">📞 ${escapeHTML(e.tel)}</div>`:''}
         </div>
         <div style="font-size:18px;color:#94A3B8">›</div>
       </div>
@@ -277,10 +265,6 @@ function voirProfilEntreprise(idUnique) {
   const url = window.location.origin + window.location.pathname + '?profil=' + idUnique;
   window.open(url, '_blank');
 }
-
-// Point 4 (complément) : les comptables n'ont pas de page publique dédiée
-// comme les entreprises (pas d'id_unique) — une petite fiche contact
-// suffit, avec un accès WhatsApp direct.
 function voirProfilComptablePublic(email, raison, tel) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:24px';
@@ -296,10 +280,6 @@ function voirProfilComptablePublic(email, raison, tel) {
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
 }
-// ============================================================
-// STATS AVANCÉES — CA mensuel, courbe, top clients (renderStatsDashboard,
-// utilisée par le bouton "Stats" du dashboard en complément de renderStats)
-// ============================================================
 function renderStatsDashboard() {
   const f = STATE.factures || [];
   const now = new Date();
@@ -323,13 +303,7 @@ function renderStatsDashboard() {
   const evolution = moisPrec.ca > 0 ? ((moisCourant.ca - moisPrec.ca) / moisPrec.ca * 100).toFixed(1) : 0;
   const caAnnuel = f.filter(x => new Date(x.date_emission||'').getFullYear() === currentYear).reduce((s, x) => s + Number(x.ttc), 0);
   const paiementsAnnuels = f.filter(x => x.statut === 'payee' && new Date(x.date_emission||'').getFullYear() === currentYear).reduce((s, x) => s + Number(x.ttc), 0);
-  // Grid déjà géré par renderStats() — cette fonction se contente de ne
-  // pas planter si les autres zones (sa-monthly, sa-top-clients) existent
-  // déjà, remplies par renderStats.
 }
-// ============================================================
-// EXPORT CSV
-// ============================================================
 function exporterCSV() {
   const f = STATE.factures || [];
   if (!f.length) { showToast('Aucune facture à exporter', 'error'); return; }
@@ -368,9 +342,6 @@ function exporterCSVDevis() {
   setTimeout(() => URL.revokeObjectURL(url), 3000);
   showToast('✅ Export devis CSV !', 'success');
 }
-// ============================================================
-// RAPPELS AUTOMATIQUES
-// ============================================================
 function verifierRappels() {
   const today = new Date();
   const retards = (STATE.factures || []).filter(f => {
