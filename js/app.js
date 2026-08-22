@@ -632,13 +632,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   // aucun moyen de définir son mot de passe.
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const accessTokenInvite = hashParams.get('access_token');
+  const refreshTokenInvite = hashParams.get('refresh_token');
   const typeInvite = hashParams.get('type');
-  if (accessTokenInvite && (typeInvite === 'invite' || typeInvite === 'recovery' || typeInvite === 'signup')) {
+  if (accessTokenInvite && (typeInvite === 'invite' || typeInvite === 'recovery')) {
     window._jetonDefinitionMdp = accessTokenInvite;
-    // Nettoie l'URL (le jeton ne doit pas rester visible/partageable dans
-    // l'historique du navigateur une fois utilisé).
     history.replaceState(null, '', window.location.pathname + window.location.search);
     goScreen('definir-mot-passe', null);
+    return;
+  }
+  // FIX (chantier vérification email+téléphone) : un lien de confirmation
+  // d'INSCRIPTION (type=signup) ne doit PAS renvoyer vers "définir un mot
+  // de passe" — la personne en a déjà choisi un à l'inscription. Avant ce
+  // correctif, réactiver la confirmation email aurait fait resurgir ce
+  // problème (déjà présent dans le code, simplement jamais exercé tant
+  // que la confirmation était désactivée côté Supabase). Ici, on établit
+  // directement la session avec le jeton reçu, puis on enchaîne sur la
+  // vérification du téléphone si elle n'a pas encore été faite.
+  if (accessTokenInvite && typeInvite === 'signup') {
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    if (typeof sb._setSession === 'function') {
+      sb._setSession({ access_token: accessTokenInvite, refresh_token: refreshTokenInvite });
+    }
+    if (typeof apresConnexionVerifierTelephone === 'function') {
+      await apresConnexionVerifierTelephone();
+    } else {
+      goScreen('auth', null);
+      switchTab('login');
+    }
     return;
   }
 
@@ -775,7 +795,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // notifications générales — un seul intervalle (fusion de deux
   // intervalles séparés qui déclenchaient tous les deux genNotifications()
   // à ~30s d'écart, doublant inutilement les appels réseau).
-  if (sb.user?.id) ecouterChangementsDevis(sb.user.id);
+  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
+  // recevait jamais les notifications d'acceptation/refus de devis — la
+  // requête interrogeait ses propres devis au lieu de ceux de l'entreprise.
+  if (sb.user?.id) ecouterChangementsDevis(STATE.entrepriseId || sb.user.id);
 });
 
 function verifierChangementsDevis() {
@@ -885,7 +908,10 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
           return;
         }
 
-        const entrepriseId = sb.user.id;
+        // FIX (audit) : sans le fallback, un membre d'équipe qui accepte
+        // ce lien d'invitation rattachait l'invitation à son propre id
+        // au lieu de la vraie entreprise.
+        const entrepriseId = STATE.entrepriseId || sb.user.id;
         // Mettre à jour invitation avec l'ID réel de l'entreprise
         await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(pourEmail), {
           method: 'PATCH',
