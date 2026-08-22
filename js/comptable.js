@@ -1388,11 +1388,15 @@ async function envoyerInvitationEntreprise() {
 
 async function mettreAJourInvitation(invId, statut) {
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
+    // FIX (audit workflow) : anti-pattern déjà trouvé partout dans cet
+    // audit — sans vérifier r.ok, "Mis à jour" s'affichait même en cas
+    // d'échec réel de la mise à jour du statut de l'invitation.
+    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: statut })
     });
+    if (!r.ok) { showToast('❌ Erreur lors de la mise à jour', 'error'); return; }
     showToast('Mis à jour', 'success');
     document.getElementById('gestion-ent-overlay')?.remove();
     await loadComptableApp();
@@ -2315,11 +2319,13 @@ async function accepterInvitationComptable(invId, entrepriseId) {
 
 async function refuserInvitationComptable(invId) {
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
+    // FIX (audit workflow) : même anti-pattern
+    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'refusee' })
     });
+    if (!r.ok) { showToast('Erreur lors du refus', 'error'); return; }
     showToast('Invitation refusée', 'success');
     renderNotificationsComptable();
   } catch(e) { showToast('Erreur', 'error'); }
