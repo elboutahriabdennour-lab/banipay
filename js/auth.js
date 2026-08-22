@@ -187,9 +187,31 @@ async function doLogin() {
       if (errEl) errEl.textContent = '❌ ' + messageErreur;
       return;
     }
-    // Email confirmation désactivée dans Supabase - pas de vérification
-    // const confirmed = sb.user?.email_confirmed_at || sb.user?.confirmed_at;
+    // FIX (chantier vérification email+téléphone) : la confirmation email
+    // est réactivée côté Supabase — si l'email n'est pas confirmé,
+    // Supabase refuse déjà la connexion en amont (resultatLogin.error),
+    // donc rien de plus à faire ici pour l'email. Ajout de la vérification
+    // téléphone : si elle n'a jamais été faite, on interrompt la
+    // connexion normale et on affiche l'écran de vérification une seule
+    // fois — ensuite, les connexions suivantes passent directement.
+    if (!sb.user?.phone_confirmed_at) {
+      if (errEl) errEl.textContent = '';
+      goScreen('verification-telephone', null);
+      return;
+    }
 
+    await _continuerApresAuthentification(email, errEl, remember);
+  } catch(e) {
+    if (errEl) errEl.textContent = '❌ ' + (e.message || 'Email ou mot de passe incorrect');
+  }
+}
+
+// FIX (chantier vérification email+téléphone) : logique extraite de
+// doLogin() pour être réutilisable après la vérification téléphone
+// réussie (voir confirmerCodeVerificationTelephone), sans dupliquer
+// toute la détection de rôle et le chargement du bon tableau de bord.
+async function _continuerApresAuthentification(email, errEl, remember) {
+  try {
     // NOUVEAU : détection automatique — un seul formulaire de connexion
     // pour tout le monde, pas de choix à faire. On vérifie d'abord si ce
     // compte est un agent support ; si oui, on route directement vers
@@ -353,8 +375,116 @@ async function doLogin() {
       if (typeof afficherOnboarding === 'function') setTimeout(afficherOnboarding, 600);
     }
   } catch(e) {
-    if (errEl) errEl.textContent = '❌ ' + (e.message || 'Email ou mot de passe incorrect');
+    if (errEl) errEl.textContent = '❌ ' + (e.message || 'Erreur lors du chargement du compte');
   }
+}
+
+// ============================================================
+// CHANTIER : VÉRIFICATION TÉLÉPHONE (une seule fois, par SMS)
+// ============================================================
+// PÉRIMÈTRE : ceci ne remplace PAS la connexion habituelle (email +
+// mot de passe reste le seul moyen de se connecter). Le téléphone est
+// vérifié UNE SEULE FOIS, juste après la toute première connexion
+// réussie (une fois l'email lui-même confirmé), pour qu'il puisse
+// ensuite servir de moyen de récupération/support en cas de problème.
+//
+// CONTRAINTE TECHNIQUE IMPORTANTE : ceci nécessite qu'un fournisseur SMS
+// (Twilio, MessageBird...) soit configuré dans Supabase → Authentication
+// → Providers → Phone. Sans ça, l'envoi du code échouera. C'est une
+// configuration à faire manuellement dans le tableau de bord Supabase
+// (avec un vrai coût par SMS envoyé) — aucun code ne peut s'y substituer.
+//
+// Utilise le mécanisme natif de Supabase (updateUser + verifyOtp avec
+// type=phone_change) : le téléphone est rattaché et vérifié sur le MÊME
+// compte, sans jamais devenir un second identifiant de connexion.
+window._telephoneEnAttente = null;
+
+async function envoyerCodeVerificationTelephone() {
+  const tel = (el('verif-tel-numero')?.value || '').trim();
+  const errEl = el('verif-tel-err');
+  if (errEl) errEl.textContent = '';
+  if (!tel || tel.length < 8) {
+    if (errEl) errEl.textContent = 'Entrez un numéro valide (avec indicatif, ex: +212...)';
+    return;
+  }
+  // Format international minimal — on n'impose pas un pays précis, mais
+  // on exige le "+" pour éviter les numéros locaux ambigus.
+  const telFormate = tel.startsWith('+') ? tel : '+' + tel.replace(/^0+/, '212');
+  if (errEl) errEl.textContent = '⏳ Envoi du code...';
+  try {
+    const r = await fetch(SUPABASE_URL + '/auth/v1/user', {
+      method: 'PUT',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: telFormate })
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      if (errEl) errEl.textContent = '❌ ' + (d.msg || d.error_description || d.message || 'Erreur lors de l\'envoi du code');
+      return;
+    }
+    window._telephoneEnAttente = telFormate;
+    if (errEl) errEl.textContent = '';
+    document.getElementById('verif-tel-etape-numero') && (document.getElementById('verif-tel-etape-numero').style.display = 'none');
+    document.getElementById('verif-tel-etape-code') && (document.getElementById('verif-tel-etape-code').style.display = 'block');
+    showToast('✅ Code envoyé par SMS au ' + telFormate, 'success');
+  } catch(e) {
+    if (errEl) errEl.textContent = '❌ ' + (e.message || 'Erreur réseau');
+  }
+}
+
+async function confirmerCodeVerificationTelephone() {
+  const code = (el('verif-tel-code')?.value || '').trim();
+  const errEl = el('verif-tel-err');
+  if (errEl) errEl.textContent = '';
+  if (!code || code.length < 4) {
+    if (errEl) errEl.textContent = 'Entrez le code reçu par SMS';
+    return;
+  }
+  if (!window._telephoneEnAttente) {
+    if (errEl) errEl.textContent = '❌ Recommencez — aucun numéro en attente de vérification';
+    return;
+  }
+  if (errEl) errEl.textContent = '⏳ Vérification...';
+  try {
+    const r = await fetch(SUPABASE_URL + '/auth/v1/verify', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'phone_change', phone: window._telephoneEnAttente, token: code })
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      if (errEl) errEl.textContent = '❌ ' + (d.msg || d.error_description || d.message || 'Code incorrect');
+      return;
+    }
+    // Le téléphone est maintenant confirmé côté Supabase. On rafraîchit
+    // sb.user localement pour que phone_confirmed_at soit à jour, puis on
+    // reprend exactement là où doLogin() s'était arrêté.
+    if (d.access_token) {
+      sb._setSession(d);
+    } else {
+      await sb.refreshSession();
+    }
+    window._telephoneEnAttente = null;
+    if (errEl) errEl.textContent = '';
+    showToast('✅ Téléphone vérifié !', 'success');
+    const emailPourSuite = el('login-email')?.value.trim() || sb.user?.email || '';
+    const remember = el('remember-me')?.checked;
+    await _continuerApresAuthentification(emailPourSuite, errEl, remember);
+  } catch(e) {
+    if (errEl) errEl.textContent = '❌ ' + (e.message || 'Erreur réseau');
+  }
+}
+
+// Appelée depuis app.js après un clic sur le lien de confirmation
+// d'inscription (type=signup) — établit la session puis enchaîne soit
+// sur la vérification téléphone (première fois), soit directement sur le
+// tableau de bord (comptes déjà vérifiés, cas rare pour ce chemin précis).
+async function apresConnexionVerifierTelephone() {
+  if (!sb.user?.phone_confirmed_at) {
+    goScreen('verification-telephone', null);
+    return;
+  }
+  await _continuerApresAuthentification(sb.user?.email || '', null, false);
 }
 
 // ============================================================
