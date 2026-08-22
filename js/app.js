@@ -74,24 +74,31 @@ async function loadPublicProfil(profilId) {
     const d = await r.json();
     const p = d && d[0];
     if (!p) { document.body.innerHTML='<div style="text-align:center;padding:60px 20px;font-family:Karla,sans-serif"><h2>Profil introuvable</h2></div>'; return; }
+    // FIX (audit sécurité — CRITIQUE) : cette page est PUBLIQUE (accessible
+    // sans connexion via ?profil=..., pensée pour être partagée par QR
+    // code) et aucun champ n'était échappé. N'importe quelle entreprise
+    // aurait pu mettre du code dans sa propre raison sociale, adresse,
+    // téléphone... et attaquer TOUTE PERSONNE qui visite/scanne son lien
+    // de profil — la faille avec le plus grand rayon d'action possible
+    // trouvée dans cet audit.
     document.body.innerHTML = `
       <div style="font-family:Karla,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:20px">
         <div style="background:#1F6F72;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
           ${p.logo?`<img src="${p.logo}" style="max-width:80px;max-height:50px;object-fit:contain;margin-bottom:12px;filter:brightness(0) invert(1)"><br>`:''}
-          <div style="font-size:24px;font-weight:700;color:#fff">${p.raison||'—'}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">${p.secteur||''} ${p.forme?'· '+p.forme:''}</div>
+          <div style="font-size:24px;font-weight:700;color:#fff">${escapeHTML(p.raison||'—')}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">${escapeHTML(p.secteur||'')} ${p.forme?'· '+escapeHTML(p.forme):''}</div>
         </div>
         <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-bottom:12px">
-          ${[['📍 Adresse',p.adresse+(p.ville?', '+p.ville:'')],['📞 Téléphone',p.tel],['✉️ Email',p.email],['🌐 Web',p.web]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:500">${v}</span></div>`).join('')}
+          ${[['📍 Adresse',(p.adresse||'')+(p.ville?', '+p.ville:'')],['📞 Téléphone',p.tel],['✉️ Email',p.email],['🌐 Web',p.web]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:500">${escapeHTML(v)}</span></div>`).join('')}
         </div>
         <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-bottom:12px">
           <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:10px">Identifiants légaux</div>
-          ${[['RC',p.rc],['IF',p.identifiant_fiscal],['ICE',p.ice],['Patente',p.patente],['CNSS',p.cnss]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:600;font-family:monospace">${v}</span></div>`).join('')}
+          ${[['RC',p.rc],['IF',p.identifiant_fiscal],['ICE',p.ice],['Patente',p.patente],['CNSS',p.cnss]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:600;font-family:monospace">${escapeHTML(v)}</span></div>`).join('')}
         </div>
         ${p.banque||p.rib?`<div style="background:#EEF3E4;border-radius:12px;padding:16px;border:1px solid #DCE8C7">
           <div style="font-size:11px;font-weight:600;color:#6E8F4E;margin-bottom:8px">🏦 COORDONNÉES BANCAIRES</div>
-          ${p.banque?`<div style="font-size:13px;margin-bottom:4px">${p.banque}</div>`:''}
-          ${p.rib?`<div style="font-size:12px;font-family:monospace;color:#064E3B">${p.rib}</div>`:''}
+          ${p.banque?`<div style="font-size:13px;margin-bottom:4px">${escapeHTML(p.banque)}</div>`:''}
+          ${p.rib?`<div style="font-size:12px;font-family:monospace;color:#064E3B">${escapeHTML(p.rib)}</div>`:''}
         </div>`:''}
         <button id="btn-ouvrir-demande-devis" style="width:100%;margin-top:16px;padding:14px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>
         <div id="zone-demande-devis" style="display:none;background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-top:12px">
@@ -289,11 +296,25 @@ async function afficherBonCommandePublic(bcId, token) {
 
 async function repondreBonCommandePublic(bcId, reponse, bc, token) {
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_bon_commande', {
+    const rRep = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_bon_commande', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_bc_id: bcId, p_token: token, p_reponse: reponse })
     });
+    // FIX (audit workflow) : même bug que traiterActionDocument() — la
+    // réponse n'était jamais vérifiée, un fournisseur pouvait voir
+    // "Confirmé !" alors que rien n'était enregistré côté entreprise.
+    if (!rRep.ok) {
+      document.body.innerHTML = `
+        <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
+          <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+          <h2 style="color:#B23A2E;margin-bottom:8px">Votre réponse n'a pas pu être enregistrée</h2>
+          <p style="color:#6B5F54;font-size:13px;margin-bottom:20px">Merci de réessayer, ou de contacter directement l'entreprise si le problème persiste.</p>
+          <button onclick="window.location.reload()" style="padding:12px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Réessayer</button>
+        </div>
+      `;
+      return;
+    }
     const icon = reponse === 'confirme' ? '✅' : '❌';
     document.body.innerHTML = `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
