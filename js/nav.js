@@ -119,7 +119,10 @@ function badgeDV(s) { return {envoye:'Envoyé',accepte:'Accepté',refuse:'Refus�
 // ============================================================
 
 async function chargerInvitationsComptableEnAttente() {
-  const uid = sb.user?.id;
+  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
+  // voyait jamais les invitations comptable en attente de l'entreprise —
+  // la requête filtrait sur son propre id.
+  const uid = STATE.entrepriseId || sb.user?.id;
   const emailEnt = sb.user?.email;
   let invitationsCpt = [];
   try {
@@ -255,10 +258,12 @@ async function gererClicNotification(e) {
     const invData = await invResp.json();
     const inv = invData && invData[0];
 
+    // FIX (audit) : sans le fallback, l'invitation était rattachée à
+    // l'id du membre d'équipe qui clique, pas à la vraie entreprise.
     await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'acceptee', entreprise_id: sb.user?.id })
+      body: JSON.stringify({ statut: 'acceptee', entreprise_id: (STATE.entrepriseId || sb.user?.id) })
     });
 
     if (inv && inv.comptable_email) {
@@ -272,7 +277,7 @@ async function gererClicNotification(e) {
             'Prefer': 'resolution=merge-duplicates,return=minimal'
           },
           body: JSON.stringify({
-            user_id: sb.user?.id,
+            user_id: (STATE.entrepriseId || sb.user?.id),
             nom: inv.comptable_email.split('@')[0],
             email: inv.comptable_email,
             note: 'Mon comptable Zelto',
@@ -457,11 +462,16 @@ async function marquerToutesNotificationsLues() {
   const email = sb.user?.email;
   if (!email) return;
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_toutes_notifications_lues', {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_toutes_notifications_lues', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
     });
+    // FIX (audit workflow) : fetch() ne lève une exception qu'en cas
+    // d'échec réseau, pas en cas d'erreur HTTP — sans cette vérification,
+    // un échec silencieux affichait quand même "Tout marqué comme lu"
+    // alors que les notifications restaient non lues en base.
+    if (!r.ok) { showToast('Erreur — réessayez', 'error'); return; }
     showToast('✅ Tout marqué comme lu', 'success');
     fermerNotifDropdown();
     await genNotifications();
