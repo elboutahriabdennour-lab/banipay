@@ -1,8 +1,4 @@
 // ZELTO — pdf.js
-
-
-// NOUVEAU: construit les références croisées d'une facture — devis, bon de
-// commande et bon de livraison liés, chacun avec un QR vers le document.
 function construireRefsQRFacture(f) {
   const refsQR = [];
   const base = window.location.origin + window.location.pathname;
@@ -18,21 +14,15 @@ function construireRefsQRFacture(f) {
   if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id + '&t=' + (blTrouve.token_public||'') });
   return refsQR;
 }
-
 function exportPDF(id) {
   const f = STATE.factures.find(x=>x.id===id); if(!f) return;
   const profil = STATE.profil || {};
   const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : (f.lignes||[]);
-  // Lien public de la facture
   const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (f.token_public||'');
   genDocPDF({
     type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#C9971F',
     emetteur: profil,
     destinataire:(function() {
-      // FIX: f.client_ice/client_tel/client_adresse n'étaient jamais
-      // renseignés nulle part — la fiche client, elle, contient bien ces
-      // infos. On les retrouve par correspondance de nom (les factures ne
-      // stockent qu'un nom de client, pas un identifiant).
       const clientTrouve = (STATE.clients || []).find(function(c) { return c.nom === f.client; });
       return { nom: f.client, chantier: f.chantier, ice: clientTrouve?.ice || f.client_ice || '', tel: clientTrouve?.tel || f.client_tel || '', adresse: clientTrouve?.adresse || f.client_adresse || '' };
     })(),
@@ -49,7 +39,6 @@ function exportPDF(id) {
     refsQR: construireRefsQRFacture(f),
   });
 }
-
 function previewPDF() {
   const client = el('f-client')?.value.trim();
   if(!client){showToast('Remplissez le formulaire','error');return;}
@@ -68,23 +57,9 @@ function previewPDF() {
     devis_ref: STATE.currentFacture?.devis_ref||'',
     bl_ref: STATE.currentFacture?.bl_ref||'',
     doc_id: STATE.currentFacture?.id||'',
-    // FIX sécurité (trouvé en revue finale) : si on prévisualise une
-    // facture DÉJÀ enregistrée (édition), le lien doit inclure son jeton
-    // — sinon un lien sans jeton (non fonctionnel avec le verrouillage
-    // mis en place) se glissait dans le PDF. Un tout nouveau brouillon
-    // n'a pas encore de jeton (rien à lier avant la sauvegarde), donc pas
-    // de lien affiché dans ce cas, ce qui est normal.
     doc_url: STATE.currentFacture?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentFacture.id + '&t=' + (STATE.currentFacture.token_public||'')) : '',
   });
 }
-
-
-
-// NOUVEAU : traduction des libellés fixes du PDF (facture/devis/BC/BL/avoir)
-// selon la langue choisie dans Paramètres. Le montant en lettres
-// ("cinq cents dirhams") reste en français pour l'instant — sa
-// conversion correcte en arabe (accords grammaticaux) est un chantier à
-// part, pas encore fait.
 const _TRAD_PDF = {
   fr: {
     date: 'Date', echeance: 'Échéance', validite: 'Validité', jours: 'jours', paiement: 'Paiement',
@@ -116,11 +91,8 @@ const _TRAD_PDF = {
   },
 };
 function _langPDF() { return (typeof localStorage !== 'undefined' && localStorage.getItem('bp_langue') === 'ar') ? 'ar' : 'fr'; }
-
 function genDocPDF(opts) {
   const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false,refsQR=[]} = opts;
-  // La signature de l'entreprise est automatiquement reprise depuis son profil
-  // (paramètres > Ma signature/cachet) — inutile de la repasser à chaque appel.
   const signatureEmetteur = opts.signatureEmetteur || (p && p.signature_entreprise) || null;
   const signatureClient = opts.signatureClient || null;
   const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
@@ -131,13 +103,8 @@ function genDocPDF(opts) {
   const t = _TRAD_PDF[langue];
   const typeAffiche = t.typeLabels[type] || type;
   const estRTL = langue === 'ar';
-
-  // Lien public de la facture
   const docUrl = opts.doc_url || (doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '');
-
-  // QR Code (encodé en SVG via une API simple)
   const qrUrl = docUrl ? 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&color=1E3A8A&bgcolor=ffffff&data=' + encodeURIComponent(docUrl) : '';
-
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
     return `<tr style="background:${i%2===0?'#F1EEE8':'#fff'}">
@@ -146,7 +113,6 @@ function genDocPDF(opts) {
       ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
     </tr>`;
   }).join('');
-
   const html = `<!DOCTYPE html><html lang="${langue}" dir="${estRTL ? 'rtl' : 'ltr'}"><head><meta charset="UTF-8">
 <title>${typeAffiche} ${ref}<\/title>
 <style>
@@ -201,7 +167,6 @@ tbody td{border-bottom:1px solid #EAE4DA}
 .footer-page{font-size:8px;color:#9C9186}
 <\/style><\/head><body>
 <div style="display:flex;flex-direction:column;flex:1">
-
 <div class="header">
   <div>
     ${p.logo?`<img src="${p.logo}" class="h-logo" alt="logo">`:''}
@@ -220,7 +185,6 @@ tbody td{border-bottom:1px solid #EAE4DA}
 </div>
 <div class="stripe"></div>
 <div style="height:12px"></div>
-
 ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wrap;align-items:center">
   ${devis_ref?`<span>📝 ${t.devisRef} : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
   ${bl_ref?`<span>📦 ${t.blRef} : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
@@ -230,7 +194,6 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
     '</span>';
   }).join('')}
 </div>`:''}
-
 <div class="blocs">
   <div class="bloc">
     <div class="bloc-hd">${isAvoir?t.avoirPour:isDevis?t.destinataire:t.factureA}</div>
@@ -238,17 +201,17 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
       <div class="main">${escapeHTML(destinataire.nom||'—')}</div>
       ${destinataire.chantier?`<div class="line">📋 ${t.projet} : ${escapeHTML(destinataire.chantier)}</div>`:''}
       ${destinataire.adresse?`<div class="line">📍 ${escapeHTML(destinataire.adresse||'')}</div>`:''}
-      ${destinataire.ice?`<div class="line">ICE : ${destinataire.ice}</div>`:''}
-      ${destinataire.tel?`<div class="line">📞 ${destinataire.tel}</div>`:''}
+      ${destinataire.ice?`<div class="line">ICE : ${escapeHTML(destinataire.ice)}</div>`:''}
+      ${destinataire.tel?`<div class="line">📞 ${escapeHTML(destinataire.tel)}</div>`:''}
     </div>
   </div>
   <div class="bloc">
     <div class="bloc-hd">${t.emetteur}</div>
     <div class="bloc-bd">
       <div class="main">${escapeHTML(p.raison||'—')}</div>
-      ${p.adresse?`<div class="line">📍 ${escapeHTML(p.adresse||'')}${p.ville?', '+p.ville:''}</div>`:''}
-      ${p.email?`<div class="line">✉️ ${p.email}</div>`:''}
-      ${p.tel?`<div class="line">📞 ${p.tel}</div>`:''}
+      ${p.adresse?`<div class="line">📍 ${escapeHTML(p.adresse||'')}${p.ville?', '+escapeHTML(p.ville):''}</div>`:''}
+      ${p.email?`<div class="line">✉️ ${escapeHTML(p.email)}</div>`:''}
+      ${p.tel?`<div class="line">📞 ${escapeHTML(p.tel)}</div>`:''}
     </div>
   </div>
 </div>
@@ -263,7 +226,6 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
 <tbody>${lignesHtml}</tbody>
 </table>
 </div>
-
 ${showPrices?`
 <div class="totaux"><div class="totaux-box">
   <div class="tot-row"><span>${t.sousTotalHt}</span><span style="font-weight:600;color:#2A2420">${fmt(ht)} ${devise}</span></div>
@@ -275,28 +237,23 @@ ${showPrices?`
 <div style="height:6px"></div>
 <div class="arrete">${t.arreteA} <strong>${ttcEnLettres(ttc)}</strong>. ${t.juridiction}</div>
 `:''}
-
 ${note?`<div style="margin:4px 24px;background:#F7EFDC;border-left:3px solid #B8860B;border-radius:0 6px 6px 0;padding:5px 8px;font-size:9px;color:#7A5A0E"><strong>${t.note} :</strong> ${escapeHTML(note)}</div>`:''}
 ${motif?`<div style="margin:6px 28px;background:#F5E4E1;border-left:3px solid #B23A2E;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#7A2E24"><strong>${t.motif} :</strong> ${escapeHTML(motif)}</div>`:''}
-
 ${(p.banque||p.rib)?`<div class="bank-box">
-  🏦 ${t.coordBancaires} — ${p.banque||''}${p.rib?' · RIB/IBAN : <strong>'+p.rib+'</strong>':''}
-  ${p.conditions?'<br>⏱️ '+t.conditions+' : '+p.conditions:''}
-</div>`:`${p.conditions?`<div class="bank-box" style="background:#E9F4F3;border-color:#CFE3E2;color:#A67A16">⏱️ ${t.conditionsPaiement} : ${p.conditions}</div>`:''}`}
-
+  🏦 ${t.coordBancaires} — ${escapeHTML(p.banque||'')}${p.rib?' · RIB/IBAN : <strong>'+escapeHTML(p.rib)+'</strong>':''}
+  ${p.conditions?'<br>⏱️ '+t.conditions+' : '+escapeHTML(p.conditions):''}
+</div>`:`${p.conditions?`<div class="bank-box" style="background:#E9F4F3;border-color:#CFE3E2;color:#A67A16">⏱️ ${t.conditionsPaiement} : ${escapeHTML(p.conditions)}</div>`:''}`}
 <div style="flex:1;min-height:20px"></div>
 <div class="sig-zone">
   <div class="sig-item"><div class="sig-lbl">${t.cachetSignature}</div>${signatureEmetteur?`<img src="${signatureEmetteur}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
   <div class="sig-item"><div class="sig-lbl">${t.bonPourAccord}</div>${signatureClient ? (signatureClient.startsWith('TEXTE:') ? `<div style="font-size:10px;color:#55702E;font-style:italic;margin-top:6px;line-height:1.4">✅ ${escapeHTML(signatureClient.slice(6))}</div>` : `<img src="${signatureClient}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`) : ''}</div>
 </div>
-
 <div style="flex:1"></div>
-
 <div class="footer">
   <div class="footer-brand">Zel<span>to</span></div>
   <div class="footer-center">
-    ${[p.rc?'RC: '+p.rc:'', p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:'', p.ice?'ICE: '+p.ice:'', p.patente?'Pat: '+p.patente:'', p.tel?'📞 '+p.tel:'', p.email?'✉️ '+p.email:''].filter(Boolean).join(' · ')}
-    ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+p.ville:''):''}
+    ${[p.rc?'RC: '+escapeHTML(p.rc):'', p.identifiant_fiscal?'IF: '+escapeHTML(p.identifiant_fiscal):'', p.ice?'ICE: '+escapeHTML(p.ice):'', p.patente?'Pat: '+escapeHTML(p.patente):'', p.tel?'📞 '+escapeHTML(p.tel):'', p.email?'✉️ '+escapeHTML(p.email):''].filter(Boolean).join(' · ')}
+    ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+escapeHTML(p.ville):''):''}
   </div>
   <div class="footer-right" style="text-align:right">
     ${(badge_lettre||badge_tva)?`<div style="display:flex;gap:4px;justify-content:flex-end;margin-bottom:4px">
@@ -308,25 +265,18 @@ ${(p.banque||p.rib)?`<div class="bank-box">
     <div class="footer-page">Page 1/1</div>
   </div>
 </div>
-
 </div>
 <\/body><\/html>`;
-
   ouvrirPDFViewer(html, ref);
 }
-
-
 function ouvrirPDFViewer(htmlContent, ref) {
   const ancien = document.getElementById('pdf-fullscreen');
   if (ancien) ancien.remove();
-
   const screen = document.createElement('div');
   screen.id = 'pdf-fullscreen';
   screen.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column';
-
   const bar = document.createElement('div');
   bar.style.cssText = 'background:#1F6F72;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0';
-
   const btnBack = document.createElement('button');
   btnBack.textContent = '← Retour';
   btnBack.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
@@ -335,11 +285,9 @@ function ouvrirPDFViewer(htmlContent, ref) {
     if (f && f.src && f.src.startsWith('blob:')) URL.revokeObjectURL(f.src);
     screen.remove();
   };
-
   const title = document.createElement('span');
   title.textContent = ref;
   title.style.cssText = 'color:#fff;font-size:13px;font-weight:600;flex:1;text-align:center';
-
   const btnDl = document.createElement('button');
   btnDl.textContent = '💾 Télécharger';
   btnDl.style.cssText = 'background:#6E8F4E;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
@@ -351,7 +299,6 @@ function ouvrirPDFViewer(htmlContent, ref) {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
   };
-
   const btnShare = document.createElement('button');
   btnShare.textContent = '📤';
   btnShare.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer';
@@ -368,25 +315,20 @@ function ouvrirPDFViewer(htmlContent, ref) {
     }
     btnDl.click();
   };
-
   bar.appendChild(btnBack);
   bar.appendChild(title);
   bar.appendChild(btnShare);
   bar.appendChild(btnDl);
-
   const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
   const blobUrl = URL.createObjectURL(blob);
-
   const frame = document.createElement('iframe');
   frame.id = 'pdf-frame';
   frame.src = blobUrl;
   frame.style.cssText = 'flex:1;width:100%;border:none;background:#fff';
-
   screen.appendChild(bar);
   screen.appendChild(frame);
   document.body.appendChild(screen);
 }
-
 function ttcEnLettres(montant) {
   if (!montant || isNaN(montant)) return 'zéro dirham';
   const n = Math.round(Number(montant) * 100);
