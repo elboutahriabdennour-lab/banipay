@@ -1,10 +1,7 @@
 // ZELTO — produits.js
-
 function renderProduits() {
   const cnt = el('produits-count');
   if(cnt) cnt.textContent = STATE.produits.length;
-  // NOUVEAU: carte valeur totale du stock (visible seulement si au moins un
-  // article a un stock suivi)
   const carteStock = el('valeur-stock-card');
   if (carteStock) {
     const suivis = (STATE.produits || []).filter(function(p) { return p.stock !== null && p.stock !== undefined; });
@@ -54,14 +51,12 @@ function renderProduits() {
     </div>`;
   }).join('');
 }
-
 function initNouveauProduit() {
   ['p-nom','p-desc','p-ref','p-prix','p-prix-ttc','p-cout','p-stock','p-seuil'].forEach(id=>{const e=el(id);if(e)e.value='';});
   el('p-unite')&&(el('p-unite').value='u');
   el('p-categorie')&&(el('p-categorie').value='service');
   el('p-tva')&&(el('p-tva').value='20');
 }
-
 function calcPrixTTC() {
   const ht = parseFloat(el('p-prix')?.value)||0;
   const tva = parseFloat(el('p-tva')?.value)||20;
@@ -74,7 +69,6 @@ function calcPrixTTC() {
     }
   }
 }
-
 async function sauvegarderProduit() {
   const nom = el('p-nom')?.value.trim();
   if(!nom){showToast("Entrez le nom de l'article",'error');return;}
@@ -100,7 +94,6 @@ async function sauvegarderProduit() {
     setTimeout(()=>goScreen('produits'),600);
   } catch(e){showToast('❌ '+e.message,'error');}
 }
-
 async function supprimerProduit(id) {
   if(!confirm('Supprimer cet article ?')) return;
   const p = STATE.produits.find(x => x.id === id);
@@ -110,11 +103,6 @@ async function supprimerProduit(id) {
   showToast('Supprimé');
   logAudit('produit', id, 'suppression', p?.nom || '');
 }
-
-// ============================================================
-// PROFIL
-// ============================================================
-
 function ouvrirModifProduit(id) {
   const p = STATE.produits.find(x => x.id === id);
   if (!p) return;
@@ -132,7 +120,6 @@ function ouvrirModifProduit(id) {
   calcPrixTTCModif();
   goScreen('modifier-produit');
 }
-
 function calcPrixTTCModif() {
   const ht = parseFloat(el('mp-prix')?.value) || 0;
   const tva = parseFloat(el('mp-tva')?.value) || 20;
@@ -143,7 +130,6 @@ function calcPrixTTCModif() {
     margeEl.textContent = 'Marge: ' + Math.round((ht-cout)/ht*100) + '%';
   }
 }
-
 async function sauvegarderModifProduit() {
   const p = STATE.currentProduit;
   if (!p) return;
@@ -171,9 +157,7 @@ async function sauvegarderModifProduit() {
     goScreen('produits');
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
-
 function modifierProduit(id) { ouvrirModifProduit(id); }
-
 function archiverProduit(id) {
   const p = STATE.produits.find(x => x.id === id);
   if (!p || !confirm('Archiver cet article ?')) return;
@@ -184,11 +168,6 @@ function archiverProduit(id) {
       showToast('Article archivé');
     });
 }
-
-// ============================================================
-// IMPORT / EXPORT CSV — CATALOGUE PRODUITS
-// ============================================================
-
 function telechargerTemplateProduitsCSV() {
   telechargerCSV(
     'modele_produits.csv',
@@ -196,7 +175,6 @@ function telechargerTemplateProduitsCSV() {
     [['Prestation exemple', 'Détail optionnel', 'REF-001', '500.00', '20', '', '', 'u', 'service']]
   );
 }
-
 function exporterProduitsCSV() {
   if (!STATE.produits.length) { showToast('Aucun article à exporter', 'error'); return; }
   const headers = ['nom', 'description', 'reference', 'prix_ht', 'tva_rate', 'cout_achat', 'stock', 'unite', 'categorie'];
@@ -206,42 +184,33 @@ function exporterProduitsCSV() {
   telechargerCSV('banipay_catalogue_' + today() + '.csv', headers, rows);
   showToast('✅ Export catalogue téléchargé !', 'success');
 }
-
 async function importerProduitsCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
   event.target.value = '';
-
   showToast('⏳ Lecture du fichier...');
   try {
     const text = await lireFichierTexte(file);
     const rows = parseCSV(text);
     if (!rows.length) { showToast('Fichier CSV vide ou illisible', 'error'); return; }
-
     const getVal = function(r, keys) {
       for (const k of keys) { if (r[k] !== undefined && r[k] !== '') return r[k]; }
       return '';
     };
     const catValides = ['service', 'produit', 'main-oeuvre', 'transport', 'materiaux', 'autre'];
-
     let importes = 0, ignores = 0, bloquesParLimite = 0;
     showToast('⏳ Import de ' + rows.length + ' ligne(s)...');
-
     for (const r of rows) {
       const nom = getVal(r, ['nom', 'name', 'designation', 'désignation']);
       if (!nom) { ignores++; continue; }
-
       const existe = STATE.produits.find(function(p) { return p.nom.toLowerCase() === nom.toLowerCase(); });
       if (existe) { ignores++; continue; }
-
       if (STATE.limiteProduits != null && (STATE.produits || []).length >= STATE.limiteProduits) {
         bloquesParLimite += (rows.length - importes - ignores - bloquesParLimite);
         break;
       }
-
       let categorie = (getVal(r, ['categorie', 'catégorie', 'category']) || 'service').toLowerCase();
       if (!catValides.includes(categorie)) categorie = 'autre';
-
       const body = {
         user_id: (STATE.entrepriseId || sb.user.id),
         nom: nom,
@@ -254,13 +223,11 @@ async function importerProduitsCSV(event) {
         unite: getVal(r, ['unite', 'unité', 'unit']) || 'u',
         categorie: categorie,
       };
-
       try {
         const result = await sb.post('produits', body);
         if (result && result.length) { STATE.produits.push(result[0]); importes++; }
       } catch(e2) { ignores++; }
     }
-
     STATE.produits.sort(function(a, b) { return a.nom.localeCompare(b.nom); });
     renderProduits();
     showToast('✅ ' + importes + ' article(s) importé(s)' + (ignores ? ', ' + ignores + ' ignoré(s)' : '') + (bloquesParLimite ? ', ' + bloquesParLimite + ' bloqué(s) par la limite de votre forfait' : ''), bloquesParLimite ? 'error' : 'success');
@@ -269,13 +236,7 @@ async function importerProduitsCSV(event) {
     showToast('Erreur import: ' + e.message, 'error');
   }
 }
-
-// ============================================================
-// ENVOI UNIFIÉ — WhatsApp / Email / Lien / Zelto
-// ============================================================
-
 window._envoiCourant = null;
-
 function ouvrirModalEnvoi(type, id) {
   const doc = type === 'facture'
     ? STATE.factures.find(x => x.id === id)
@@ -283,7 +244,6 @@ function ouvrirModalEnvoi(type, id) {
     ? (STATE.bonsCommande || []).find(x => x.id === id)
     : STATE.devis.find(x => x.id === id);
   if (!doc) return;
-
   window._envoiCourant = { type, id, doc };
   const libelleType = type === 'facture' ? 'la facture' : type === 'bon-commande' ? 'le bon de commande' : 'le devis';
   setEl('me-titre', 'Envoyer ' + libelleType + ' ' + doc.ref);
@@ -291,7 +251,6 @@ function ouvrirModalEnvoi(type, id) {
   if (picker) { picker.style.display = 'none'; picker.innerHTML = ''; }
   el('modal-envoyer')?.classList.add('active');
 }
-
 function envoyerVia(canal) {
   const ctx = window._envoiCourant;
   if (!ctx) return;
@@ -301,7 +260,6 @@ function envoyerVia(canal) {
   const docUrl = window.location.origin + window.location.pathname + (isBC ? '?bc=' + id : '?doc=' + id + (type === 'devis' ? '&type=devis' : '')) + '&t=' + (doc?.token_public||'');
   const libelleDest = isBC ? (doc.fournisseur || '') : (doc.client || '');
   const libelleDoc = type === 'facture' ? 'facture' : isBC ? 'bon de commande' : 'devis';
-
   if (canal === 'whatsapp') {
     const msg = encodeURIComponent(
       'Bonjour ' + libelleDest + ',\n\n' +
@@ -313,7 +271,6 @@ function envoyerVia(canal) {
     window.open('https://wa.me/?text=' + msg, '_blank');
     if (isBC && typeof envoyerBonCommande === 'function') _marquerBCEnvoye(id);
     closeAllModals();
-
   } else if (canal === 'email') {
     const sujet = encodeURIComponent((type === 'facture' ? 'Facture ' : isBC ? 'Bon de commande ' : 'Devis ') + doc.ref);
     const corps = encodeURIComponent(
@@ -326,17 +283,12 @@ function envoyerVia(canal) {
     window.location.href = 'mailto:' + (doc.client_email || '') + '?subject=' + sujet + '&body=' + corps;
     if (isBC) _marquerBCEnvoye(id);
     closeAllModals();
-
   } else if (canal === 'lien') {
     navigator.clipboard?.writeText(docUrl).then(() => showToast('✅ Lien copié !', 'success'));
     if (isBC) _marquerBCEnvoye(id);
     closeAllModals();
-
   } else if (canal === 'banipay') {
     if (isBC) {
-      // NOUVEAU: le BC connaît déjà son fournisseur_id s'il a été choisi via
-      // le sélecteur "Fournisseur sur Zelto" — pas besoin de repicker, on
-      // notifie directement.
       if (doc.fournisseur_id) {
         _marquerBCEnvoye(id, true);
         closeAllModals();
@@ -348,27 +300,33 @@ function envoyerVia(canal) {
     }
   }
 }
-
-// Marque le BC comme envoyé et notifie le fournisseur s'il a un compte Zelto
 async function _marquerBCEnvoye(id, notifierMaintenant) {
   if (typeof envoyerBonCommande !== 'function') return;
-  // Réutilise la logique déjà écrite (statut + notification RPC) sans
-  // dupliquer le partage, puisqu'on vient de le faire nous-mêmes ci-dessus.
   try {
     await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'envoye' });
     const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
     if (bc) bc.statut = 'envoye';
     if (bc && bc.fournisseur_id) {
-      await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_bc_recu', {
+      const rNotif = await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_bc_recu', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_bc_id: id })
       });
-      if (notifierMaintenant) showToast('✅ Notification envoyée au fournisseur', 'success');
+      // FIX (audit workflow) : même souci — fetch() ne lève pas d'exception
+      // sur une erreur HTTP, donc le message de succès s'affichait même si
+      // la notification n'avait pas réellement atteint le fournisseur.
+      if (notifierMaintenant) {
+        showToast(rNotif.ok ? '✅ Notification envoyée au fournisseur' : '⚠️ Bon de commande enregistré, mais la notification au fournisseur a échoué', rNotif.ok ? 'success' : 'error');
+      }
     }
-  } catch(e) {}
+  } catch(e) {
+    // FIX (audit) : avant, un échec ici passait totalement inaperçu — le
+    // bon de commande restait affiché comme "non envoyé" alors que le
+    // message WhatsApp/email était déjà parti côté utilisateur.
+    console.warn('_marquerBCEnvoye: échec de la mise à jour du statut', e);
+    showToast('⚠️ Le message est parti, mais le statut du bon de commande n\'a pas pu être mis à jour', 'error');
+  }
 }
-
 function afficherPickerClientsZelto() {
   const picker = el('me-banipay-picker');
   if (!picker) return;
@@ -385,18 +343,12 @@ function afficherPickerClientsZelto() {
     '</div>'
   ).join('');
 }
-
 async function envoyerVersCompteZelto(destinataireId, destinataireNom, destinataireEmail) {
   const ctx = window._envoiCourant;
   if (!ctx) return;
   const { type, id, doc } = ctx;
   const p = STATE.profil || {};
-
   try {
-    // FIX: utilise la fonction RPC SECURITY DEFINER (contourne complètement
-    // la RLS, y compris pour le rôle anon) au lieu d'un accès direct à la
-    // table — approche identique à celle qui a fini par résoudre le
-    // lettrage/TVA.
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
       headers: {
