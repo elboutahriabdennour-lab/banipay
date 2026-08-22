@@ -260,6 +260,12 @@ async function genererFactureImmediate(id) {
   showToast('⏳ Génération de la facture...');
   try {
     const facture = await genererFactureDepuisAbonnement(a);
+    // FIX (audit workflow — argent) : avant, la date de prochaine
+    // génération avançait même si la facture n'avait pas été créée
+    // (échec silencieux de sb.post sans exception) — l'abonnement
+    // pensait avoir facturé cette échéance alors que non, et le client
+    // n'aurait jamais été facturé pour cette période.
+    if (!facture) { showToast('❌ La facture n\'a pas pu être créée', 'error'); return; }
     const prochaine = calculerProchaineDateAbonnement(a.prochaine_date, a.frequence, a.jour_generation);
     await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
       prochaine_date: prochaine,
@@ -268,7 +274,7 @@ async function genererFactureImmediate(id) {
     a.prochaine_date = prochaine;
     a.derniere_generation = today();
     renderDetailAbonnement();
-    showToast('✅ Facture ' + (facture ? facture.ref : '') + ' générée !', 'success');
+    showToast('✅ Facture ' + facture.ref + ' générée !', 'success');
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
 
@@ -289,6 +295,11 @@ async function verifierAbonnements() {
   for (const a of aTraiter) {
     try {
       const facture = await genererFactureDepuisAbonnement(a);
+      // FIX (audit workflow — argent) : même risque qu'en génération
+      // manuelle, mais plus grave ici car ce chemin tourne sans
+      // supervision humaine à chaque connexion — sans ce garde-fou, une
+      // échéance de facturation aurait pu être silencieusement sautée.
+      if (!facture) { console.warn('verifierAbonnements: facture non créée pour', a.client); continue; }
       const prochaine = calculerProchaineDateAbonnement(a.prochaine_date, a.frequence, a.jour_generation);
       await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
         prochaine_date: prochaine,
