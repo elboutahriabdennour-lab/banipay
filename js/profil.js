@@ -1,5 +1,4 @@
 // ZELTO — profil.js
-
 function renderProfil() {
   const p = STATE.profil;
   const id = p.id_unique || 'BP-' + (sb.user?.id||'').substr(0,6).toUpperCase();
@@ -8,7 +7,6 @@ function renderProfil() {
   setEl('pv-nom', p.raison||'Mon Entreprise');
   setEl('pv-id', '#'+id);
   setEl('pv-rc-label', `RC ${p.rc||'—'} · IF ${p.identifiant_fiscal||'—'} · ICE ${p.ice||'—'}`);
-  // Profil completeness
   const required = ['raison','adresse','tel','rc','identifiant_fiscal','ice'];
   const filled = required.filter(k=>p[k]).length;
   const pct = Math.round(filled/required.length*100);
@@ -21,7 +19,6 @@ function renderProfil() {
     barre.style.width = pct + '%';
     barre.style.background = pct === 100 ? '#8FBF6B' : pct >= 50 ? '#E4C77A' : '#D98066';
   }
-  // Info rows
   const fields = [
     ['🏢 Raison',p.raison],['🏭 Secteur',p.secteur],['⚖️ Forme',p.forme],
     ['📍 Adresse',p.adresse?p.adresse+(p.ville?', '+p.ville:''):null],
@@ -35,23 +32,16 @@ function renderProfil() {
     `<div class="p-card-title">Informations entreprise</div>` +
     fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('') +
     `<div class="p-row"><span class="p-lbl">🎨 Couleur PDF</span><span class="p-val"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${p.couleur_accent||'#C9971F'};vertical-align:middle;margin-right:6px;border:1px solid #E3DCCF"></span>${p.couleur_accent||'#C9971F'}</span></div>`;
-  // QR
   const publicUrl = window.location.origin+window.location.pathname+'?profil='+id;
   setEl('pv-lien', publicUrl);
-  // FIX: genQRCanvas() dessinait un faux QR décoratif (carrés aléatoires),
-  // qui ne pouvait évidemment jamais être scanné — remplacé par un vrai QR
-  // code généré via l'API déjà utilisée ailleurs dans l'app (comptable, etc.)
   const qrContainer = el('qr-canvas-container');
   if (qrContainer) {
     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(publicUrl);
     qrContainer.innerHTML = '<img src="' + qrUrl + '" width="120" height="120" style="border-radius:8px;background:#F1EEE8">';
   }
-  // Objectif
   if(el('pv-objectif')) el('pv-objectif').textContent = p.objectif_mensuel ? fmtInt(p.objectif_mensuel)+' MAD/mois' : 'Non défini';
-  // Comptable link
   updateComptableLinkDisplay();
 }
-
 function goProfilEdit(show=true) {
   const view = el('profil-view');
   const edit = el('profil-edit');
@@ -72,14 +62,12 @@ function goProfilEdit(show=true) {
   Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#C9971F':'');});
   const codeEl = el('pf-code-comptable');
   if(codeEl) codeEl.value = '';
-  // Initialiser le canvas de signature entreprise (si le module signature.js est présent)
   if (typeof initSignatureEntrepriseCanvas === 'function') {
     setTimeout(initSignatureEntrepriseCanvas, 50);
   }
 }
-
 async function saveProfil() {
-  const data = { id: sb.user.id };
+  const data = { id: (STATE.entrepriseId || sb.user.id) };
   const map = {
     'pe-raison':'raison','pe-secteur':'secteur','pe-forme':'forme',
     'pe-adresse':'adresse','pe-ville':'ville','pe-cp':'cp',
@@ -94,8 +82,6 @@ async function saveProfil() {
     const e=el(id);
     if(e){ data[key]=e.value.trim(); STATE.profil[key]=e.value.trim(); }
   });
-  // Signature d'entreprise : uniquement si (re)dessinée pendant cette édition,
-  // pour ne jamais écraser une signature déjà enregistrée sans raison.
   if (typeof getSignatureEntrepriseDataUrl === 'function') {
     const sigDataUrl = getSignatureEntrepriseDataUrl();
     if (sigDataUrl !== null) {
@@ -103,30 +89,23 @@ async function saveProfil() {
       STATE.profil.signature_entreprise = sigDataUrl;
     }
   }
-  // Generate id_unique if not exists
   if(!STATE.profil.id_unique) {
     data.id_unique = 'BP-'+uid6();
     STATE.profil.id_unique = data.id_unique;
   }
-
-  // NOUVEAU : contraintes de saisie imposées par la DGI — l'ICE doit
-  // faire EXACTEMENT 15 chiffres (aucune exception, c'est le format
-  // officiel), RC et IF doivent être numériques s'ils sont renseignés.
   if (typeof validerIdentifiantsLegaux === 'function' && !validerIdentifiantsLegaux(el('pe-ice')?.value.trim(), el('pe-rc')?.value.trim(), el('pe-if')?.value.trim())) return;
-
   showToast('⏳ Sauvegarde...');
   try {
     await sb.upsert('profils_entreprise', data);
     const code = el('pf-code-comptable')?.value.trim();
     if(code&&code.length>=4) {
-      await sb.upsert('acces_comptable',{user_id:sb.user.id,email:sb.user.email,code});
+      await sb.upsert('acces_comptable',{user_id:(STATE.entrepriseId || sb.user.id),email:sb.user.email,code});
     }
     showToast('✅ Profil enregistré !','success');
     goProfilEdit(false);
     renderProfil();
   } catch(e){showToast('❌ '+e.message,'error');}
 }
-
 function updateComptableLinkDisplay() {
   const email = sb.user?.email;
   if (!email) return;
@@ -134,76 +113,61 @@ function updateComptableLinkDisplay() {
   const el_lien = el('pv-comptable-link');
   if(el_lien) el_lien.textContent = lien;
 }
-
 function copierLienProfil() {
   const id = STATE.profil.id_unique||'BP-000000';
   const lien = `${window.location.origin}${window.location.pathname}?profil=${id}`;
   navigator.clipboard?.writeText(lien).then(()=>showToast('✅ Lien copié !','success'));
 }
-
 async function partagerProfil() {
   const id = STATE.profil.id_unique||'BP-000000';
   const lien = `${window.location.origin}${window.location.pathname}?profil=${id}`;
   if(navigator.share){try{await navigator.share({title:STATE.profil.raison||'Zelto',url:lien});return;}catch(e){}}
   navigator.clipboard?.writeText(lien).then(()=>showToast('✅ Lien copié !','success'));
 }
-
 async function uploadLogo(event) {
   const file = event.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = async (e) => {
     const b64 = e.target.result;
+    const ancienLogo = STATE.profil.logo;
     STATE.profil.logo = b64;
-    await sb.upsert('profils_entreprise',{id:sb.user.id,logo:b64});
-    const preview = el('logo-preview-container');
-    if(preview) preview.innerHTML = `<img src="${b64}" style="max-width:120px;max-height:60px;border-radius:8px;object-fit:contain">`;
-    const delBtn = el('del-logo-btn');
-    if(delBtn) delBtn.style.display='block';
-    showToast('✅ Logo enregistré','success');
+    // FIX (audit workflow) : sb.upsert() lève maintenant une vraie erreur
+    // en cas d'échec (voir config.js) — sans ce try/catch, une erreur ici
+    // aurait fait planter silencieusement la fonction, sans aucun message
+    // pour l'utilisateur.
+    try {
+      await sb.upsert('profils_entreprise',{id:(STATE.entrepriseId || sb.user.id),logo:b64});
+      const preview = el('logo-preview-container');
+      if(preview) preview.innerHTML = `<img src="${b64}" style="max-width:120px;max-height:60px;border-radius:8px;object-fit:contain">`;
+      const delBtn = el('del-logo-btn');
+      if(delBtn) delBtn.style.display='block';
+      showToast('✅ Logo enregistré','success');
+    } catch(err) {
+      STATE.profil.logo = ancienLogo;
+      showToast('❌ ' + err.message, 'error');
+    }
   };
   reader.readAsDataURL(file);
 }
-
 async function supprimerLogo() {
+  const ancienLogo = STATE.profil.logo;
   STATE.profil.logo = null;
-  await sb.upsert('profils_entreprise',{id:sb.user.id,logo:null});
-  const preview = el('logo-preview-container');
-  if(preview) preview.innerHTML='';
-  const delBtn = el('del-logo-btn');
-  if(delBtn) delBtn.style.display='none';
-  showToast('Logo supprimé');
-}
-
-// ============================================================
-// QR CODE INLINE
-// ============================================================
-
-function genQRCanvas(canvasId, text, size) {
-  const canvas = el(canvasId); if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,size,size);
-  ctx.strokeStyle='#2A2420'; ctx.lineWidth=6; ctx.strokeRect(3,3,size-6,size-6);
-  const drawCorner=(x,y)=>{
-    ctx.fillStyle='#2A2420';ctx.fillRect(x,y,28,28);
-    ctx.fillStyle='#fff';ctx.fillRect(x+5,y+5,18,18);
-    ctx.fillStyle='#2A2420';ctx.fillRect(x+9,y+9,10,10);
-  };
-  drawCorner(12,12);drawCorner(size-40,12);drawCorner(12,size-40);
-  // Random modules for visual
-  ctx.fillStyle='#2A2420';
-  const seed=text.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-  for(let i=0;i<40;i++){
-    const rx=(seed*i*7)%size, ry=(seed*i*13)%size;
-    if(rx>40&&rx<size-40&&ry>40&&ry<size-40) ctx.fillRect(rx,ry,4,4);
+  try {
+    await sb.upsert('profils_entreprise',{id:(STATE.entrepriseId || sb.user.id),logo:null});
+    const preview = el('logo-preview-container');
+    if(preview) preview.innerHTML='';
+    const delBtn = el('del-logo-btn');
+    if(delBtn) delBtn.style.display='none';
+    showToast('Logo supprimé');
+  } catch(err) {
+    STATE.profil.logo = ancienLogo;
+    showToast('❌ ' + err.message, 'error');
   }
-  ctx.fillStyle='#C9971F';ctx.font='bold 10px Arial';ctx.textAlign='center';
-  ctx.fillText('Zelto',size/2,size/2+4);
 }
-
-// ============================================================
-// COMPTABLE
-// ============================================================
-
+// FIX (audit) : genQRCanvas() retirée — c'était l'ancienne version du QR
+// code (dessiné à la main, décoratif, jamais scannable), remplacée
+// partout par un vrai QR via l'API qrserver.com. Plus aucun appel dans
+// le code, sans quoi cette suppression aurait cassé quelque chose.
 function autoSaveDraft() {
   if (!STATE.lignesF.length && !el('f-client')?.value) return;
   const draft = {
@@ -216,25 +180,21 @@ function autoSaveDraft() {
     savedAt: new Date().toISOString()
   };
   const drafts = listDrafts();
-  // Keep max 5 drafts
   const existing = drafts.findIndex(d => d.client === draft.client && d.chantier === draft.chantier);
   if (existing > -1) drafts[existing] = draft;
   else drafts.unshift(draft);
   localStorage.setItem('bp_drafts_' + sb.user?.id, JSON.stringify(drafts.slice(0, 5)));
   showToast('📋 Brouillon sauvegardé', 'default');
 }
-
 function listDrafts() {
   try { return JSON.parse(localStorage.getItem('bp_drafts_' + sb.user?.id) || '[]'); }
   catch(e) { return []; }
 }
-
 function deleteDraft(id) {
   const drafts = listDrafts().filter(d => d.id !== id);
   localStorage.setItem('bp_drafts_' + sb.user?.id, JSON.stringify(drafts));
   renderBrouillons();
 }
-
 function restoreDraft(id) {
   const draft = listDrafts().find(d => d.id === id);
   if (!draft) return;
@@ -242,7 +202,6 @@ function restoreDraft(id) {
   goScreen('nouvelle');
   showToast('📋 Brouillon restauré', 'success');
 }
-
 function renderBrouillons() {
   const drafts = listDrafts();
   const cnt = el('brouillons-count');
@@ -266,11 +225,6 @@ function renderBrouillons() {
       </div>
     </div>`).join('');
 }
-
-// ============================================================
-// MODIFIER CLIENT
-// ============================================================
-
 function renderParametres() {
   const p = STATE.profil;
   el('param-prefix-fac') && (el('param-prefix-fac').value = p.prefix_fac || 'FAC');
@@ -280,9 +234,13 @@ function renderParametres() {
   el('param-mode-paiement') && (el('param-mode-paiement').value = p.mode_paiement_defaut || 'virement');
   el('param-tva-defaut') && (el('param-tva-defaut').value = p.tva_defaut || '20');
   el('param-methode-stock') && (el('param-methode-stock').value = p.methode_stock || 'CMUP');
+  // NOUVEAU (audit) : l'entreprise choisit si son téléphone/email
+  // apparaissent dans l'annuaire public Zelto. Par défaut activé (aucun
+  // changement de comportement pour les comptes existants), mais
+  // désormais désactivable en un clic.
+  el('param-annuaire-contact-visible') && (el('param-annuaire-contact-visible').checked = p.annuaire_contact_visible !== false);
   updateParamPreview();
 }
-
 function updateParamPreview() {
   const prefix = el('param-prefix-fac')?.value || 'FAC';
   const start = el('param-num-start')?.value || '1';
@@ -290,10 +248,9 @@ function updateParamPreview() {
   const num = String(start).padStart(4, '0');
   setEl('param-preview', `${prefix}-${year}-${num}`);
 }
-
 async function sauvegarderParametres() {
   const data = {
-    id: sb.user.id,
+    id: (STATE.entrepriseId || sb.user.id),
     prefix_fac: el('param-prefix-fac')?.value.trim() || 'FAC',
     prefix_dev: el('param-prefix-dev')?.value.trim() || 'DEV',
     num_start: parseInt(el('param-num-start')?.value) || 1,
@@ -301,6 +258,7 @@ async function sauvegarderParametres() {
     mode_paiement_defaut: el('param-mode-paiement')?.value || 'virement',
     tva_defaut: parseInt(el('param-tva-defaut')?.value) || 20,
     methode_stock: el('param-methode-stock')?.value || 'CMUP',
+    annuaire_contact_visible: el('param-annuaire-contact-visible') ? !!el('param-annuaire-contact-visible').checked : true,
   };
   showToast('⏳ Sauvegarde...');
   try {
@@ -310,14 +268,12 @@ async function sauvegarderParametres() {
     goScreen('profil');
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
-
 function ouvrirModifMotDePasse() {
   el('mdp-new') && (el('mdp-new').value = '');
   el('mdp-confirm') && (el('mdp-confirm').value = '');
   el('mdp-err') && (el('mdp-err').textContent = '');
   el('modal-mdp')?.classList.add('active');
 }
-
 async function doUpdatePassword() {
   const pwd = el('mdp-new')?.value;
   const confirm2 = el('mdp-confirm')?.value;
@@ -338,11 +294,7 @@ async function doUpdatePassword() {
     showToast('✅ Mot de passe mis à jour !', 'success');
   } catch(e) { if(errEl) errEl.textContent = '❌ ' + e.message; }
 }
-
 async function updatePassword(newPwd) { return doUpdatePassword(); }
-
-// NOUVEAU: export RGPD — récupérer toutes ses données avant suppression
-// (la suppression existait déjà, l'export manquait).
 function exporterToutesMesDonnees() {
   showToast('⏳ Préparation de l\'export...');
   try {
@@ -372,17 +324,14 @@ function exporterToutesMesDonnees() {
     showToast('Erreur: ' + e.message, 'error');
   }
 }
-
 function confirmerSuppressionCompte() {
   if (!confirm('⚠️ Cette action est IRRÉVERSIBLE.\nToutes vos données seront supprimées.\n\nÊtes-vous sûr ?')) return;
   if (!confirm('Dernière confirmation : supprimer définitivement votre compte Zelto ?')) return;
   deleteAccount();
 }
-
 async function deleteAccount() {
   showToast('⏳ Suppression en cours...');
   try {
-    // Delete all user data
     const uid = sb.user.id;
     await Promise.all([
       sb.del('factures', `user_id=eq.${uid}`),
@@ -398,19 +347,7 @@ async function deleteAccount() {
     showToast('Compte supprimé', 'success');
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
-
-// ============================================================
-// PORTAIL CLIENT (base)
-// ============================================================
-
-
-
-// ============================================================
-// ARCHIVE DOCUMENTS
-// ============================================================
-
 let _archiveType = '';
-
 function renderArchive() {
   const list = el('archive-list');
   const count = el('archive-count');
@@ -435,7 +372,6 @@ function renderArchive() {
     return card.outerHTML;
   }).join('');
 }
-
 function ajouterDocumentArchive(type) {
   _archiveType = type;
   const labels = {statuts:'Statuts', rib:'RIB bancaire', cnss:'Attestation CNSS', patente:'Patente', ice:'Certificat ICE', autre:'Autre'};
@@ -443,7 +379,6 @@ function ajouterDocumentArchive(type) {
   const inp = el('archive-file-input');
   if (inp) { inp.setAttribute('data-type', type); inp.click(); }
 }
-
 async function uploadDocumentArchive(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -454,7 +389,7 @@ async function uploadDocumentArchive(event) {
   try {
     const reader = new FileReader();
     reader.onload = async function(e) {
-      const uid = sb.user?.id;
+      const uid = STATE.entrepriseId || sb.user?.id;
       if (!uid) return;
       const doc = { id: Date.now().toString(), type: labels[type]||type, nom: file.name, icon: icons[type]||'\u{1F4C4}', date: new Date().toLocaleDateString('fr-FR'), data: e.target.result, size: (file.size/1024).toFixed(0)+' KB', user_id: uid };
       await sb.post('archive_documents', doc);
@@ -467,7 +402,6 @@ async function uploadDocumentArchive(event) {
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
   event.target.value = '';
 }
-
 async function supprimerDocArchive(id) {
   if (!confirm('Supprimer ce document ?')) return;
   try {
@@ -477,32 +411,18 @@ async function supprimerDocArchive(id) {
     showToast('Document supprimé', 'success');
   } catch(e) { showToast('Erreur', 'error'); }
 }
-
 async function loadArchive() {
   try {
-    const uid = sb.user?.id;
+    const uid = STATE.entrepriseId || sb.user?.id;
     if (!uid) return;
     const docs = await sb.get('archive_documents', 'user_id=eq.' + uid + '&order=created_at.desc');
     STATE.archive = docs || [];
     renderArchive();
   } catch(e) { STATE.archive = []; }
 }
-
-// ============================================================
-// GESTION ACCÈS COMPTABLE PAR EMAIL
-// ============================================================
-
 async function renderAccesComptable() { inviterComptable(); }
-
-
-// FIX: cette fonction n'existait tout simplement pas — les boutons
-// "Relevés bancaires" appelaient loadReleves() qui n'était définie nulle
-// part, et STATE.releves n'était jamais initialisé depuis la base. Résultat
-// concret : le bouton ne faisait rien du tout (ReferenceError silencieux),
-// et même en le corrigeant, uploadReleve() aurait planté sur
-// "STATE.releves.unshift" appliqué à undefined.
 async function loadReleves() {
-  const uid = sb.user?.id;
+  const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) { STATE.releves = []; return; }
   try {
     STATE.releves = (await sb.get('releves_bancaires', 'user_id=eq.' + uid + '&order=annee.desc,mois.desc')) || [];
@@ -511,12 +431,9 @@ async function loadReleves() {
   }
   renderReleves();
 }
-
 function renderReleves() {
   const list = el('releves-list');
   if (!list) return;
-
-  // Set current month/year defaults
   const now = new Date();
   const moisEl = el('releve-mois');
   const anneeEl = el('releve-annee');
@@ -525,15 +442,12 @@ function renderReleves() {
     anneeEl.value = String(now.getFullYear());
     moisEl.dataset.set = '1';
   }
-
   const releves = STATE.releves || [];
   if (!releves.length) {
     list.innerHTML = '<div class="empty"><div class="empty-ico">🏦</div><div class="empty-title">Aucun relevé</div><div>Uploadez vos relevés pour les partager avec votre comptable</div></div>';
     return;
   }
-
   const moisLabels = ['', 'Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-
   list.innerHTML = releves.map(function(r) {
     return '<div class="card" style="margin:0 20px 10px">' +
       '<div style="display:flex;align-items:center;gap:12px">' +
@@ -552,24 +466,20 @@ function renderReleves() {
     '</div>';
   }).join('');
 }
-
 function telechargerReleveEntreprise(releveId) {
   const r = (STATE.releves || []).find(function(x) { return String(x.id) === String(releveId); });
   if (!r || !r.data) { showToast('Fichier introuvable', 'error'); return; }
   if (typeof telechargerFichierBase64 === 'function') telechargerFichierBase64(r.data, r.nom_fichier || 'releve');
 }
-
 async function uploadReleve(event) {
   const file = event.target.files[0];
   if (!file) return;
   const mois = el('releve-mois')?.value || '01';
   const annee = el('releve-annee')?.value || '2026';
   const banque = (el('releve-banque')?.value || '').trim() || 'Banque';
-  const uid = sb.user?.id;
+  const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
-
   showToast('\u23f3 Upload en cours...');
-
   try {
     const reader = new FileReader();
     reader.onload = async function(e) {
@@ -585,7 +495,6 @@ async function uploadReleve(event) {
         vu_par_comptable: false,
         created_at: new Date().toISOString()
       };
-
       await sb.post('releves_bancaires', releve);
       STATE.releves.unshift(releve);
       renderReleves();
@@ -598,7 +507,6 @@ async function uploadReleve(event) {
   }
   event.target.value = '';
 }
-
 async function supprimerReleve(id) {
   if (!confirm('Supprimer ce relevé ?')) return;
   try {
@@ -608,11 +516,8 @@ async function supprimerReleve(id) {
     showToast('Relevé supprimé', 'success');
   } catch(e) { showToast('Erreur', 'error'); }
 }
-
-
 async function inviterComptable() {
   if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('comptable_lie', 'Accès comptable')) return;
-  // Ouvrir modal invitation
   const overlay = document.createElement('div');
   overlay.id = 'modal-inv-cpt';
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end';
@@ -626,12 +531,10 @@ async function inviterComptable() {
     '<button id="btn-send-inv-cpt" style="width:100%;padding:13px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✉️ Envoyer l\'invitation</button>' +
     '<button id="btn-close-inv-cpt-modal" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
     '<div id="inv-cpt-feedback" style="font-size:12px;text-align:center;margin-top:10px;min-height:16px"></div>';
-
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   overlay.addEventListener('click', function(ev) { if (ev.target === overlay) overlay.remove(); });
   document.getElementById('btn-close-inv-cpt-modal').onclick = function() { overlay.remove(); };
-
   document.getElementById('btn-send-inv-cpt').onclick = async function() {
     const emailCpt = (document.getElementById('inv-cpt-email-input')?.value || '').trim().toLowerCase();
     const feedback = document.getElementById('inv-cpt-feedback');
@@ -640,15 +543,12 @@ async function inviterComptable() {
       feedback.textContent = 'Email invalide';
       return;
     }
-
-    const uid = sb.user?.id;
+    const uid = STATE.entrepriseId || sb.user?.id;
     const emailEnt = sb.user?.email;
     const profil = STATE.profil || {};
     feedback.style.color = '#1F6F72';
     feedback.textContent = '⏳ Envoi en cours...';
-
     try {
-      // 1. Créer invitation en DB
       const resp = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
         method: 'POST',
         headers: {
@@ -665,16 +565,11 @@ async function inviterComptable() {
           sens: 'entreprise_vers_comptable'
         })
       });
-
-      // 2. Chercher si le comptable a un compte Zelto
       const userResp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_user_by_email', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_email: emailCpt })
       }).catch(function() { return { ok: false }; });
-
-      // 3. Notifier via la fonction RPC SECURITY DEFINER — élimine toute
-      // dépendance à une policy RLS sur notifications_app.
       await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
         method: 'POST',
         headers: {
@@ -683,7 +578,7 @@ async function inviterComptable() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          p_user_id: uid, // sera lu par le comptable via son email
+          p_user_id: uid,
           p_destinataire_email: emailCpt,
           p_type: 'invitation_comptable',
           p_titre: 'Invitation de ' + (profil.raison || emailEnt),
@@ -691,32 +586,25 @@ async function inviterComptable() {
           p_meta: JSON.stringify({ entreprise_id: uid, entreprise_email: emailEnt, comptable_email: emailCpt })
         })
       });
-
       feedback.style.color = '#6E8F4E';
       feedback.textContent = '✅ Invitation envoyée ! Le comptable sera notifié à sa prochaine connexion.';
-
       setTimeout(function() { overlay.remove(); }, 2000);
-
     } catch(e) {
       feedback.style.color = '#B23A2E';
       feedback.textContent = 'Erreur: ' + e.message;
     }
   };
 }
-
-// ── SECTION "MON COMPTABLE" DANS PROFIL ENTREPRISE ─────────
-
 async function renderMonComptable() {
   const container = document.getElementById('mon-comptable-section');
   if (!container) return;
-
+  // NOUVEAU (audit) : deux identifiants distincts ici. "uid" reste la
+  // personne connectée elle-même (pour vérifier si ELLE est comptable),
+  // "entId" est l'entreprise dont on veut voir les invitations comptable
+  // — les deux ne sont pas forcément la même chose sous le multi-utilisateur.
   const uid = sb.user?.id;
+  const entId = STATE.entrepriseId || sb.user?.id;
   const emailEnt = sb.user?.email;
-
-  // FIX: si la personne qui consulte cette fiche EST elle-même un
-  // compte comptable (gère sa propre entreprise comme son "premier
-  // client" — voir assurerAutoClientComptable), proposer "Inviter mon
-  // comptable" n'a aucun sens : elle EST le comptable.
   try {
     const rProfilCpt = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?id=eq.' + uid + '&select=id', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
@@ -731,15 +619,12 @@ async function renderMonComptable() {
       return;
     }
   } catch(eCheck) {}
-
   try {
-    // Chercher une invitation acceptée
     const resp = await fetch(
-      SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + uid + '&statut=eq.acceptee&order=created_at.desc&limit=1',
+      SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entId + '&statut=eq.acceptee&order=created_at.desc&limit=1',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     const invs = await resp.json() || [];
-
     if (!invs.length) {
       container.innerHTML =
         '<div style="text-align:center;padding:20px;background:#F1EEE8;border-radius:14px">' +
@@ -749,11 +634,8 @@ async function renderMonComptable() {
         '</div>';
       return;
     }
-
     const inv = invs[0];
     const emailCpt = inv.comptable_email;
-
-    // FIX: afficher le nom/cabinet du comptable plutôt que son email brut
     let nomAffiche = emailCpt;
     try {
       const respCpt = await fetch(
@@ -764,7 +646,6 @@ async function renderMonComptable() {
       const p = profCpt && profCpt[0];
       if (p && p.nom) nomAffiche = p.nom + (p.cabinet ? ' · ' + p.cabinet : '');
     } catch(eCpt) {}
-
     container.innerHTML =
       '<div style="background:linear-gradient(135deg,#241F1B,#1F6F72);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px">' +
         '<div style="display:flex;align-items:center;gap:12px">' +
@@ -782,12 +663,10 @@ async function renderMonComptable() {
         '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer' + (typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('comptable_lie') : '') + '</button>' +
         '<button onclick="revoquerComptable(\'' + inv.id + '\')" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🚫 Révoquer</button>' +
       '</div>';
-
   } catch(e) {
     container.innerHTML = '<div style="color:#B23A2E;font-size:12px">Erreur chargement</div>';
   }
 }
-
 async function revoquerComptable(invId) {
   if (!confirm('Révoquer l\'accès de votre comptable ?')) return;
   try {
@@ -800,5 +679,3 @@ async function revoquerComptable(invId) {
     renderMonComptable();
   } catch(e) { showToast('Erreur', 'error'); }
 }
-
-// ── CÔTÉ COMPTABLE ─────────────────────────────────────────
