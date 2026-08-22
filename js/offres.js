@@ -11,13 +11,11 @@
 // profils_entreprise.offre_id, et la table entreprise_features_
 // supplementaires pour les ajouts à la carte après un devis). Peut
 // évoluer vers un vrai écran d'admin plus tard si besoin.
-
 STATE.mesFeatures = STATE.mesFeatures || [];
 STATE.toutesOffres = STATE.toutesOffres || [];
 STATE.limiteClients = STATE.limiteClients || null; // null = illimité ou pas encore chargé
 STATE.limiteProduits = STATE.limiteProduits || null;
 STATE.nomForfaitActuel = STATE.nomForfaitActuel || null;
-
 async function chargerMesFeatures() {
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_features', {
@@ -28,7 +26,6 @@ async function chargerMesFeatures() {
     const data = resp.ok ? ((await resp.json()) || []) : [];
     STATE.mesFeatures = data.map(function(x) { return x.code; });
   } catch(e) { STATE.mesFeatures = []; }
-
   try {
     const respL = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_ma_limite_clients', {
       method: 'POST',
@@ -37,7 +34,6 @@ async function chargerMesFeatures() {
     });
     STATE.limiteClients = respL.ok ? (await respL.json()) : null;
   } catch(e) { STATE.limiteClients = null; }
-
   try {
     const respP = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_ma_limite_produits', {
       method: 'POST',
@@ -46,7 +42,6 @@ async function chargerMesFeatures() {
     });
     STATE.limiteProduits = respP.ok ? (await respP.json()) : null;
   } catch(e) { STATE.limiteProduits = null; }
-
   // Nom du forfait actuel — pour l'affichage du badge (Profil, etc.)
   try {
     const respO = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + sb.user.id + '&select=offre_id,offres(nom)', {
@@ -55,11 +50,9 @@ async function chargerMesFeatures() {
     const dataO = respO.ok ? ((await respO.json()) || []) : [];
     STATE.nomForfaitActuel = dataO[0]?.offres?.nom || null;
   } catch(e) { STATE.nomForfaitActuel = null; }
-
   afficherBadgeForfait();
   if (typeof appliquerVerrousVisuels === 'function') appliquerVerrousVisuels();
 }
-
 // Affiche "Forfait : XXX" partout où un emplacement existe pour ça
 // (actuellement : Profil). Ne fait rien si l'élément n'existe pas sur
 // l'écran courant.
@@ -67,7 +60,6 @@ function afficherBadgeForfait() {
   const badge = el('badge-forfait-actuel');
   if (badge) badge.textContent = STATE.nomForfaitActuel ? '📦 Forfait ' + STATE.nomForfaitActuel : '';
 }
-
 // Vrai/faux — l'entreprise a-t-elle accès à cette fonctionnalité ?
 // C'est LE bon outil pour une fonctionnalité SUR-MESURE construite pour
 // UNE SEULE entreprise (jamais montrée aux autres) : on l'utilise pour
@@ -94,7 +86,6 @@ function afficherBadgeForfait() {
 function aAccesFeature(code) {
   return (STATE.mesFeatures || []).includes(code);
 }
-
 // NOUVEAU : badge cadenas visible AVANT le clic — plutôt que de laisser
 // la personne cliquer et découvrir après coup qu'elle n'a pas accès.
 // FIX (audit) : distingue "pas encore chargé" (STATE.mesFeatures est
@@ -108,7 +99,6 @@ function htmlBadgeVerrou(code) {
   if (aAccesFeature(code)) return '';
   return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;background:#F1EEE8;color:#9C9186;padding:2px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">🔒 Pro</span>';
 }
-
 // Applique le cadenas visuel directement sur des éléments DOM déjà en
 // place dans la page statique (contrairement à htmlBadgeVerrou, qui sert
 // pour du HTML construit dynamiquement en JS).
@@ -124,7 +114,6 @@ function appliquerVerrousVisuels() {
     if (!el2) return;
     el2.innerHTML = htmlBadgeVerrou(c.code);
   });
-
   // Cas particulier : la zone d'upload OCR n'est pas un bouton avec du
   // texte, un simple badge inline ne suffit pas à expliquer ce qui est
   // verrouillé — message dédié à la place.
@@ -135,7 +124,6 @@ function appliquerVerrousVisuels() {
       : '<span style="font-size:10px;color:#9C9186">🔒 La lecture automatique du montant/fournisseur nécessite le forfait Pro</span>';
   }
 }
-
 // Version "verrou visible" — à utiliser UNIQUEMENT pour les
 // fonctionnalités du catalogue standard (celles listées dans "Mon
 // forfait"), pas pour du sur-mesure — voir la note ci-dessus.
@@ -148,29 +136,27 @@ function verifierAccesFeature(code, nomFeature) {
   window._retourMonForfait = (document.querySelector('.screen.active')||{}).id?.replace('screen-','') || 'profil'; setTimeout(function() { goScreen('mon-forfait', null); }, 900);
   return false;
 }
-
 // Vérifie la limite de clients (nombre, pas juste oui/non). Retourne true
 // si on peut ajouter un client de plus.
+// FIX (audit) : verifierLimiteClients() et verifierLimiteProduits() étaient
+// deux copies quasi identiques de la même logique. Fusionnées ici en une
+// fonction générique — les deux noms d'origine restent disponibles (appelés
+// ailleurs dans l'app) et se contentent maintenant de déléguer.
+function _verifierLimiteGenerique(limite, liste, nomChose) {
+  if (limite == null) return true; // illimité, ou pas encore chargé (on ne bloque pas par précaution)
+  if ((liste || []).length >= limite) {
+    showToast('🔒 Limite de ' + limite + ' ' + nomChose + ' atteinte pour votre forfait', 'error');
+    window._retourMonForfait = (document.querySelector('.screen.active')||{}).id?.replace('screen-','') || 'profil'; setTimeout(function() { goScreen('mon-forfait', null); }, 900);
+    return false;
+  }
+  return true;
+}
 function verifierLimiteClients() {
-  if (STATE.limiteClients == null) return true; // illimité, ou pas encore chargé (on ne bloque pas par précaution)
-  if ((STATE.clients || []).length >= STATE.limiteClients) {
-    showToast('🔒 Limite de ' + STATE.limiteClients + ' clients atteinte pour votre forfait', 'error');
-    window._retourMonForfait = (document.querySelector('.screen.active')||{}).id?.replace('screen-','') || 'profil'; setTimeout(function() { goScreen('mon-forfait', null); }, 900);
-    return false;
-  }
-  return true;
+  return _verifierLimiteGenerique(STATE.limiteClients, STATE.clients, 'clients');
 }
-
 function verifierLimiteProduits() {
-  if (STATE.limiteProduits == null) return true;
-  if ((STATE.produits || []).length >= STATE.limiteProduits) {
-    showToast('🔒 Limite de ' + STATE.limiteProduits + ' articles atteinte pour votre forfait', 'error');
-    window._retourMonForfait = (document.querySelector('.screen.active')||{}).id?.replace('screen-','') || 'profil'; setTimeout(function() { goScreen('mon-forfait', null); }, 900);
-    return false;
-  }
-  return true;
+  return _verifierLimiteGenerique(STATE.limiteProduits, STATE.produits, 'articles');
 }
-
 // ============================================================
 // ÉCRAN "MON FORFAIT"
 // ============================================================
@@ -186,33 +172,29 @@ async function chargerMonForfait() {
   } catch(e) { STATE.toutesOffres = []; }
   renderMonForfait();
 }
-
 function renderMonForfait() {
   const zone = el('mon-forfait-content');
   if (!zone) return;
   const offreActuelleId = STATE.profil?.offre_id;
   const offres = STATE.toutesOffres || [];
-
   if (!offres.length) {
     zone.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">Catalogue non disponible</div></div>';
     return;
   }
-
   zone.innerHTML = offres.map(function(o) {
     const estActuelle = o.id === offreActuelleId;
     const features = (o.offre_features || []).map(function(x) { return x.features; }).filter(Boolean);
-    const prixTxt = o.type === 'sur_mesure' ? 'Sur devis' : (Number(o.prix_mensuel) > 0 ? fmt(o.prix_mensuel) + ' MAD/mois' : 'Gratuit');
+    // DEMANDE : plus aucun prix de forfait affiché nulle part dans l'app —
+    // seuls le nom et les fonctionnalités incluses restent visibles.
     return '<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:2px solid ' + (estActuelle ? '#C9971F' : '#E3DCCF') + ';position:relative">' +
       (estActuelle ? '<div style="position:absolute;top:-10px;right:14px;background:#C9971F;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px">VOTRE FORFAIT</div>' : '') +
-      '<div style="font-size:15px;font-weight:800;color:#2A2420">' + escapeHTML(o.nom) + '</div>' +
-      '<div style="font-size:13px;font-weight:700;color:#C9971F;margin:4px 0 10px">' + prixTxt + '</div>' +
+      '<div style="font-size:15px;font-weight:800;color:#2A2420;margin-bottom:10px">' + escapeHTML(o.nom) + '</div>' +
       (features.length
         ? features.map(function(f) { return '<div style="font-size:12px;color:#6B5F54;padding:3px 0">✅ ' + escapeHTML(f.nom) + '</div>'; }).join('')
         : (o.type === 'sur_mesure' ? '<div style="font-size:12px;color:#6B5F54">Fonctionnalités choisies avec vous, à la carte</div>' : '')) +
       (o.type === 'sur_mesure' ? '<button onclick="ouvrirDemandeFonctionnalites()" style="width:100%;margin-top:12px;padding:10px;background:#241F1B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis pour des fonctionnalités sur mesure</button>' : '') +
     '</div>';
   }).join('');
-
   // Fonctionnalités ajoutées à la carte (au-dessus du forfait de base),
   // affichées séparément si elles existent.
   const dejaAffichees = new Set();
@@ -225,7 +207,6 @@ function renderMonForfait() {
     '</div>';
   }
 }
-
 // Demande de fonctionnalités sur mesure — réutilise le canal Support déjà
 // en place (formulaire enregistré en base), pas besoin d'un nouveau circuit.
 function ouvrirDemandeFonctionnalites() {
