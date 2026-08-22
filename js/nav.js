@@ -296,11 +296,13 @@ async function gererClicNotification(e) {
   }
   const btnR = e.target.closest('.btn-refuse-cpt-inv');
   if (btnR) {
-    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + btnR.dataset.id, {
+    // FIX (audit workflow) : même anti-pattern
+    const rRef = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + btnR.dataset.id, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'refusee' })
     });
+    if (!rRef.ok) { showToast('Erreur lors du refus', 'error'); return true; }
     showToast('Invitation refusée', 'success');
     await genNotifications();
     renderNotifScreen();
