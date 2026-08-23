@@ -314,7 +314,10 @@ async function supprimerClient(id) {
   if (!id || !confirm('Supprimer ce client ?')) return;
   const c = STATE.clients.find(x => x.id === id);
   try {
-    await sb.del('clients',`id=eq.${id}&user_id=eq.${sb.user.id}`);
+    // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
+    // pouvait jamais supprimer un client — la clause WHERE ne
+    // correspondait jamais à la vraie ligne (créée sous l'id entreprise).
+    await sb.del('clients',`id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
     STATE.clients = STATE.clients.filter(c=>c.id!==id);
     updateClientDatalist();
     showToast('Client supprimé', 'success');
@@ -359,7 +362,9 @@ async function sauvegarderModifClient() {
   };
   showToast('⏳ Mise à jour...');
   try {
-    await sb.patch('clients', `id=eq.${c.id}&user_id=eq.${sb.user.id}`, data);
+    // FIX (audit) : même bug que supprimerClient — sans le fallback, la
+    // modification échouait silencieusement pour un membre d'équipe.
+    await sb.patch('clients', `id=eq.${c.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, data);
     Object.assign(c, data);
     updateClientDatalist();
     showToast('✅ Client mis à jour !', 'success');
@@ -454,7 +459,7 @@ function filtrerPickerClients() {
       zone.id = 'clients-picker-annuaire';
       zone.innerHTML = '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
         resultats.map(function(p) {
-          return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + "'" + (p.raison||'').replace(/'/g,"\\'") + "'" + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div></div></div>';
+          return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + "'" + escapeHTML(p.raison||'').replace(/'/g,"\\'") + "'" + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
         }).join('');
       container.appendChild(zone);
     } catch(e) {}
