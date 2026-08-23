@@ -449,7 +449,7 @@ function rechercherFournisseurBC() {
       if (resultats.length) {
         list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
           resultats.map(function(p) {
-            return '<div class="card" onclick="choisirFournisseurBC(' + "'" + (p.raison||'').replace(/'/g,"\\'") + "'" + ',\'' + p.id + '\')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + (p.secteur||'') + (p.ville?' · '+p.ville:'') + '</div></div></div>';
+            return '<div class="card" onclick="choisirFournisseurBC(' + "'" + escapeHTML(p.raison||'').replace(/'/g,"\\'") + "'" + ',\'' + p.id + '\')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
           }).join('');
       }
     } catch(e) {}
