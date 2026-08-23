@@ -1,17 +1,12 @@
 // ZELTO — utils.js
-
 function fmt(n) { return Number(n || 0).toLocaleString('fr-MA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-
 function fmtInt(n) { return Math.round(n || 0).toLocaleString('fr-MA'); }
-
 function today() {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().split('T')[0];
 }
-
 function uid6() { return Math.random().toString(36).substr(2, 6).toUpperCase(); }
-
 function getRef(prefix, list) {
   const year = new Date().getFullYear();
   const n = String((list?.length || 0) + 1).padStart(4, '0');
@@ -19,17 +14,6 @@ function getRef(prefix, list) {
   if (custom) return custom.replace('{PREFIX}', prefix).replace('{YEAR}', year).replace('{NUM}', n);
   return `${prefix}-${year}-${n}`;
 }
-
-
-// CORRECTIF ANNULÉ : j'avais ajouté "let _toastTimer" ici en pensant
-// qu'elle n'était déclarée nulle part — en réalité config.js la déclare
-// déjà ("let _toastTimer;") tout en bas du fichier. Deux "let" du même nom
-// au niveau racine entre deux scripts classiques provoquent une ERREUR DE
-// SYNTAXE qui empêche tout ce fichier (utils.js) de s'exécuter — donc
-// showToast, fmt, el, et toutes les autres fonctions utilitaires
-// utilisées PARTOUT dans l'app. C'est cette régression, introduite par ma
-// propre correction précédente, qui a cassé les boutons.
-
 function showToast(msg, type) {
   if (!type) type = 'default';
   const t = document.getElementById('toast');
@@ -44,14 +28,6 @@ function showToast(msg, type) {
     t.classList.remove('show');
     setTimeout(function() { t.className = 'toast'; t.textContent = ''; }, 400);
   }, duration);
-
-  // FIX: garde-fou absolu — si showToast() est rappelée rapidement plusieurs
-  // fois de suite (ex: boucle d'envoi, plusieurs opérations qui se
-  // terminent presque en même temps), chaque appel annule le minuteur
-  // précédent et en relance un nouveau : le message peut donner
-  // l'impression de ne jamais disparaître tant que les appels s'enchaînent.
-  // Ce second minuteur, lui, n'est JAMAIS annulé — il force la disparition
-  // 8 secondes après le PREMIER message de la rafale, quoi qu'il arrive.
   if (!window._toastDeadline) {
     window._toastDeadline = setTimeout(function() {
       const tt = document.getElementById('toast');
@@ -60,8 +36,6 @@ function showToast(msg, type) {
     }, 8000);
   }
 }
-
-
 function hideToast() {
   const t = document.getElementById('toast');
   if (!t) return;
@@ -69,54 +43,41 @@ function hideToast() {
   t.classList.remove('show');
   setTimeout(() => { t.className = 'toast'; }, 350);
 }
-
 function escapeHTML(str) {
   if (typeof str !== 'string') return str || '';
   return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag]));
 }
-
 function el(id) { return document.getElementById(id); }
-
 function setEl(id, v, prop = 'textContent') { const e = el(id); if (e) e[prop] = v; }
-
 function closeAllModals() {
   document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 }
-
-// Dark mode
-
 function applyDarkMode() {
   document.body.classList.toggle('dark', STATE.darkMode);
 }
-
-// ============================================================
-// LOAD ALL DATA
-// ============================================================
-
 function toggleDarkMode() {
   STATE.darkMode = !STATE.darkMode;
   localStorage.setItem('bp_dark', STATE.darkMode ? '1' : '0');
   applyDarkMode();
   showToast(STATE.darkMode ? '🌙 Mode sombre activé' : '☀️ Mode clair activé');
 }
-
-// ============================================================
-// NOTIFICATIONS SCREEN
-// ============================================================
-
 function togglePwd(inputId, btnId) {
   const inp = el(inputId);
   const btn = el(btnId);
   if (!inp) return;
+  // FIX (demande utilisateur) : le singe 🙈 remplacé par un simple œil
+  // barré. Un vrai emoji "œil barré" n'est pas fiable d'un appareil à
+  // l'autre (rendu très inégal iOS/Android/Windows) — on garde donc le
+  // même œil 👁️ et on le barre avec une simple ligne de texte (CSS),
+  // fiable partout, sans rien ajouter au DOM.
   if (inp.type === 'password') {
     inp.type = 'text';
-    if (btn) btn.textContent = '🙈';
+    if (btn) { btn.textContent = '👁️'; btn.style.textDecoration = 'line-through'; }
   } else {
     inp.type = 'password';
-    if (btn) btn.textContent = '👁️';
+    if (btn) { btn.textContent = '👁️'; btn.style.textDecoration = 'none'; }
   }
 }
-
 function toggleRememberMe() {
   const checked = el('remember-me')?.checked;
   if (checked) {
@@ -127,7 +88,6 @@ function toggleRememberMe() {
     localStorage.removeItem('bp_saved_pwd');
   }
 }
-
 function loadSavedCredentials() {
   const savedEmail = localStorage.getItem('bp_saved_email');
   if (savedEmail) {
@@ -135,46 +95,28 @@ function loadSavedCredentials() {
     if (el('remember-me')) el('remember-me').checked = true;
   }
 }
-
 function formatDate(d) {
   if (!d) return '—';
   const date = new Date(d);
   return date.toLocaleDateString('fr-MA', { day:'2-digit', month:'2-digit', year:'numeric' });
 }
-
 function formatDateTime(d) {
   if (!d) return '—';
   const date = new Date(d);
   return date.toLocaleDateString('fr-MA') + ' ' + date.toLocaleTimeString('fr-MA', { hour:'2-digit', minute:'2-digit' });
 }
-
 function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-
 function isValidPhone(p) { return /^[\+\d\s\-]{8,15}$/.test(p); }
-
-// NOTE (audit 2026) : isValidICE(), getStatusBadge(), calculateDueDate(),
-// validateInvoice(), validateClient(), validateProduct() ont été retirées
-// — c'était du scaffolding jamais branché ; la validation ICE réelle vit
-// dans validerIdentifiantsLegaux() (profil.js/clients.js), les badges de
-// statut sont construits en ligne dans chaque écran de liste.
-
 function isOverdue(facture) {
   if (facture.statut === 'payee') return false;
   if (!facture.echeance) return false;
   return new Date(facture.echeance) < new Date();
 }
-
 function getDaysLate(facture) {
   if (!facture.echeance || !isOverdue(facture)) return 0;
   const diff = new Date() - new Date(facture.echeance);
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
-
-// ============================================================
-// JOURNAL D'AUDIT — traçabilité des actions clés
-// ============================================================
-
-// Enregistre une action dans le journal d'audit (best-effort, ne bloque jamais l'UI)
 async function logAudit(typeDoc, docId, action, details) {
   try {
     const uid = sb.user?.id;
@@ -187,11 +129,9 @@ async function logAudit(typeDoc, docId, action, details) {
       details: details || ''
     });
   } catch(e) {
-    // Silencieux : le journal ne doit jamais bloquer l'action métier
     console.warn('logAudit:', e);
   }
 }
-
 async function renderJournalAudit() {
   const list = el('audit-list');
   if (!list) return;
@@ -220,20 +160,12 @@ async function renderJournalAudit() {
     list.innerHTML = '<div style="text-align:center;padding:30px;color:#B23A2E">Erreur de chargement</div>';
   }
 }
-
-// ============================================================
-// EXPORT / IMPORT CSV GÉNÉRIQUE
-// ============================================================
-
-// Parseur CSV minimal mais robuste : gère les guillemets et les virgules dans les champs
 function parseCSV(text) {
   const rows = [];
   let row = [];
   let field = '';
   let inQuotes = false;
-  // Retirer le BOM UTF-8 éventuel
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     const next = text[i + 1];
@@ -245,12 +177,11 @@ function parseCSV(text) {
       if (c === '"') { inQuotes = true; }
       else if (c === ',' || c === ';') { row.push(field); field = ''; }
       else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-      else if (c === '\r') { /* ignore */ }
+      else if (c === '\r') { }
       else { field += c; }
     }
   }
   if (field.length || row.length) { row.push(field); rows.push(row); }
-
   if (!rows.length) return [];
   const headers = rows[0].map(function(h) { return h.trim().toLowerCase(); });
   return rows.slice(1).filter(function(r) { return r.some(function(v) { return v.trim() !== ''; }); }).map(function(r) {
@@ -259,7 +190,6 @@ function parseCSV(text) {
     return obj;
   });
 }
-
 function telechargerCSV(nomFichier, headers, rows) {
   const csv = [headers].concat(rows).map(function(r) {
     return r.map(function(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
@@ -274,7 +204,6 @@ function telechargerCSV(nomFichier, headers, rows) {
   document.body.removeChild(a);
   setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
 }
-
 function lireFichierTexte(file) {
   return new Promise(function(resolve, reject) {
     const reader = new FileReader();
@@ -283,15 +212,10 @@ function lireFichierTexte(file) {
     reader.readAsText(file, 'UTF-8');
   });
 }
-
-// ============================================================
-// Télécharge un fichier stocké en base64 (data URL) — utilisé pour les
-// relevés bancaires, pièces jointes d'achats, etc.
 function telechargerFichierBase64(dataUrl, nomSouhaite) {
   try {
     const a = document.createElement('a');
     a.href = dataUrl;
-    // Déduire une extension raisonnable si le nom n'en a pas déjà une
     let nom = nomSouhaite || 'fichier';
     if (!/\.[a-zA-Z0-9]+$/.test(nom)) {
       const m = dataUrl.match(/^data:([^;]+);/);
@@ -308,16 +232,11 @@ function telechargerFichierBase64(dataUrl, nomSouhaite) {
     showToast('Erreur téléchargement: ' + e.message, 'error');
   }
 }
-
-// Point 6 : sélecteur de langue — pour l'instant, seul le sens de
-// lecture (RTL) est géré, pas la traduction complète du texte (chantier
-// séparé, plus large).
 function changerLangueInterface() {
   const langue = el('param-langue')?.value || 'fr';
   localStorage.setItem('bp_langue', langue);
   appliquerLangueInterface();
 }
-
 function appliquerLangueInterface() {
   const langue = localStorage.getItem('bp_langue') || 'fr';
   document.documentElement.setAttribute('dir', langue === 'ar' ? 'rtl' : 'ltr');
