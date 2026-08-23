@@ -1,62 +1,111 @@
-// ZELTO — demandes-devis.js — Demandes de devis reçues des clients
+// ZELTO — devis-recus.js — Devis reçus d'autres entreprises, retrouver
+// ceux acceptés pour les convertir manuellement en BC si l'automatique ne
+// s'est pas déclenché (accepté via un lien partagé sans être connecté au
+// moment de l'acceptation, par exemple).
 // ============================================================
-// Complète le cycle : Client demande un devis (page publique, sans
-// compte) → Entreprise voit la demande → crée le devis en réponse
-// (pré-rempli) → l'envoie → client accepte → BC généré (phase 25).
+// Source des données : les notifications de type "devis_recu" déjà
+// stockées (notifications_app) — on relit chaque devis référencé pour
+// connaître son statut actuel, et on vérifie si un BC existe déjà pour lui
+// (STATE.bonsCommande[].devis_source_id).
 
-STATE.demandesDevis = STATE.demandesDevis || [];
+STATE.devisRecusAcceptes = STATE.devisRecusAcceptes || [];
 
-async function loadDemandesDevis() {
+async function chargerDevisRecusAcceptes() {
+  const email = sb.user?.email;
+  if (!email) return;
+
+  const zone = el('devis-recus-liste');
+  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
+
   try {
-    STATE.demandesDevis = (await sb.get('demandes_devis', 'entreprise_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
-  } catch(e) { STATE.demandesDevis = []; }
-  renderDemandesDevis();
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: email })
+    });
+    const notifs = resp.ok ? ((await resp.json()) || []) : [];
+    const notifsDevis = notifs.filter(function(n) { return n.type === 'devis_recu'; });
+
+    const resultats = [];
+    for (const n of notifsDevis) {
+      let meta = {};
+      try { meta = typeof n.meta === 'string' ? JSON.parse(n.meta || '{}') : (n.meta || {}); } catch(e) {}
+      if (!meta.doc_id) continue;
+
+      try {
+        const r = await fetch(SUPABASE_URL + '/rest/v1/devis?id=eq.' + meta.doc_id + '&select=*', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        });
+        const data = await r.json();
+        const d = data && data[0];
+        if (!d) continue;
+        if (d.statut !== 'accepte') continue;
+
+        const dejaConverti = (STATE.bonsCommande || []).some(function(bc) { return bc.devis_source_id === d.id; });
+        resultats.push({ devis: d, dejaConverti, emetteurRaison: meta.emetteur_raison || '', notifId: n.id });
+      } catch(e2) {}
+    }
+    STATE.devisRecusAcceptes = resultats;
+  } catch(e) {
+    STATE.devisRecusAcceptes = [];
+  }
+  renderDevisRecusAcceptes();
 }
 
-function renderDemandesDevis() {
-  const container = el('demandes-devis-liste');
-  if (!container) return;
-  const demandes = STATE.demandesDevis || [];
-  const nouvelles = demandes.filter(function(d) { return d.statut === 'nouvelle'; });
+function renderDevisRecusAcceptes() {
+  const zone = el('devis-recus-liste');
+  if (!zone) return;
+  const liste = STATE.devisRecusAcceptes || [];
+  const aConvertir = liste.filter(function(x) { return !x.dejaConverti; }).length;
 
-  const resume = el('demandes-devis-resume');
-  if (resume) {
-    resume.innerHTML = nouvelles.length
-      ? '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#A67A16">📝 ' + nouvelles.length + ' nouvelle(s) demande(s) de devis</span></div>'
-      : '';
-  }
+  const resume = el('devis-recus-resume');
+  if (resume) resume.innerHTML = aConvertir
+    ? '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#A67A16">📝 ' + aConvertir + ' devis accepté(s) pas encore converti(s) en BC</span></div>'
+    : '';
 
-  container.innerHTML = !demandes.length
-    ? '<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">Aucune demande de devis</div><div>Partagez votre lien de profil pour en recevoir</div></div>'
-    : demandes.map(function(d) {
-        const estTraitee = d.statut === 'traitee';
+  zone.innerHTML = !liste.length
+    ? '<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">Aucun devis reçu accepté</div><div>Les devis que vous acceptez depuis d\'autres entreprises Zelto apparaîtront ici</div></div>'
+    : liste.map(function(x) {
+        const d = x.devis;
         return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +
-          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
-            '<div><div style="font-size:13px;font-weight:700">' + escapeHTML(d.client_nom||'') + '</div>' +
-            '<div style="font-size:11px;color:#9C9186">' + (d.client_tel||'') + (d.client_email ? ' · ' + d.client_email : '') + '</div></div>' +
-            (estTraitee ? '<span style="font-size:10px;font-weight:600;color:#6E8F4E">✅ Traitée</span>' : '<span style="font-size:10px;font-weight:600;color:#A67A16">⏳ Nouvelle</span>') +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+            '<div><div style="font-size:13px;font-weight:700">' + escapeHTML(d.ref||'') + '</div>' +
+            '<div style="font-size:11px;color:#9C9186">' + escapeHTML(x.emetteurRaison || d.client || '') + ' · ' + (d.date_emission||'') + '</div></div>' +
+            '<div style="font-size:13px;font-weight:800">' + fmt(d.ttc||0) + ' MAD</div>' +
           '</div>' +
-          '<div style="font-size:12px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px;margin-bottom:8px">' + escapeHTML(d.description||'') + '</div>' +
-          (!estTraitee ? '<button onclick="creerDevisDepuisDemande(' + d.id + ')" style="width:100%;padding:9px;background:#B8860B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Créer le devis</button>' : '') +
+          (x.dejaConverti
+            ? '<div style="font-size:11px;color:#6E8F4E;font-weight:600">✅ Déjà converti en bon de commande</div>'
+            : '<button onclick="convertirDevisRecuEnBC(' + d.id + ')" style="width:100%;padding:9px;background:#7C5CA6;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:6px">📋 Convertir en bon de commande</button>') +
+          '<button onclick="supprimerDevisRecu(\'' + x.notifId + '\')" style="width:100%;padding:7px;background:none;color:#B23A2E;border:1px solid #F5E4E1;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer de la liste</button>' +
         '</div>';
       }).join('');
 }
 
-// Pré-remplit l'écran de création de devis à partir d'une demande reçue,
-// et marque la demande comme traitée dès qu'on commence à y répondre.
-async function creerDevisDepuisDemande(demandeId) {
-  const d = (STATE.demandesDevis || []).find(function(x) { return x.id === demandeId; });
-  if (!d) return;
-
+// Point 8 : un devis reçu peut être retiré de cette liste — supprime
+// juste la notification source, pas le devis lui-même (qui appartient à
+// l'autre entreprise).
+async function supprimerDevisRecu(notifId) {
+  if (!confirm('Retirer ce devis de la liste ?')) return;
   try {
-    await sb.patch('demandes_devis', 'id=eq.' + demandeId + '&entreprise_id=eq.' + sb.user.id, { statut: 'traitee' });
-    d.statut = 'traitee';
-  } catch(e) {}
+    // FIX (audit workflow) : même anti-pattern trouvé partout dans cet
+    // audit — sans vérifier r.ok, le devis disparaissait de l'écran même
+    // si la notification correspondante n'était pas réellement marquée
+    // comme lue en base (elle aurait pu réapparaître plus tard).
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_id: notifId })
+    });
+    if (!r.ok) { showToast('Erreur — réessayez', 'error'); return; }
+    STATE.devisRecusAcceptes = (STATE.devisRecusAcceptes || []).filter(function(x) { return x.notifId !== notifId; });
+    renderDevisRecusAcceptes();
+    showToast('Retiré de la liste', 'success');
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
+}
 
-  goScreen('nouveau-devis', null);
-  setTimeout(function() {
-    el('d-client') && (el('d-client').value = d.client_nom || '');
-    el('d-note') && (el('d-note').value = 'Suite à votre demande : ' + (d.description || ''));
-    showToast('📝 Devis pré-rempli depuis la demande de ' + d.client_nom, 'success');
-  }, 150);
+async function convertirDevisRecuEnBC(devisId) {
+  if (typeof enregistrerBCDepuisDevisAccepte !== 'function') return;
+  showToast('⏳ Conversion...');
+  await enregistrerBCDepuisDevisAccepte(devisId);
+  await chargerDevisRecusAcceptes();
 }
