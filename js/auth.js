@@ -386,7 +386,10 @@ async function _continuerApresAuthentification(email, errEl, remember) {
       if (errEl) errEl.textContent = '';
       goScreen('dashboard');
       showToast('✅ Bienvenue !', 'success');
-      if (typeof afficherOnboarding === 'function') setTimeout(afficherOnboarding, 600);
+      // FIX (bug signalé) : sans cette vérification, l'onboarding se
+      // réaffichait à CHAQUE connexion réussie, pas seulement la
+      // première — rien ne mémorisait jamais qu'il avait déjà été vu.
+      if (typeof afficherOnboarding === 'function' && !STATE.profil?.onboarding_vu) setTimeout(afficherOnboarding, 600);
     }
   } catch(e) {
     if (errEl) errEl.textContent = '❌ ' + (e.message || 'Erreur lors du chargement du compte');
