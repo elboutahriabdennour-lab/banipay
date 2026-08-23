@@ -198,7 +198,17 @@ async function doLogin() {
     // téléphone : si elle n'a jamais été faite, on interrompt la
     // connexion normale et on affiche l'écran de vérification une seule
     // fois — ensuite, les connexions suivantes passent directement.
-    if (!sb.user?.phone_confirmed_at) {
+    // FIX URGENT (régression du 22/08) : ce blocage a cassé la connexion
+    // pour TOUT LE MONDE — goScreen() cache d'abord tous les écrans, puis
+    // n'affiche le nouveau QUE s'il existe dans le HTML. Comme l'écran
+    // "screen-verification-telephone" n'existe pas encore (pas encore
+    // reçu app.html pour l'ajouter), aucun écran ne se réaffichait :
+    // page blanche à chaque connexion. DÉSACTIVÉ tant que l'écran HTML
+    // et la configuration Twilio ne sont pas prêts — voir plus bas
+    // (activerVerificationTelephoneObligatoire) pour la réactiver
+    // proprement une fois les deux prêts.
+    const verificationTelephoneActive = false;
+    if (verificationTelephoneActive && !sb.user?.phone_confirmed_at) {
       if (errEl) errEl.textContent = '';
       goScreen('verification-telephone', null);
       return;
@@ -484,7 +494,10 @@ async function confirmerCodeVerificationTelephone() {
 // sur la vérification téléphone (première fois), soit directement sur le
 // tableau de bord (comptes déjà vérifiés, cas rare pour ce chemin précis).
 async function apresConnexionVerifierTelephone() {
-  if (!sb.user?.phone_confirmed_at) {
+  // FIX URGENT (même régression que dans doLogin, voir plus haut) —
+  // désactivé tant que l'écran HTML n'existe pas.
+  const verificationTelephoneActive = false;
+  if (verificationTelephoneActive && !sb.user?.phone_confirmed_at) {
     goScreen('verification-telephone', null);
     return;
   }
