@@ -85,6 +85,13 @@ function openAddLigneDevis() {
   el('mld-unite') && (el('mld-unite').value = 'u');
   el('modal-ligne-d')?.classList.add('active');
   setTimeout(() => el('mld-desc')?.focus(), 100);
+  // NOUVEAU (chantier ajouté) : même suggestion de prix que côté facture
+  // — voir chercherHistoriquePrixClient() dans factures.js.
+  const champDesc = el('mld-desc');
+  if (champDesc && !champDesc.dataset.suggestionPrixAttachee && typeof afficherSuggestionPrixClient === 'function') {
+    champDesc.addEventListener('blur', function() { afficherSuggestionPrixClient('d-client', 'mld-desc'); });
+    champDesc.dataset.suggestionPrixAttachee = '1';
+  }
 }
 
 function confirmerLigneDevis() {
