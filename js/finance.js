@@ -239,3 +239,97 @@ async function exporterEcrituresComptables(factures, achats, paiements, profil) 
     showToast('✅ Export téléchargé en CSV (Excel indisponible)', 'success');
   }
 }
+
+// ============================================================
+// RAPPORT DE MARGE PAR CHANTIER (chantier ajouté)
+// ============================================================
+// Compare, pour chaque chantier identifié par son nom (même champ texte
+// libre que sur les factures/devis), ce qu'il a rapporté (factures) et
+// ce qu'il a coûté (achats rattachés). Nécessite que le champ "chantier"
+// soit renseigné des deux côtés pour que le rapprochement fonctionne —
+// un achat sans chantier renseigné n'apparaît simplement dans aucun total.
+function calculerMargeParChantier() {
+  const chantiers = {};
+  (STATE.factures || []).forEach(function(f) {
+    if (!f.chantier) return;
+    if (!chantiers[f.chantier]) chantiers[f.chantier] = { revenus: 0, depenses: 0, nbFactures: 0, nbAchats: 0 };
+    chantiers[f.chantier].revenus += Number(f.ttc) || 0;
+    chantiers[f.chantier].nbFactures++;
+  });
+  (STATE.achats || []).forEach(function(a) {
+    if (!a.chantier) return;
+    if (!chantiers[a.chantier]) chantiers[a.chantier] = { revenus: 0, depenses: 0, nbFactures: 0, nbAchats: 0 };
+    chantiers[a.chantier].depenses += Number(a.ttc) || 0;
+    chantiers[a.chantier].nbAchats++;
+  });
+  return Object.keys(chantiers).map(function(nom) {
+    const c = chantiers[nom];
+    return { nom: nom, revenus: c.revenus, depenses: c.depenses, marge: c.revenus - c.depenses, nbFactures: c.nbFactures, nbAchats: c.nbAchats };
+  }).sort(function(a, b) { return b.marge - a.marge; });
+}
+// À appeler depuis un écran doté d'un élément #rapport-marge-chantiers-content
+// (pas encore créé dans le HTML — en attente de app.html).
+function renderRapportMargeChantiers() {
+  const container = el('rapport-marge-chantiers-content');
+  if (!container) return;
+  const chantiers = calculerMargeParChantier();
+  if (!chantiers.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-ico">🏗️</div><div class="empty-title">Aucun chantier identifié</div><div>Renseignez un nom de chantier sur vos factures et achats pour voir leur rentabilité ici</div></div>';
+    return;
+  }
+  container.innerHTML = chantiers.map(function(c) {
+    const positif = c.marge >= 0;
+    return '<div class="card" style="flex-direction:column;align-items:stretch;padding:14px">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px">' +
+        '<div style="font-size:14px;font-weight:700">' + escapeHTML(c.nom) + '</div>' +
+        '<div style="font-size:14px;font-weight:800;color:' + (positif ? '#6E8F4E' : '#B23A2E') + '">' + (positif ? '+' : '') + fmt(c.marge) + ' MAD</div>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:#6B5F54">' +
+        '<span>💰 Revenus : ' + fmt(c.revenus) + ' MAD (' + c.nbFactures + ' facture(s))</span>' +
+        '<span>🛒 Dépenses : ' + fmt(c.depenses) + ' MAD (' + c.nbAchats + ' achat(s))</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ============================================================
+// ALERTE DÉPASSEMENT DE BUDGET CHANTIER (chantier ajouté)
+// ============================================================
+// Le "budget" d'un chantier = le total des devis ACCEPTÉS portant ce
+// nom de chantier (l'engagement pris avec le client). Si les achats
+// rattachés dépassent ce montant, alerte — utile pour réagir avant que
+// le chantier ne devienne déficitaire, pas seulement le constater après coup.
+function verifierDepassementsBudgetChantier() {
+  const budgets = {};
+  (STATE.devis || []).forEach(function(d) {
+    if (!d.chantier || d.statut !== 'accepte') return;
+    budgets[d.chantier] = (budgets[d.chantier] || 0) + (Number(d.ttc) || 0);
+  });
+  const depenses = {};
+  (STATE.achats || []).forEach(function(a) {
+    if (!a.chantier) return;
+    depenses[a.chantier] = (depenses[a.chantier] || 0) + (Number(a.ttc) || 0);
+  });
+  const alertes = [];
+  Object.keys(budgets).forEach(function(nom) {
+    const budget = budgets[nom];
+    const depense = depenses[nom] || 0;
+    if (budget > 0 && depense > budget) {
+      alertes.push({ chantier: nom, budget: budget, depense: depense, depassement: depense - budget });
+    }
+  });
+  return alertes;
+}
+// Ajoutée à la même notification centrale que les relances — voir
+// genNotifications() dans nav.js, qui appelle déjà ajouterNotificationsRelances().
+function ajouterNotificationsDepassementChantier() {
+  const alertes = verifierDepassementsBudgetChantier();
+  alertes.forEach(function(a) {
+    STATE.notifications.push({
+      type: 'danger',
+      icon: '🚨',
+      title: 'Budget dépassé — ' + a.chantier,
+      body: 'Dépensé : ' + fmt(a.depense) + ' MAD pour un budget de ' + fmt(a.budget) + ' MAD (dépassement de ' + fmt(a.depassement) + ' MAD)',
+    });
+  });
+}
