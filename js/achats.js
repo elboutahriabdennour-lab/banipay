@@ -109,7 +109,7 @@ async function importerFournisseurZelto() {
     const comptableId = url.searchParams.get('comptable');
     if (comptableId) {
       const invResp = await fetch(
-        SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + sb.user?.id + '&statut=eq.acceptee&limit=1',
+        SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + (STATE.entrepriseId || sb.user?.id) + '&statut=eq.acceptee&limit=1',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
       );
       const invs = await invResp.json() || [];
@@ -498,11 +498,19 @@ async function sauvegarderAchat() {
   const ttc = ht + tva;
 
   const achat = {
-    user_id: sb.user?.id,
+    // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe
+    // créant un achat l'enregistrait sous son propre id — l'achat
+    // devenait invisible pour le reste de l'entreprise.
+    user_id: (STATE.entrepriseId || sb.user?.id),
     fournisseur: fournisseur,
     fournisseur_id: el('achat-fournisseur-id')?.value || null,
     fournisseur_banipay: el('achat-fournisseur-banipay')?.value === '1',
     ref_fournisseur: el('achat-ref')?.value || '',
+    // NOUVEAU (chantier ajouté) : lecture défensive — fonctionne dès que
+    // le champ "achat-chantier" existera dans le formulaire HTML (pas
+    // encore ajouté, en attente de app.html), sans rien casser en
+    // attendant (el(...)?.value renvoie simplement undefined -> '').
+    chantier: el('achat-chantier')?.value.trim() || '',
     date_achat: el('achat-date')?.value || new Date().toISOString().split('T')[0],
     echeance: el('achat-echeance')?.value || null,
     ht: ht,
