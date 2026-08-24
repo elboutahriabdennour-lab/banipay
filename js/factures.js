@@ -224,6 +224,49 @@ function updateTotauxF() {
   setEl('total-ttc', fmt(ttc) + ' ' + STATE.deviseF);
 }
 
+// ============================================================
+// HISTORIQUE DE PRIX PAR CLIENT (chantier ajouté)
+// ============================================================
+// Cherche, dans les factures et devis déjà enregistrés pour CE client
+// précis, la dernière fois qu'une prestation à la description proche a
+// été vendue, et à quel prix — pour éviter les incohérences de tarif
+// d'une fois sur l'autre. Ne bloque jamais la saisie, juste une
+// suggestion informative.
+function chercherHistoriquePrixClient(clientNom, description) {
+  if (!clientNom || !description || description.trim().length < 3) return null;
+  const descNorm = description.trim().toLowerCase();
+  const tousDocs = []
+    .concat((STATE.factures || []).map(function(f) { return { doc: f, source: 'facture' }; }))
+    .concat((STATE.devis || []).map(function(d) { return { doc: d, source: 'devis' }; }))
+    .filter(function(x) { return x.doc.client === clientNom; })
+    .sort(function(a, b) { return new Date(b.doc.date_emission||0) - new Date(a.doc.date_emission||0); });
+
+  for (const { doc, source } of tousDocs) {
+    const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes||'[]') : (doc.lignes||[]);
+    for (const l of lignes) {
+      const ldesc = (l.desc || l.designation || '').trim().toLowerCase();
+      if (!ldesc) continue;
+      const correspond = ldesc === descNorm ||
+        (ldesc.length > 3 && descNorm.indexOf(ldesc) !== -1) ||
+        (descNorm.length > 3 && ldesc.indexOf(descNorm) !== -1);
+      if (correspond) {
+        return { prix: Number(l.pu)||0, date: doc.date_emission, ref: doc.ref, source: source };
+      }
+    }
+  }
+  return null;
+}
+// Affiche la suggestion (si trouvée) sous forme de toast informatif —
+// n'importe où un champ description + client existe déjà.
+function afficherSuggestionPrixClient(clientElId, descElId) {
+  const clientNom = (el(clientElId)?.value || '').trim();
+  const description = (el(descElId)?.value || '').trim();
+  const trouve = chercherHistoriquePrixClient(clientNom, description);
+  if (trouve) {
+    showToast('💡 Dernier prix pour ' + clientNom + ' : ' + fmt(trouve.prix) + ' MAD (' + trouve.source + ' ' + trouve.ref + ', ' + formatDate(trouve.date) + ')', 'default');
+  }
+}
+
 function openAddLigne() {
   el('ml-desc') && (el('ml-desc').value = '');
   el('ml-qte') && (el('ml-qte').value = '1');
@@ -231,6 +274,14 @@ function openAddLigne() {
   el('ml-unite') && (el('ml-unite').value = 'u');
   el('modal-ligne')?.classList.add('active');
   setTimeout(() => el('ml-desc')?.focus(), 100);
+  // NOUVEAU (chantier ajouté) : suggestion de prix dès que la personne
+  // quitte le champ description, sans avoir besoin de toucher au HTML —
+  // l'écouteur est attaché une seule fois (dataset comme garde-fou).
+  const champDesc = el('ml-desc');
+  if (champDesc && !champDesc.dataset.suggestionPrixAttachee) {
+    champDesc.addEventListener('blur', function() { afficherSuggestionPrixClient('f-client', 'ml-desc'); });
+    champDesc.dataset.suggestionPrixAttachee = '1';
+  }
 }
 
 function confirmerLigne() {
@@ -315,7 +366,7 @@ async function sauvegarderFacture(isDraft = false) {
     autoAddClient(client);
     showToast(isDraft ? '📋 Brouillon sauvegardé' : '✅ Facture enregistrée !', 'success');
     logAudit('facture', r[0].id, 'creation', (r[0].ref || '') + ' — ' + client + ' — ' + fmt(body.ttc) + ' MAD');
-    if (!isDraft) decrementerStockDepuisLignes(STATE.lignesF, r[0].ref);
+    if (!isDraft) await decrementerStockDepuisLignes(STATE.lignesF, r[0].ref);
     setTimeout(() => goScreen('dashboard'), 800);
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
@@ -514,7 +565,10 @@ function renderDetail() {
 async function marquerPayee(id) {
   const f = STATE.factures.find(x => x.id === id);
   if (!f) return;
-  await sb.patch('factures', `id=eq.${id}&user_id=eq.${sb.user.id}`, { statut: 'payee', montant_recu: f.ttc });
+  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
+  // pouvait jamais marquer une facture comme payée (clause WHERE ne
+  // correspondant jamais à la vraie ligne).
+  await sb.patch('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, { statut: 'payee', montant_recu: f.ttc });
   f.statut = 'payee'; f.montant_recu = f.ttc;
   STATE.currentFacture = f;
   renderDetail();
@@ -523,7 +577,8 @@ async function marquerPayee(id) {
 }
 
 async function marquerRetard(id) {
-  await sb.patch('factures', `id=eq.${id}&user_id=eq.${sb.user.id}`, { statut: 'retard' });
+  // FIX (audit) : même bug
+  await sb.patch('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, { statut: 'retard' });
   const f = STATE.factures.find(x => x.id === id);
   if (f) { f.statut = 'retard'; STATE.currentFacture = f; renderDetail(); }
   showToast('Statut mis à jour');
@@ -532,7 +587,8 @@ async function marquerRetard(id) {
 async function supprimerFacture(id) {
   if (!confirm('Supprimer cette facture ?')) return;
   const f = STATE.factures.find(x => x.id === id);
-  await sb.del('factures', `id=eq.${id}&user_id=eq.${sb.user.id}`);
+  // FIX (audit) : même bug
+  await sb.del('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
   STATE.factures = STATE.factures.filter(x => x.id !== id);
   showToast('Facture supprimée');
   logAudit('facture', id, 'suppression', f?.ref || '');
@@ -563,7 +619,9 @@ async function confirmerPaiement() {
   if (montant <= 0) { showToast('Entrez un montant', 'error'); return; }
   const newRecu = Math.min(Number(f.ttc), (Number(f.montant_recu||0) + montant));
   const newStatut = newRecu >= Number(f.ttc) ? 'payee' : f.statut;
-  await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${sb.user.id}`, { montant_recu: newRecu, statut: newStatut });
+  // FIX (audit) : sans le fallback, un membre d'équipe ne pouvait
+  // jamais enregistrer un paiement sur une facture de l'entreprise.
+  await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, { montant_recu: newRecu, statut: newStatut });
   f.montant_recu = newRecu; f.statut = newStatut;
   // Save paiement record
   try {
@@ -703,7 +761,10 @@ function autoAddClient(nom) {
 
 function updateClientDatalist() {
   const dl = el('client-datalist');
-  if (dl) dl.innerHTML = STATE.clients.map(c => `<option value="${c.nom}">`).join('');
+  // FIX (audit sécurité) : le nom du client s'insérait sans échappement
+  // dans l'attribut value — un nom contenant un guillemet aurait cassé
+  // la structure HTML de la page (voire permis d'injecter des attributs).
+  if (dl) dl.innerHTML = STATE.clients.map(c => `<option value="${escapeHTML(c.nom)}">`).join('');
 }
 
 
@@ -849,7 +910,8 @@ async function confirmerAcompte() {
   const newStatut = newRecu >= Number(f.ttc) - 0.01 ? 'payee' : f.statut;
   showToast('⏳ Enregistrement...');
   try {
-    await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${sb.user.id}`, {
+    // FIX (audit) : même bug
+    await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, {
       montant_recu: newRecu, statut: newStatut
     });
     await sb.post('paiements', {
@@ -952,7 +1014,8 @@ async function supprimerPaiement(paiementId, factureId) {
     if (p?.[0]) {
       const newRecu = Math.max(0, Number(f.montant_recu) - Number(p[0].montant));
       await sb.del('paiements', `id=eq.${paiementId}`);
-      await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${sb.user.id}`, {
+      // FIX (audit) : même bug
+      await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, {
         montant_recu: newRecu,
         statut: newRecu >= Number(f.ttc) - 0.01 ? 'payee' : 'envoyee'
       });
