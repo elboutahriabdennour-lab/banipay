@@ -78,6 +78,9 @@ function genAlertes() {
   }
 
   if (typeof ajouterNotificationsRelances === 'function') ajouterNotificationsRelances();
+  // NOUVEAU (chantier ajouté) : alerte de dépassement de budget chantier
+  // — voir finance.js pour le calcul.
+  if (typeof ajouterNotificationsDepassementChantier === 'function') ajouterNotificationsDepassementChantier();
 
   const ilYA7Jours = new Date();
   ilYA7Jours.setDate(ilYA7Jours.getDate() - 7);
@@ -213,11 +216,17 @@ function htmlListeNotifications(allNotifs) {
     // dédié qui montre le message complet (pas tronqué) + bouton "Créer
     // le devis".
     const isDemande = typeReel === 'demande_devis';
-    const estCliquable = isDoc || isReponse || isDemande;
+    // FIX (bug signalé) : une invitation comptable arrivait bien comme
+    // notification, mais rien ne la rendait cliquable — le comptable la
+    // voyait sans aucun moyen de l'ouvrir pour accepter ou refuser depuis
+    // ce panneau (le vrai bouton Accepter/Refuser n'existe que dans son
+    // onglet "Notifs" dédié, jamais ici).
+    const isInvitationCpt = typeReel === 'invitation_comptable';
+    const estCliquable = isDoc || isReponse || isDemande || isInvitationCpt;
     let meta = {};
     try { meta = JSON.parse((n.raw && n.raw.meta) || '{}'); } catch(e3) {}
     return separateur + '<div class="notif-item' + (estLue ? '' : ' notif-unread') +
-      (isDoc ? ' notif-doc-view' : '') + (isReponse ? ' notif-reponse-view' : '') + (isDemande ? ' notif-demande-view' : '') +
+      (isDoc ? ' notif-doc-view' : '') + (isReponse ? ' notif-reponse-view' : '') + (isDemande ? ' notif-demande-view' : '') + (isInvitationCpt ? ' notif-invitation-cpt-view' : '') +
       '" ' + (estCliquable ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" data-nid="' + (n.id||'') + '" style="cursor:pointer"' : '') + '>' +
       (!estLue ? '<div style="width:9px;height:9px;border-radius:50%;background:#1F6F72;flex-shrink:0;margin-top:6px"></div>' : '<div style="width:9px;flex-shrink:0"></div>') +
       '<div class="notif-ico">' + (typeIco[typeReel] || n.icon || '🔔') + '</div>' +
@@ -231,7 +240,11 @@ function htmlListeNotifications(allNotifs) {
       '</div>' : '') +
       (isReponse && meta.action === 'accepter' && meta.doc_type === 'devis' ? '<button class="btn-convertir-facture" data-docid="' + (meta.doc_id||'') + '" style="margin-top:8px;width:100%;padding:7px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Convertir en facture</button>' : '') +
       (isDemande ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir la demande complète et y répondre</div>' : '') +
+      (isInvitationCpt ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour accepter ou refuser</div>' : '') +
       (n._relanceFactureId ? '<button class="btn-envoyer-relance" data-facture-id="' + n._relanceFactureId + '" data-type-relance="' + n._relanceType + '" style="margin-top:8px;width:100%;padding:6px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📤 Envoyer la relance</button>' : '') +
+      // NOUVEAU (chantier ajouté) : côté achat, pas de destinataire à qui
+      // écrire — juste un bouton pour marquer comme vu et arrêter le rappel.
+      (n._relanceAchatId ? '<button class="btn-vu-relance-achat" data-achat-id="' + n._relanceAchatId + '" data-type-relance="' + n._relanceAchatType + '" style="margin-top:8px;width:100%;padding:6px;background:#6B5F54;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">👍 Vu, ne plus rappeler aujourd\'hui</button>' : '') +
       '</div></div>';
   }).join('');
 }
@@ -246,6 +259,16 @@ async function gererClicNotification(e) {
     const fid = parseInt(btnRelance.dataset.factureId);
     const type = btnRelance.dataset.typeRelance;
     if (typeof envoyerRelance === 'function') await envoyerRelance(fid, type);
+    return;
+  }
+  // NOUVEAU (chantier ajouté) : bouton "Vu, ne plus rappeler aujourd'hui"
+  // sur un rappel de paiement fournisseur.
+  const btnVuAchat = e.target.closest('.btn-vu-relance-achat');
+  if (btnVuAchat) {
+    const aid = parseInt(btnVuAchat.dataset.achatId);
+    const type = btnVuAchat.dataset.typeRelance;
+    if (typeof marquerRelanceAchatVue === 'function') await marquerRelanceAchatVue(aid, type);
+    fermerNotifDropdown();
     return;
   }
   const btnA = e.target.closest('.btn-accept-cpt-inv');
@@ -416,6 +439,19 @@ async function gererClicNotification(e) {
     }
     return true;
   }
+  // FIX (bug signalé) : toucher une notification d'invitation comptable
+  // (hors bouton) ouvre l'onglet "Notifs" du tableau de bord comptable —
+  // c'est le SEUL endroit où les vrais boutons Accepter/Refuser existent
+  // pour ce type d'invitation. Avant ce correctif, cliquer ici ne faisait
+  // strictement rien (aucun gestionnaire ne correspondait).
+  const notifInvCpt = e.target.closest('.notif-invitation-cpt-view');
+  if (notifInvCpt && !e.target.closest('button')) {
+    fermerNotifDropdown();
+    goScreen('comptable', null);
+    if (typeof switchCptNav === 'function') switchCptNav('notifs');
+    return true;
+  }
+
   return false;
 }
 
