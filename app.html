@@ -540,6 +540,7 @@
     </div>
   </div>
   <div class="form-section"><div class="form-label">Référence</div><input class="form-input" id="achat-ref" placeholder="Ex: FACT-2026-001"></div>
+  <div class="form-section"><div class="form-label">Chantier / Projet (optionnel)</div><input class="form-input" id="achat-chantier" placeholder="Ex: Villa Casablanca"><div style="font-size:10px;color:#9C9186;margin-top:4px">Renseignez le même nom que sur la facture liée pour suivre sa rentabilité</div></div>
   <div style="display:flex;gap:12px;padding:0 20px">
     <div style="flex:1;margin-bottom:14px"><div class="form-label">Date</div><input class="form-input" id="achat-date" type="date"></div>
     <div style="flex:1;margin-bottom:14px"><div class="form-label">Échéance</div><input class="form-input" id="achat-echeance" type="date"></div>
@@ -1143,6 +1144,46 @@
   </div>
 </div>
 
+<!-- VÉRIFICATION TÉLÉPHONE (une seule fois, après la première connexion) -->
+<div class="screen" id="screen-verification-telephone">
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <svg width="145" height="17" viewBox="20 18 260 30">
+        <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="#C9971F" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+      </svg>
+      <h1 style="margin:2px 0">Zel<span>to</span></h1>
+      <svg width="145" height="17" viewBox="20 132 260 30">
+        <path d="M 270 146 Q 150 160 30 146" fill="none" stroke="#1F6F72" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
+      </svg>
+    </div>
+    <div class="auth-card">
+      <!-- Étape 1 : saisie du numéro -->
+      <div id="verif-tel-etape-numero">
+        <div class="auth-title">Vérifiez votre téléphone</div>
+        <div style="font-size:13px;color:#6B5F54;margin-bottom:16px;text-align:center">Une seule fois — pour pouvoir récupérer votre compte même si vous perdez l'accès à votre email.</div>
+        <label class="a-lbl">Numéro de téléphone</label>
+        <input id="verif-tel-numero" class="a-inp" type="tel" placeholder="+212 6XX XX XX XX" autocomplete="tel">
+        <button class="a-btn a-btn-blue" onclick="envoyerCodeVerificationTelephone()">Recevoir le code par SMS</button>
+      </div>
+      <!-- Étape 2 : saisie du code reçu (cachée au départ) -->
+      <div id="verif-tel-etape-code" style="display:none">
+        <div class="auth-title">Entrez le code reçu</div>
+        <div style="font-size:13px;color:#6B5F54;margin-bottom:16px;text-align:center">Un SMS avec un code à 6 chiffres vient d'être envoyé.</div>
+        <label class="a-lbl">Code de vérification</label>
+        <input id="verif-tel-code" class="a-inp" type="text" inputmode="numeric" maxlength="6" placeholder="123456" style="letter-spacing:8px;font-size:22px;text-align:center">
+        <button class="a-btn a-btn-green" onclick="confirmerCodeVerificationTelephone()">Confirmer</button>
+      </div>
+      <!-- Champ d'erreur PARTAGÉ entre les 2 étapes (même ID que celui déjà
+           utilisé par envoyerCodeVerificationTelephone() et
+           confirmerCodeVerificationTelephone() dans auth.js) -->
+      <div id="verif-tel-err" class="a-err"></div>
+    </div>
+    <div class="a-footer">Données sécurisées · Zelto v2.0</div>
+  </div>
+</div>
+
 <!-- DÉFINIR MOT DE PASSE (via lien d'invitation/récupération) -->
 <div class="screen" id="screen-definir-mot-passe">
   <div class="auth-wrap">
@@ -1648,6 +1689,17 @@
           <option value="LIFO">LIFO — Dernier entré, premier sorti</option>
         </select>
         <div style="font-size:11px;color:#9C9186;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
+      </div>
+    </div>
+    <!-- Annuaire public -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">🏢 Annuaire public</div>
+      <div style="padding:14px 16px">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;color:#6B5F54">
+          <input type="checkbox" id="param-annuaire-contact-visible" style="width:16px;height:16px">
+          Afficher mon téléphone et email dans l'annuaire public Zelto
+        </label>
+        <div style="font-size:10px;color:#9C9186">Si désactivé, seuls votre nom et secteur restent visibles dans l'annuaire.</div>
       </div>
     </div>
     <!-- Préparation DGI -->
