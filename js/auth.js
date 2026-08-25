@@ -104,6 +104,57 @@ function selectRole(role) {
 // SIGNUP AVEC ROLE
 // ============================================================
 
+// FIX (grand audit) : ces deux fonctions étaient appelées par le HTML
+// (oninput="checkPwdStrength()" et oninput="checkPwdMatch()" sur le
+// formulaire d'inscription) mais n'existaient nulle part dans le code —
+// la barre de force et l'indicateur de correspondance du mot de passe
+// ne faisaient donc jamais rien depuis toujours. Mêmes critères que
+// doUpdatePassword() plus bas, pour rester cohérent dans toute l'app.
+function checkPwdStrength() {
+  const pwd = el('signup-password')?.value || '';
+  const barre = el('pwd-bar');
+  const indice = el('pwd-hint');
+  if (!barre || !indice) return;
+  if (!pwd) {
+    barre.style.width = '0%';
+    indice.textContent = '';
+    return;
+  }
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (pwd.length >= 12) score++;
+
+  const niveaux = [
+    { largeur: '25%', couleur: '#B23A2E', texte: 'Faible — 8 caractères min., 1 majuscule, 1 chiffre' },
+    { largeur: '50%', couleur: '#B8860B', texte: 'Moyen — ajoutez ce qui manque' },
+    { largeur: '75%', couleur: '#6E8F4E', texte: 'Bon' },
+    { largeur: '100%', couleur: '#1F6F72', texte: 'Excellent' },
+  ];
+  const n = niveaux[Math.max(0, score - 1)] || niveaux[0];
+  barre.style.width = n.largeur;
+  barre.style.background = n.couleur;
+  indice.textContent = n.texte;
+  indice.style.color = n.couleur;
+  // Revérifie aussi la correspondance si le second champ a déjà une valeur
+  if (el('signup-password2')?.value) checkPwdMatch();
+}
+function checkPwdMatch() {
+  const pwd = el('signup-password')?.value || '';
+  const pwd2 = el('signup-password2')?.value || '';
+  const zone = el('pwd-match');
+  if (!zone) return;
+  if (!pwd2) { zone.textContent = ''; return; }
+  if (pwd === pwd2) {
+    zone.textContent = '✅ Les mots de passe correspondent';
+    zone.style.color = '#6E8F4E';
+  } else {
+    zone.textContent = '❌ Les mots de passe ne correspondent pas';
+    zone.style.color = '#B23A2E';
+  }
+}
+
 async function doSignup() {
   const nom = el('signup-nom')?.value.trim();
   const email = el('signup-email')?.value.trim();
