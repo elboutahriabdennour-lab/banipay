@@ -3,10 +3,8 @@
 // Un fil de discussion attaché à une facture précise. Les deux parties
 // (l'entreprise et son comptable) peuvent écrire et se répondre — avant,
 // seul le comptable pouvait écrire, et l'entreprise ne voyait rien.
-
 STATE._notesFactureId = STATE._notesFactureId || null;
 STATE._notesFactureListe = STATE._notesFactureListe || [];
-
 async function ouvrirNotesFacture(factureId) {
   STATE._notesFactureId = factureId;
   const zone = document.getElementById('notes-facture-zone');
@@ -15,7 +13,6 @@ async function ouvrirNotesFacture(factureId) {
   zone.innerHTML = '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">⏳ Chargement...</div>';
   await chargerNotesFacture();
 }
-
 async function chargerNotesFacture() {
   if (!STATE._notesFactureId) return;
   try {
@@ -28,13 +25,11 @@ async function chargerNotesFacture() {
   } catch(e) { STATE._notesFactureListe = []; }
   renderNotesFacture();
 }
-
 function renderNotesFacture() {
   const zone = document.getElementById('notes-facture-zone');
   if (!zone) return;
   const notes = STATE._notesFactureListe || [];
   const monRole = (typeof CPT !== 'undefined' && CPT.currentEntId) ? 'comptable' : 'entreprise';
-
   zone.innerHTML =
     '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-top:14px">' +
       '<div style="font-size:12px;font-weight:700;margin-bottom:10px">💬 Notes' + (notes.length ? ' (' + notes.length + ')' : '') + '</div>' +
@@ -57,18 +52,29 @@ function renderNotesFacture() {
       '</div>' +
     '</div>';
 }
-
 async function envoyerNoteFacture() {
   const input = document.getElementById('nouvelle-note-facture');
   const contenu = (input?.value || '').trim();
   if (!contenu || !STATE._notesFactureId) return;
   input.value = '';
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/rpc/ajouter_note_facture', {
+    // FIX (audit workflow) : sans vérifier r.ok, un échec silencieux
+    // (fetch ne lève pas d'exception sur une erreur HTTP) effaçait quand
+    // même le texte tapé, sans aucun message — la note était perdue sans
+    // que la personne s'en rende compte.
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/ajouter_note_facture', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_facture_id: STATE._notesFactureId, p_contenu: contenu })
     });
+    if (!r.ok) {
+      if (input) input.value = contenu; // restaure le texte tapé
+      showToast('❌ Échec de l\'envoi — réessayez', 'error');
+      return;
+    }
     await chargerNotesFacture();
-  } catch(e) { showToast('Erreur envoi: ' + e.message, 'error'); }
+  } catch(e) {
+    if (input) input.value = contenu;
+    showToast('Erreur envoi: ' + e.message, 'error');
+  }
 }
