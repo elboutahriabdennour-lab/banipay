@@ -713,8 +713,13 @@ async function marquerAchatPaye(id) {
   const a = STATE.achats.find(function(x) { return x.id === id; });
   if (!a || a.statut === 'payee') return;
   try {
-    await sb.patch('factures_achat', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'payee' });
+    // NOUVEAU (export comptable complet) : la date de paiement est
+    // enregistrée en plus du statut — nécessaire pour générer une vraie
+    // écriture de règlement fournisseur dans l'export comptable.
+    const dateAujourdhui = new Date().toISOString().split('T')[0];
+    await sb.patch('factures_achat', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'payee', date_paiement: dateAujourdhui });
     a.statut = 'payee';
+    a.date_paiement = dateAujourdhui;
     showToast('\u2705 Facture marquée payée', 'success');
     document.getElementById('achat-detail-overlay')?.remove();
     renderAchats();
