@@ -277,6 +277,24 @@ async function doLogin() {
 // toute la détection de rôle et le chargement du bon tableau de bord.
 async function _continuerApresAuthentification(email, errEl, remember) {
   try {
+    // NOUVEAU (chantier parrainage) : si un code de parrainage a été
+    // capturé (voir app.js/index.html), on l'enregistre une seule fois
+    // ici — le premier moment où une vraie session authentifiée existe
+    // après l'inscription. La RPC elle-même est protégée (ON CONFLICT +
+    // vérification anti-auto-parrainage côté serveur), donc même si ce
+    // code s'exécutait deux fois par accident, aucun risque de doublon.
+    const parrainEnAttente = localStorage.getItem('bp_parrain_id');
+    if (parrainEnAttente) {
+      try {
+        await fetch(SUPABASE_URL + '/rest/v1/rpc/enregistrer_parrainage', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_parrain_id_unique: parrainEnAttente, p_filleul_email: email || sb.user?.email || '' })
+        });
+      } catch(eParrain) { console.warn('enregistrer_parrainage:', eParrain); }
+      localStorage.removeItem('bp_parrain_id');
+    }
+
     // NOUVEAU : détection automatique — un seul formulaire de connexion
     // pour tout le monde, pas de choix à faire. On vérifie d'abord si ce
     // compte est un agent support ; si oui, on route directement vers
