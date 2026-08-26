@@ -124,6 +124,50 @@ async function partagerProfil() {
   if(navigator.share){try{await navigator.share({title:STATE.profil.raison||'Zelto',url:lien});return;}catch(e){}}
   navigator.clipboard?.writeText(lien).then(()=>showToast('✅ Lien copié !','success'));
 }
+
+// ============================================================
+// PARRAINAGE ENTRE ENTREPRISES (chantier ajouté)
+// ============================================================
+// PÉRIMÈTRE HONNÊTE : ceci compte les inscriptions réalisées via un lien
+// de parrainage — il n'y a pour l'instant AUCUNE récompense automatique
+// associée (les forfaits n'ont pas encore de prix fixé). Un système de
+// récompense pourra être ajouté plus tard une fois cette décision prise,
+// sans avoir à retoucher ce mécanisme de suivi.
+STATE.mesParrainages = STATE.mesParrainages || [];
+function lienParrainage() {
+  const id = STATE.profil.id_unique || 'BP-000000';
+  return `${window.location.origin}${window.location.pathname.replace('app.html','index.html')}?parrain=${id}`;
+}
+function copierLienParrainage() {
+  navigator.clipboard?.writeText(lienParrainage()).then(() => showToast('✅ Lien de parrainage copié !', 'success'));
+}
+async function partagerLienParrainage() {
+  const lien = lienParrainage();
+  if (navigator.share) { try { await navigator.share({ title: 'Rejoignez Zelto', url: lien }); return; } catch(e) {} }
+  navigator.clipboard?.writeText(lien).then(() => showToast('✅ Lien copié !', 'success'));
+}
+async function chargerMesParrainages() {
+  try {
+    STATE.mesParrainages = (await sb.get('parrainages', 'parrain_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || [];
+  } catch(e) { STATE.mesParrainages = []; }
+  renderParrainage();
+}
+function renderParrainage() {
+  const zone = el('parrainage-content');
+  if (!zone) return;
+  const n = (STATE.mesParrainages || []).length;
+  zone.innerHTML =
+    '<div style="font-size:12px;color:#6B5F54;margin-bottom:12px">Partagez ce lien — chaque entreprise qui s\'inscrit grâce à vous apparaît ici.</div>' +
+    '<div style="background:#F1EEE8;border-radius:10px;padding:10px 12px;font-size:11px;color:#6B5F54;word-break:break-all;margin-bottom:10px">' + lienParrainage() + '</div>' +
+    '<div style="display:flex;gap:8px;margin-bottom:16px">' +
+      '<button onclick="copierLienParrainage()" style="flex:1;padding:9px;background:#F1EEE8;color:#241F1B;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>' +
+      '<button onclick="partagerLienParrainage()" style="flex:1;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>' +
+    '</div>' +
+    '<div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:8px">' + n + ' entreprise' + (n>1?'s':'') + ' parrainée' + (n>1?'s':'') + '</div>' +
+    (STATE.mesParrainages || []).map(function(p) {
+      return '<div style="font-size:12px;color:#6B5F54;padding:6px 0;border-bottom:1px solid #EAE4DA">' + escapeHTML(p.filleul_email || 'Entreprise') + ' · ' + formatDate(p.created_at) + '</div>';
+    }).join('');
+}
 async function uploadLogo(event) {
   const file = event.target.files[0]; if(!file) return;
   const reader = new FileReader();
