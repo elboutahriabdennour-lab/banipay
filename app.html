@@ -635,6 +635,13 @@
     <button class="s-btn blue" onclick="sauvegarderFacture()">💾 Sauvegarder</button>
     <button class="s-btn gray" onclick="previewPDF()">📄 PDF</button>
   </div>
+  <div class="send-row">
+    <!-- NOUVEAU (mode hors-ligne) : autoSaveDraft() existait déjà dans
+         le code mais n'était reliée à aucun bouton — impossible de créer
+         un brouillon jusqu'ici. 100% local (localStorage), fonctionne
+         donc sans connexion, contrairement à "Sauvegarder" ci-dessus. -->
+    <button class="s-btn gray" onclick="autoSaveDraft()" style="width:100%">📋 Enregistrer comme brouillon (fonctionne hors-ligne)</button>
+  </div>
   <div class="pb"></div>
 </div>
 
@@ -931,6 +938,11 @@
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">Mon comptable</div>
       <div id="mon-comptable-section" style="padding:14px 16px">Chargement...</div>
+    </div>
+    <!-- Section Parrainage (chantier ajouté) -->
+    <div style="margin:14px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
+      <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">🤝 Parrainer une entreprise</div>
+      <div id="parrainage-content" style="padding:14px 16px">Chargement...</div>
     </div>
     <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#6E8F4E">🏢 Annuaire Zelto</button>
     <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
