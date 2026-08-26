@@ -740,7 +740,7 @@ function goScreen(name) {
     'recherche': _safe(typeof initRecherche!=='undefined'?initRecherche:undefined,'initRecherche'),
     'notifications': _safe(typeof renderNotifScreen!=='undefined'?renderNotifScreen:undefined,'renderNotifScreen'),
     'audit': _safe(typeof renderJournalAudit!=='undefined'?renderJournalAudit:undefined,'renderJournalAudit'),
-    'profil': function() { if (typeof renderProfil==='function') renderProfil(); setTimeout(function(){ if (typeof renderMonComptable==='function') renderMonComptable(); }, 300); },
+    'profil': function() { if (typeof renderProfil==='function') renderProfil(); setTimeout(function(){ if (typeof renderMonComptable==='function') renderMonComptable(); }, 300); if (typeof chargerMesParrainages === 'function') chargerMesParrainages(); },
     'comptable': _safe(typeof renderComptableDashboard!=='undefined'?renderComptableDashboard:undefined,'renderComptableDashboard'),
     'comptable-profil': function() { if (typeof renderComptableProfil==='function') renderComptableProfil(); if (typeof chargerEquipeCabinet === 'function') chargerEquipeCabinet(); if (typeof chargerMesInvitationsCabinet === 'function') chargerMesInvitationsCabinet(); },
     'cpt-entreprise': function() {},
