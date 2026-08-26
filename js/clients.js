@@ -196,6 +196,7 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal) {
 }
 
 async function sauvegarderClient() {
+  if (typeof verifierConnexionRequise === 'function' && !verifierConnexionRequise()) return;
   const nom = el('cl-nom')?.value.trim();
   if (!nom) { showToast('Entrez le nom du client', 'error'); return; }
   if (typeof verifierLimiteClients === 'function' && !verifierLimiteClients()) return;
