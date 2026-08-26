@@ -1,40 +1,21 @@
 // ZELTO — ubl.js — Génération de factures structurées UBL 2.1
 // ============================================================
-// PRÉPARATION À LA FACTURATION ÉLECTRONIQUE DGI (Maroc, obligation 2027
-// pour les PME/TPE) — CE FICHIER EST UNE PRÉPARATION, PAS UNE CONFORMITÉ
-// GARANTIE.
-//
-// Ce que ce fichier fait : génère un XML conforme à la structure
-// INTERNATIONALE standard UBL 2.1 (norme OASIS), le format que la DGI a
-// annoncé retenir. C'est un socle solide et stable.
-//
-// Ce que ce fichier NE fait PAS : les spécifications techniques précises
-// du "profil marocain" (règles locales, contrôles spécifiques, mode de
-// signature électronique, connexion à la plateforme xHub/DGI) n'étaient
-// pas encore publiées au moment où ce code a été écrit. Ce module devra
-// être ajusté dès leur publication officielle — probablement l'ajout de
-// champs spécifiques, pas une refonte complète, si le schéma suit le même
-// principe que la France (CIUS-FR) ou l'Italie (FatturaPA), qui étendent
-// UBL/CII plutôt que de partir de zéro.
-//
-// À ne PAS utiliser comme unique preuve de conformité fiscale tant que la
-// DGI n'a pas publié son profil définitif et que ce module n'a pas été
-// validé contre celui-ci.
-
+// PRÉPARATION À LA FACTURATION ÉLECTRONIQUE DGI (Maroc) — une réforme
+// est annoncée par la DGI, mais sans date ni seuils officiellement
+// publiés à ce jour (vérifié août 2026). CE FICHIER EST UNE PRÉPARATION,
+// PAS UNE CONFORMITÉ GARANTIE — à ajuster dès la publication des
+// spécifications définitives.
 function _ubl_echap(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 }
-
-// Construit le XML UBL 2.1 d'une facture (structure Invoice standard OASIS)
 function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
   const f = facture;
   const p = profilEmetteur || {};
   const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
   const devise = f.devise || 'MAD';
   const dateEmission = f.date_emission || new Date().toISOString().split('T')[0];
-
   const lignesXML = lignes.map(function(l, i) {
     const qte = Number(l.qte) || 0;
     const pu = Number(l.pu) || 0;
@@ -52,7 +33,6 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
     </cac:Price>
   </cac:InvoiceLine>`;
   }).join('');
-
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Généré par Zelto — préparation UBL 2.1, format international OASIS.
      Profil marocain DGI/xHub non encore publié au moment de la génération :
@@ -66,7 +46,6 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
   <cbc:IssueDate>${dateEmission}</cbc:IssueDate>
   <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
   <cbc:DocumentCurrencyCode>${devise}</cbc:DocumentCurrencyCode>
-
   <cac:AccountingSupplierParty>
     <cac:Party>
       <cac:PartyName><cbc:Name>${_ubl_echap(p.raison)}</cbc:Name></cac:PartyName>
@@ -77,7 +56,6 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
       <cac:PostalAddress><cbc:StreetName>${_ubl_echap(p.adresse)}</cbc:StreetName><cbc:CityName>${_ubl_echap(p.ville)}</cbc:CityName><cac:Country><cbc:IdentificationCode>MA</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
     </cac:Party>
   </cac:AccountingSupplierParty>
-
   <cac:AccountingCustomerParty>
     <cac:Party>
       <cac:PartyName><cbc:Name>${_ubl_echap(f.client)}</cbc:Name></cac:PartyName>
@@ -85,7 +63,6 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
       <cac:PostalAddress><cbc:StreetName>${_ubl_echap(clientInfo?.adresse)}</cbc:StreetName><cac:Country><cbc:IdentificationCode>MA</cbc:IdentificationCode></cac:Country></cac:PostalAddress>
     </cac:Party>
   </cac:AccountingCustomerParty>
-
   <cac:TaxTotal>
     <cbc:TaxAmount currencyID="${devise}">${(Number(f.tva)||0).toFixed(2)}</cbc:TaxAmount>
     <cac:TaxSubtotal>
@@ -94,7 +71,6 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
       <cac:TaxCategory><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory>
     </cac:TaxSubtotal>
   </cac:TaxTotal>
-
   <cac:LegalMonetaryTotal>
     <cbc:LineExtensionAmount currencyID="${devise}">${(Number(f.ht)||0).toFixed(2)}</cbc:LineExtensionAmount>
     <cbc:TaxExclusiveAmount currencyID="${devise}">${(Number(f.ht)||0).toFixed(2)}</cbc:TaxExclusiveAmount>
@@ -104,19 +80,15 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
 ${lignesXML}
 </Invoice>`;
 }
-
-// Télécharge le XML UBL d'une facture (préparation DGI)
 function telechargerXMLUBLFacture(factureId) {
   if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('export_ubl', 'Export UBL / préparation DGI')) return;
   const f = (STATE.factures || []).find(function(x) { return x.id === factureId; });
   if (!f) { showToast('Facture introuvable', 'error'); return; }
   const clientInfo = (STATE.clients || []).find(function(c) { return c.nom === f.client; });
-
   if (!STATE.profil?.ice) {
     showToast('⚠️ Renseignez l\'ICE de votre entreprise dans Profil avant d\'exporter (obligatoire DGI)', 'error');
     return;
   }
-
   const xml = genererXMLUBLFacture(f, STATE.profil, clientInfo);
   const blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -127,9 +99,6 @@ function telechargerXMLUBLFacture(factureId) {
   setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
   showToast('✅ XML UBL 2.1 exporté (préparation — pas encore connecté à la plateforme DGI)', 'success');
 }
-
-// Vérifie la présence des champs légaux obligatoires (ICE en premier lieu,
-// exigé pour la facturation électronique) et affiche un statut simple.
 function afficherStatutDGI() {
   const el_status = document.getElementById('dgi-readiness-status');
   if (!el_status) return;
@@ -138,7 +107,6 @@ function afficherStatutDGI() {
   if (!p.ice) manquants.push('ICE');
   if (!p.rc) manquants.push('RC');
   if (!p.identifiant_fiscal) manquants.push('Identifiant fiscal');
-
   if (!manquants.length) {
     el_status.innerHTML = '<span style="color:#6E8F4E;font-weight:600">✅ Informations légales complètes</span>';
   } else {
