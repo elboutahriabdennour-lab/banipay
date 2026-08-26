@@ -331,6 +331,10 @@ function ajouterDepuisCatalogue(id) {
 }
 
 async function sauvegarderFacture(isDraft = false) {
+  // NOUVEAU (mode hors-ligne, version prudente) : un brouillon reste
+  // volontairement autorisé sans connexion (c'est justement le cas déjà
+  // géré en local) — seule la vraie sauvegarde finale est bloquée.
+  if (!isDraft && typeof verifierConnexionRequise === 'function' && !verifierConnexionRequise()) return;
   const client = el('f-client')?.value.trim();
   if (!client) { showToast('Entrez le nom du client', 'error'); return; }
   if (!STATE.lignesF.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
