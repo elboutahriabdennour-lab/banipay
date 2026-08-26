@@ -687,6 +687,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const comptableEmail = params.get('comptable');
   const portailId = params.get('portail');
   const profilId = params.get('profil');
+  // NOUVEAU (chantier ajouté) : capture le code de parrainage dès
+  // l'arrivée sur le lien, stocké en local en attendant que la personne
+  // termine réellement son inscription (elle peut visiter plusieurs
+  // pages avant de s'inscrire) — voir doSignup() dans auth.js pour la
+  // validation finale.
+  const parrainId = params.get('parrain');
+  if (parrainId) localStorage.setItem('bp_parrain_id', parrainId);
 
   if (portailId) { await loadPublicProfil(portailId); return; }
   if (profilId) { await loadPublicProfil(profilId); return; }
