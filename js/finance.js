@@ -203,8 +203,37 @@ async function exporterEcrituresComptables(factures, achats, paiements, profil) 
     lignesReglements.push([p.date, 'BQ', COMPTES_CGNC.banque, 'Banques', libelle, facture ? facture.ref : '', montant.toFixed(2), '']);
     lignesReglements.push([p.date, 'BQ', COMPTES_CGNC.clients, 'Clients', libelle, facture ? facture.ref : '', '', montant.toFixed(2)]);
   });
+  // NOUVEAU (export comptable complet) : les règlements FOURNISSEURS
+  // manquaient entièrement — seul l'argent reçu des clients était
+  // enregistré, jamais l'argent versé aux fournisseurs. Repose sur
+  // date_paiement (voir migration dédiée) — un achat marqué payé avant
+  // cette migration n'aura pas de date et sera donc ignoré ici plutôt
+  // que d'utiliser une date approximative fausse.
+  (achats || []).forEach(function(a) {
+    if (a.statut !== 'payee' || !a.date_paiement) return;
+    const ttc = Number(a.ttc) || 0;
+    const libelle = 'Règlement fournisseur — ' + (a.fournisseur || '') + (a.ref_fournisseur ? ' (' + a.ref_fournisseur + ')' : '');
+    lignesReglements.push([a.date_paiement, 'BQ', COMPTES_CGNC.fournisseurs, 'Fournisseurs', libelle, a.ref_fournisseur || '', ttc.toFixed(2), '']);
+    lignesReglements.push([a.date_paiement, 'BQ', COMPTES_CGNC.banque, 'Banques', libelle, a.ref_fournisseur || '', '', ttc.toFixed(2)]);
+  });
 
-  const toutesLignes = lignesVentes.concat(lignesAchats).concat(lignesReglements);
+  // NOUVEAU (export comptable complet) : les avoirs (annulations/
+  // corrections de facture) n'apparaissaient jamais dans l'export —
+  // une facture annulée restait comptabilisée comme si elle avait
+  // vraiment été vendue.
+  const lignesAvoirs = [];
+  (STATE.avoirs || []).forEach(function(av) {
+    if (!av.date_emission) return;
+    const ht = Number(av.ht) || 0;
+    const tva = Number(av.tva) || 0;
+    const ttc = Number(av.ttc) || 0;
+    const libelle = 'Avoir ' + (av.ref || '') + ' — ' + (av.client || '') + (av.motif ? ' (' + av.motif + ')' : '');
+    lignesAvoirs.push([av.date_emission, 'AV', COMPTES_CGNC.ventes, 'Ventes de biens et services produits', libelle, av.ref || '', ht.toFixed(2), '']);
+    if (tva > 0) lignesAvoirs.push([av.date_emission, 'AV', COMPTES_CGNC.tvaCollectee, 'État, TVA facturée', libelle, av.ref || '', tva.toFixed(2), '']);
+    lignesAvoirs.push([av.date_emission, 'AV', COMPTES_CGNC.clients, 'Clients', libelle, av.ref || '', '', ttc.toFixed(2)]);
+  });
+
+  const toutesLignes = lignesVentes.concat(lignesAchats).concat(lignesReglements).concat(lignesAvoirs);
   if (!toutesLignes.length) { showToast('Aucune écriture à exporter', 'error'); return; }
 
   const nomFichier = 'ecritures_comptables_' + raison.replace(/\s+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.xlsx';
@@ -219,6 +248,7 @@ async function exporterEcrituresComptables(factures, achats, paiements, profil) 
     if (lignesVentes.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(lignesVentes)), 'Ventes (VE)');
     if (lignesAchats.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(lignesAchats)), 'Achats (AC)');
     if (lignesReglements.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(lignesReglements)), 'Règlements (BQ)');
+    if (lignesAvoirs.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([headers].concat(lignesAvoirs)), 'Avoirs (AV)');
     XLSX.writeFile(wb, nomFichier);
     showToast('✅ Export Excel téléchargé (' + toutesLignes.length + ' lignes)', 'success');
   } catch(e) {
