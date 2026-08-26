@@ -253,6 +253,10 @@ function renderListeEntreprises(filtre) {
           '<div style="font-size:13px;font-weight:700;color:#2A2420">' + escapeHTML(nomAffiche) + '</div>' +
           '<div style="font-size:11px;color:#6B5F54">' + (p.secteur || '') + (p.ville ? ' · ' + p.ville : '') + '</div>' +
         '</div>' +
+        // NOUVEAU (grand audit) : messagerAvecEntreprise() existait déjà
+        // dans le code mais n'était jamais reliée à aucun bouton — un
+        // comptable pouvait répondre à un message, jamais en démarrer un.
+        '<button onclick="event.stopPropagation();messagerAvecEntreprise(\'' + inv.entreprise_id + '\',\'' + (inv.entreprise_email||'').replace(/'/g,"\\'") + '\')" title="Écrire à cette entreprise" style="background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0">💬</button>' +
         '<div style="font-size:12px;font-weight:700;color:' + etatColor(etat) + '">' + etatLabel(etat) + '</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
