@@ -482,6 +482,7 @@ function previewAchatPJ(event) {
 // ============================================================
 
 async function sauvegarderAchat() {
+  if (typeof verifierConnexionRequise === 'function' && !verifierConnexionRequise()) return;
   const fournisseur = (el('achat-fournisseur')?.value || '').trim();
   if (!fournisseur) { showToast('Saisissez le fournisseur', 'error'); return; }
   if (!STATE.lignesAchat.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
