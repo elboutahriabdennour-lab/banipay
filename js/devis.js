@@ -117,6 +117,7 @@ function remplirPickerBCPourDevis() {
 }
 
 async function sauvegarderDevis() {
+  if (typeof verifierConnexionRequise === 'function' && !verifierConnexionRequise()) return;
   const client = el('d-client')?.value.trim();
   if (!client) { showToast('Entrez le nom du client', 'error'); return; }
   if (!STATE.lignesD.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
