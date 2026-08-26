@@ -1023,6 +1023,9 @@
   <!-- Rapport de marge par chantier (chantier ajouté) -->
   <div class="sec-label" style="margin-top:8px">🏗️ Rentabilité par chantier</div>
   <div style="padding:0 20px 20px" id="rapport-marge-chantiers-content"></div>
+  <div style="padding:0 20px 20px">
+    <button onclick="goScreen('carnet-chantier',null);setTimeout(initCarnetChantier,50)" style="width:100%;padding:12px;background:#fff;border:1.5px solid #E3DCCF;color:#241F1B;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Ouvrir le carnet de chantier photo</button>
+  </div>
   <div class="pb"></div>
 </div>
 
@@ -2073,6 +2076,30 @@
       <div id="rapport-stock-content"></div>
     </div>
     <div style="height:30px"></div>
+  </div>
+
+  <!-- CARNET DE CHANTIER (chantier ajouté) -->
+  <div class="screen" id="screen-carnet-chantier">
+    <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">📷 Carnet de chantier</div>
+      <select id="carnet-chantier-select" class="f-inp" onchange="changerChantierCarnet()" style="margin-bottom:14px"></select>
+      <button onclick="ouvrirAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px">📸 Ajouter une photo</button>
+      <input type="file" id="carnet-photo-input" accept="image/*" capture="environment" style="display:none" onchange="traiterNouvellePhotoChantier(event)">
+      <div id="carnet-chantier-liste"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- Modale note pour une nouvelle photo de carnet -->
+  <div class="modal-overlay" id="modal-carnet-note">
+    <div class="modal-box">
+      <img id="carnet-photo-apercu" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:220px;object-fit:cover">
+      <label class="f-lbl">Note (optionnelle)</label>
+      <textarea id="carnet-note-input" class="f-inp" rows="3" placeholder="Ex: Coulage de la dalle terminé"></textarea>
+      <button onclick="confirmerAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px">Enregistrer dans le carnet</button>
+      <button onclick="closeAllModals()" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:8px">Annuler</button>
+    </div>
   </div>
 
   <!-- RAPPROCHEMENT PAIEMENTS -->
