@@ -402,6 +402,12 @@
 function toggleFeature(carte) {
   carte.classList.toggle('ouverte');
 }
+// NOUVEAU (chantier parrainage) : capture le code dès la landing page,
+// au cas où la personne arrive ici avant de cliquer vers l'inscription.
+(function() {
+  const parrainId = new URLSearchParams(window.location.search).get('parrain');
+  if (parrainId) localStorage.setItem('bp_parrain_id', parrainId);
+})();
 </script>
 
 <!-- ===== EMPLACEMENT ANNONCE =====
