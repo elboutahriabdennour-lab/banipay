@@ -279,14 +279,19 @@ async function exporterEcrituresComptables(factures, achats, paiements, profil) 
 // soit renseigné des deux côtés pour que le rapprochement fonctionne —
 // un achat sans chantier renseigné n'apparaît simplement dans aucun total.
 function calculerMargeParChantier() {
+  // NOUVEAU (retour utilisateur) : respecte le même filtre de période que
+  // l'écran Statistiques (voir filtrerParPeriode, défini dans stats.js).
+  const periode = STATE.statsPeriode || 'tout';
+  const facturesFiltrees = typeof filtrerParPeriode === 'function' ? filtrerParPeriode(STATE.factures || [], periode, 'date_emission') : (STATE.factures || []);
+  const achatsFiltres = typeof filtrerParPeriode === 'function' ? filtrerParPeriode(STATE.achats || [], periode, 'date_achat') : (STATE.achats || []);
   const chantiers = {};
-  (STATE.factures || []).forEach(function(f) {
+  facturesFiltrees.forEach(function(f) {
     if (!f.chantier) return;
     if (!chantiers[f.chantier]) chantiers[f.chantier] = { revenus: 0, depenses: 0, nbFactures: 0, nbAchats: 0 };
     chantiers[f.chantier].revenus += Number(f.ttc) || 0;
     chantiers[f.chantier].nbFactures++;
   });
-  (STATE.achats || []).forEach(function(a) {
+  achatsFiltres.forEach(function(a) {
     if (!a.chantier) return;
     if (!chantiers[a.chantier]) chantiers[a.chantier] = { revenus: 0, depenses: 0, nbFactures: 0, nbAchats: 0 };
     chantiers[a.chantier].depenses += Number(a.ttc) || 0;
