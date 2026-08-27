@@ -609,6 +609,19 @@ async function inviterComptable() {
           sens: 'entreprise_vers_comptable'
         })
       });
+      // FIX (bug root cause trouvé via diagnostic) : cette réponse n'était
+      // JAMAIS vérifiée — l'insertion pouvait échouer silencieusement
+      // (politique de sécurité, colonne manquante...) tout en affichant
+      // "Invitation envoyée !" comme si tout s'était bien passé. C'est
+      // exactement ce qui s'est produit : la ligne n'existait jamais
+      // réellement dans invitations_comptable.
+      if (!resp.ok) {
+        const erreurBrute = await resp.json().catch(function() { return {}; });
+        feedback.style.color = '#B23A2E';
+        feedback.textContent = '❌ Échec de l\'envoi : ' + (erreurBrute.message || 'erreur inconnue — vérifiez les droits d\'accès sur la table invitations_comptable dans Supabase');
+        console.warn('inviterComptable: échec insertion', resp.status, erreurBrute);
+        return;
+      }
       const userResp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_user_by_email', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
