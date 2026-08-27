@@ -2183,6 +2183,22 @@ async function chargerNotificationsComptable() {
     );
     const invitations = await resp.json() || [];
 
+    // NOUVEAU (retour utilisateur) : le comptable doit voir de vraies
+    // informations sur l'entreprise avant de décider, pas juste son
+    // email — une requête par invitation (leur nombre reste toujours
+    // très faible, quelques-unes tout au plus).
+    for (const inv of invitations) {
+      if (!inv.entreprise_id) continue;
+      try {
+        const respProfil = await fetch(
+          SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + inv.entreprise_id + '&select=raison,secteur,ville,tel',
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
+        );
+        const profils = respProfil.ok ? ((await respProfil.json()) || []) : [];
+        if (profils[0]) inv._profil = profils[0];
+      } catch(eProfil) {}
+    }
+
     // FIX: remplace get_mes_notifications (générique) par une RPC dédiée
     // qui ne renvoie que les types liés au métier de comptable — évite
     // tout mélange avec des notifications qui ne le concernent pas.
@@ -2236,17 +2252,23 @@ async function renderNotificationsComptable() {
 
       (invitations.length ? '<div style="font-size:12px;font-weight:700;color:#1F6F72;text-transform:uppercase;margin-bottom:10px">Invitations en attente</div>' +
         invitations.map(function(inv) {
-          return '<div style="background:#FBF0DA;border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid #E8D9AE">' +
+          // NOUVEAU (retour utilisateur) : vraies informations de
+          // l'entreprise affichées avant de décider, pas juste son email.
+          const p = inv._profil || {};
+          return '<div style="background:#FBF0DA;border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid #E8D9AE" id="inv-cpt-carte-' + inv.id + '">' +
             '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' +
               '<div style="font-size:24px">🏢</div>' +
               '<div>' +
-                '<div style="font-size:13px;font-weight:700">' + escapeHTML(inv.entreprise_email || '') + '</div>' +
-                '<div style="font-size:11px;color:#6B5F54">Invite à accéder à ses documents</div>' +
+                '<div style="font-size:13px;font-weight:700">' + escapeHTML(p.raison || inv.entreprise_email || '') + '</div>' +
+                '<div style="font-size:11px;color:#6B5F54">' + [p.secteur, p.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
+                (p.tel ? '<div style="font-size:11px;color:#6B5F54">📞 ' + escapeHTML(p.tel) + '</div>' : '') +
+                '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(inv.entreprise_email || '') + '</div>' +
               '</div>' +
             '</div>' +
-            '<div style="display:flex;gap:8px">' +
-              '<button class="btn-accept-inv" data-id="' + inv.id + '" data-eid="' + (inv.entreprise_id||'') + '" style="flex:1;padding:10px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
-              '<button class="btn-reject-inv" data-id="' + inv.id + '" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
+            '<div style="display:flex;gap:6px">' +
+              '<button class="btn-accept-inv" data-id="' + inv.id + '" data-eid="' + (inv.entreprise_id||'') + '" style="flex:1;padding:10px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
+              '<button class="btn-plus-tard-inv" data-id="' + inv.id + '" style="flex:1;padding:10px 4px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⏳ Plus tard</button>' +
+              '<button class="btn-reject-inv" data-id="' + inv.id + '" style="flex:1;padding:10px 4px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
             '</div>' +
           '</div>';
         }).join('') : '') +
@@ -2290,6 +2312,18 @@ async function renderNotificationsComptable() {
       const btnReject = e.target.closest('.btn-reject-inv');
       if (btnReject) {
         await refuserInvitationComptable(btnReject.dataset.id);
+        return;
+      }
+      // NOUVEAU (retour utilisateur) : "Plus tard" ne change rien en
+      // base — l'invitation reste "en_attente" côté entreprise, elle
+      // réapparaîtra simplement la prochaine fois que le comptable rouvre
+      // cet onglet. On masque juste la carte pour l'instant, sans forcer
+      // une décision immédiate.
+      const btnPlusTard = e.target.closest('.btn-plus-tard-inv');
+      if (btnPlusTard) {
+        const carte = document.getElementById('inv-cpt-carte-' + btnPlusTard.dataset.id);
+        if (carte) carte.style.display = 'none';
+        showToast('Vous pourrez décider plus tard — l\'invitation reste en attente', 'default');
       }
     });
   }
