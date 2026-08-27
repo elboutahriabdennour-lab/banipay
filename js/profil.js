@@ -593,13 +593,21 @@ async function inviterComptable() {
     feedback.style.color = '#1F6F72';
     feedback.textContent = '⏳ Envoi en cours...';
     try {
+      // FIX (bug root cause #2, trouvé via diagnostic) : une contrainte
+      // d'unicité existe sur (entreprise_id, comptable_email) — si une
+      // invitation avait déjà été envoyée par le passé à ce même email
+      // (même refusée, même très ancienne), toute nouvelle tentative
+      // échouait avec "duplicate key value violates unique constraint".
+      // Passage en upsert : si la ligne existe déjà, son statut est
+      // remis à "en_attente" (réinvitation), sinon une nouvelle ligne
+      // est créée normalement.
       const resp = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': 'Bearer ' + sb.token,
           'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
+          'Prefer': 'resolution=merge-duplicates,return=representation'
         },
         body: JSON.stringify({
           comptable_email: emailCpt,
