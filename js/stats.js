@@ -6,8 +6,43 @@
 // silencieusement les miennes (aucune erreur, juste un remplacement
 // silencieux — un des bugs les plus difficiles à détecter de cette
 // conversation).
+// NOUVEAU (retour utilisateur) : filtre de période pour les statistiques
+// — jusqu'ici, tout se calculait systématiquement sur l'historique
+// complet, impossible de voir "ce mois-ci" ou "cette année" séparément.
+STATE.statsPeriode = STATE.statsPeriode || 'tout';
+function filtrerParPeriode(items, periode, champDate) {
+  if (periode === 'tout') return items;
+  const maintenant = new Date();
+  return items.filter(function(x) {
+    const dt = new Date(x[champDate] || '');
+    if (isNaN(dt.getTime())) return false;
+    if (periode === 'mois') {
+      return dt.getMonth() === maintenant.getMonth() && dt.getFullYear() === maintenant.getFullYear();
+    }
+    if (periode === 'mois-dernier') {
+      const moisDernier = new Date(maintenant.getFullYear(), maintenant.getMonth() - 1, 1);
+      return dt.getMonth() === moisDernier.getMonth() && dt.getFullYear() === moisDernier.getFullYear();
+    }
+    if (periode === 'annee') {
+      return dt.getFullYear() === maintenant.getFullYear();
+    }
+    return true;
+  });
+}
+function changerPeriodeStats(periode, btn) {
+  STATE.statsPeriode = periode;
+  document.querySelectorAll('#stats-periode-tabs .ftab').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderStats();
+  if (typeof renderRapportMargeChantiers === 'function') renderRapportMargeChantiers();
+}
+
 function renderStats() {
-  const f = STATE.factures || [];
+  // NOUVEAU : la vue 12 mois glissants reste toujours complète (voir
+  // "months" plus bas, construit séparément à partir de STATE.factures
+  // directement) — seuls les totaux/répartition/tops respectent le
+  // filtre de période choisi.
+  const f = filtrerParPeriode(STATE.factures || [], STATE.statsPeriode, 'date_emission');
   const d = STATE.devis || [];
   const now = new Date();
   const thisMonth = now.getMonth();
@@ -31,7 +66,7 @@ function renderStats() {
       ca: 0, paye: 0
     });
   }
-  f.forEach(fac => {
+  (STATE.factures || []).forEach(fac => {
     const dt = new Date(fac.date_emission||'');
     const m = months.find(x => x.month===dt.getMonth() && x.year===dt.getFullYear());
     if (m) { m.ca += Number(fac.ttc)||0; if(fac.statut==='payee') m.paye += Number(fac.ttc)||0; }
