@@ -141,16 +141,26 @@ function rechercherClientOuLien() {
 }
 
 function renderClients() {
-  const el_count = el('clients-count');
-  if (el_count) el_count.textContent = STATE.clients.length;
   const list = el('clients-list');
   if (!list) return;
   const q = (el('search-client-inp')?.value||'').toLowerCase();
   const filtered = q ? STATE.clients.filter(c =>
     c.nom.toLowerCase().includes(q) || (c.tel||'').includes(q) || (c.email||'').toLowerCase().includes(q)
   ) : STATE.clients;
+
+  // NOUVEAU (retour utilisateur) : le compteur reflète maintenant la
+  // recherche en cours, pas juste le total — "3 sur 12" plutôt que
+  // toujours "12", même en pleine recherche filtrée.
+  const el_count = el('clients-count');
+  if (el_count) el_count.textContent = q ? (filtered.length + ' sur ' + STATE.clients.length) : STATE.clients.length;
+
   if (!filtered.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun client</div></div>`;
+    // NOUVEAU : distingue "aucun résultat pour cette recherche" de
+    // "vraiment aucun client" — avant, les deux affichaient exactement
+    // le même message, laissant croire à tort que le compte était vide.
+    list.innerHTML = q
+      ? `<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucun résultat pour "${escapeHTML(q)}"</div><div style="margin-top:8px"><span onclick="el('search-client-inp').value='';renderClients()" style="color:#1F6F72;font-weight:600;cursor:pointer;font-size:13px">Effacer la recherche</span></div></div>`
+      : `<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun client</div></div>`;
     return;
   }
   list.innerHTML = filtered.map(c => {
