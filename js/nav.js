@@ -448,7 +448,17 @@ async function gererClicNotification(e) {
   if (notifInvCpt && !e.target.closest('button')) {
     fermerNotifDropdown();
     goScreen('comptable', null);
-    if (typeof switchCptNav === 'function') switchCptNav('notifs');
+    // FIX (bug signalé) : goScreen('comptable') déclenche déjà
+    // automatiquement renderComptableDashboard() (tableau de bord par
+    // défaut) — appeler switchCptNav('notifs') immédiatement après
+    // créait une vraie course entre 2 rendus asynchrones qui écrivent
+    // au même endroit (#cpt-main-content). Le tableau de bord gagnait
+    // parfois, laissant l'onglet Notifs vide. Un court délai laisse le
+    // rendu par défaut se terminer avant de basculer — même principe
+    // déjà utilisé ailleurs dans ce code (voir 'profil' juste au-dessus).
+    setTimeout(function() {
+      if (typeof switchCptNav === 'function') switchCptNav('notifs');
+    }, 400);
     return true;
   }
 
