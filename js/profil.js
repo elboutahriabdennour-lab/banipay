@@ -601,7 +601,13 @@ async function inviterComptable() {
       // Passage en upsert : si la ligne existe déjà, son statut est
       // remis à "en_attente" (réinvitation), sinon une nouvelle ligne
       // est créée normalement.
-      const resp = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
+      // FIX (le précédent essai n'a pas suffi) : Prefer:
+      // resolution=merge-duplicates seul ne fonctionne QUE sur la clé
+      // primaire — sans le paramètre ?on_conflict=..., PostgREST ne sait
+      // pas que c'est CETTE contrainte nommée qu'il faut utiliser pour
+      // l'upsert, et l'insertion échoue exactement comme une insertion
+      // normale. Confirmé en capture d'écran : même erreur, à l'identique.
+      const resp = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?on_conflict=entreprise_id,comptable_email', {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
