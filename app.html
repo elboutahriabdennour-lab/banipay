@@ -194,7 +194,7 @@
 
 <!-- ANNUAIRE -->
 <div class="screen" id="screen-annuaire">
-  <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Annuaire Zelto</div><div class="hero-sub-txt">Entreprises utilisant Zelto</div></div>
   <div style="padding:12px 20px">
     <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
@@ -494,7 +494,7 @@
   <!-- RUBRIQUE VENTES (hub) -->
   <!-- DEMANDES DE DEVIS REÇUES -->
   <div class="screen" id="screen-demandes-devis">
-    <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+    <div class="topbar"><button class="back-btn" onclick="goScreen('hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📝 Demandes de devis reçues</div>
       <div id="demandes-devis-resume"></div>
@@ -513,7 +513,7 @@
   </div>
 
 <div class="screen" id="screen-achats">
-  <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goScreen('hub-achats',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
   <div style="display:flex;gap:8px;padding:12px 20px;overflow-x:auto">
     <button class="ftab active" onclick="filtrerAchats('tous',this)">Tous</button>
@@ -1521,9 +1521,9 @@
 <!-- ===== BROUILLONS ===== -->
 <div class="screen" id="screen-brouillons">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-brand" onclick="goScreen('profil',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('dashboard')">&#8592;</button>
+      <button class="back-btn" onclick="goScreen('profil',null)">&#8592;</button>
     </div>
   </div>
   <div class="sec-header">
@@ -1625,7 +1625,7 @@
 <!-- ===== PARAMETRES ===== -->
 <div class="screen" id="screen-parametres">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-brand" onclick="goScreen('profil',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('profil')">&#8592;</button>
     </div>
@@ -2078,7 +2078,7 @@
 
   <!-- BONS DE COMMANDE REÇUS (côté fournisseur) -->
   <div class="screen" id="screen-bc-recus">
-    <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+    <div class="topbar"><button class="back-btn" onclick="goScreen('hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📋 Bons de commande reçus</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Bons de commande envoyés par vos clients suite à l'acceptation d'un devis — convertissez-les en facture d'un clic.</div>
@@ -2098,7 +2098,7 @@
 
   <!-- CARNET DE CHANTIER (chantier ajouté) -->
   <div class="screen" id="screen-carnet-chantier">
-    <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+    <div class="topbar"><button class="back-btn" onclick="goScreen('stats',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📷 Carnet de chantier</div>
       <select id="carnet-chantier-select" class="f-inp" onchange="changerChantierCarnet()" style="margin-bottom:14px"></select>
@@ -2202,7 +2202,7 @@
 <!-- ===== LISTE BONS DE COMMANDE ===== -->
 <div class="screen" id="screen-bons-commande-list">
   <div class="topbar">
-    <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
+    <button class="back-btn" onclick="goScreen('hub-achats',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px">
     <div class="sec-label" style="padding:0">📋 Bons de commande</div>
@@ -2248,7 +2248,7 @@
 <!-- ===== LISTE BONS DE LIVRAISON ===== -->
 <div class="screen" id="screen-bons-livraison-list">
   <div class="topbar">
-    <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
+    <button class="back-btn" onclick="goScreen('hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
   </div>
   <div class="sec-label">📦 Bons de livraison</div>
   <div class="card-list" id="bons-livraison-liste"></div>
@@ -2272,7 +2272,7 @@
 <!-- ===== JOURNAL D'AUDIT ===== -->
 <div class="screen" id="screen-audit">
   <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
+    <div class="topbar-brand" onclick="goScreen('profil',null)" style="cursor:pointer">Zel<span>to</span></div>
     <div class="topbar-right"><button class="back-btn" onclick="goScreen('profil')">&#8592;</button></div>
   </div>
   <div class="hero" style="padding-bottom:16px">
