@@ -1923,8 +1923,9 @@
       <button onclick="ouvrirScannerQR()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">+ Ajouter</button>
     </div>
   </div>
-    <div style="padding:0 20px 12px">
-      <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client..." oninput="renderClients()" style="margin-top:12px">
+    <div style="padding:0 20px 12px;position:relative">
+      <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client..." oninput="renderClients();document.getElementById('search-client-clear').style.display=this.value?'block':'none'" style="margin-top:12px">
+      <span id="search-client-clear" onclick="document.getElementById('search-client-inp').value='';renderClients();this.style.display='none'" style="display:none;position:absolute;right:32px;top:22px;color:#9C9186;cursor:pointer;font-size:16px;padding:4px">✕</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted)">Clients (<span id="clients-count">0</span>)</div>
