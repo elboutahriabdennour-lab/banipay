@@ -83,6 +83,22 @@ const sb = {
     return d;
   },
 
+  // FIX (bug trouvé — retour utilisateur) : cette fonction était appelée
+  // depuis renvoyerConfirmation() mais n'existait nulle part — chaque
+  // clic sur "Renvoyer l'email" déclenchait une TypeError silencieuse,
+  // jamais un vrai renvoi. Aucun email n'a donc jamais été réellement
+  // renvoyé via ce bouton.
+  async resendConfirmation(email) {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/resend`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'signup', email: email })
+    });
+    const d = await r.json().catch(function() { return {}; });
+    if (!r.ok) throw new Error(d.error?.message || d.msg || d.error_description || 'Échec du renvoi');
+    return d;
+  },
+
   async refreshSession() {
     const rt = localStorage.getItem('bp_r');
     if (!rt) return;
