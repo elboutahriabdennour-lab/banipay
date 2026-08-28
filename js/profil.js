@@ -40,7 +40,6 @@ function renderProfil() {
     qrContainer.innerHTML = '<img src="' + qrUrl + '" width="120" height="120" style="border-radius:8px;background:#F1EEE8">';
   }
   if(el('pv-objectif')) el('pv-objectif').textContent = p.objectif_mensuel ? fmtInt(p.objectif_mensuel)+' MAD/mois' : 'Non défini';
-  updateComptableLinkDisplay();
 }
 function goProfilEdit(show=true) {
   const view = el('profil-view');
@@ -60,8 +59,6 @@ function goProfilEdit(show=true) {
     'pe-couleur':'couleur_accent',
   };
   Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#C9971F':'');});
-  const codeEl = el('pf-code-comptable');
-  if(codeEl) codeEl.value = '';
   if (typeof initSignatureEntrepriseCanvas === 'function') {
     setTimeout(initSignatureEntrepriseCanvas, 50);
   }
@@ -97,21 +94,10 @@ async function saveProfil() {
   showToast('⏳ Sauvegarde...');
   try {
     await sb.upsert('profils_entreprise', data);
-    const code = el('pf-code-comptable')?.value.trim();
-    if(code&&code.length>=4) {
-      await sb.upsert('acces_comptable',{user_id:(STATE.entrepriseId || sb.user.id),email:sb.user.email,code});
-    }
     showToast('✅ Profil enregistré !','success');
     goProfilEdit(false);
     renderProfil();
   } catch(e){showToast('❌ '+e.message,'error');}
-}
-function updateComptableLinkDisplay() {
-  const email = sb.user?.email;
-  if (!email) return;
-  const lien = `${window.location.origin}${window.location.pathname}?comptable=${encodeURIComponent(email)}`;
-  const el_lien = el('pv-comptable-link');
-  if(el_lien) el_lien.textContent = lien;
 }
 function copierLienProfil() {
   const id = STATE.profil.id_unique||'BP-000000';
