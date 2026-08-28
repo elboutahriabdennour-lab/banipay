@@ -363,15 +363,63 @@ async function deleteAccount() {
   showToast('⏳ Suppression en cours...');
   try {
     const uid = sb.user.id;
+    // FIX (grand audit) : cette fonction ne nettoyait que 7 tables sur
+    // les 22+ qui existent réellement dans l'app aujourd'hui — tout ce
+    // qui a été construit au fil des sessions (achats, abonnements,
+    // équipe, chantiers, parrainage, relevés...) restait derrière,
+    // orphelin, après une "suppression de compte".
+    //
+    // Étape 1 : tables dépendant des produits (doivent être nettoyées
+    // AVANT les produits eux-mêmes).
+    const mesProduits = await sb.get('produits', 'user_id=eq.' + uid).catch(function() { return []; });
+    const idsProduits = (mesProduits || []).map(function(p) { return p.id; });
+    if (idsProduits.length) {
+      const filtreIds = 'in.(' + idsProduits.join(',') + ')';
+      await Promise.all([
+        sb.del('lots_stock', 'produit_id=' + filtreIds).catch(function() {}),
+        sb.del('mouvements_stock', 'produit_id=' + filtreIds).catch(function() {}),
+      ]);
+    }
+
+    // Étape 2 : tout ce qui est directement rattaché à user_id
+    const tablesUserID = [
+      'factures', 'devis', 'clients', 'produits', 'avoirs', 'paiements',
+      'abonnements', 'archive_documents', 'audit_log', 'bons_commande',
+      'bons_livraison', 'employes', 'factures_achat', 'photos_chantier',
+      'relances_achats_vues', 'relances_envoyees', 'releves_bancaires',
+    ];
+    await Promise.all(tablesUserID.map(function(t) {
+      return sb.del(t, 'user_id=eq.' + uid).catch(function(e) { console.warn('Suppression ' + t + ':', e); });
+    }));
+
+    // Étape 3 : tables avec une colonne clé différente
     await Promise.all([
-      sb.del('factures', `user_id=eq.${uid}`),
-      sb.del('devis', `user_id=eq.${uid}`),
-      sb.del('clients', `user_id=eq.${uid}`),
-      sb.del('produits', `user_id=eq.${uid}`),
-      sb.del('avoirs', `user_id=eq.${uid}`),
-      sb.del('paiements', `user_id=eq.${uid}`),
-      sb.del('profils_entreprise', `id=eq.${uid}`),
+      sb.del('demandes_devis', 'entreprise_id=eq.' + uid).catch(function() {}),
+      sb.del('membres_entreprise', 'entreprise_id=eq.' + uid).catch(function() {}),
+      sb.del('membres_cabinet', 'cabinet_id=eq.' + uid).catch(function() {}),
+      sb.del('parrainages', 'parrain_id=eq.' + uid).catch(function() {}),
+      sb.del('invitations_comptable', 'entreprise_id=eq.' + uid).catch(function() {}),
     ]);
+
+    // Étape 4 : le profil lui-même
+    await sb.del('profils_entreprise', 'id=eq.' + uid);
+
+    // Étape 5 : le compte d'authentification (email/mot de passe) —
+    // NOUVEAU (grand audit) : ceci n'était JAMAIS fait auparavant. Sans
+    // cette étape, l'email et le mot de passe restaient valides même
+    // après "suppression du compte" — la personne pouvait toujours se
+    // reconnecter, juste avec un profil vide. Passe par une fonction
+    // serveur dédiée (voir supprimer-compte-edge-function.ts) car cette
+    // opération nécessite des droits que le client n'a jamais.
+    try {
+      await fetch(SUPABASE_URL + '/functions/v1/supprimer-compte', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      });
+    } catch(eAuth) {
+      console.warn('Suppression du compte d\'authentification échouée (à traiter manuellement) :', eAuth);
+    }
+
     sb.logout();
     goScreen('auth');
     showToast('Compte supprimé', 'success');
