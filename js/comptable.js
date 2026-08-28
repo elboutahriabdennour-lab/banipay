@@ -273,7 +273,6 @@ function renderListeEntreprises(filtre) {
           '<div style="font-size:9px;color:#9C9186">TVA</div>' +
         '</div>' +
       '</div>' +
-      '<button onclick="event.stopPropagation();retirerEntrepriseComptable(\'' + inv.id + '\',\'' + escapeHTML(nomAffiche).replace(/'/g,"\\\\'") + '\')" style="width:100%;margin-top:10px;padding:8px;background:none;color:#B23A2E;border:1px solid #F5E4E1;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">\u2715 Retirer cette entreprise</button>' +
     '</div>';
   }).join('');
 }
@@ -2172,54 +2171,27 @@ function appendModeBanner() {
 }
 
 
-// NOUVEAU (diagnostic temporaire) : affiche un panneau visible à l'écran
-// avec chaque étape du chargement — à retirer une fois le vrai souci
-// trouvé et corrigé, ce n'est pas fait pour rester en production.
-// Facile à faire en capture d'écran pour me le montrer.
-function afficherDiagnosticComptable() {
-  const content = document.getElementById('cpt-main-content');
-  if (!content || !window._diagCpt) return;
-  const panneau = document.createElement('div');
-  panneau.style.cssText = 'background:#241F1B;color:#F1EEE8;border-radius:12px;padding:14px;margin:0 0 16px;font-family:monospace;font-size:10px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto';
-  panneau.innerHTML = '<div style="color:#C9971F;font-weight:700;margin-bottom:8px">🔍 DIAGNOSTIC (temporaire)</div>' +
-    window._diagCpt.etapes.map(function(e) { return escapeHTML(e); }).join('\n');
-  content.insertBefore(panneau, content.firstChild);
-}
-
 async function chargerNotificationsComptable() {
   const email = sb.user?.email;
-  // NOUVEAU (diagnostic) : trace chaque étape dans window._diagCpt, visible
-  // via afficherDiagnosticComptable() — à retirer une fois le vrai souci
-  // trouvé, ce n'est pas fait pour rester en production.
-  window._diagCpt = { etapes: [] };
-  function diag(msg) { window._diagCpt.etapes.push(msg); console.log('[DIAG comptable]', msg); }
-
-  diag('Email du compte connecté : "' + (email || '(vide !)') + '"');
-  if (!email) { diag('❌ ARRÊT — sb.user?.email est vide, impossible de continuer.'); return; }
+  if (!email) return;
 
   try {
     const url = SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.en_attente&order=created_at.desc';
-    diag('Requête invitations → ' + url);
     const resp = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } });
-    diag('Réponse HTTP invitations : ' + resp.status + (resp.ok ? ' (OK)' : ' (ÉCHEC)'));
     const invitations = await resp.json() || [];
-    diag('Nombre d\'invitations trouvées avec statut "en_attente" : ' + invitations.length);
-    if (!resp.ok) diag('❌ Contenu brut de l\'erreur : ' + JSON.stringify(invitations));
-    if (resp.ok && invitations.length === 0) diag('⚠️ Requête réussie mais 0 résultat — vérifier que l\'email de l\'invitation (comptable_email en base) correspond EXACTEMENT à "' + email + '" (majuscules/espaces compris).');
 
+    // Vraies informations de l'entreprise affichées avant de décider,
+    // pas juste son email.
     for (const inv of invitations) {
-      diag('→ Invitation trouvée : id=' + inv.id + ', entreprise_id=' + inv.entreprise_id + ', entreprise_email=' + inv.entreprise_email);
-      if (!inv.entreprise_id) { diag('  ⚠️ entreprise_id est vide pour cette invitation — impossible de récupérer le profil.'); continue; }
+      if (!inv.entreprise_id) continue;
       try {
         const respProfil = await fetch(
           SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + inv.entreprise_id + '&select=raison,secteur,ville,tel',
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
         );
-        diag('  Réponse HTTP profil entreprise : ' + respProfil.status);
         const profils = respProfil.ok ? ((await respProfil.json()) || []) : [];
-        diag('  Profil trouvé : ' + (profils[0] ? JSON.stringify(profils[0]) : '(aucun résultat)'));
         if (profils[0]) inv._profil = profils[0];
-      } catch(eProfil) { diag('  ❌ Exception lors de la récupération du profil : ' + eProfil.message); }
+      } catch(eProfil) {}
     }
 
     const respN = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications_comptable', {
@@ -2227,10 +2199,7 @@ async function chargerNotificationsComptable() {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
     });
-    diag('Réponse HTTP get_mes_notifications_comptable : ' + respN.status);
     const notifs = respN.ok ? ((await respN.json()) || []) : [];
-    diag('Nombre d\'"autres notifications" trouvées : ' + notifs.length);
-    if (!respN.ok) diag('❌ Contenu brut de l\'erreur RPC : ' + JSON.stringify(notifs));
 
     CPT.invitationsEnAttente = invitations;
     CPT.notifications = notifs;
@@ -2244,7 +2213,7 @@ async function chargerNotificationsComptable() {
 
     return { invitations, notifs };
   } catch(e) {
-    diag('❌ EXCEPTION NON PRÉVUE : ' + e.message + ' — ' + (e.stack || '').split('\n')[0]);
+    console.warn('chargerNotificationsComptable:', e);
     return { invitations: [], notifs: [] };
   }
 }
@@ -2304,8 +2273,6 @@ async function renderNotificationsComptable() {
         '<div style="text-align:center;padding:40px;color:#9C9186"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:14px;font-weight:600">Aucune notification</div></div>' : '') +
 
     '</div>';
-
-  afficherDiagnosticComptable();
 
   // NOUVEAU : mêmes style et comportement que côté entreprise — chaque
   // notification s'ouvre pour voir son contenu complet, avec les mêmes
