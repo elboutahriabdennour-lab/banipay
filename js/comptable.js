@@ -1106,7 +1106,6 @@ function quitterComptable() {
 // Fonctions legacy retirées (2026) — anciennes coquilles vides d'un
 // système d'invitation par lien remplacé depuis par membres_entreprise
 // (vérification automatique par email, voir equipe.js).
-function renderDashboardComptable() { renderComptableDashboard(); }
 
 // ============================================================
 // VUE "À TRAITER" — GLOBALE
