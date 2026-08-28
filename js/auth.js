@@ -36,7 +36,7 @@ async function renvoyerConfirmation() {
   try {
     await sb.resendConfirmation(email);
     showToast('Email renvoyé !', 'success');
-  } catch(e) { showToast('Erreur envoi', 'error'); }
+  } catch(e) { showToast('❌ ' + (e.message || 'Erreur envoi'), 'error'); }
 }
 
 async function doLogout() {
@@ -133,6 +133,28 @@ function checkPwdMatch() {
   }
 }
 
+// NOUVEAU (retour utilisateur) : détecte les fautes de frappe les plus
+// courantes sur les domaines email (ex: .con au lieu de .com — cas réel
+// trouvé en production) — volontairement une liste courte et sûre,
+// jamais de correction automatique silencieuse, juste une proposition
+// que la personne doit valider elle-même.
+function detecterFauteEmail(email) {
+  const corrections = {
+    'gmail.con': 'gmail.com', 'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gmil.com': 'gmail.com',
+    'gmail.co': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmaill.com': 'gmail.com',
+    'hotmail.con': 'hotmail.com', 'hotmial.com': 'hotmail.com', 'hotmail.co': 'hotmail.com',
+    'yahoo.con': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahoo.co': 'yahoo.com',
+    'outlook.con': 'outlook.com', 'outlok.com': 'outlook.com',
+  };
+  const m = email.match(/@([a-zA-Z0-9.-]+)$/);
+  if (!m) return null;
+  const domaine = m[1].toLowerCase();
+  if (corrections[domaine]) {
+    return email.slice(0, email.lastIndexOf('@') + 1) + corrections[domaine];
+  }
+  return null;
+}
+
 async function doSignup() {
   const nom = el('signup-nom')?.value.trim();
   const email = el('signup-email')?.value.trim();
@@ -147,6 +169,22 @@ async function doSignup() {
   if (!/[A-Z]/.test(pwd)) { if(errEl) errEl.textContent = 'Au moins une majuscule'; return; }
   if (!/[0-9]/.test(pwd)) { if(errEl) errEl.textContent = 'Au moins un chiffre'; return; }
   if (pwd !== pwd2) { if(errEl) errEl.textContent = 'Mots de passe différents'; return; }
+  // NOUVEAU (retour utilisateur) : Supabase ne peut jamais confirmer si
+  // un email de confirmation a vraiment été délivré — l'inscription
+  // réussit même si l'adresse contient une faute de frappe (ex: .con au
+  // lieu de .com), le compte existe alors sans que personne ne reçoive
+  // jamais le lien de confirmation. Cette vérification simple attrape
+  // les fautes les plus courantes avant même d'essayer.
+  const fauteCourante = detecterFauteEmail(email);
+  if (fauteCourante) {
+    if (errEl) errEl.textContent = '';
+    if (!confirm('Vous avez saisi "' + email + '" — vouliez-vous plutôt dire "' + fauteCourante + '" ?\n\nAppuyez sur OK pour corriger, ou Annuler pour continuer tel quel.')) {
+      // "Annuler" = la personne confirme vouloir garder son adresse telle quelle
+    } else {
+      if (el('signup-email')) el('signup-email').value = fauteCourante;
+      return; // on laisse la personne relancer elle-même avec l'adresse corrigee
+    }
+  }
   if (errEl) errEl.textContent = '⏳ Vérification...';
   // NOUVEAU : exclusivité stricte — un email agent support ne peut pas
   // aussi devenir un compte entreprise/comptable.
