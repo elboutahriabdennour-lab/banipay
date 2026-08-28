@@ -523,7 +523,7 @@
     <button class="ftab" onclick="toggleSelectionMode('achats')" style="margin-left:auto">☑️ Sélectionner</button>
   </div>
   <div id="achats-list"></div>
-  <button class="fab" onclick="STATE.lignesAchat=[];window._achatFactureLieeId=null;goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
+  <button class="fab" onclick="STATE.lignesAchat=[];window._achatFactureLieeId=null;STATE._achatPJData=null;STATE._achatPJNom=null;const pv=document.getElementById('achat-pj-preview');if(pv)pv.innerHTML='';goScreen('nouvelle-achat',null)" style="background:linear-gradient(135deg,#B23A2E,#8E2E24)">+</button>
   <div class="pb"></div>
 </div>
 
