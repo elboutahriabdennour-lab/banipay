@@ -412,12 +412,28 @@ async function deleteAccount() {
     // serveur dédiée (voir supprimer-compte-edge-function.ts) car cette
     // opération nécessite des droits que le client n'a jamais.
     try {
-      await fetch(SUPABASE_URL + '/functions/v1/supprimer-compte', {
+      const respAuth = await fetch(SUPABASE_URL + '/functions/v1/supprimer-compte', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       });
+      const dAuth = await respAuth.json().catch(function() { return {}; });
+      if (!respAuth.ok) {
+        // NOUVEAU (retour utilisateur) : la réponse n'était jamais
+        // vérifiée — un échec de suppression du compte d'authentification
+        // passait totalement inaperçu, "Compte supprimé" s'affichait quand
+        // même alors que la personne pouvait toujours se reconnecter.
+        console.error('Suppression compte auth — réponse serveur:', respAuth.status, dAuth);
+        showToast('⚠️ Données supprimées, mais le compte de connexion n\'a pas pu être retiré (' + (dAuth.error || respAuth.status) + ')', 'error');
+        sb.logout();
+        goScreen('auth');
+        return;
+      }
     } catch(eAuth) {
-      console.warn('Suppression du compte d\'authentification échouée (à traiter manuellement) :', eAuth);
+      console.error('Suppression compte auth — exception:', eAuth);
+      showToast('⚠️ Données supprimées, mais le compte de connexion n\'a pas pu être retiré : ' + eAuth.message, 'error');
+      sb.logout();
+      goScreen('auth');
+      return;
     }
 
     sb.logout();
