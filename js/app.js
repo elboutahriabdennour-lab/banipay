@@ -48,18 +48,6 @@ async function loadAll() {
 // NOTIFICATIONS
 // ============================================================
 
-async function loadComptableData(userId) {
-  try {
-    const [f,pf] = await Promise.all([
-      sb.get('factures',`user_id=eq.${userId}&order=created_at.desc`,SUPABASE_KEY),
-      sb.get('profils_entreprise',`id=eq.${userId}`,SUPABASE_KEY)
-    ]);
-    window._comptableFactures = f||[];
-    window._comptableProfil = (pf&&pf[0])||{};
-    renderDashboardComptable();
-  } catch(e){showToast('Erreur accès comptable','error');}
-}
-
 async function loadPortailClient(clientId) {
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#6B5F54">⏳ Chargement...</div>';
   // This would load client-specific data via a public token
@@ -684,7 +672,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const comptableEmail = params.get('comptable');
   const portailId = params.get('portail');
   const profilId = params.get('profil');
   // NOUVEAU (chantier ajouté) : capture le code de parrainage dès
@@ -755,13 +742,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // retiré (2026) — jamais généré nulle part dans l'app actuelle,
   // remplacé par membres_entreprise (vérification automatique par email
   // à la connexion, voir equipe.js).
-
-  if (comptableEmail) {
-    window._comptableEmail = decodeURIComponent(comptableEmail);
-    switchTab('comptable');
-    goScreen('auth');
-    return;
-  }
+  // NOTE : l'ancien système d'accès comptable par lien+code (?comptable=)
+  // a également été retiré — remplacé par le système d'invitation par
+  // compte (invitations_comptable), plus complet.
 
   // Restore session - toujours passer par auth d'abord
   // Sauf si "remember me" activé explicitement
