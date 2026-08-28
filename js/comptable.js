@@ -1593,8 +1593,8 @@ async function basculerModeEntreprise() {
 function revenirEspaceComptable() {
   CPT.modeEntreprise = false;
   document.getElementById('cpt-mode-pill')?.remove();
+  document.getElementById('cpt-mode-style')?.remove();
   document.getElementById('mode-entreprise-banner')?.remove(); // nettoyage legacy si présent
-  document.body.style.paddingTop = '';
   STATE.factures = []; STATE.devis = []; STATE.clients = [];
   STATE.produits = []; STATE.avoirs = []; STATE.achats = [];
   goScreen('comptable');
@@ -2185,19 +2185,33 @@ function basculerModeDevis() {
 }
 
 function appendModeBanner() {
-  // FIX: un seul bouton de retour désormais — la pile flottante ci-dessous,
-  // visible sur tous les écrans (l'ancien bouton topbar n'existait que sur
-  // le dashboard, ce qui créait une incohérence entre les écrans).
-
-  // Pill flottante discrète, en bas à droite, sur tous les autres écrans
+  // FIX (retour utilisateur) : déplacé du bas vers le haut de l'écran —
+  // repositionné en bande fixe pleine largeur plutôt qu'injecté dans LA
+  // barre du haut, puisque sa forme change trop d'un écran à l'autre
+  // (topbar classique, form-header, hero...) pour y accrocher un bouton
+  // de façon fiable partout. Cette bande reste visible identiquement,
+  // peu importe l'écran en dessous.
+  //
+  // FIX (bug trouvé en testant) : .screen utilise position:fixed;top:0
+  // dans la CSS de l'app — un padding-top sur <body> n'a donc AUCUN
+  // effet sur ces écrans (ils ignorent le flux normal du document).
+  // La bonne technique est d'injecter une règle CSS qui décale
+  // directement .screen.active vers le bas pendant que ce mode est actif.
   document.getElementById('cpt-mode-pill')?.remove();
+  document.getElementById('cpt-mode-style')?.remove();
+  const style = document.createElement('style');
+  style.id = 'cpt-mode-style';
+  style.textContent = '.screen.active{top:30px !important}';
+  document.head.appendChild(style);
+
   const pill = document.createElement('div');
   pill.id = 'cpt-mode-pill';
-  pill.style.cssText = 'position:fixed;bottom:90px;right:16px;z-index:9999;background:#1F6F72;color:#fff;border-radius:24px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(67,56,202,0.4);display:flex;align-items:center;gap:6px';
+  pill.style.cssText = 'position:fixed;top:0;left:0;right:0;height:30px;z-index:99999;background:#1F6F72;color:#fff;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;gap:6px;border-bottom:2px solid #C9971F;box-sizing:border-box';
   pill.innerHTML = '📊 Espace comptable';
   pill.onclick = revenirEspaceComptable;
   document.body.appendChild(pill);
 }
+
 
 
 async function chargerNotificationsComptable() {
