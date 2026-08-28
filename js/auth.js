@@ -1,10 +1,10 @@
 // ZELTO — auth.js
 
 function switchTab(tab) {
-  ['aw-normal','aw-signup','aw-comptable','aw-confirm'].forEach(id => {
+  ['aw-normal','aw-signup','aw-confirm'].forEach(id => {
     const e = el(id); if (e) e.style.display = 'none';
   });
-  const target = { login: 'aw-normal', signup: 'aw-signup', comptable: 'aw-comptable', confirm: 'aw-confirm' }[tab];
+  const target = { login: 'aw-normal', signup: 'aw-signup', confirm: 'aw-confirm' }[tab];
   if (el(target)) el(target).style.display = 'block';
 }
 
@@ -44,28 +44,6 @@ async function doLogout() {
   sb.logout();
   Object.assign(STATE, { factures:[], devis:[], clients:[], produits:[], avoirs:[], paiements:[], profil:{}, notifications:[], abonnements:[] });
   goScreen('auth');
-}
-
-async function accederComptable() {
-  const code = el('comptable-code')?.value.trim();
-  const errEl = el('comptable-error');
-  const email = window._comptableEmail;
-  if (!code || !email) { if(errEl) errEl.textContent = 'Code requis'; return; }
-  if(errEl) errEl.textContent = '⏳...';
-  try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/acces_comptable?email=eq.${encodeURIComponent(email)}&code=eq.${code}&select=user_id`, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
-    const d = await r.json();
-    if (d && d.length > 0) {
-      window._comptableUserId = d[0].user_id;
-      await loadComptableData(d[0].user_id);
-      goScreen('dashboard-comptable');
-      showToast('✅ Accès autorisé', 'success');
-    } else {
-      if(errEl) errEl.textContent = '❌ Code incorrect';
-    }
-  } catch(e) { if(errEl) errEl.textContent = '❌ Erreur'; }
 }
 
 // ============================================================
