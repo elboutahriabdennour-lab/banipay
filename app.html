@@ -58,6 +58,21 @@
     <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
     <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
   </div>
+  <div style="height:8px"></div>
+  <!-- NOUVEAU (retour utilisateur) : déplacés depuis Profil vers
+       l'accueil — mêmes fonctions/écrans exacts, juste un accès plus
+       direct depuis le tableau de bord. -->
+  <div class="quick-actions" style="grid-template-columns:repeat(3,1fr)">
+    <div class="qa-item" onclick="renderHubVentes();goScreen('hub-ventes',null)"><div class="qa-ico" style="background:#EEF3E4">💰</div><div class="qa-lbl">Ventes</div></div>
+    <div class="qa-item" onclick="window._retourBcRecus='dashboard';loadBCRecus();goScreen('bc-recus',null)"><div class="qa-ico" style="background:#EDE6F0">📋</div><div class="qa-lbl">BC reçus</div></div>
+    <div class="qa-item" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><div class="qa-ico" style="background:#EEF3E4">🏦</div><div class="qa-lbl">Relevés</div></div>
+  </div>
+  <div style="height:8px"></div>
+  <div class="quick-actions" style="grid-template-columns:repeat(3,1fr)">
+    <div class="qa-item" onclick="window._retourEmployes='dashboard';if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}"><div class="qa-ico" style="background:#E9F4F3">👥</div><div class="qa-lbl">Personnel<span id="verrou-rh-dashboard"></span></div></div>
+    <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
+    <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
+  </div>
 
 
 <!-- MODAL PAIEMENT -->
@@ -178,7 +193,7 @@
 
 <!-- ARCHIVE -->
 <div class="screen" id="screen-archive">
-  <div class="topbar"><button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourArchive||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Archive Entreprise</div><div class="hero-amount" id="archive-count">0 document(s)</div><div class="hero-sub-txt">Partagée avec votre comptable</div></div>
   <div style="padding:12px 20px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
     <div class="qa-item" onclick="ajouterDocumentArchive('statuts')"><div class="qa-ico">📋</div><div class="qa-lbl">Statuts</div></div>
@@ -194,7 +209,7 @@
 
 <!-- ANNUAIRE -->
 <div class="screen" id="screen-annuaire">
-  <div class="topbar"><button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourAnnuaire||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Annuaire Zelto</div><div class="hero-sub-txt">Entreprises utilisant Zelto</div></div>
   <div style="padding:12px 20px">
     <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
@@ -284,7 +299,7 @@
 
 <!-- RELEVES -->
 <div class="screen" id="screen-releves">
-  <div class="topbar"><button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourReleves||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
   <div class="hero" style="padding-bottom:20px"><div class="hero-lbl">Relevés bancaires</div><div class="hero-sub-txt">Partagés avec votre comptable</div></div>
   <div style="padding:16px 20px">
     <div style="background:#EEF3E4;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid #C9D9AE">
@@ -933,13 +948,7 @@
       <div class="p-card-title">Informations entreprise</div>
     </div>
     <div id="pv-objectif" style="display:none;background:#E9F4F3;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#A67A16"></div>
-    <div id="pv-comptable-link" style="display:none;margin-bottom:10px"></div>
-    <button class="p-btn" onclick="loadArchive();goScreen('archive',null)" style="color:#C9971F">📁 Archive documents</button>
     <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
-    <button class="p-btn" onclick="if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}" style="color:#1F6F72">👥 Registre du personnel<span id="verrou-rh-profil"></span></button>
-    <button class="p-btn" onclick="loadBCRecus();goScreen('bc-recus',null)" style="color:#7C5CA6">📋 Bons de commande reçus</button>
-    <button class="p-btn" onclick="renderHubVentes();goScreen('hub-ventes',null)" style="color:#55702E">💰 Rubrique Ventes</button>
-    <button class="p-btn" onclick="loadReleves();goScreen('releves',null)" style="color:#6E8F4E">🏦 Relevés bancaires</button>
     <!-- Section Mon Comptable -->
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">Mon comptable</div>
@@ -950,14 +959,12 @@
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">🤝 Parrainer une entreprise</div>
       <div id="parrainage-content" style="padding:14px 16px">Chargement...</div>
     </div>
-    <button class="p-btn" onclick="loadAnnuaire();goScreen('annuaire',null)" style="color:#6E8F4E">🏢 Annuaire Zelto</button>
     <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
     <button class="p-btn" onclick="goScreen('mon-forfait',null)" style="color:#C9971F">📦 Mon forfait</button>
     <button class="p-btn" onclick="window._retourSupport='profil';window._retourQuiSommesNous='profil';goScreen('support',null)" style="color:#1F6F72">🆘 Support</button>
     <button class="p-btn" onclick="window._retourQuiSommesNous='profil';goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
-    <button class="p-btn" onclick="updateComptableLinkDisplay()" style="color:#7C5CA6">🔐 Lien accès comptable</button>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
   <div id="profil-edit" style="display:none;padding:0 16px">
@@ -998,9 +1005,6 @@
       <input id="pe-couleur" type="color" value="#C9971F" style="width:52px;height:40px;border:1.5px solid #E3DCCF;border-radius:10px;padding:2px;cursor:pointer">
       <div style="font-size:11px;color:#9C9186">S'applique aux factures uniquement — devis/avoirs gardent leur code couleur habituel</div>
     </div>
-    <label class="f-lbl">🔐 Code comptable (6 chiffres)</label>
-    <input id="pf-code-comptable" class="f-inp" type="password" maxlength="6" style="margin-bottom:6px;letter-spacing:6px;font-size:18px">
-    <div style="font-size:11px;color:#9C9186;margin-bottom:16px">Partagez ce code avec votre comptable</div>
     <div style="margin-bottom:12px">
       <div class="f-lbl">Logo entreprise</div>
       <div id="logo-preview-container" style="margin-bottom:8px"></div>
@@ -1158,18 +1162,6 @@
         <button class="a-btn a-btn-blue" onclick="renvoyerConfirmation()">&#128228; Renvoyer l'email</button>
         <button onclick="switchTab('login')" class="a-btn" style="background:#EAE4DA;color:#6B5F54;margin-top:8px">&#8592; Retour</button>
       </div>
-
-      <div id="aw-comptable" style="display:none">
-        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
-        <div style="background:#EEF3E4;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:20px">
-          <div style="font-size:28px">🔐</div>
-          <div><div style="font-size:14px;font-weight:600;color:#6E8F4E">Espace Comptable</div><div style="font-size:11px;color:#9CBB7A">Lecture seule</div></div>
-        </div>
-        <label class="a-lbl">Code d'accès</label>
-        <input id="comptable-code" class="a-inp" type="password" placeholder="123456" maxlength="6" style="letter-spacing:8px;font-size:22px;text-align:center">
-        <div id="comptable-error" class="a-err"></div>
-        <button class="a-btn a-btn-green" onclick="accederComptable()">Accéder →</button>
-      </div>
     </div>
     <div class="a-footer">Données sécurisées · Zelto v2.0</div>
   </div>
@@ -1236,280 +1228,6 @@
 </div>
 
 <!-- DASHBOARD COMPTABLE -->
-<div class="screen" id="screen-dashboard-comptable">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('comptable',null)" style="cursor:pointer">🔐 Zel<span>to</span></div>
-    <div class="topbar-right">
-      <button class="back-btn" onclick="goScreen('comptable',null)">←</button>
-      <button class="a-btn a-btn-blue" onclick="quitterComptable()" style="padding:8px 14px;margin-top:0;font-size:12px;width:auto">Quitter</button></div>
-  </div>
-  <div class="hero">
-    <div class="hero-lbl">Vue comptable</div>
-    <div class="hero-amount" id="c-total-ht">0 MAD HT</div>
-    <div class="hero-sub-txt" id="c-total-factures">0 factures</div>
-    <div class="hero-grid">
-      <div class="hero-box"><div class="hero-box-val g" id="c-total-tva">0</div><div class="hero-box-lbl">TVA collectée</div></div>
-      <div class="hero-box"><div class="hero-box-val o" id="ds-envoye">0</div><div class="hero-box-lbl">En attente</div></div>
-      <div class="hero-box"><div class="hero-box-val g" id="ds-accepte">0</div><div class="hero-box-lbl">Payées</div></div>
-    </div>
-  </div>
-  <div style="display:none" id="comptable-client-nom"></div>
-  <div style="display:none" id="comptable-banque"></div>
-  <div style="display:none" id="ds-refuse"></div>
-  <div class="sec-label">Entreprise</div>
-  <div style="padding:0 20px;background:#fff;border-radius:12px;margin:0 20px;border:1px solid #EAE4DA" id="comptable-infos-content"></div>
-  <div class="sec-label">Factures</div>
-  <div class="card-list" id="comptable-factures-list"></div>
-  <div class="pb"></div>
-</div>
-
-<!-- MODAL RECHERCHE FOURNISSEUR BC (annuaire + historique) -->
-<div class="modal-overlay" id="modal-fournisseur-bc">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">👥 Choisir un fournisseur</div>
-    <input class="m-inp" id="search-fournisseur-bc" placeholder="Nom du fournisseur (2 lettres min. pour l'annuaire)..." oninput="rechercherFournisseurBC()">
-    <div id="fournisseur-bc-picker-list" style="max-height:350px;overflow-y:auto"></div>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL LIGNE BON DE LIVRAISON (manquait — bouton "Ajouter un article" du BL ne faisait rien, même bug que le BC) -->
-<div class="modal-overlay" id="modal-ligne-bl">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter un article livré</div>
-    <input class="m-inp" id="mlbl-desc" placeholder="Description de l'article">
-    <input class="m-inp" id="mlbl-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
-    <button class="m-btn" onclick="confirmerLigneBL()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL ÉDITION PROFIL COMPTABLE (manquait — bouton "Modifier" ne faisait rien) -->
-<div class="modal-overlay" id="modal-edition-comptable">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">✏️ Modifier mes informations</div>
-    <label class="a-lbl">Nom</label>
-    <input class="m-inp" id="ec-nom" placeholder="Votre nom">
-    <label class="a-lbl">Cabinet</label>
-    <input class="m-inp" id="ec-cabinet" placeholder="Nom du cabinet">
-    <label class="a-lbl">Téléphone</label>
-    <input class="m-inp" id="ec-tel" placeholder="Téléphone">
-    <label class="a-lbl">Spécialité</label>
-    <input class="m-inp" id="ec-specialite" placeholder="Ex: Expertise comptable, Audit...">
-    <button class="m-btn" onclick="sauvegarderEditionComptable()">💾 Enregistrer</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL LIGNE BON DE COMMANDE (manquait — bouton "Ajouter un article" du BC ne faisait rien) -->
-<div class="modal-overlay" id="modal-ligne-bc">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter un article</div>
-    <input class="m-inp" id="mlbc-desc" placeholder="Description de l'article">
-    <input class="m-inp" id="mlbc-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
-    <input class="m-inp" id="mlbc-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
-    <button class="m-btn" onclick="confirmerLigneBC()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL LIGNE -->
-<div class="modal-overlay" id="modal-ligne">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter une ligne</div>
-    <input class="m-inp" id="ml-desc" placeholder="Description de la prestation">
-    <input class="m-inp" id="ml-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
-    <input class="m-inp" id="ml-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
-    <select class="m-inp" id="ml-unite">
-      <option value="u">Unit&#233; (u)</option>
-      <option value="h">Heure (h)</option>
-      <option value="j">Jour (j)</option>
-      <option value="Fft">Forfait (Fft)</option>
-      <option value="m2">m&#178;</option>
-      <option value="ml">ml</option>
-      <option value="kg">kg</option>
-    </select>
-    <button class="m-btn" onclick="confirmerLigne()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-
-<div class="modal-overlay" id="modal-ligne-d">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter une ligne</div>
-    <input class="m-inp" id="mld-desc" placeholder="Description de la prestation">
-    <input class="m-inp" id="mld-qte" type="number" placeholder="Quantit&#233;" value="1" min="0.01" step="0.01">
-    <input class="m-inp" id="mld-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
-    <select class="m-inp" id="mld-unite">
-      <option value="u">Unit&#233; (u)</option>
-      <option value="h">Heure (h)</option>
-      <option value="j">Jour (j)</option>
-      <option value="Fft">Forfait (Fft)</option>
-      <option value="m2">m&#178;</option>
-      <option value="ml">ml</option>
-      <option value="kg">kg</option>
-    </select>
-    <button class="m-btn" onclick="confirmerLigneDevis()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-ligne-ab">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter une ligne</div>
-    <input class="m-inp" id="mlab-desc" placeholder="Description de la prestation">
-    <input class="m-inp" id="mlab-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
-    <input class="m-inp" id="mlab-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
-    <select class="m-inp" id="mlab-unite">
-      <option value="u">Unité (u)</option>
-      <option value="h">Heure (h)</option>
-      <option value="j">Jour (j)</option>
-      <option value="Fft">Forfait (Fft)</option>
-      <option value="m2">m²</option>
-      <option value="ml">ml</option>
-      <option value="kg">kg</option>
-    </select>
-    <button class="m-btn" onclick="confirmerLigneAB()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-ligne-achat">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Ajouter une ligne d'achat</div>
-    <input class="m-inp" id="mla-desc" placeholder="Description de l'article/prestation">
-    <input class="m-inp" id="mla-qte" type="number" placeholder="Quantité" value="1" min="0.01" step="0.01">
-    <input class="m-inp" id="mla-pu" type="number" placeholder="Prix unitaire HT (MAD)" min="0" step="0.01">
-    <select class="m-inp" id="mla-unite">
-      <option value="u">Unité (u)</option>
-      <option value="h">Heure (h)</option>
-      <option value="j">Jour (j)</option>
-      <option value="Fft">Forfait (Fft)</option>
-      <option value="m2">m²</option>
-      <option value="ml">ml</option>
-      <option value="kg">kg</option>
-    </select>
-    <button class="m-btn" onclick="confirmerLigneAchat()">Ajouter</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL CATALOGUE -->
-<div class="modal-overlay" id="modal-produits">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Choisir un article</div>
-    <input class="m-inp" id="search-produit" placeholder="Rechercher..." oninput="filtrerProduits()">
-    <div id="produits-picker" style="max-height:350px;overflow-y:auto"></div>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL SÉLECTION CLIENT -->
-<div class="modal-overlay" id="modal-clients-picker">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">👥 Choisir un client</div>
-    <input class="m-inp" id="search-client-picker" placeholder="Rechercher..." oninput="filtrerPickerClients()">
-    <div id="clients-picker-list" style="max-height:350px;overflow-y:auto"></div>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL PAIEMENT -->
-<div class="modal-overlay" id="modal-paiement">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">&#128176; Enregistrer un paiement</div>
-    <div style="background:#F1EEE8;padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6B5F54">Total TTC</span><strong id="pp-total">0</strong></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6B5F54">D&#233;j&#224; re&#231;u</span><strong id="pp-recu" style="color:#6E8F4E">0</strong></div>
-      <div style="display:flex;justify-content:space-between;border-top:1px solid #E3DCCF;padding-top:4px;margin-top:4px"><span style="color:#2A2420;font-weight:600">Reste &#224; payer</span><strong id="pp-restant" style="color:#B23A2E">0</strong></div>
-    </div>
-    <label class="a-lbl">Montant re&#231;u</label>
-    <input class="m-inp" id="pp-montant" type="number" placeholder="Ex: 1500.00" step="0.01">
-    <label class="a-lbl">Date du paiement</label>
-    <input class="m-inp" id="pp-date" type="date">
-    <label class="a-lbl">Mode de paiement</label>
-    <select id="pp-mode" class="m-inp">
-      <option value="virement">Virement bancaire</option>
-      <option value="cheque">Ch&#232;que</option>
-      <option value="especes">Esp&#232;ces</option>
-      <option value="carte">Carte bancaire</option>
-    </select>
-    <button class="m-btn green" onclick="confirmerPaiement()">Valider le paiement</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL ENVOYER (WhatsApp / Email / Lien / Compte Zelto) -->
-<div class="modal-overlay" id="modal-envoyer">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="me-titre">Envoyer le document</div>
-    <button class="m-btn" style="background:#25D366" onclick="envoyerVia('whatsapp')">📱 WhatsApp</button>
-    <button class="m-btn" style="background:#C9971F" onclick="envoyerVia('email')">✉️ Email</button>
-    <button class="m-btn" style="background:#6B5F54" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
-    <button class="m-btn" style="background:#1F6F72" onclick="envoyerVia('banipay')">🅿️ Compte Zelto</button>
-    <div id="me-banipay-picker" style="display:none;margin-top:10px"></div>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL SIGNATURE TACTILE (acceptation devis/facture) -->
-<div class="modal-overlay" id="modal-signature">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">✍️ Signez pour accepter</div>
-    <div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Dessinez votre signature dans le cadre ci-dessous (facultatif)</div>
-    <canvas id="sig-canvas" style="width:100%;height:160px;background:#F1EEE8;border:1.5px dashed #CDBEA0;border-radius:10px;touch-action:none;display:block"></canvas>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="m-btn-sec" style="flex:1;margin-top:0" onclick="effacerSignature()">🔄 Effacer</button>
-      <button class="m-btn" style="flex:1;margin-top:0;background:#6E8F4E" onclick="confirmerSignatureEtAccepter()">✅ Valider et accepter</button>
-    </div>
-    <button class="m-btn-sec" style="font-weight:600;text-decoration:underline" onclick="accepterSansSignature()">Accepter sans signer →</button>
-    <button class="m-btn-sec" onclick="annulerSignature()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL AJUSTEMENT STOCK -->
-<div class="modal-overlay" id="modal-ajustement-stock">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="as-titre">Ajuster le stock</div>
-    <div style="background:#F1EEE8;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px;display:flex;justify-content:space-between">
-      <span style="color:#6B5F54">Stock actuel</span><strong id="as-stock-actuel">0</strong>
-    </div>
-    <label class="a-lbl">Type de mouvement</label>
-    <select id="as-type" class="m-inp" onchange="afficherChampCoutSiEntree()">
-      <option value="entree">⬆️ Entrée (réapprovisionnement)</option>
-      <option value="sortie">⬇️ Sortie manuelle</option>
-      <option value="ajustement">⚖️ Ajustement (nouvelle valeur)</option>
-    </select>
-    <label class="a-lbl">Quantité</label>
-    <input class="m-inp" id="as-quantite" type="number" placeholder="Ex: 10" step="0.01">
-    <div id="as-cout-bloc">
-      <label class="a-lbl">Coût unitaire d'achat (MAD)</label>
-      <input class="m-inp" id="as-cout" type="number" placeholder="Ex: 45.00" step="0.01">
-      <div style="font-size:11px;color:#9C9186;margin-top:-6px;margin-bottom:10px">Sert au calcul automatique du coût moyen / FIFO / LIFO</div>
-    </div>
-    <label class="a-lbl">Motif (optionnel)</label>
-    <input class="m-inp" id="as-motif" placeholder="Ex: Livraison fournisseur">
-    <button class="m-btn" onclick="confirmerAjustementStock()">✅ Valider</button>
-    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
-  </div>
-</div>
-
-<!-- ===== HISTORIQUE PAIEMENTS ===== -->
 <div class="screen" id="screen-historique-paiements">
   <div class="topbar">
     <button class="back-btn" onclick="goScreen('detail',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div>
@@ -2039,7 +1757,7 @@
   <!-- REGISTRE DU PERSONNEL (RH) -->
   <div class="screen" id="screen-employes">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="initNouvelEmploye();goScreen('nouvel-employe',null)">+ Ajouter</span></div>
+      <button class="back-btn" onclick="goScreen(window._retourEmployes||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="initNouvelEmploye();goScreen('nouvel-employe',null)">+ Ajouter</span></div>
     </div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">👥 Registre du personnel</div>
@@ -2084,7 +1802,7 @@
 
   <!-- BONS DE COMMANDE REÇUS (côté fournisseur) -->
   <div class="screen" id="screen-bc-recus">
-    <div class="topbar"><button class="back-btn" onclick="goScreen('hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+    <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourBcRecus||'hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📋 Bons de commande reçus</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Bons de commande envoyés par vos clients suite à l'acceptation d'un devis — convertissez-les en facture d'un clic.</div>
