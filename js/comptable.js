@@ -1041,7 +1041,7 @@ function renderCptInfos() {
   ].filter(function(x) { return x[1]; });
 
   list.innerHTML = '<div style="padding:16px">' +
-    '<div style="background:#fff;border-radius:16px;border:1px solid #E3DCCF;padding:16px">' +
+    '<div style="background:#fff;border-radius:16px;border:1px solid #E3DCCF;padding:16px;margin-bottom:16px">' +
       '<div style="font-size:16px;font-weight:700;margin-bottom:14px">' + escapeHTML(p.raison || '—') + '</div>' +
       fields.map(function(x) {
         return '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1EEE8;font-size:12px">' +
@@ -1050,6 +1050,12 @@ function renderCptInfos() {
         '</div>';
       }).join('') +
     '</div>' +
+    // NOUVEAU (retour utilisateur) : déplacé depuis la carte liste vers
+    // ici — la vraie restriction "admin uniquement" est appliquée côté
+    // serveur (fonction retirer_entreprise_comptable), pas seulement en
+    // cachant ce bouton, qui reste visible à tous mais peut être refusé
+    // par le serveur avec un message clair si la personne n'est pas titulaire.
+    '<button onclick="retirerEntrepriseComptable(\'' + (CPT.entreprises.find(function(e){return e.entreprise_id===CPT.currentEntrepriseId;})||{}).id + '\',\'' + escapeHTML(p.raison||'cette entreprise').replace(/'/g,"\\'") + '\')" style="width:100%;padding:12px;background:none;color:#B23A2E;border:1px solid #F5E4E1;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer cette entreprise</button>' +
   '</div>';
 }
 
@@ -1227,10 +1233,19 @@ async function retirerEntrepriseComptable(invitationId, nomEntreprise) {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_invitation_id: invitationId })
     });
-    if (!resp.ok) { showToast('Erreur lors du retrait', 'error'); return; }
+    if (!resp.ok) {
+      // NOUVEAU (retour utilisateur) : affiche le vrai message du serveur
+      // — notamment "Seul le titulaire du cabinet peut retirer une
+      // entreprise" — au lieu d'un message générique qui cachait la
+      // vraie raison du refus.
+      const erreur = await resp.json().catch(function() { return {}; });
+      showToast('❌ ' + (erreur.message || 'Erreur lors du retrait'), 'error');
+      return;
+    }
     CPT.entreprises = (CPT.entreprises || []).filter(function(e) { return e.id !== invitationId; });
     renderListeEntreprises();
     showToast('✅ ' + nomEntreprise + ' retirée', 'success');
+    goScreen('comptable', null);
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
 
