@@ -452,9 +452,15 @@ function previewAchatPJ(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const isImage = file.type.startsWith('image/');
-    preview.innerHTML = isImage
+    // NOUVEAU (retour utilisateur) : bouton pour retirer la photo/pièce
+    // jointe avant d'enregistrer — jusqu'ici, la seule façon de "changer
+    // d'avis" était de choisir un autre fichier, aucun moyen de repartir
+    // sans aucune pièce jointe du tout.
+    const boutonRetirer = '<button type="button" onclick="retirerPhotoAchat()" style="margin-top:6px;width:100%;padding:8px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer cette pièce jointe</button>';
+    preview.innerHTML = (isImage
       ? '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #E3DCCF">'
-      : '<div style="background:#F1EEE8;border-radius:10px;padding:10px;font-size:12px;color:#6B5F54;border:1px solid #E3DCCF">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>';
+      : '<div style="background:#F1EEE8;border-radius:10px;padding:10px;font-size:12px;color:#6B5F54;border:1px solid #E3DCCF">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>')
+      + boutonRetirer;
     STATE._achatPJData = e.target.result;
     STATE._achatPJNom = file.name;
 
@@ -467,6 +473,20 @@ function previewAchatPJ(event) {
     else if (file.type === 'application/pdf' && typeof lireFacturePDF === 'function' && (typeof aAccesFeature !== 'function' || aAccesFeature('ocr_achats'))) lireFacturePDF(e.target.result);
   };
   reader.readAsDataURL(file);
+}
+// NOUVEAU (retour utilisateur) : retire la pièce jointe choisie, remet
+// aussi les 2 champs input file à vide (sinon re-choisir EXACTEMENT le
+// même fichier ensuite ne redéclencherait pas l'évènement "change").
+function retirerPhotoAchat() {
+  STATE._achatPJData = null;
+  STATE._achatPJNom = null;
+  const preview = el('achat-pj-preview');
+  if (preview) preview.innerHTML = '';
+  const inputPhoto = el('achat-pj');
+  if (inputPhoto) inputPhoto.value = '';
+  const inputGalerie = el('achat-pj-galerie');
+  if (inputGalerie) inputGalerie.value = '';
+  showToast('Pièce jointe retirée', 'default');
 }
 
 // ============================================================
