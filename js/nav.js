@@ -690,7 +690,7 @@ function goScreen(name) {
   const sc = el('screen-' + name);
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
 
-  const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','dashboard-comptable','pdf-viewer','chat'];
+  const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','pdf-viewer','chat'];
   const _bottomNav = document.querySelector('.bottom-nav');
   if (_bottomNav) _bottomNav.style.display = _noNav.includes(name) ? 'none' : 'flex';
 
