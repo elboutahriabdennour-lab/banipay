@@ -178,18 +178,26 @@ function nomEntreprise(entrepriseId, entrepriseEmailFallback) {
 // ============================================================
 
 function calculerEtat(inv) {
+  // FIX (retour utilisateur) : seules les factures de VENTE étaient
+  // prises en compte ici — une entreprise avec des dizaines d'achats
+  // jamais lettrés/vérifiés pouvait quand même afficher "🟢 À jour" tant
+  // que ses ventes étaient en règle. Les achats comptent désormais aussi.
   const factures = inv._factures || [];
+  const achats = inv._achats || [];
   const controlesBruts = inv._controles || [];
-  if (!factures.length) return 'vert';
+  const controlesAchatsBruts = inv._controlesAchats || [];
+  const totalDocuments = factures.length + achats.length;
+  if (!totalDocuments) return 'vert';
 
-  // FIX: même correctif — ne pas compter les contrôles orphelins (facture supprimée)
-  const idsExistants = factures.map(function(f) { return String(f.id); });
-  const controles = controlesBruts.filter(function(c) { return idsExistants.includes(String(c.facture_id)); });
+  const idsFacturesExistantes = factures.map(function(f) { return String(f.id); });
+  const idsAchatsExistants = achats.map(function(a) { return String(a.id); });
+  const controlesF = controlesBruts.filter(function(c) { return idsFacturesExistantes.includes(String(c.facture_id)); });
+  const controlesA = controlesAchatsBruts.filter(function(c) { return idsAchatsExistants.includes(String(c.facture_id)); });
 
-  const total = factures.length;
-  const lettres = controles.filter(function(c) { return c.lettre; }).length;
-  const tvaVerif = controles.filter(function(c) { return c.tva_verifie; }).length;
-  const consultes = controles.filter(function(c) { return c.consulte; }).length;
+  const total = totalDocuments;
+  const lettres = controlesF.filter(function(c) { return c.lettre; }).length + controlesA.filter(function(c) { return c.lettre; }).length;
+  const tvaVerif = controlesF.filter(function(c) { return c.tva_verifie; }).length + controlesA.filter(function(c) { return c.tva_verifie; }).length;
+  const consultes = controlesF.filter(function(c) { return c.consulte; }).length + controlesA.filter(function(c) { return c.consulte; }).length;
 
   const txLettrage = total > 0 ? lettres / total : 1;
   const txTVA = total > 0 ? tvaVerif / total : 1;
@@ -233,13 +241,17 @@ function renderListeEntreprises(filtre) {
 
   list.innerHTML = ents.map(function(inv) {
     const p = inv.profil || {};
+    // FIX (retour utilisateur) : mêmes chiffres "Documents/Lettrage/TVA"
+    // ne comptaient que les ventes — les achats sont désormais inclus.
     const f = inv._factures || [];
-    // FIX: même correctif — écarter les contrôles orphelins
+    const a = inv._achats || [];
     const idsExistants = f.map(function(fac) { return String(fac.id); });
+    const idsAchatsExistants = a.map(function(ac) { return String(ac.id); });
     const c = (inv._controles || []).filter(function(x) { return idsExistants.includes(String(x.facture_id)); });
-    const total = f.length;
-    const lettres = c.filter(function(x) { return x.lettre; }).length;
-    const tvaOk = c.filter(function(x) { return x.tva_verifie; }).length;
+    const cAchats = (inv._controlesAchats || []).filter(function(x) { return idsAchatsExistants.includes(String(x.facture_id)); });
+    const total = f.length + a.length;
+    const lettres = c.filter(function(x) { return x.lettre; }).length + cAchats.filter(function(x) { return x.lettre; }).length;
+    const tvaOk = c.filter(function(x) { return x.tva_verifie; }).length + cAchats.filter(function(x) { return x.tva_verifie; }).length;
     const txL = total > 0 ? Math.round(lettres / total * 100) : 100;
     const txT = total > 0 ? Math.round(tvaOk / total * 100) : 100;
     const etat = inv._etat || 'vert';
@@ -403,16 +415,19 @@ function renderFicheEntreprise() {
   }
   setEl('cpt-ent-sub', (p.secteur || '') + (p.ville ? ' · ' + p.ville : ''));
 
-  // FIX: si des factures ont été supprimées, leurs contrôles (lettrage/TVA)
-  // restent orphelins dans controles_factures — les compter tous produisait
-  // des nombres absurdes (ex: "-3" non lettrées, un décompte négatif). On
-  // ne compte désormais que les contrôles dont la facture existe encore.
+  // FIX (retour utilisateur) : ces indicateurs ne comptaient que les
+  // ventes — les achats sont désormais inclus dans "Documents",
+  // "Lettrage" et "TVA", cohérent avec la carte liste et l'état global.
   const idsExistants = f.map(function(fac) { return String(fac.id); });
+  const achatsCourants = CPT.currentAchats || [];
+  const idsAchatsExistants = achatsCourants.map(function(ac) { return String(ac.id); });
+  const controlesAchats = CPT.currentControlesAchats || [];
   const cValides = c.filter(function(x) { return idsExistants.includes(String(x.facture_id)); });
-  const total = f.length;
-  const lettres = cValides.filter(function(x) { return x.lettre; }).length;
+  const cAchatsValides = controlesAchats.filter(function(x) { return idsAchatsExistants.includes(String(x.facture_id)); });
+  const total = f.length + achatsCourants.length;
+  const lettres = cValides.filter(function(x) { return x.lettre; }).length + cAchatsValides.filter(function(x) { return x.lettre; }).length;
   const nonLettres = Math.max(0, total - lettres);
-  const tvaOk = cValides.filter(function(x) { return x.tva_verifie; }).length;
+  const tvaOk = cValides.filter(function(x) { return x.tva_verifie; }).length + cAchatsValides.filter(function(x) { return x.tva_verifie; }).length;
   const tvaKo = Math.max(0, total - tvaOk);
   const txL = total > 0 ? Math.round(lettres / total * 100) : 100;
   const txT = total > 0 ? Math.round(tvaOk / total * 100) : 100;
