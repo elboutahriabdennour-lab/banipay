@@ -105,7 +105,7 @@ function htmlBadgeVerrou(code) {
 function appliquerVerrousVisuels() {
   const cibles = [
     { id: 'verrou-stock-dashboard', code: 'stock' },
-    { id: 'verrou-rh-profil', code: 'rh' },
+    { id: 'verrou-rh-dashboard', code: 'rh' },
     { id: 'verrou-equipe-inviter', code: 'multi_utilisateurs' },
     { id: 'verrou-relances-auto', code: 'relances_auto' },
   ];
