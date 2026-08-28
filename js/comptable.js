@@ -1576,13 +1576,43 @@ function renderComptableDashboard() {
 // ============================================================
 
 async function basculerModeEntreprise() {
-  // Le comptable bascule vers l'interface entreprise — ses propres données
+  // FIX (audit critique) : cette fonction sert à 2 usages différents —
+  // 1) le comptable gère SA PROPRE activité (bouton "Mes factures &
+  //    devis" du tableau de bord comptable) : STATE.entrepriseId doit
+  //    rester vide, pour que STATE.entrepriseId||sb.user.id retombe
+  //    correctement sur son propre compte.
+  // 2) le comptable visite une entreprise CLIENTE (bouton "🏢 Mode" dans
+  //    sa fiche) : sans régler STATE.entrepriseId sur CPT.currentEntrepriseId,
+  //    toute création (facture, devis, achat...) faite dans ce mode se
+  //    serait enregistrée par erreur sous le compte du comptable
+  //    lui-même, pas celui de l'entreprise visitée.
+  const visiteEntrepriseClient = !!CPT.currentEntrepriseId;
   CPT.modeEntreprise = true;
-
-  if (!STATE.factures || !STATE.factures.length) {
-    showToast('\u23f3 Chargement...', 'success');
-    await loadAll();
+  if (visiteEntrepriseClient) {
+    STATE.entrepriseId = CPT.currentEntrepriseId;
+  } else {
+    STATE.entrepriseId = null; // repli sur son propre compte, comportement déjà correct
   }
+
+  // FIX (audit critique, trouvé en corrigeant ce qui précède) : charger
+  // "seulement si vide" faisait qu'en passant de son propre compte à une
+  // entreprise cliente (ou d'une entreprise à une autre), les anciennes
+  // données restaient affichées à tort — elles ne semblaient "à jour"
+  // que parce que STATE.factures n'était pas vide, pas parce qu'elles
+  // correspondaient au bon contexte.
+  showToast('\u23f3 Chargement...', 'success');
+  await loadAll();
+  // NOUVEAU (audit critique) : sans ceci, les fonctionnalités payantes de
+  // l'ENTREPRISE visitée n'étaient jamais vérifiées — STATE.mesFeatures
+  // restait vide ou porteur des fonctionnalités du comptable lui-même,
+  // bloquant à tort des actions que l'entreprise a pourtant payées.
+  // ⚠️ Limite connue : get_mes_features utilise auth.uid() côté serveur,
+  // donc renvoie toujours les fonctionnalités du COMPTABLE connecté, pas
+  // celles de l'entreprise visitée, même après ce correctif — une vraie
+  // RPC dédiée côté serveur serait nécessaire pour une fiabilité complète
+  // dans le cas "visite d'une entreprise cliente". À signaler si ça reste
+  // un problème après ce correctif.
+  if (typeof chargerMesFeatures === 'function') await chargerMesFeatures();
 
   // Pill flottante discrète (remplace l'ancienne bannière pleine largeur)
   appendModeBanner();
@@ -1592,6 +1622,7 @@ async function basculerModeEntreprise() {
 
 function revenirEspaceComptable() {
   CPT.modeEntreprise = false;
+  STATE.entrepriseId = null;
   document.getElementById('cpt-mode-pill')?.remove();
   document.getElementById('cpt-mode-style')?.remove();
   document.getElementById('mode-entreprise-banner')?.remove(); // nettoyage legacy si présent
