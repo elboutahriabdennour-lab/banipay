@@ -628,12 +628,22 @@ async function confirmerPaiement() {
   await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, { montant_recu: newRecu, statut: newStatut });
   f.montant_recu = newRecu; f.statut = newStatut;
   // Save paiement record
+  // FIX (grand audit) : le solde de la facture était déjà mis à jour
+  // avant ce bloc, mais un échec silencieux ici faisait que le message
+  // de succès s'affichait quand même — la facture semblait bien payée,
+  // mais cette transaction précise n'apparaîtrait jamais dans
+  // l'Historique des paiements.
+  let paiementEnregistre = true;
   try {
     await sb.post('paiements', { user_id: (STATE.entrepriseId || sb.user.id), facture_id: f.id, montant, date: el('pp-date')?.value, mode: el('pp-mode')?.value || 'virement' });
-  } catch(e) {}
+  } catch(e) { paiementEnregistre = false; console.warn('Enregistrement paiement (historique):', e); }
   closeAllModals();
   renderDetail();
-  showToast(`✅ ${fmt(montant)} MAD enregistré !`, 'success');
+  if (paiementEnregistre) {
+    showToast(`✅ ${fmt(montant)} MAD enregistré !`, 'success');
+  } else {
+    showToast(`⚠️ Solde mis à jour, mais l'historique de ce paiement n'a pas pu être enregistré`, 'error');
+  }
 }
 
 // ============================================================
