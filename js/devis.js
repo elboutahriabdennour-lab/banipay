@@ -658,10 +658,15 @@ async function enregistrerBCDepuisDevisAccepte(devisId) {
 async function envoyerBonCommande(id) {
   const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
   if (!bc) return;
+  // FIX (grand audit) : un échec silencieux ici laissait quand même
+  // partager le lien avec "Lien copié" en succès, alors que le statut
+  // du bon de commande restait incorrect côté Zelto (jamais passé à
+  // "envoyé").
+  let statutMisAJour = true;
   try {
     await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'envoye' });
     bc.statut = 'envoye';
-  } catch(e) {}
+  } catch(e) { statutMisAJour = false; console.warn('Mise à jour statut BC:', e); }
 
   // NOUVEAU: si le fournisseur a un compte Zelto, il reçoit une
   // notification directe (en plus du lien partageable ci-dessous).
@@ -678,10 +683,10 @@ async function envoyerBonCommande(id) {
   const lien = window.location.origin + window.location.pathname + '?bc=' + id + '&t=' + (bc.token_public||'');
   if (navigator.share) {
     try { await navigator.share({ title: 'Bon de commande ' + (bc.ref||''), text: 'Bon de commande ' + (bc.ref||'') + ' — merci de confirmer la réception : ' + lien }); }
-    catch(e2) { navigator.clipboard?.writeText(lien); showToast('Lien copié', 'success'); }
+    catch(e2) { navigator.clipboard?.writeText(lien); showToast(statutMisAJour ? 'Lien copié' : '⚠️ Lien copié, mais le statut n\'a pas pu être mis à jour', statutMisAJour ? 'success' : 'error'); }
   } else {
     navigator.clipboard?.writeText(lien);
-    showToast('✅ Lien copié — envoyez-le à votre fournisseur', 'success');
+    showToast(statutMisAJour ? '✅ Lien copié — envoyez-le à votre fournisseur' : '⚠️ Lien copié, mais le statut n\'a pas pu être mis à jour', statutMisAJour ? 'success' : 'error');
   }
   renderBonsCommandeListe();
 }
