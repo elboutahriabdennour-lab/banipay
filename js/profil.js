@@ -412,7 +412,10 @@ async function deleteAccount() {
     // serveur dédiée (voir supprimer-compte-edge-function.ts) car cette
     // opération nécessite des droits que le client n'a jamais.
     try {
-      const respAuth = await fetch(SUPABASE_URL + '/functions/v1/supprimer-compte', {
+      // NOTE : nommée "smooth-endpoint" côté Supabase (nom généré par
+      // défaut, jamais renommé lors du déploiement) — le code à
+      // l'intérieur reste bien celui de supprimer-compte-edge-function.ts.
+      const respAuth = await fetch(SUPABASE_URL + '/functions/v1/smooth-endpoint', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       });
