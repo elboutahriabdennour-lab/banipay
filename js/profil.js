@@ -562,6 +562,7 @@ function renderReleves() {
         '</div>' +
         '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
           '<span style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:' + (r.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (r.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (r.vu_par_comptable ? '✓ Vu' : '⏳ En attente') + '</span>' +
+          '<button onclick="event.stopPropagation();analyserReleve(\'' + r.id + '\')" style="background:#E9F4F3;color:#1F6F72;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit" title="Détecter les transactions et les rapprocher de vos factures">🔍 Analyser</button>' +
           '<button onclick="telechargerReleveEntreprise(\'' + r.id + '\')" style="background:#F1EEE8;color:#6B5F54;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">📥</button>' +
           '<button onclick="supprimerReleve(\'' + r.id + '\')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
         '</div>' +
