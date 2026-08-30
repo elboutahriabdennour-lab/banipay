@@ -27,9 +27,12 @@ async function loadConversations() {
   try {
     let query = '';
     if (role === 'comptable') {
-      query = 'comptable_email=eq.' + encodeURIComponent(email);
+      query = 'comptable_email=eq.' + encodeURIComponent(email.toLowerCase());
     } else {
-      query = 'entreprise_id=eq.' + uid;
+      // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe
+      // ne voyait jamais les conversations de l'entreprise avec son
+      // comptable — la requête filtrait sur son propre id.
+      query = 'entreprise_id=eq.' + (STATE.entrepriseId || uid);
     }
 
     const r = await fetch(
@@ -458,7 +461,10 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
   const uid = sb.user?.id;
   const role = sb.user?.user_metadata?.role || 'entreprise';
 
-  let entId = entrepriseId || uid;
+  // FIX (audit) : sans STATE.entrepriseId en repli, un membre d'équipe
+  // qui démarre une conversation sans préciser explicitement
+  // d'entreprise créait la conversation sous son propre id.
+  let entId = entrepriseId || STATE.entrepriseId || uid;
   let entEmail = entrepriseEmail || sb.user?.email;
   let cptEmail = comptableEmail;
 
@@ -515,7 +521,9 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
 }
 
 async function messagerAvecComptable() {
-  const uid = sb.user?.id;
+  // FIX (audit) : même bug — un membre d'équipe ne retrouvait jamais le
+  // comptable de l'entreprise, la requête filtrant sur son propre id.
+  const uid = STATE.entrepriseId || sb.user?.id;
   try {
     const r = await fetch(
       SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + uid + '&statut=eq.acceptee&limit=1',
