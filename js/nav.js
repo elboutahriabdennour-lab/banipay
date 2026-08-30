@@ -137,7 +137,7 @@ async function chargerInvitationsComptableEnAttente() {
 
     if (emailEnt) {
       const resp2 = await fetch(
-        SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_email=eq.' + encodeURIComponent(emailEnt) + '&statut=eq.en_attente&order=created_at.desc',
+        SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_email=eq.' + encodeURIComponent(emailEnt.toLowerCase()) + '&statut=eq.en_attente&order=created_at.desc',
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
       );
       const byEmail = await resp2.json() || [];
