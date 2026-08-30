@@ -255,6 +255,21 @@ async function doLogin() {
     // l'objet, ou simplement l'absence d'utilisateur après l'appel).
     if ((resultatLogin && resultatLogin.error) || !sb.user) {
       const messageErreur = resultatLogin?.error?.message || resultatLogin?.error || 'Email ou mot de passe incorrect';
+      // NOUVEAU (vérification email obligatoire) : Supabase renvoie le
+      // texte fixe (en anglais) "Email not confirmed" pour ce cas précis
+      // — plutôt que d'afficher ce message brut et confus, on bascule
+      // vers le même écran "vérifiez votre email" que juste après
+      // l'inscription, avec le vrai bouton de renvoi (récemment réparé).
+      // Concerne aussi bien les nouveaux comptes que les anciens comptes
+      // jamais confirmés avant l'activation de cette exigence.
+      if (String(messageErreur).toLowerCase().includes('email not confirmed')) {
+        window._pendingConfirmEmail = email;
+        switchTab('confirm');
+        const cEl = el('confirm-email-display');
+        if (cEl) cEl.textContent = email;
+        if (errEl) errEl.textContent = '';
+        return;
+      }
       if (errEl) errEl.textContent = '❌ ' + messageErreur;
       return;
     }
