@@ -21,7 +21,7 @@ async function loadComptableApp() {
   try {
     // Charger invitations acceptées
     const invResp = await fetch(
-      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.acceptee&select=*',
+      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&statut=eq.acceptee&select=*',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     if (!invResp.ok) {
@@ -1303,7 +1303,7 @@ async function ouvrirGestionEntreprises() {
   let invites = [];
   try {
     invites = await fetch(
-      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&order=created_at.desc&select=*',
+      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&order=created_at.desc&select=*',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     ).then(function(r) { return r.json(); }) || [];
   } catch(e) {}
@@ -2250,7 +2250,7 @@ async function chargerNotificationsComptable() {
   if (!email) return;
 
   try {
-    const url = SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.en_attente&order=created_at.desc';
+    const url = SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&statut=eq.en_attente&order=created_at.desc';
     const resp = await fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } });
     const invitations = await resp.json() || [];
 
