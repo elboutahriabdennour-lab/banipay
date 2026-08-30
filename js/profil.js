@@ -399,33 +399,13 @@ async function deleteAccount() {
       sb.del('membres_cabinet', 'cabinet_id=eq.' + uid).catch(function() {}),
       sb.del('parrainages', 'parrain_id=eq.' + uid).catch(function() {}),
     ]);
-
-    // FIX (trouvé via la vraie liste des contraintes de la base) : ces 5
-    // tables n'ont PAS de suppression en cascade côté base de données —
-    // une seule ligne oubliée ici bloque la suppression du compte
-    // d'authentification avec "Database error deleting user", sans
-    // aucune autre indication. "messages" (expediteur_id) manquait
-    // même totalement de la liste — jamais nettoyée jusqu'ici.
-    const tablesCritiques = [
-      ['invitations_comptable', 'entreprise_id'],
-      ['archive_documents', 'user_id'],
-      ['factures_achat', 'user_id'],
-      ['releves_bancaires', 'user_id'],
-      ['messages', 'expediteur_id'],
-    ];
-    const echecsCritiques = [];
-    for (const [table, colonne] of tablesCritiques) {
-      try {
-        await sb.del(table, colonne + '=eq.' + uid);
-      } catch(e) {
-        echecsCritiques.push(table);
-        console.error('Suppression critique échouée (bloquera la suppression du compte) :', table, e);
-      }
-    }
-    if (echecsCritiques.length) {
-      showToast('❌ Impossible de continuer — échec sur : ' + echecsCritiques.join(', '), 'error');
-      return;
-    }
+    // NOTE : invitations_comptable, archive_documents, factures_achat,
+    // releves_bancaires et messages ne sont PLUS nettoyées ici — ces 5
+    // tables n'ont pas de suppression en cascade en base, et le compte
+    // connecté n'a pas toujours le droit de les supprimer lui-même
+    // (RLS). La fonction serveur (supprimer-compte-edge-function.ts)
+    // les nettoie désormais elle-même, avec les pleins droits, juste
+    // avant de supprimer le compte — plus fiable qu'ici.
 
     // Étape 4 : le profil lui-même
     await sb.del('profils_entreprise', 'id=eq.' + uid);
