@@ -396,7 +396,7 @@ async function _continuerApresAuthentification(email, errEl, remember) {
       // MAIS seulement si l'email apparaît comme comptable (pas comme entreprise)
       try {
         const invCheck = await fetch(
-          SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email) + '&statut=eq.acceptee&limit=1',
+          SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&statut=eq.acceptee&limit=1',
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
         );
         const invData = await invCheck.json();
@@ -678,7 +678,7 @@ async function assurerAutoClientComptable() {
   if (!user) return;
   try {
     const existe = await fetch(
-      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(user.email) + '&entreprise_email=eq.' + encodeURIComponent(user.email) + '&limit=1',
+      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(user.email.toLowerCase()) + '&entreprise_email=eq.' + encodeURIComponent(user.email.toLowerCase()) + '&limit=1',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     ).then(function(r) { return r.json(); });
     if (existe && existe.length) return; // déjà créé
