@@ -192,7 +192,7 @@ async function afficherPageInvitation(email, entrepriseId) {
 async function accepterInvitationEmail(emailEnc, entrepriseId) {
   const email = decodeURIComponent(emailEnc);
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email), {
+    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email.toLowerCase()), {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'acceptee' })
@@ -216,7 +216,7 @@ async function refuserInvitationEmail(emailEnc, entrepriseId) {
     // (réseau, permissions...) affichait quand même "Invitation refusée"
     // comme si tout s'était bien passé, alors que l'invitation restait
     // "en_attente" en base. Même piège trouvé des dizaines de fois ce soir.
-    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email), {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email.toLowerCase()), {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut: 'refusee' })
