@@ -200,6 +200,26 @@ async function doSignup() {
       return;
     }
   } catch(eCheck) { /* si la vérification échoue, on laisse continuer normalement */ }
+  // NOUVEAU (bug trouvé en test réel) : depuis "Confirm email" activé,
+  // Supabase ne renvoie plus JAMAIS d'erreur pour un email déjà utilisé
+  // à l'inscription — il renvoie un faux "succès" à la place (protection
+  // anti-énumération, documentée officiellement). Sans cette
+  // vérification préalable, quelqu'un essayant de créer un compte
+  // comptable avec un email déjà utilisé pour un compte entreprise (ou
+  // l'inverse) voyait "Email envoyé !" sans qu'aucun compte ne soit
+  // réellement créé — aucune indication de ce qui n'allait pas.
+  try {
+    const respExiste = await fetch(SUPABASE_URL + '/rest/v1/rpc/email_deja_utilise', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: email })
+    });
+    const existeDeja = respExiste.ok ? await respExiste.json() : false;
+    if (existeDeja) {
+      if (errEl) errEl.textContent = '❌ Cette adresse email est déjà utilisée par un autre compte (entreprise ou comptable) — connectez-vous plutôt, ou utilisez une autre adresse.';
+      return;
+    }
+  } catch(eExiste) { /* si la vérification échoue, on laisse continuer normalement */ }
   if (errEl) errEl.textContent = '⏳ Création...';
   try {
     const resultatSignup = await sb.signup(email, pwd, { nom, role, cabinet });
