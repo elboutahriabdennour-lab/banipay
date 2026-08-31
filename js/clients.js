@@ -189,7 +189,7 @@ function initNouveauClient() {
 // Point 2 (complément) : validation ICE/RC/IF réutilisable — la même
 // règle s'applique partout où ces identifiants sont saisis (profil
 // entreprise, client, fournisseur), pas seulement au profil.
-function validerIdentifiantsLegaux(ice, rc, identifiantFiscal) {
+function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss) {
   if (ice && !/^\d{15}$/.test(ice)) {
     showToast('❌ L\'ICE doit contenir exactement 15 chiffres (' + ice.length + ' saisi(s))', 'error');
     return false;
@@ -200,6 +200,17 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal) {
   }
   if (identifiantFiscal && !/^\d+$/.test(identifiantFiscal)) {
     showToast('❌ L\'identifiant fiscal (IF) ne doit contenir que des chiffres', 'error');
+    return false;
+  }
+  // NOUVEAU (retour utilisateur) : Patente et CNSS n'étaient jamais
+  // vérifiés du tout — on pouvait y saisir n'importe quel texte alors
+  // que ce sont aussi des identifiants numériques marocains.
+  if (patente && !/^\d+$/.test(patente)) {
+    showToast('❌ Le numéro de Patente ne doit contenir que des chiffres', 'error');
+    return false;
+  }
+  if (cnss && !/^\d+$/.test(cnss)) {
+    showToast('❌ Le numéro CNSS ne doit contenir que des chiffres', 'error');
     return false;
   }
   return true;
