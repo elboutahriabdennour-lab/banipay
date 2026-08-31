@@ -90,7 +90,7 @@ async function saveProfil() {
     data.id_unique = 'BP-'+uid6();
     STATE.profil.id_unique = data.id_unique;
   }
-  if (typeof validerIdentifiantsLegaux === 'function' && !validerIdentifiantsLegaux(el('pe-ice')?.value.trim(), el('pe-rc')?.value.trim(), el('pe-if')?.value.trim())) return;
+  if (typeof validerIdentifiantsLegaux === 'function' && !validerIdentifiantsLegaux(el('pe-ice')?.value.trim(), el('pe-rc')?.value.trim(), el('pe-if')?.value.trim(), el('pe-patente')?.value.trim(), el('pe-cnss')?.value.trim())) return;
   showToast('⏳ Sauvegarde...');
   try {
     await sb.upsert('profils_entreprise', data);
