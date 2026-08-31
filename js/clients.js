@@ -189,7 +189,7 @@ function initNouveauClient() {
 // Point 2 (complément) : validation ICE/RC/IF réutilisable — la même
 // règle s'applique partout où ces identifiants sont saisis (profil
 // entreprise, client, fournisseur), pas seulement au profil.
-function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss) {
+function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, rib, tel) {
   if (ice && !/^\d{15}$/.test(ice)) {
     showToast('❌ L\'ICE doit contenir exactement 15 chiffres (' + ice.length + ' saisi(s))', 'error');
     return false;
@@ -212,6 +212,27 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss) {
   if (cnss && !/^\d+$/.test(cnss)) {
     showToast('❌ Le numéro CNSS ne doit contenir que des chiffres', 'error');
     return false;
+  }
+  // NOUVEAU : le RIB marocain a un format officiel fixe (24 chiffres) —
+  // jamais vérifié jusqu'ici, alors que des paiements clients en dépendent.
+  if (rib) {
+    const ribNettoye = rib.replace(/\s/g, '');
+    if (!/^\d{24}$/.test(ribNettoye)) {
+      showToast('❌ Le RIB doit contenir exactement 24 chiffres (' + ribNettoye.length + ' saisi(s))', 'error');
+      return false;
+    }
+  }
+  // NOUVEAU : numéro marocain classique (10 chiffres commençant par 0)
+  // ou format international (+212 suivi de 9 chiffres) — tolérant sur
+  // les espaces/tirets de mise en forme.
+  if (tel) {
+    const telNettoye = tel.replace(/[\s.\-]/g, '');
+    const formatLocal = /^0\d{9}$/.test(telNettoye);
+    const formatInternational = /^\+212\d{9}$/.test(telNettoye);
+    if (!formatLocal && !formatInternational) {
+      showToast('❌ Numéro de téléphone invalide — format attendu : 0XXXXXXXXX ou +212XXXXXXXXX', 'error');
+      return false;
+    }
   }
   return true;
 }
