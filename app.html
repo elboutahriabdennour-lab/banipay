@@ -1059,10 +1059,10 @@
   <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
   <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
   <!-- Rapport de marge par chantier (chantier ajouté) -->
-  <div class="sec-label" style="margin-top:8px">🏗️ Rentabilité par chantier</div>
+  <div class="sec-label" style="margin-top:8px">📊 Rentabilité par chantier / projet</div>
   <div style="padding:0 20px 20px" id="rapport-marge-chantiers-content"></div>
   <div style="padding:0 20px 20px">
-    <button onclick="goScreen('carnet-chantier',null);setTimeout(initCarnetChantier,50)" style="width:100%;padding:12px;background:#fff;border:1.5px solid #E3DCCF;color:#241F1B;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Ouvrir le carnet de chantier photo</button>
+    <button onclick="goScreen('carnet-chantier',null);setTimeout(initCarnetChantier,50)" style="width:100%;padding:12px;background:#fff;border:1.5px solid #E3DCCF;color:#241F1B;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Ouvrir le carnet de chantier / projet</button>
   </div>
   <div class="pb"></div>
 </div>
@@ -1154,6 +1154,13 @@
         <input id="signup-password2" class="a-inp" type="password" placeholder="Retapez le mot de passe" oninput="checkPwdMatch()">
         <div id="pwd-match" style="font-size:11px;margin-top:4px;min-height:16px"></div>
         <div id="signup-err" class="a-err"></div>
+        <!-- NOUVEAU (protection anti-abus) : champ invisible pour un
+             humain (position hors écran + tabindex désactivé), que les
+             robots d'inscription automatisée remplissent souvent sans
+             le voir. Si rempli, l'inscription est bloquée silencieusement
+             (sans message qui aiderait un robot à comprendre pourquoi). -->
+        <input type="text" id="signup-piege" name="site_web_2" autocomplete="off" tabindex="-1"
+               style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
         <button class="a-btn a-btn-blue" onclick="doSignup()" style="margin-top:8px">Créer mon compte</button>
         <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
       </div>
@@ -1833,7 +1840,7 @@
   <div class="screen" id="screen-carnet-chantier">
     <div class="topbar"><button class="back-btn" onclick="goScreen('stats',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
-      <div class="sec-label" style="padding:0 0 12px">📷 Carnet de chantier</div>
+      <div class="sec-label" style="padding:0 0 12px">📷 Carnet de chantier / projet</div>
       <select id="carnet-chantier-select" class="f-inp" onchange="changerChantierCarnet()" style="margin-bottom:14px"></select>
       <button onclick="ouvrirAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px">📸 Ajouter une photo</button>
       <input type="file" id="carnet-photo-input" accept="image/*" capture="environment" style="display:none" onchange="traiterNouvellePhotoChantier(event)">
