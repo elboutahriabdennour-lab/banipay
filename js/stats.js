@@ -84,7 +84,7 @@ function renderStats() {
   const grid = el('stats-grid');
   if (grid) grid.innerHTML = `
     <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;grid-column:span 2">
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px 12px">
         <div style="text-align:center">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">CA Total</div>
           <div style="font-size:18px;font-weight:800;color:#0F172A">${fmt(caTotal)}</div>
@@ -95,12 +95,12 @@ function renderStats() {
           <div style="font-size:18px;font-weight:800;color:#059669">${fmt(caEncaisse)}</div>
           <div style="font-size:9px;color:#059669">${txRecouvrement}%</div>
         </div>
-        <div style="text-align:center;border-left:1px solid #F1F5F9;padding-left:8px">
+        <div style="text-align:center;border-top:1px solid #F1F5F9;padding-top:10px">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">En attente</div>
           <div style="font-size:18px;font-weight:800;color:#D97706">${fmt(caEnAttente)}</div>
           <div style="font-size:9px;color:#64748B">MAD</div>
         </div>
-        <div style="text-align:center;border-left:1px solid #F1F5F9;padding-left:8px">
+        <div style="text-align:center;border-left:1px solid #F1F5F9;border-top:1px solid #F1F5F9;padding-left:8px;padding-top:10px">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">En retard</div>
           <div style="font-size:18px;font-weight:800;color:#EF4444">${fmt(caEnRetard)}</div>
           <div style="font-size:9px;color:#64748B">MAD</div>
