@@ -189,7 +189,7 @@ function initNouveauClient() {
 // Point 2 (complément) : validation ICE/RC/IF réutilisable — la même
 // règle s'applique partout où ces identifiants sont saisis (profil
 // entreprise, client, fournisseur), pas seulement au profil.
-function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, rib, tel) {
+function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, rib, tel, email) {
   if (ice && !/^\d{15}$/.test(ice)) {
     showToast('❌ L\'ICE doit contenir exactement 15 chiffres (' + ice.length + ' saisi(s))', 'error');
     return false;
@@ -233,6 +233,12 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, ri
       showToast('❌ Numéro de téléphone invalide — format attendu : 0XXXXXXXXX ou +212XXXXXXXXX', 'error');
       return false;
     }
+  }
+  // NOUVEAU : format email de base — attrape les fautes de frappe
+  // évidentes (email sans @, sans domaine...) avant l'enregistrement.
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('❌ Adresse email invalide', 'error');
+    return false;
   }
   return true;
 }
