@@ -68,7 +68,11 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
     <cac:TaxSubtotal>
       <cbc:TaxableAmount currencyID="${devise}">${(Number(f.ht)||0).toFixed(2)}</cbc:TaxableAmount>
       <cbc:TaxAmount currencyID="${devise}">${(Number(f.tva)||0).toFixed(2)}</cbc:TaxAmount>
-      <cac:TaxCategory><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory>
+      <cac:TaxCategory>
+        <cbc:ID>S</cbc:ID>
+        <cbc:Percent>${(Number(f.ht) > 0 ? (Number(f.tva) / Number(f.ht) * 100) : 20).toFixed(2)}</cbc:Percent>
+        <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme>
+      </cac:TaxCategory>
     </cac:TaxSubtotal>
   </cac:TaxTotal>
   <cac:LegalMonetaryTotal>
