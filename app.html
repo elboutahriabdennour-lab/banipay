@@ -268,6 +268,9 @@
     </div>
   </div>
   <div class="form-section"><label class="f-lbl">Date de début</label><input id="ab-date-debut" class="f-inp" type="date"></div>
+  <!-- NOUVEAU (suivi de contrats) : optionnel — sans date de fin, le
+       comportement reste identique à avant (récurrence indéfinie). -->
+  <div class="form-section"><label class="f-lbl">Date de fin du contrat (optionnelle)</label><input id="ab-date-fin" class="f-inp" type="date"><div style="font-size:11px;color:#9C9186;margin-top:4px">Laissez vide pour une récurrence sans limite de durée. Une alerte vous préviendra 30 jours avant l'échéance.</div></div>
   <div class="form-section">
     <label class="f-lbl">Prestations</label>
     <div id="ab-lignes-container"></div>
@@ -292,6 +295,7 @@
     <div class="d-amount" id="dab-amount"></div>
     <div class="d-meta" id="dab-ref"></div>
   </div>
+  <div id="dab-echeance-contrat" style="display:none"></div>
   <div class="d-body">
     <div class="d-card"><div class="d-card-title">Prestations récurrentes</div><div id="dab-lignes"></div></div>
     <div id="dab-actions"></div>
