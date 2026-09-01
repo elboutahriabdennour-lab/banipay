@@ -355,7 +355,7 @@ function renderStatsDashboard() {
 function exporterCSV() {
   const f = STATE.factures || [];
   if (!f.length) { showToast('Aucune facture à exporter', 'error'); return; }
-  const headers = ['Référence', 'Client', 'Date', 'Échéance', 'HT', 'TVA', 'TTC', 'Statut', 'Mode paiement', 'Chantier'];
+  const headers = ['Référence', 'Client', 'Date', 'Échéance', 'HT', 'TVA', 'TTC', 'Statut', 'Mode paiement', 'Chantier / Projet'];
   const rows = f.map(fac => [
     fac.ref || '', fac.client || '', fac.date_emission || '', fac.echeance || '',
     (Number(fac.ht) || 0).toFixed(2), (Number(fac.tva) || 0).toFixed(2), (Number(fac.ttc) || 0).toFixed(2),
@@ -374,7 +374,7 @@ function exporterCSV() {
 function exporterCSVDevis() {
   const d = STATE.devis || [];
   if (!d.length) { showToast('Aucun devis à exporter', 'error'); return; }
-  const headers = ['Référence', 'Client', 'Date', 'Validité (j)', 'HT', 'TVA', 'TTC', 'Statut', 'Chantier'];
+  const headers = ['Référence', 'Client', 'Date', 'Validité (j)', 'HT', 'TVA', 'TTC', 'Statut', 'Chantier / Projet'];
   const rows = d.map(dv => [
     dv.ref || '', dv.client || '', dv.date_emission || '', dv.validite || 30,
     (Number(dv.ht) || 0).toFixed(2), (Number(dv.tva) || 0).toFixed(2), (Number(dv.ttc) || 0).toFixed(2),
