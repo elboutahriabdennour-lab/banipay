@@ -7,6 +7,39 @@ STATE.lignesAB = STATE.lignesAB || [];
 // CHARGEMENT
 // ============================================================
 
+// ============================================================
+// ALERTES DE RENOUVELLEMENT DE CONTRAT (suivi de contrats)
+// ============================================================
+// Un contrat avec une date de fin qui approche (30 jours ou moins)
+// mérite une alerte — pour éviter qu'un abonnement s'arrête sans que
+// personne n'ait pensé à le renouveler ou à en discuter avec le client.
+function verifierContratsAExpirer() {
+  const aujourdhui = new Date();
+  const alertes = [];
+  (STATE.abonnements || []).forEach(function(a) {
+    if (!a.date_fin || a.statut !== 'actif') return;
+    const dateFin = new Date(a.date_fin);
+    const joursRestants = Math.ceil((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
+    if (joursRestants <= 30 && joursRestants >= 0) {
+      alertes.push({ id: a.id, client: a.client, dateFin: a.date_fin, joursRestants: joursRestants });
+    }
+  });
+  return alertes;
+}
+// Ajoutée à la même notification centrale que les autres alertes — voir
+// genNotifications() dans nav.js.
+function ajouterNotificationsContratsAExpirer() {
+  const alertes = verifierContratsAExpirer();
+  alertes.forEach(function(a) {
+    STATE.notifications.push({
+      type: a.joursRestants <= 7 ? 'danger' : 'warning',
+      icon: '📅',
+      title: 'Contrat bientôt terminé — ' + a.client,
+      body: a.joursRestants === 0 ? 'Se termine aujourd\'hui' : 'Se termine dans ' + a.joursRestants + ' jour(s) (' + a.dateFin + ')',
+    });
+  });
+}
+
 async function loadAbonnements() {
   try {
     const uid = STATE.entrepriseId || sb.user?.id;
@@ -138,6 +171,10 @@ async function sauvegarderAbonnement() {
       frequence,
       jour_generation: jourGeneration,
       prochaine_date: dateDebut,
+      // NOUVEAU (suivi de contrats) : optionnelle, permet les alertes
+      // de renouvellement — un abonnement sans date de fin se comporte
+      // exactement comme avant (récurrence indéfinie).
+      date_fin: el('ab-date-fin')?.value || null,
       statut: 'actif',
       devise: 'MAD',
       note: el('ab-note')?.value.trim(),
@@ -172,6 +209,20 @@ function renderDetailAbonnement() {
   setEl('dab-amount', fmt(ht * 1.2) + ' ' + (a.devise||'MAD') + ' TTC / ' + (freqLabels[a.frequence]||a.frequence).toLowerCase());
   setEl('dab-ref', 'Prochaine génération : ' + formatDate(a.prochaine_date) + (a.chantier ? ' · ' + a.chantier : ''));
 
+  // NOUVEAU (suivi de contrats) : affiche l'échéance du contrat si elle
+  // existe, avec un avertissement visuel si elle approche.
+  const dabEcheance = el('dab-echeance-contrat');
+  if (dabEcheance) {
+    if (a.date_fin) {
+      const joursRestants = Math.ceil((new Date(a.date_fin) - new Date()) / (1000*60*60*24));
+      const urgent = joursRestants <= 30;
+      dabEcheance.style.display = 'block';
+      dabEcheance.innerHTML = '<div style="background:' + (urgent ? '#F7EFDC' : '#F1EEE8') + ';border-radius:10px;padding:10px 14px;margin:0 20px 14px;font-size:12px;color:' + (urgent ? '#B8860B' : '#6B5F54') + ';font-weight:' + (urgent ? '700' : '400') + '">📅 Contrat jusqu\'au ' + formatDate(a.date_fin) + (urgent ? ' — ' + (joursRestants <= 0 ? 'terminé' : joursRestants + ' jour(s) restant(s)') : '') + '</div>';
+    } else {
+      dabEcheance.style.display = 'none';
+    }
+  }
+
   const lignesEl = el('dab-lignes');
   if (lignesEl) lignesEl.innerHTML = lignes.map(function(l) {
     return '<div class="d-ligne"><div><div style="font-size:13px;font-weight:500">' + l.desc + '</div><div style="font-size:11px;color:#9C9186">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div><div style="font-size:13px;font-weight:600">' + fmt(l.qte*l.pu) + ' MAD</div></div>';
@@ -186,6 +237,10 @@ function renderDetailAbonnement() {
 
   if (a.statut === 'actif') {
     actions.push('<button class="action-item" onclick="genererFactureImmediate(' + a.id + ')"><div class="action-ico" style="background:#E9F4F3">⚡</div>Générer une facture maintenant</button>');
+    // NOUVEAU (suivi de contrats) : seulement si une date de fin existe.
+    if (a.date_fin) {
+      actions.push('<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="renouvelerContrat(' + a.id + ')"><div class="action-ico" style="background:#E9F4F3">🔄</div>Renouveler le contrat</button>');
+    }
     actions.push('<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="changerStatutAbonnement(' + a.id + ',\'suspendu\')"><div class="action-ico" style="background:#F7EFDC">⏸</div>Suspendre</button>');
   } else if (a.statut === 'suspendu') {
     actions.push('<button class="action-item success" onclick="changerStatutAbonnement(' + a.id + ',\'actif\')"><div class="action-ico" style="background:#EEF3E4">▶️</div>Réactiver</button>');
@@ -205,6 +260,30 @@ async function changerStatutAbonnement(id, statut) {
   renderDetailAbonnement();
   showToast('Statut mis à jour', 'success');
   logAudit('abonnement', id, 'modification', 'Statut → ' + statut);
+}
+
+// NOUVEAU (suivi de contrats) : demande une nouvelle date de fin et
+// l'enregistre — l'historique du renouvellement est conservé via le
+// journal d'audit déjà existant (logAudit), pas besoin d'une nouvelle
+// table dédiée pour ce premier besoin.
+async function renouvelerContrat(id) {
+  const a = STATE.abonnements.find(function(x) { return x.id === id; });
+  if (!a) return;
+  const ancienneDate = a.date_fin;
+  const nouvelleDate = prompt('Nouvelle date de fin du contrat (AAAA-MM-JJ) :', ancienneDate || '');
+  if (!nouvelleDate) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nouvelleDate)) {
+    showToast('❌ Format de date invalide — utilisez AAAA-MM-JJ', 'error');
+    return;
+  }
+  try {
+    await sb.patch('abonnements', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { date_fin: nouvelleDate });
+    a.date_fin = nouvelleDate;
+    STATE.currentAbonnement = a;
+    renderDetailAbonnement();
+    showToast('✅ Contrat renouvelé jusqu\'au ' + formatDate(nouvelleDate), 'success');
+    logAudit('abonnement', id, 'renouvellement', (ancienneDate ? 'Ancienne échéance : ' + formatDate(ancienneDate) + ' → ' : '') + 'Nouvelle échéance : ' + formatDate(nouvelleDate));
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
 
 async function supprimerAbonnement(id) {
