@@ -1056,12 +1056,23 @@
     <button class="ftab" onclick="changerPeriodeStats('mois',this)">Ce mois</button>
     <button class="ftab" onclick="changerPeriodeStats('mois-dernier',this)">Mois dernier</button>
     <button class="ftab" onclick="changerPeriodeStats('annee',this)">Cette année</button>
+    <button class="ftab" id="stats-tab-perso" onclick="changerPeriodeStats('personnalisee',this)">📅 Personnalisée</button>
   </div>
+  <!-- NOUVEAU : sélecteur de dates, visible seulement en mode "Personnalisée" -->
+  <div id="stats-dates-perso" style="display:none;padding:0 20px 14px;gap:8px;align-items:center">
+    <input type="date" id="stats-date-debut" class="f-inp" style="flex:1" onchange="appliquerDatesPersonnalisees()">
+    <span style="font-size:12px;color:#9C9186">au</span>
+    <input type="date" id="stats-date-fin" class="f-inp" style="flex:1" onchange="appliquerDatesPersonnalisees()">
+  </div>
+  <!-- NOUVEAU : filtres croisés actifs (clic sur un client/produit) -->
+  <div id="stats-filtres-actifs" style="padding:0 20px 10px"></div>
   <div style="padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" id="stats-grid"></div>
   <div style="padding:0 20px;margin-bottom:16px" id="sa-monthly"></div>
   <div style="padding:0 20px" id="chart-bars"></div>
   <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
   <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
+  <div style="padding:0 20px;margin-top:16px" id="sa-top-produits"></div>
+  <div style="padding:0 20px;margin-top:16px" id="sa-modes-paiement"></div>
   <!-- Rapport de marge par chantier (chantier ajouté) -->
   <div class="sec-label" style="margin-top:8px">📊 Rentabilité par chantier / projet</div>
   <div style="padding:0 20px 20px" id="rapport-marge-chantiers-content"></div>
