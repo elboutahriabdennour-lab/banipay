@@ -78,8 +78,17 @@ const sb = {
       headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email, password: pwd, data: meta })
     });
-    const d = await r.json();
-    if (d.error) throw new Error(d.error.message || d.error);
+    const d = await r.json().catch(function() { return {}; });
+    // FIX (bug trouvé — retour utilisateur) : ne vérifiait que d.error,
+    // jamais le vrai statut HTTP (r.ok). Supabase renvoie parfois ses
+    // erreurs sous d'autres formes (msg, error_description, code...) —
+    // dans ce cas, d.error était vide, et signup() retournait comme si
+    // tout s'était bien passé alors que le compte n'était jamais créé.
+    // Même correctif déjà appliqué à resendConfirmation() ci-dessous,
+    // jamais reporté ici jusqu'à présent.
+    if (!r.ok || d.error) {
+      throw new Error(d.error?.message || d.error || d.msg || d.error_description || 'Échec de la création du compte');
+    }
     return d;
   },
 
