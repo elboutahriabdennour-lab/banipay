@@ -73,6 +73,10 @@
     <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
     <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
   </div>
+  <div style="height:8px"></div>
+  <div class="quick-actions" style="grid-template-columns:repeat(3,1fr)">
+    <div class="qa-item" onclick="window._retourMarche='dashboard';loadMarche();goScreen('marche',null)"><div class="qa-ico" style="background:#EDE6F0">🤝</div><div class="qa-lbl">Le Marché</div></div>
+  </div>
 
 
 <!-- MODAL PAIEMENT -->
@@ -228,7 +232,7 @@
 
 <!-- LE MARCHÉ — offres et demandes de services -->
 <div class="screen" id="screen-marche">
-  <div class="topbar"><button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="initNouvelleAnnonce();goScreen('nouvelle-annonce',null)">+ Publier</span></div></div>
+  <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourMarche||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="initNouvelleAnnonce();goScreen('nouvelle-annonce',null)">+ Publier</span></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Le Marché</div><div class="hero-sub-txt">Offres et demandes entre entreprises Zelto</div></div>
   <div style="padding:12px 20px">
     <input class="f-inp" id="marche-search" placeholder="🔍 Rechercher..." oninput="renderMarche()" style="margin-bottom:12px">
@@ -1021,7 +1025,7 @@
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">🤝 Parrainer une entreprise</div>
       <div id="parrainage-content" style="padding:14px 16px">Chargement...</div>
     </div>
-    <button class="p-btn" onclick="window._retourAnnonces='profil';loadMarche();goScreen('marche',null)" style="color:#7C5CA6">🤝 Le Marché</button>
+    <button class="p-btn" onclick="window._retourMarche='profil';loadMarche();goScreen('marche',null)" style="color:#7C5CA6">🤝 Le Marché</button>
     <button class="p-btn" onclick="ouvrirHistoriqueSiAdmin()" style="color:#6B5F54">📋 Historique</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
@@ -1854,6 +1858,17 @@
       <div class="form-title" id="emp-form-titre">Nouvel employé</div>
     </div>
     <div class="form-section"><label class="f-lbl">Nom *</label><input id="emp-nom" class="f-inp" placeholder="Nom complet"></div>
+    <!-- NOUVEAU (retour utilisateur) : identité et informations
+         personnelles — jamais présentes jusqu'ici, alors qu'un registre
+         du personnel sérieux en a besoin. -->
+    <div class="form-section">
+      <div class="f-row">
+        <div><label class="f-lbl">CIN</label><input id="emp-cin" class="f-inp" placeholder="Ex: AB123456"></div>
+        <div><label class="f-lbl">N° CNSS</label><input id="emp-cnss" class="f-inp" inputmode="numeric" placeholder="Chiffres uniquement"></div>
+      </div>
+    </div>
+    <div class="form-section"><label class="f-lbl">Date de naissance</label><input id="emp-date-naissance" class="f-inp" type="date"></div>
+    <div class="form-section"><label class="f-lbl">Adresse</label><input id="emp-adresse" class="f-inp" placeholder="Adresse personnelle"></div>
     <div class="form-section"><label class="f-lbl">Poste</label><input id="emp-poste" class="f-inp" placeholder="Ex: Maçon, Comptable, Chauffeur..."></div>
     <div class="form-section"><label class="f-lbl">Téléphone</label><input id="emp-tel" class="f-inp" placeholder="Téléphone"></div>
     <div class="form-section"><label class="f-lbl">Date d'entrée</label><input id="emp-date-entree" class="f-inp" type="date"></div>
@@ -2117,6 +2132,17 @@
       <option value="equipe">Équipe</option>
       <option value="annonce">Annonces marché</option>
     </select>
+    <select id="historique-filtre-action" class="f-inp" onchange="appliquerFiltresHistorique()" style="margin-bottom:8px">
+      <option value="">Toutes les actions</option>
+      <option value="creation">Création</option>
+      <option value="modification">Modification</option>
+      <option value="suppression">Suppression</option>
+      <option value="acceptation">Acceptation</option>
+      <option value="refus">Refus</option>
+      <option value="paiement">Paiement</option>
+      <option value="renouvellement">Renouvellement</option>
+    </select>
+    <input id="historique-recherche" class="f-inp" placeholder="🔍 Rechercher dans les détails..." oninput="appliquerFiltresHistorique()" style="margin-bottom:8px">
     <div class="f-row" style="margin-bottom:8px">
       <div><label class="f-lbl">Du</label><input type="date" id="historique-date-debut" class="f-inp" onchange="appliquerFiltresHistorique()"></div>
       <div><label class="f-lbl">Au</label><input type="date" id="historique-date-fin" class="f-inp" onchange="appliquerFiltresHistorique()"></div>
