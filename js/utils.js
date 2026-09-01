@@ -206,11 +206,15 @@ function appliquerFiltresHistorique() {
 
   const acteur = el('historique-filtre-acteur')?.value || '';
   const type = el('historique-filtre-type')?.value || '';
+  const action = el('historique-filtre-action')?.value || '';
+  const recherche = (el('historique-recherche')?.value || '').toLowerCase();
   const dateDebut = el('historique-date-debut')?.value || '';
   const dateFin = el('historique-date-fin')?.value || '';
 
   if (acteur) logs = logs.filter(function(l) { return l.acteur_email === acteur; });
   if (type) logs = logs.filter(function(l) { return l.type_doc === type; });
+  if (action) logs = logs.filter(function(l) { return l.action === action; });
+  if (recherche) logs = logs.filter(function(l) { return (l.details || '').toLowerCase().includes(recherche); });
   if (dateDebut) logs = logs.filter(function(l) { return new Date(l.created_at) >= new Date(dateDebut); });
   if (dateFin) logs = logs.filter(function(l) { return new Date(l.created_at) <= new Date(dateFin + 'T23:59:59'); });
 
@@ -236,6 +240,8 @@ function appliquerFiltresHistorique() {
 function reinitialiserFiltresHistorique() {
   if (el('historique-filtre-acteur')) el('historique-filtre-acteur').value = '';
   if (el('historique-filtre-type')) el('historique-filtre-type').value = '';
+  if (el('historique-filtre-action')) el('historique-filtre-action').value = '';
+  if (el('historique-recherche')) el('historique-recherche').value = '';
   if (el('historique-date-debut')) el('historique-date-debut').value = '';
   if (el('historique-date-fin')) el('historique-date-fin').value = '';
   appliquerFiltresHistorique();
