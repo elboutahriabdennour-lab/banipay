@@ -696,6 +696,97 @@ async function envoyerBonCommande(id) {
 // ============================================================
 STATE.bcRecus = STATE.bcRecus || [];
 
+// ============================================================
+// FACTURES REÇUES D'AUTRES ENTREPRISES ZELTO — moitié manquante du
+// marché B2B (le côté vendeur existait déjà via BC reçus/conversion).
+// Complète la boucle : quand un fournisseur Zelto facture une entreprise
+// Zelto, cette dernière voit la facture arriver ici et la convertit en
+// achat sans ressaisie.
+// ============================================================
+async function loadFacturesRecues() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_factures_recues', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.facturesRecues = r.ok ? ((await r.json()) || []) : [];
+  } catch(e) { STATE.facturesRecues = []; }
+  renderFacturesRecues();
+}
+
+function renderFacturesRecues() {
+  const container = el('factures-recues-liste');
+  if (!container) return;
+  const factures = STATE.facturesRecues || [];
+  if (!factures.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">Aucune facture reçue</div><div>Les factures que vous envoient vos fournisseurs Zelto apparaîtront ici</div></div>';
+    return;
+  }
+  container.innerHTML = factures.map(function(f) {
+    return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #E3DCCF">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+        '<span style="font-weight:700;font-size:13px">' + escapeHTML(f.ref || '') + '</span>' +
+        '<span style="font-weight:700">' + fmt(f.ttc) + ' MAD</span>' +
+      '</div>' +
+      '<div style="font-size:12px;color:#6B5F54;margin-bottom:8px">' + escapeHTML(f.date_emission || '') + '</div>' +
+      (f.achat_genere_id
+        ? '<div style="font-size:11px;color:#6E8F4E;font-weight:600">✅ Déjà importée dans vos achats</div>'
+        : '<button onclick="convertirFactureEnAchat(\'' + f.id + '\')" style="width:100%;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📥 Importer dans mes achats</button>') +
+    '</div>';
+  }).join('');
+}
+
+async function convertirFactureEnAchat(factureId) {
+  const facture = (STATE.facturesRecues || []).find(function(x) { return x.id === factureId; });
+  if (!facture) return;
+  try {
+    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + facture.user_id + '&select=*', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    const profils = await rp.json();
+    const fournisseurProfil = (profils && profils[0]) || {};
+
+    const achat = {
+      user_id: (STATE.entrepriseId || sb.user.id),
+      fournisseur: fournisseurProfil.raison || 'Fournisseur Zelto',
+      fournisseur_id: facture.user_id || null,
+      fournisseur_banipay: true,
+      ref_fournisseur: facture.ref || '',
+      chantier: '',
+      date_achat: facture.date_emission || today(),
+      echeance: null,
+      ht: facture.ht, tva: facture.tva, tva_taux: facture.ht > 0 ? Math.round(facture.tva / facture.ht * 100) : 20,
+      ttc: facture.ttc,
+      categorie: 'autre',
+      statut: 'attente',
+      note: 'Importée automatiquement depuis la facture ' + (facture.ref || '') + ' de ' + (fournisseurProfil.raison || ''),
+      lignes: (facture.lignes || []).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u' }; }),
+      pj_data: null,
+    };
+
+    const r = await sb.post('factures_achat', achat);
+    if (r && r.length) {
+      STATE.achats = STATE.achats || [];
+      STATE.achats.unshift(r[0]);
+      facture.achat_genere_id = r[0].id;
+      // Persiste le marquage côté facture (on n'en est pas propriétaire,
+      // même principe que marquer_bc_converti pour les BC reçus).
+      try {
+        await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_facture_importee', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_facture_id: facture.id, p_achat_id: r[0].id })
+        });
+      } catch(e2) {}
+      showToast('✅ Achat créé depuis la facture ' + (facture.ref || ''), 'success');
+      renderFacturesRecues();
+    }
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
+
 async function loadBCRecus() {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bons_commande_recus', {
