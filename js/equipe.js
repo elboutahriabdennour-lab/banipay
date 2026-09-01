@@ -58,7 +58,11 @@ async function accepterMonInvitationEquipe(membreId) {
 
 async function chargerEquipe() {
   try {
-    STATE.membresEquipe = (await sb.get('membres_entreprise', 'entreprise_id=eq.' + sb.user.id + '&order=created_at.desc')) || [];
+    // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe
+    // avec le rôle "admin" ne pouvait ni voir ni gérer sa propre équipe —
+    // la requête filtrait sur son propre id au lieu de celui de
+    // l'entreprise, retournant toujours une liste vide pour lui.
+    STATE.membresEquipe = (await sb.get('membres_entreprise', 'entreprise_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || [];
   } catch(e) { STATE.membresEquipe = []; }
   renderEquipe();
 }
@@ -96,6 +100,7 @@ async function inviterMembreEquipe() {
     if (!r.ok) { const t = await r.text(); showToast('Erreur: ' + t, 'error'); return; }
     el('equipe-email') && (el('equipe-email').value = '');
     showToast('✅ Invitation envoyée à ' + email, 'success');
+    logAudit('equipe', null, 'creation', 'Invitation envoyée à ' + email + ' (rôle : ' + role + ')');
     await chargerEquipe();
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
@@ -105,8 +110,9 @@ async function inviterMembreEquipe() {
 async function revoquerMembreEquipe(id) {
   if (!confirm('Retirer ce membre de l\'équipe ?')) return;
   try {
-    await sb.patch('membres_entreprise', 'id=eq.' + id + '&entreprise_id=eq.' + sb.user.id, { statut: 'revoque' });
+    await sb.patch('membres_entreprise', 'id=eq.' + id + '&entreprise_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'revoque' });
     showToast('Membre retiré', 'success');
+    logAudit('equipe', id, 'suppression', 'Membre retiré de l\'équipe');
     await chargerEquipe();
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
