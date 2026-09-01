@@ -39,9 +39,12 @@ function renderMarche() {
     return '<div class="card" style="margin:0 20px 10px" onclick="ouvrirAnnonceMarche(' + JSON.stringify(a.id) + ')">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
         '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;background:' + (estOffre ? '#EEF3E4' : '#F7EFDC') + ';color:' + (estOffre ? '#55702E' : '#96751B') + '">' + (estOffre ? '🛠️ OFFRE' : '🔍 DEMANDE') + '</span>' +
+        (a.prix ? '<span style="font-size:13px;font-weight:700;color:#0F172A">' + fmt(a.prix) + ' MAD</span>' : '') +
       '</div>' +
+      (a.photo ? '<img src="' + a.photo + '" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px">' : '') +
       '<div style="font-size:14px;font-weight:700;margin-bottom:4px">' + escapeHTML(a.titre || '') + '</div>' +
       '<div style="font-size:12px;color:#6B5F54">' + [a.secteur, a.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
+      (a.date_limite ? '<div style="font-size:11px;color:#B8860B;margin-top:4px">📅 Avant le ' + formatDate(a.date_limite) + '</div>' : '') +
     '</div>';
   }).join('');
 }
@@ -53,10 +56,15 @@ function ouvrirAnnonceMarche(id) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:24px';
   overlay.innerHTML =
-    '<div style="background:#fff;border-radius:18px;padding:24px;max-width:340px;width:100%">' +
-      '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;background:' + (estOffre ? '#EEF3E4' : '#F7EFDC') + ';color:' + (estOffre ? '#55702E' : '#96751B') + '">' + (estOffre ? '🛠️ OFFRE' : '🔍 DEMANDE') + '</span>' +
+    '<div style="background:#fff;border-radius:18px;padding:24px;max-width:340px;width:100%;max-height:85vh;overflow-y:auto">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;background:' + (estOffre ? '#EEF3E4' : '#F7EFDC') + ';color:' + (estOffre ? '#55702E' : '#96751B') + '">' + (estOffre ? '🛠️ OFFRE' : '🔍 DEMANDE') + '</span>' +
+        (a.prix ? '<span style="font-size:16px;font-weight:800;color:#0F172A">' + fmt(a.prix) + ' MAD</span>' : '') +
+      '</div>' +
+      (a.photo ? '<img src="' + a.photo + '" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin:12px 0">' : '') +
       '<div style="font-size:17px;font-weight:700;margin:10px 0 6px">' + escapeHTML(a.titre || '') + '</div>' +
-      '<div style="font-size:12px;color:#9C9186;margin-bottom:14px">' + [a.secteur, a.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
+      '<div style="font-size:12px;color:#9C9186;margin-bottom:6px">' + [a.secteur, a.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
+      (a.date_limite ? '<div style="font-size:12px;color:#B8860B;margin-bottom:14px">📅 Avant le ' + formatDate(a.date_limite) + '</div>' : '') +
       (a.description ? '<div style="font-size:13px;color:#2A2420;margin-bottom:18px;white-space:pre-wrap">' + escapeHTML(a.description) + '</div>' : '') +
       '<div id="marche-contact-zone" style="font-size:12px;color:#9C9186;margin-bottom:10px">Chargement du contact...</div>' +
       '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:10px;background:#F1EEE8;border:none;border-radius:10px;color:#6B5F54;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
@@ -94,6 +102,33 @@ function initNouvelleAnnonce() {
   el('na-description') && (el('na-description').value = '');
   el('na-secteur') && (el('na-secteur').value = '');
   el('na-ville') && (el('na-ville').value = STATE.profil?.ville || '');
+  el('na-prix') && (el('na-prix').value = '');
+  el('na-date-limite') && (el('na-date-limite').value = '');
+  STATE._photoAnnonceData = null;
+  const preview = el('na-photo-preview');
+  if (preview) preview.innerHTML = '';
+}
+
+// Même principe déjà utilisé pour le carnet de chantier — lecture en
+// base64, aperçu immédiat.
+function previewPhotoAnnonce(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    STATE._photoAnnonceData = e.target.result;
+    const preview = el('na-photo-preview');
+    if (preview) preview.innerHTML = '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #E3DCCF">' +
+      '<button type="button" onclick="retirerPhotoAnnonce()" style="width:100%;margin-top:6px;padding:8px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer la photo</button>';
+  };
+  reader.readAsDataURL(file);
+}
+function retirerPhotoAnnonce() {
+  STATE._photoAnnonceData = null;
+  const preview = el('na-photo-preview');
+  if (preview) preview.innerHTML = '';
+  const input = el('na-photo');
+  if (input) input.value = '';
 }
 
 async function sauvegarderAnnonce() {
@@ -109,6 +144,9 @@ async function sauvegarderAnnonce() {
       description: el('na-description')?.value.trim() || null,
       secteur: el('na-secteur')?.value.trim() || null,
       ville: el('na-ville')?.value.trim() || null,
+      prix: el('na-prix')?.value ? parseFloat(el('na-prix').value) : null,
+      date_limite: el('na-date-limite')?.value || null,
+      photo: STATE._photoAnnonceData || null,
       statut: 'active',
     });
     if (!r || !r.length) throw new Error('Erreur serveur');
