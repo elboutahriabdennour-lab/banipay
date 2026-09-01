@@ -309,7 +309,7 @@ function renderRapportMargeChantiers() {
   if (!container) return;
   const chantiers = calculerMargeParChantier();
   if (!chantiers.length) {
-    container.innerHTML = '<div class="empty"><div class="empty-ico">🏗️</div><div class="empty-title">Aucun chantier identifié</div><div>Renseignez un nom de chantier sur vos factures et achats pour voir leur rentabilité ici</div></div>';
+    container.innerHTML = '<div class="empty"><div class="empty-ico">📁</div><div class="empty-title">Aucun chantier / projet identifié</div><div>Renseignez un nom de chantier ou de projet sur vos factures et achats pour voir leur rentabilité ici</div></div>';
     return;
   }
   container.innerHTML = chantiers.map(function(c) {
