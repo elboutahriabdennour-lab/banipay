@@ -64,6 +64,7 @@ function renderHubAchats() {
       { valeur: achats.length, label: 'Factures', couleur: 'var(--ink)' },
     ]) +
     _tuileHub('🧾', 'Factures d\'achat', achats.length + ' facture(s) enregistrée(s)', fmt(totalAchats) + ' MAD', 'var(--brique-dark)', 'var(--brique-light)', "goScreen('achats',null)") +
+    _tuileHub('📥', 'Factures reçues (fournisseurs Zelto)', 'Importez-les sans ressaisie', null, 'var(--zellige)', 'var(--zellige-light)', "window._retourFacturesRecues='hub-achats';loadFacturesRecues();goScreen('factures-recues',null)") +
     _tuileHub('📋', 'Bons de commande envoyés', bcEnAttente ? bcEnAttente + ' en attente de réponse' : 'Tous répondus', null, 'var(--plum)', 'var(--plum-light)', "goScreen('bons-commande-list',null)", bcEnAttente || null) +
     _tuileHub('📝', 'Devis reçus acceptés', devisAConvertir ? 'À convertir en bon de commande' : 'Rien à convertir', null, 'var(--safran-dark)', 'var(--safran-light)', "chargerDevisRecusAcceptes();goScreen('devis-recus',null)", devisAConvertir || null) +
     _lienDiscretHub('📝', 'Demander un devis à un fournisseur', 'var(--plum)', 'ouvrirDemandeDevisFournisseur()');
