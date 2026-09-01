@@ -81,6 +81,7 @@ function genAlertes() {
   // NOUVEAU (chantier ajouté) : alerte de dépassement de budget chantier
   // — voir finance.js pour le calcul.
   if (typeof ajouterNotificationsDepassementChantier === 'function') ajouterNotificationsDepassementChantier();
+  if (typeof ajouterNotificationsContratsAExpirer === 'function') ajouterNotificationsContratsAExpirer();
 
   const ilYA7Jours = new Date();
   ilYA7Jours.setDate(ilYA7Jours.getDate() - 7);
