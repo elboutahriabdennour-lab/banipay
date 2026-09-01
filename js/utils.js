@@ -121,8 +121,14 @@ async function logAudit(typeDoc, docId, action, details) {
   try {
     const uid = sb.user?.id;
     if (!uid) return;
+    // FIX (retour utilisateur) : distingue désormais l'ENTREPRISE
+    // concernée (pour que son propriétaire voie toute l'activité, même
+    // celle de son équipe) de l'ACTEUR réel (qui a vraiment fait
+    // l'action) — auparavant les deux étaient confondus dans "user_id".
     await sb.post('audit_log', {
       user_id: uid,
+      entreprise_id: (STATE.entrepriseId || uid),
+      acteur_email: sb.user?.email || null,
       type_doc: typeDoc,
       doc_id: docId != null ? String(docId) : null,
       action: action,
@@ -132,33 +138,91 @@ async function logAudit(typeDoc, docId, action, details) {
     console.warn('logAudit:', e);
   }
 }
+// NOUVEAU (retour utilisateur) : "Historique" — trace toutes les
+// opérations, filtrable par type, par acteur (qui a fait quoi dans
+// l'équipe), et par date. Interroge désormais par entreprise_id, pas
+// par user_id seul — voir le correctif dans logAudit() ci-dessus.
+STATE._historiqueData = STATE._historiqueData || [];
+STATE.historiqueFiltreActeur = STATE.historiqueFiltreActeur || '';
+STATE.historiqueFiltreType = STATE.historiqueFiltreType || '';
+
 async function renderJournalAudit() {
   const list = el('audit-list');
   if (!list) return;
   list.innerHTML = '<div style="text-align:center;padding:30px;color:#9C9186">⏳ Chargement...</div>';
   try {
-    const uid = sb.user?.id;
-    const logs = await sb.get('audit_log', 'user_id=eq.' + uid + '&order=created_at.desc&limit=100');
-    if (!logs || !logs.length) {
-      list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune activité enregistrée</div></div>';
-      return;
-    }
-    const actionIcons = { creation:'✨', modification:'✏️', suppression:'🗑️', acceptation:'✅', refus:'❌', paiement:'💰' };
-    const actionLabels = { creation:'Création', modification:'Modification', suppression:'Suppression', acceptation:'Acceptation', refus:'Refus', paiement:'Paiement' };
-    const typeLabels = { facture:'Facture', devis:'Devis', client:'Client', produit:'Article' };
-    list.innerHTML = logs.map(function(l) {
-      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #EAE4DA;align-items:flex-start">' +
-        '<div style="width:32px;height:32px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
-        '<div style="flex:1">' +
-          '<div style="font-size:13px;font-weight:600">' + (typeLabels[l.type_doc] || l.type_doc) + ' — ' + (actionLabels[l.action] || l.action) + '</div>' +
-          (l.details ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + escapeHTML(l.details) + '</div>' : '') +
-          '<div style="font-size:11px;color:#9C9186;margin-top:3px">' + formatDateTime(l.created_at) + '</div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+    const entrepriseId = STATE.entrepriseId || sb.user?.id;
+    const logs = await sb.get('audit_log', 'entreprise_id=eq.' + entrepriseId + '&order=created_at.desc&limit=500');
+    STATE._historiqueData = logs || [];
+    remplirFiltreActeurs();
+    appliquerFiltresHistorique();
   } catch(e) {
     list.innerHTML = '<div style="text-align:center;padding:30px;color:#B23A2E">Erreur de chargement</div>';
   }
+}
+
+// Construit la liste des acteurs distincts déjà présents dans
+// l'historique chargé, pour remplir le filtre "Qui" dynamiquement.
+function remplirFiltreActeurs() {
+  const select = el('historique-filtre-acteur');
+  if (!select) return;
+  const acteurs = Array.from(new Set((STATE._historiqueData || []).map(function(l) { return l.acteur_email; }).filter(Boolean))).sort();
+  select.innerHTML = '<option value="">Tous les membres</option>' + acteurs.map(function(a) {
+    return '<option value="' + escapeHTML(a) + '">' + escapeHTML(a) + '</option>';
+  }).join('');
+}
+
+function appliquerFiltresHistorique() {
+  const list = el('audit-list');
+  if (!list) return;
+  let logs = STATE._historiqueData || [];
+
+  const acteur = el('historique-filtre-acteur')?.value || '';
+  const type = el('historique-filtre-type')?.value || '';
+  const dateDebut = el('historique-date-debut')?.value || '';
+  const dateFin = el('historique-date-fin')?.value || '';
+
+  if (acteur) logs = logs.filter(function(l) { return l.acteur_email === acteur; });
+  if (type) logs = logs.filter(function(l) { return l.type_doc === type; });
+  if (dateDebut) logs = logs.filter(function(l) { return new Date(l.created_at) >= new Date(dateDebut); });
+  if (dateFin) logs = logs.filter(function(l) { return new Date(l.created_at) <= new Date(dateFin + 'T23:59:59'); });
+
+  if (!logs.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune activité trouvée</div></div>';
+    return;
+  }
+  const actionIcons = { creation:'✨', modification:'✏️', suppression:'🗑️', acceptation:'✅', refus:'❌', paiement:'💰', renouvellement:'🔄' };
+  const actionLabels = { creation:'Création', modification:'Modification', suppression:'Suppression', acceptation:'Acceptation', refus:'Refus', paiement:'Paiement', renouvellement:'Renouvellement' };
+  const typeLabels = { facture:'Facture', devis:'Devis', client:'Client', produit:'Article', achat:'Achat', abonnement:'Abonnement', equipe:'Équipe', annonce:'Annonce marché' };
+  list.innerHTML = logs.map(function(l) {
+    return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #EAE4DA;align-items:flex-start">' +
+      '<div style="width:32px;height:32px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:13px;font-weight:600">' + (typeLabels[l.type_doc] || l.type_doc) + ' — ' + (actionLabels[l.action] || l.action) + '</div>' +
+        (l.details ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + escapeHTML(l.details) + '</div>' : '') +
+        '<div style="font-size:11px;color:#9C9186;margin-top:3px">' + formatDateTime(l.created_at) + (l.acteur_email ? ' · ' + escapeHTML(l.acteur_email) : '') + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function reinitialiserFiltresHistorique() {
+  if (el('historique-filtre-acteur')) el('historique-filtre-acteur').value = '';
+  if (el('historique-filtre-type')) el('historique-filtre-type').value = '';
+  if (el('historique-date-debut')) el('historique-date-debut').value = '';
+  if (el('historique-date-fin')) el('historique-date-fin').value = '';
+  appliquerFiltresHistorique();
+}
+
+function exporterHistoriqueCSV() {
+  const logs = STATE._historiqueData || [];
+  if (!logs.length) { showToast('Rien à exporter', 'error'); return; }
+  const headers = ['Date', 'Type', 'Action', 'Détails', 'Acteur'];
+  const rows = logs.map(function(l) {
+    return [formatDateTime(l.created_at), l.type_doc || '', l.action || '', l.details || '', l.acteur_email || ''];
+  });
+  telechargerCSV('zelto_historique_' + new Date().toISOString().split('T')[0] + '.csv', headers, rows);
+  showToast('✅ Export téléchargé', 'success');
 }
 function parseCSV(text) {
   const rows = [];
