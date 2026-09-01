@@ -1022,7 +1022,7 @@
       <div id="parrainage-content" style="padding:14px 16px">Chargement...</div>
     </div>
     <button class="p-btn" onclick="window._retourAnnonces='profil';loadMarche();goScreen('marche',null)" style="color:#7C5CA6">🤝 Le Marché</button>
-    <button class="p-btn" onclick="goScreen('audit',null)" style="color:#6B5F54">📋 Journal d'activité</button>
+    <button class="p-btn" onclick="renderJournalAudit();goScreen('audit',null)" style="color:#6B5F54">📋 Historique</button>
     <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
     <button class="p-btn" onclick="goScreen('mon-forfait',null)" style="color:#C9971F">📦 Mon forfait</button>
@@ -2097,8 +2097,34 @@
     <div class="topbar-right"><button class="back-btn" onclick="goScreen('profil')">&#8592;</button></div>
   </div>
   <div class="hero" style="padding-bottom:16px">
-    <div class="hero-lbl">Journal d'activité</div>
-    <div class="hero-sub-txt">Historique des 100 dernières actions</div>
+    <div class="hero-lbl">Historique</div>
+    <div class="hero-sub-txt">Toutes les opérations de l'entreprise, sans exception</div>
+  </div>
+  <!-- NOUVEAU (retour utilisateur) : filtres par acteur (équipe), par
+       type, et par période, plus un export CSV. -->
+  <div style="padding:0 20px 12px">
+    <select id="historique-filtre-acteur" class="f-inp" onchange="appliquerFiltresHistorique()" style="margin-bottom:8px">
+      <option value="">Tous les membres</option>
+    </select>
+    <select id="historique-filtre-type" class="f-inp" onchange="appliquerFiltresHistorique()" style="margin-bottom:8px">
+      <option value="">Tous les types</option>
+      <option value="facture">Factures</option>
+      <option value="devis">Devis</option>
+      <option value="client">Clients</option>
+      <option value="produit">Articles / Stock</option>
+      <option value="achat">Achats</option>
+      <option value="abonnement">Abonnements</option>
+      <option value="equipe">Équipe</option>
+      <option value="annonce">Annonces marché</option>
+    </select>
+    <div class="f-row" style="margin-bottom:8px">
+      <div><label class="f-lbl">Du</label><input type="date" id="historique-date-debut" class="f-inp" onchange="appliquerFiltresHistorique()"></div>
+      <div><label class="f-lbl">Au</label><input type="date" id="historique-date-fin" class="f-inp" onchange="appliquerFiltresHistorique()"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="reinitialiserFiltresHistorique()" style="flex:1;padding:9px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Tout effacer</button>
+      <button onclick="exporterHistoriqueCSV()" style="flex:1;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📥 Exporter CSV</button>
+    </div>
   </div>
   <div style="padding:0 20px" id="audit-list"></div>
   <div class="pb"></div>
