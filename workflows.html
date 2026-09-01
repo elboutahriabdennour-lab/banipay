@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Zelto — Workflows complets</title>
+<style>
+:root{
+  --ink:#2A2420; --ink-soft:#6B5F54; --paper:#F1EEE8; --surface:#FFFFFF;
+  --border:#E3DCCF; --safran:#C9971F; --zellige:#1F6F72; --brique:#B23A2E;
+  --sauge:#6E8F4E; --plum:#7C5CA6; --charcoal:#241F1B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',-apple-system,sans-serif;background:var(--paper);color:var(--ink);line-height:1.5}
+.page{max-width:900px;margin:0 auto;padding:40px 24px 100px}
+header{text-align:center;margin-bottom:50px}
+header .logo{font-size:36px;font-weight:800;margin-bottom:6px}
+header .logo span{color:var(--safran)}
+header h1{font-size:20px;font-weight:600;color:var(--ink-soft)}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:50px}
+.toc h2{font-size:14px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin-bottom:14px}
+.toc ol{padding-left:20px}
+.toc li{margin-bottom:6px;font-size:14px}
+.toc a{color:var(--zellige);text-decoration:none}
+section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:32px;scroll-margin-top:20px}
+section h2{font-size:19px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+section .num{width:28px;height:28px;border-radius:50%;background:var(--charcoal);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+section .desc{font-size:13px;color:var(--ink-soft);margin-bottom:24px}
+.diagram-wrap{overflow-x:auto;margin-bottom:16px}
+svg{display:block;margin:0 auto}
+.note{background:var(--paper);border-left:3px solid var(--safran);border-radius:0 10px 10px 0;padding:12px 16px;font-size:12.5px;color:var(--ink-soft);margin-top:16px}
+text.t{font-size:13px;fill:var(--ink)}
+text.ts{font-size:11px;fill:var(--ink-soft)}
+text.th{font-size:13px;font-weight:700;fill:var(--ink)}
+.box{fill:var(--surface);stroke:var(--border);stroke-width:1}
+.c-purple rect{fill:#EDE6F0;stroke:var(--plum)}
+.c-purple text.th{fill:#4A2E63}
+.c-purple text.ts{fill:#6B4A85}
+.c-coral rect{fill:#F5E4E1;stroke:var(--brique)}
+.c-coral text.th{fill:#7A2A1E}
+.c-coral text.ts{fill:#96382A}
+.c-teal rect{fill:#E9F4F3;stroke:var(--zellige)}
+.c-teal text.th{fill:#154F52}
+.c-teal text.ts{fill:#1F6F72}
+.c-green rect{fill:#EEF3E4;stroke:var(--sauge)}
+.c-green text.th{fill:#3F5426}
+.c-green text.ts{fill:#55702E}
+.c-red rect{fill:#F5E4E1;stroke:var(--brique)}
+.c-red text.th{fill:#7A2A1E}
+.c-red text.ts{fill:#96382A}
+.c-amber rect{fill:#F7EFDC;stroke:var(--safran)}
+.c-amber text.th{fill:#7A5D14}
+.c-amber text.ts{fill:#96751B}
+.c-gray rect{fill:#F1EEE8;stroke:#CDBEA0}
+.c-gray text.th{fill:var(--ink)}
+.c-gray text.ts{fill:var(--ink-soft)}
+.arr{stroke:#9C9186;stroke-width:1.2}
+.arrd{stroke:#9C9186;stroke-width:1;stroke-dasharray:4,3}
+footer{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:40px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div style="text-align:left;margin-bottom:20px"><a href="index.html" style="color:var(--zellige);text-decoration:none;font-size:13px">← Retour à zelto.ma</a></div>
+  <div class="logo">Zel<span>to</span></div>
+  <h1>Tous les workflows, de bout en bout — avec schémas</h1>
+</header>
+
+<div class="toc">
+  <h2>Sommaire</h2>
+  <ol>
+    <li><a href="#w1">Inscription et confirmation d'email</a></li>
+    <li><a href="#w2">Devis envoyé par l'entreprise → Facture</a></li>
+    <li><a href="#w3">Demande de devis initiée par le client</a></li>
+    <li><a href="#w4">Invitation Entreprise → Comptable</a></li>
+    <li><a href="#w5">Invitation Comptable → Entreprise (sens inverse)</a></li>
+    <li><a href="#w6">Marché B2B entre entreprises Zelto</a></li>
+    <li><a href="#w7">Mouvements de stock</a></li>
+    <li><a href="#w8">Les QR codes de l'application</a></li>
+    <li><a href="#w9">Suppression de compte</a></li>
+  </ol>
+</div>
+
+<!-- 1. INSCRIPTION -->
+<section id="w1">
+  <h2><span class="num">1</span> Inscription et confirmation d'email</h2>
+  <div class="desc">Choix du rôle, vérification d'email déjà utilisé avant l'envoi, et gestion des anciens comptes jamais confirmés.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 440" width="780" height="440">
+    <defs><marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="box"><rect x="300" y="20" width="160" height="44" rx="8"/><text class="th" x="380" y="47" text-anchor="middle">Créer un compte</text></g>
+    <line x1="380" y1="64" x2="380" y2="96" class="arr" marker-end="url(#a1)"/>
+    <g class="c-purple"><rect x="180" y="96" width="180" height="44" rx="8"/><text class="th" x="270" y="123" text-anchor="middle">Je suis... Entreprise</text></g>
+    <g class="c-coral"><rect x="400" y="96" width="180" height="44" rx="8"/><text class="th" x="490" y="123" text-anchor="middle">Je suis... Comptable</text></g>
+    <line x1="270" y1="140" x2="270" y2="172" class="arr" marker-end="url(#a1)"/>
+    <line x1="490" y1="140" x2="380" y2="172" class="arr" marker-end="url(#a1)"/>
+    <g class="box"><rect x="260" y="172" width="240" height="44" rx="8"/><text class="t" x="380" y="199" text-anchor="middle">Nom, email, mot de passe</text></g>
+    <line x1="380" y1="216" x2="380" y2="248" class="arr" marker-end="url(#a1)"/>
+    <g class="c-amber"><rect x="260" y="248" width="240" height="56" rx="8"/><text class="th" x="380" y="272" text-anchor="middle">Email déjà utilisé ?</text><text class="ts" x="380" y="290" text-anchor="middle">vérifié avant l'envoi</text></g>
+    <line x1="260" y1="276" x2="150" y2="276" class="arr" marker-end="url(#a1)"/>
+    <g class="c-red"><rect x="10" y="252" width="140" height="48" rx="8"/><text class="ts" x="80" y="272" text-anchor="middle">Message clair</text><text class="ts" x="80" y="288" text-anchor="middle">→ se connecter</text></g>
+    <line x1="380" y1="304" x2="380" y2="336" class="arr" marker-end="url(#a1)"/>
+    <g class="c-teal"><rect x="260" y="336" width="240" height="44" rx="8"/><text class="t" x="380" y="363" text-anchor="middle">Email de confirmation envoyé</text></g>
+    <line x1="380" y1="380" x2="380" y2="400" class="arr" marker-end="url(#a1)"/>
+    <text class="t" x="380" y="418" text-anchor="middle">Lien cliqué → connexion possible</text>
+    <g class="c-gray"><rect x="550" y="150" width="220" height="90" rx="8"/><text class="th" x="660" y="174" text-anchor="middle">Ancien compte</text><text class="ts" x="660" y="192" text-anchor="middle">jamais confirmé, tente</text><text class="ts" x="660" y="208" text-anchor="middle">de se connecter</text><text class="ts" x="660" y="224" text-anchor="middle">→ redirigé ici</text></g>
+    <line x1="580" y1="240" x2="500" y2="272" class="arr" marker-end="url(#a1)"/>
+  </svg>
+  </div>
+  <div class="note">Détection automatique des fautes de frappe courantes (gmail.con → gmail.com) avant l'envoi de l'inscription.</div>
+</section>
+
+<!-- 2. DEVIS -->
+<section id="w2">
+  <h2><span class="num">2</span> Devis envoyé par l'entreprise → Facture</h2>
+  <div class="desc">Le parcours classique : l'entreprise initie, le client répond.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 285" width="780" height="285">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-purple"><rect x="20" y="30" width="170" height="56" rx="8"/><text class="th" x="105" y="52" text-anchor="middle">Nouveau devis</text><text class="ts" x="105" y="70" text-anchor="middle">client, lignes, chantier</text></g>
+    <line x1="190" y1="58" x2="230" y2="58" class="arr" marker-end="url(#a2)"/>
+    <g class="c-purple"><rect x="230" y="30" width="170" height="56" rx="8"/><text class="th" x="315" y="52" text-anchor="middle">Lien envoyé</text><text class="ts" x="315" y="70" text-anchor="middle">WhatsApp, email</text></g>
+    <line x1="400" y1="58" x2="440" y2="58" class="arr" marker-end="url(#a2)"/>
+    <g class="c-gray"><rect x="440" y="30" width="170" height="56" rx="8"/><text class="th" x="525" y="52" text-anchor="middle">Client consulte</text><text class="ts" x="525" y="70" text-anchor="middle">sans compte requis</text></g>
+    <line x1="525" y1="86" x2="525" y2="118" class="arr" marker-end="url(#a2)"/>
+    <line x1="490" y1="140" x2="330" y2="140" stroke="#9C9186" stroke-width="1"/>
+    <g class="c-red"><rect x="270" y="112" width="160" height="56" rx="8"/><text class="th" x="350" y="140" text-anchor="middle">Refusé</text><text class="ts" x="350" y="158" text-anchor="middle">fin du parcours</text></g>
+    <g class="c-green"><rect x="450" y="112" width="160" height="56" rx="8"/><text class="th" x="530" y="140" text-anchor="middle">Accepté</text><text class="ts" x="530" y="158" text-anchor="middle">par le client</text></g>
+    <line x1="430" y1="140" x2="450" y2="140" class="arr" marker-end="url(#a2)"/>
+    <line x1="530" y1="168" x2="530" y2="200" class="arr" marker-end="url(#a2)"/>
+    <g class="c-teal"><rect x="450" y="200" width="160" height="56" rx="8"/><text class="th" x="530" y="222" text-anchor="middle">Conversion facture</text><text class="ts" x="530" y="240" text-anchor="middle">un clic, sans ressaisie</text></g>
+    <line x1="450" y1="228" x2="410" y2="228" class="arr" marker-end="url(#a2)"/>
+    <g class="c-amber"><rect x="220" y="200" width="180" height="56" rx="8"/><text class="th" x="310" y="222" text-anchor="middle">Suivi paiement</text><text class="ts" x="310" y="240" text-anchor="middle">relances si en retard</text></g>
+  </g></svg>
+  </div>
+</section>
+
+<!-- 3. DEMANDE DE DEVIS CLIENT -->
+<section id="w3">
+  <h2><span class="num">3</span> Demande de devis initiée par le client</h2>
+  <div class="desc">Sens inverse du précédent — un visiteur du profil public demande un devis, sans relation préalable.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 247" width="780" height="247">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-gray"><rect x="20" y="30" width="200" height="56" rx="8"/><text class="th" x="120" y="52" text-anchor="middle">Visiteur</text><text class="ts" x="120" y="70" text-anchor="middle">consulte un profil public Zelto</text></g>
+    <line x1="220" y1="58" x2="260" y2="58" class="arr" marker-end="url(#a3)"/>
+    <g class="c-gray"><rect x="260" y="30" width="200" height="56" rx="8"/><text class="th" x="360" y="52" text-anchor="middle">"Demander un devis"</text><text class="ts" x="360" y="70" text-anchor="middle">nom, besoin décrit</text></g>
+    <line x1="460" y1="58" x2="500" y2="58" class="arr" marker-end="url(#a3)"/>
+    <g class="c-amber"><rect x="500" y="30" width="200" height="56" rx="8"/><text class="th" x="600" y="52" text-anchor="middle">Demande enregistrée</text><text class="ts" x="600" y="70" text-anchor="middle">table demandes_devis</text></g>
+    <line x1="600" y1="86" x2="600" y2="118" class="arr" marker-end="url(#a3)"/>
+    <g class="c-purple"><rect x="500" y="118" width="200" height="56" rx="8"/><text class="th" x="600" y="140" text-anchor="middle">Entreprise reçoit</text><text class="ts" x="600" y="158" text-anchor="middle">dans sa liste de demandes</text></g>
+    <line x1="500" y1="146" x2="460" y2="146" stroke="#9C9186" stroke-width="1"/>
+    <line x1="460" y1="146" x2="460" y2="200" stroke="#9C9186" stroke-width="1"/>
+    <line x1="460" y1="200" x2="240" y2="200" class="arr" marker-end="url(#a3)"/>
+    <g class="c-teal"><rect x="20" y="172" width="220" height="56" rx="8"/><text class="th" x="130" y="194" text-anchor="middle">Transformée en devis</text><text class="ts" x="130" y="212" text-anchor="middle">reprend le workflow n°2</text></g>
+  </g></svg>
+  </div>
+</section>
+
+<!-- 4. INVITATION ENTREPRISE VERS COMPTABLE -->
+<section id="w4">
+  <h2><span class="num">4</span> Invitation Entreprise → Comptable</h2>
+  <div class="desc">L'entreprise choisit son comptable et lui envoie une invitation.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 323" width="780" height="323">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-purple"><rect x="20" y="30" width="200" height="56" rx="8"/><text class="th" x="120" y="52" text-anchor="middle">Entreprise invite</text><text class="ts" x="120" y="70" text-anchor="middle">saisit l'email du comptable</text></g>
+    <line x1="220" y1="58" x2="260" y2="58" class="arr" marker-end="url(#a4)"/>
+    <g class="c-coral"><rect x="260" y="30" width="220" height="56" rx="8"/><text class="th" x="370" y="52" text-anchor="middle">Notification reçue</text><text class="ts" x="370" y="70" text-anchor="middle">côté comptable</text></g>
+    <line x1="370" y1="86" x2="370" y2="118" class="arr" marker-end="url(#a4)"/>
+    <g class="c-coral"><rect x="240" y="118" width="260" height="56" rx="8"/><text class="th" x="370" y="140" text-anchor="middle">Ouverture de la notification</text><text class="ts" x="370" y="158" text-anchor="middle">raison sociale, secteur, ville, tel</text></g>
+    <line x1="370" y1="174" x2="370" y2="206" class="arr" marker-end="url(#a4)"/>
+    <g class="c-green"><rect x="60" y="206" width="160" height="44" rx="8"/><text class="th" x="140" y="233" text-anchor="middle">Accepter</text></g>
+    <g class="c-gray"><rect x="290" y="206" width="160" height="44" rx="8"/><text class="th" x="370" y="233" text-anchor="middle">Plus tard</text></g>
+    <g class="c-red"><rect x="520" y="206" width="160" height="44" rx="8"/><text class="th" x="600" y="233" text-anchor="middle">Refuser</text></g>
+    <line x1="320" y1="174" x2="140" y2="206" class="arr" marker-end="url(#a4)"/>
+    <line x1="370" y1="174" x2="370" y2="206" class="arr" marker-end="url(#a4)"/>
+    <line x1="420" y1="174" x2="600" y2="206" class="arr" marker-end="url(#a4)"/>
+    <line x1="140" y1="250" x2="140" y2="282" class="arr" marker-end="url(#a4)"/>
+    <g class="c-teal"><rect x="40" y="282" width="200" height="44" rx="8"/><text class="t" x="140" y="309" text-anchor="middle">Accès partagé actif</text></g>
+    <line x1="370" y1="250" x2="370" y2="282" class="arr" marker-end="url(#a4)"/>
+    <g class="c-gray"><rect x="270" y="282" width="200" height="44" rx="8"/><text class="ts" x="370" y="309" text-anchor="middle">reste en attente</text></g>
+  </g></svg>
+  </div>
+</section>
+
+<!-- 5. INVITATION COMPTABLE VERS ENTREPRISE -->
+<section id="w5">
+  <h2><span class="num">5</span> Invitation Comptable → Entreprise (sens inverse)</h2>
+  <div class="desc">Le comptable peut aussi être à l'initiative : il invite une entreprise à devenir sa cliente, depuis son propre profil.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 247" width="780" height="247">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-coral"><rect x="20" y="30" width="200" height="56" rx="8"/><text class="th" x="120" y="52" text-anchor="middle">Comptable invite</text><text class="ts" x="120" y="70" text-anchor="middle">depuis son profil</text></g>
+    <line x1="220" y1="58" x2="260" y2="58" class="arr" marker-end="url(#a5)"/>
+    <g class="c-purple"><rect x="260" y="30" width="220" height="56" rx="8"/><text class="th" x="370" y="52" text-anchor="middle">Entreprise notifiée</text><text class="ts" x="370" y="70" text-anchor="middle">même mécanisme, sens inversé</text></g>
+    <line x1="370" y1="86" x2="370" y2="118" class="arr" marker-end="url(#a5)"/>
+    <g class="c-green"><rect x="220" y="118" width="160" height="44" rx="8"/><text class="th" x="300" y="145" text-anchor="middle">Accepte</text></g>
+    <g class="c-red"><rect x="440" y="118" width="160" height="44" rx="8"/><text class="th" x="520" y="145" text-anchor="middle">Refuse</text></g>
+    <line x1="330" y1="174" x2="300" y2="162" class="arr" marker-end="url(#a5)"/>
+    <line x1="410" y1="174" x2="520" y2="162" class="arr" marker-end="url(#a5)"/>
+    <line x1="300" y1="162" x2="300" y2="194" class="arr" marker-end="url(#a5)"/>
+    <g class="c-teal"><rect x="200" y="194" width="200" height="44" rx="8"/><text class="t" x="300" y="221" text-anchor="middle">Même accès partagé</text></g>
+  </g></svg>
+  </div>
+  <div class="note">Techniquement, la même table d'invitation est utilisée dans les deux sens (colonne <em>sens</em> : entreprise_vers_comptable ou comptable_vers_entreprise) — l'écran de réception et de décision reste identique.</div>
+</section>
+
+<!-- 6. MARCHE B2B -->
+<section id="w6">
+  <h2><span class="num">6</span> Marché B2B entre entreprises Zelto</h2>
+  <div class="desc">Un bon de commande adressé à un fournisseur Zelto revient automatiquement en achat, sans double saisie.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 323" width="780" height="323">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-purple"><rect x="20" y="30" width="200" height="56" rx="8"/><text class="th" x="120" y="52" text-anchor="middle">Entreprise A</text><text class="ts" x="120" y="70" text-anchor="middle">bon de commande</text></g>
+    <line x1="220" y1="58" x2="260" y2="58" class="arr" marker-end="url(#a6)"/>
+    <g class="c-coral"><rect x="260" y="30" width="220" height="56" rx="8"/><text class="th" x="370" y="52" text-anchor="middle">Fournisseur choisi</text><text class="ts" x="370" y="70" text-anchor="middle">via l'annuaire Zelto</text></g>
+    <line x1="480" y1="58" x2="520" y2="58" class="arr" marker-end="url(#a6)"/>
+    <g class="c-coral"><rect x="520" y="30" width="200" height="56" rx="8"/><text class="th" x="620" y="52" text-anchor="middle">Entreprise B</text><text class="ts" x="620" y="70" text-anchor="middle">reçoit dans son compte</text></g>
+    <line x1="620" y1="86" x2="620" y2="118" class="arr" marker-end="url(#a6)"/>
+    <g class="c-teal"><rect x="520" y="118" width="200" height="56" rx="8"/><text class="th" x="620" y="140" text-anchor="middle">Convertit en facture</text><text class="ts" x="620" y="158" text-anchor="middle">un clic, tout pré-rempli</text></g>
+    <line x1="520" y1="146" x2="480" y2="146" stroke="#9C9186" stroke-width="1"/>
+    <line x1="480" y1="146" x2="480" y2="206" stroke="#9C9186" stroke-width="1"/>
+    <line x1="480" y1="206" x2="220" y2="206" class="arr" marker-end="url(#a6)"/>
+    <g class="c-purple"><rect x="20" y="178" width="200" height="56" rx="8"/><text class="th" x="120" y="200" text-anchor="middle">Entreprise A</text><text class="ts" x="120" y="218" text-anchor="middle">Factures reçues</text></g>
+    <line x1="120" y1="234" x2="120" y2="266" class="arr" marker-end="url(#a6)"/>
+    <g class="c-green"><rect x="20" y="266" width="200" height="44" rx="8"/><text class="t" x="120" y="293" text-anchor="middle">Importée en achat</text></g>
+    <line x1="620" y1="174" x2="620" y2="290" stroke="#9C9186" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="620" y1="290" x2="250" y2="290" class="arrd"/>
+    <text class="ts" x="480" y="284">notification au fournisseur une fois importée</text>
+  </g></svg>
+  </div>
+</section>
+
+<!-- 7. STOCK -->
+<section id="w7">
+  <h2><span class="num">7</span> Mouvements de stock</h2>
+  <div class="desc">Le stock varie automatiquement selon les actions faites ailleurs dans l'app — jamais besoin d'un ajustement manuel pour l'usage courant.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 304" width="780" height="304">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a7" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-gray"><rect x="320" y="130" width="180" height="60" rx="8"/><text class="th" x="410" y="153" text-anchor="middle">Produit</text><text class="ts" x="410" y="171" text-anchor="middle">quantité en stock</text></g>
+    <g class="c-red"><rect x="20" y="30" width="200" height="56" rx="8"/><text class="th" x="120" y="52" text-anchor="middle">Facture créée</text><text class="ts" x="120" y="70" text-anchor="middle">décrément automatique</text></g>
+    <line x1="220" y1="58" x2="320" y2="150" class="arr" marker-end="url(#a7)"/>
+    <g class="c-green"><rect x="20" y="234" width="200" height="56" rx="8"/><text class="th" x="120" y="256" text-anchor="middle">Facture annulée</text><text class="ts" x="120" y="274" text-anchor="middle">incrément automatique</text></g>
+    <line x1="220" y1="262" x2="320" y2="175" class="arr" marker-end="url(#a7)"/>
+    <g class="c-teal"><rect x="600" y="30" width="200" height="56" rx="8"/><text class="th" x="700" y="52" text-anchor="middle">Achat enregistré</text><text class="ts" x="700" y="70" text-anchor="middle">incrément manuel possible</text></g>
+    <line x1="600" y1="58" x2="500" y2="150" class="arr" marker-end="url(#a7)"/>
+    <g class="c-amber"><rect x="600" y="234" width="200" height="56" rx="8"/><text class="th" x="700" y="256" text-anchor="middle">Ajustement manuel</text><text class="ts" x="700" y="274" text-anchor="middle">inventaire, casse</text></g>
+    <line x1="600" y1="262" x2="500" y2="175" class="arr" marker-end="url(#a7)"/>
+    <line x1="410" y1="190" x2="410" y2="222" class="arr" marker-end="url(#a7)"/>
+    <g class="box"><rect x="290" y="222" width="240" height="44" rx="8"/><text class="t" x="410" y="249" text-anchor="middle">Alerte si rupture de stock</text></g>
+  </g></svg>
+  </div>
+</section>
+
+<!-- 8. QR CODES -->
+<section id="w8">
+  <h2><span class="num">8</span> Les QR codes de l'application</h2>
+  <div class="desc">Quatre usages distincts, chacun avec un objectif différent.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 380" width="780" height="380">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a8" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+
+    <g class="c-purple"><rect x="20" y="30" width="220" height="70" rx="8"/><text class="th" x="130" y="55" text-anchor="middle">QR profil entreprise</text><text class="ts" x="130" y="73" text-anchor="middle">généré, à partager</text><text class="ts" x="130" y="89" text-anchor="middle">scanné → import client</text></g>
+
+    <g class="c-coral"><rect x="300" y="30" width="220" height="70" rx="8"/><text class="th" x="410" y="55" text-anchor="middle">QR invitation comptable</text><text class="ts" x="410" y="73" text-anchor="middle">généré, à partager</text><text class="ts" x="410" y="89" text-anchor="middle">lien direct vers l'invitation</text></g>
+
+    <g class="c-teal"><rect x="580" y="30" width="220" height="70" rx="8"/><text class="th" x="690" y="55" text-anchor="middle">QR sur les documents</text><text class="ts" x="690" y="73" text-anchor="middle">imprimé sur facture/devis</text><text class="ts" x="690" y="89" text-anchor="middle">renvoie vers la version en ligne</text></g>
+
+    <g class="c-amber"><rect x="300" y="150" width="220" height="70" rx="8"/><text class="th" x="410" y="175" text-anchor="middle">Scan (caméra)</text><text class="ts" x="410" y="193" text-anchor="middle">côté achats</text><text class="ts" x="410" y="209" text-anchor="middle">identifie une facture reçue</text></g>
+
+    <line x1="130" y1="100" x2="130" y2="132" class="arrd"/>
+    <text class="ts" x="130" y="126" text-anchor="middle" transform="rotate(0)"></text>
+    <line x1="130" y1="132" x2="380" y2="184" class="arr" marker-end="url(#a8)"/>
+    <text class="ts" x="220" y="140">personne scanne avec l'app</text>
+
+    <line x1="690" y1="100" x2="690" y2="184" class="arrd"/>
+    <line x1="690" y1="184" x2="520" y2="184" class="arr" marker-end="url(#a8)"/>
+
+    <g class="box"><rect x="300" y="270" width="220" height="56" rx="8"/><text class="t" x="410" y="292" text-anchor="middle">Ajout automatique</text><text class="ts" x="410" y="310" text-anchor="middle">client ou achat, sans saisie</text></g>
+    <line x1="410" y1="220" x2="410" y2="270" class="arr" marker-end="url(#a8)"/>
+  </g></svg>
+  </div>
+  <div class="note">Génération réelle via l'API qrserver.com — remplace une ancienne version dessinée à la main, purement décorative et jamais scannable.</div>
+</section>
+
+<!-- 9. SUPPRESSION -->
+<section id="w9">
+  <h2><span class="num">9</span> Suppression de compte</h2>
+  <div class="desc">Le parcours le plus complexe de l'application — nettoyage complet des données et suppression réelle du compte de connexion.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 400" width="780" height="400">
+    <g transform="scale(0.9512)">
+    <defs><marker id="a9" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="box"><rect x="310" y="20" width="200" height="44" rx="8"/><text class="th" x="410" y="47" text-anchor="middle">Supprimer mon compte</text></g>
+    <line x1="410" y1="64" x2="410" y2="96" class="arr" marker-end="url(#a9)"/>
+    <g class="c-gray"><rect x="300" y="96" width="220" height="56" rx="8"/><text class="th" x="410" y="118" text-anchor="middle">24 tables nettoyées</text><text class="ts" x="410" y="136" text-anchor="middle">côté application</text></g>
+    <line x1="410" y1="152" x2="410" y2="184" class="arr" marker-end="url(#a9)"/>
+    <g class="c-purple"><rect x="280" y="184" width="260" height="56" rx="8"/><text class="th" x="410" y="206" text-anchor="middle">Fonction serveur dédiée</text><text class="ts" x="410" y="224" text-anchor="middle">droits complets, contourne les RLS</text></g>
+    <line x1="410" y1="240" x2="410" y2="272" class="arr" marker-end="url(#a9)"/>
+    <g class="c-amber"><rect x="220" y="272" width="200" height="56" rx="8"/><text class="th" x="320" y="294" text-anchor="middle">Tables sans cascade</text><text class="ts" x="320" y="312" text-anchor="middle">factures, conversations...</text></g>
+    <g class="c-coral"><rect x="480" y="272" width="220" height="56" rx="8"/><text class="th" x="590" y="294" text-anchor="middle">Si comptable</text><text class="ts" x="590" y="312" text-anchor="middle">entreprises liées notifiées</text></g>
+    <line x1="410" y1="240" x2="590" y2="272" class="arr" marker-end="url(#a9)"/>
+    <line x1="320" y1="328" x2="320" y2="360" class="arr" marker-end="url(#a9)"/>
+    <line x1="590" y1="328" x2="410" y2="360" class="arr" marker-end="url(#a9)"/>
+    <g class="c-red"><rect x="220" y="360" width="380" height="44" rx="8"/><text class="th" x="410" y="387" text-anchor="middle">Compte de connexion réellement supprimé</text></g>
+  </g></svg>
+  </div>
+</section>
+
+<footer>Zelto — document de référence, reflète l'état réel de l'application</footer>
+</div>
+</body>
+</html>
