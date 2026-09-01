@@ -146,6 +146,33 @@ STATE._historiqueData = STATE._historiqueData || [];
 STATE.historiqueFiltreActeur = STATE.historiqueFiltreActeur || '';
 STATE.historiqueFiltreType = STATE.historiqueFiltreType || '';
 
+// NOUVEAU (retour utilisateur) : vérifie si la personne connectée est
+// administratrice de l'entreprise concernée — soit parce qu'elle utilise
+// directement son propre compte, soit parce qu'elle a le rôle "admin"
+// dans l'équipe. Vraie protection en base (RLS) en complément — voir
+// migration_historique_admin.sql — cette fonction n'est qu'un confort
+// d'affichage, pas la vraie barrière de sécurité.
+async function estAdminEntreprise() {
+  const entrepriseId = STATE.entrepriseId || sb.user?.id;
+  if (entrepriseId === sb.user?.id) return true;
+  try {
+    const membres = await sb.get('membres_entreprise', 'entreprise_id=eq.' + entrepriseId + '&user_id=eq.' + sb.user.id + '&statut=eq.actif');
+    return !!(membres && membres[0] && membres[0].role === 'admin');
+  } catch(e) {
+    return false;
+  }
+}
+
+async function ouvrirHistoriqueSiAdmin() {
+  const estAdmin = await estAdminEntreprise();
+  if (!estAdmin) {
+    showToast('🔒 Seul un administrateur peut consulter l\'historique complet', 'error');
+    return;
+  }
+  renderJournalAudit();
+  goScreen('audit', null);
+}
+
 async function renderJournalAudit() {
   const list = el('audit-list');
   if (!list) return;
