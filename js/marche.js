@@ -113,6 +113,7 @@ async function sauvegarderAnnonce() {
     });
     if (!r || !r.length) throw new Error('Erreur serveur');
     showToast('✅ Annonce publiée !', 'success');
+    logAudit('annonce', r[0].id, 'creation', titre);
     goScreen('marche', null);
     loadMarche();
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
