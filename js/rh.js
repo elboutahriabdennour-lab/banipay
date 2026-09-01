@@ -5,24 +5,19 @@
 // pas de bulletin de paie légal, pas de calcul de cotisations CNSS/AMO ni
 // de retenue à la source IR. Juste un carnet d'informations pour
 // l'entreprise, pas un outil de déclaration officielle.
-
 STATE.employes = STATE.employes || [];
-
 async function loadEmployes() {
   try {
     STATE.employes = (await sb.get('employes', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=date_entree.desc')) || [];
   } catch(e) { STATE.employes = []; }
   renderEmployes();
 }
-
 function renderEmployes() {
   const container = el('employes-liste');
   if (!container) return;
   const employes = STATE.employes || [];
-
   const actifs = employes.filter(function(e) { return e.statut === 'actif'; });
   const masseSalariale = actifs.reduce(function(s, e) { return s + (Number(e.salaire_mensuel) || 0); }, 0);
-
   const resume = el('employes-resume');
   if (resume) {
     resume.innerHTML =
@@ -31,7 +26,6 @@ function renderEmployes() {
         '<div style="background:#FBF0DA;border-radius:12px;padding:12px"><div style="font-size:11px;color:#A67A16;font-weight:600">💰 Masse salariale/mois</div><div style="font-size:18px;font-weight:800;color:#A67A16">' + fmt(masseSalariale) + ' MAD</div></div>' +
       '</div>';
   }
-
   container.innerHTML = !employes.length
     ? '<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun employé enregistré</div></div>'
     : employes.map(function(e) {
@@ -46,10 +40,13 @@ function renderEmployes() {
         '</div>';
       }).join('');
 }
-
 function initNouvelEmploye() {
   STATE._employeEnEdition = null;
   el('emp-nom') && (el('emp-nom').value = '');
+  el('emp-cin') && (el('emp-cin').value = '');
+  el('emp-cnss') && (el('emp-cnss').value = '');
+  el('emp-date-naissance') && (el('emp-date-naissance').value = '');
+  el('emp-adresse') && (el('emp-adresse').value = '');
   el('emp-poste') && (el('emp-poste').value = '');
   el('emp-tel') && (el('emp-tel').value = '');
   el('emp-date-entree') && (el('emp-date-entree').value = today());
@@ -59,12 +56,15 @@ function initNouvelEmploye() {
   const titre = el('emp-form-titre');
   if (titre) titre.textContent = 'Nouvel employé';
 }
-
 function ouvrirFicheEmploye(id) {
   const e = (STATE.employes || []).find(function(x) { return x.id === id; });
   if (!e) return;
   STATE._employeEnEdition = id;
   el('emp-nom') && (el('emp-nom').value = e.nom || '');
+  el('emp-cin') && (el('emp-cin').value = e.cin || '');
+  el('emp-cnss') && (el('emp-cnss').value = e.cnss || '');
+  el('emp-date-naissance') && (el('emp-date-naissance').value = e.date_naissance || '');
+  el('emp-adresse') && (el('emp-adresse').value = e.adresse || '');
   el('emp-poste') && (el('emp-poste').value = e.poste || '');
   el('emp-tel') && (el('emp-tel').value = e.telephone || '');
   el('emp-date-entree') && (el('emp-date-entree').value = e.date_entree || '');
@@ -77,16 +77,21 @@ function ouvrirFicheEmploye(id) {
   if (titre) titre.textContent = 'Fiche employé';
   goScreen('nouvel-employe', null);
 }
-
 async function sauvegarderEmploye() {
   const nom = (el('emp-nom')?.value || '').trim();
   if (!nom) { showToast('Le nom est obligatoire', 'error'); return; }
-
+  // NOUVEAU (retour utilisateur) : même validation déjà éprouvée pour le
+  // CNSS de l'entreprise elle-même — chiffres uniquement.
+  const cnss = el('emp-cnss')?.value.trim() || '';
+  if (cnss && !/^\d+$/.test(cnss)) { showToast('❌ Le numéro CNSS ne doit contenir que des chiffres', 'error'); return; }
   const joursCoches = Array.from(document.querySelectorAll('.emp-jour:checked')).map(function(cb) { return cb.value; });
-
   const data = {
     user_id: (STATE.entrepriseId || sb.user.id),
     nom: nom,
+    cin: el('emp-cin')?.value.trim() || '',
+    cnss: cnss,
+    date_naissance: el('emp-date-naissance')?.value || null,
+    adresse: el('emp-adresse')?.value.trim() || '',
     poste: el('emp-poste')?.value.trim() || '',
     telephone: el('emp-tel')?.value.trim() || '',
     date_entree: el('emp-date-entree')?.value || null,
@@ -95,7 +100,6 @@ async function sauvegarderEmploye() {
     statut: el('emp-statut')?.value || 'actif',
     notes: el('emp-notes')?.value.trim() || '',
   };
-
   try {
     if (STATE._employeEnEdition) {
       await sb.patch('employes', 'id=eq.' + STATE._employeEnEdition + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), data);
@@ -112,7 +116,6 @@ async function sauvegarderEmploye() {
     showToast('Erreur: ' + e.message, 'error');
   }
 }
-
 async function supprimerEmploye() {
   if (!STATE._employeEnEdition) return;
   if (!confirm('Retirer cet employé du registre ?')) return;
