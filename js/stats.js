@@ -10,9 +10,28 @@
 // — jusqu'ici, tout se calculait systématiquement sur l'historique
 // complet, impossible de voir "ce mois-ci" ou "cette année" séparément.
 STATE.statsPeriode = STATE.statsPeriode || 'tout';
+// NOUVEAU (retour utilisateur) : filtres croisés — cliquer sur un client
+// ou un produit filtre tout le reste du tableau de bord.
+STATE.statsFiltreClient = STATE.statsFiltreClient || null;
+STATE.statsFiltreProduit = STATE.statsFiltreProduit || null;
+
 function filtrerParPeriode(items, periode, champDate) {
   if (periode === 'tout') return items;
   const maintenant = new Date();
+  // NOUVEAU : période personnalisée — bornes inclusives, ignore les
+  // éléments sans date exploitable, même prudence que les autres modes.
+  if (periode === 'personnalisee') {
+    const debut = el('stats-date-debut')?.value;
+    const fin = el('stats-date-fin')?.value;
+    if (!debut && !fin) return items;
+    return items.filter(function(x) {
+      const dt = new Date(x[champDate] || '');
+      if (isNaN(dt.getTime())) return false;
+      if (debut && dt < new Date(debut)) return false;
+      if (fin && dt > new Date(fin + 'T23:59:59')) return false;
+      return true;
+    });
+  }
   return items.filter(function(x) {
     const dt = new Date(x[champDate] || '');
     if (isNaN(dt.getTime())) return false;
@@ -29,10 +48,62 @@ function filtrerParPeriode(items, periode, champDate) {
     return true;
   });
 }
+function appliquerDatesPersonnalisees() {
+  renderStats();
+  if (typeof renderRapportMargeChantiers === 'function') renderRapportMargeChantiers();
+}
+// NOUVEAU : applique les filtres croisés (client/produit) par-dessus le
+// filtre de période — factorisé ici pour être utilisé identiquement
+// partout (totaux, graphique, tops, répartition).
+function appliquerFiltresCroisesStats(factures) {
+  let res = factures;
+  if (STATE.statsFiltreClient) {
+    res = res.filter(function(f) { return f.client === STATE.statsFiltreClient; });
+  }
+  if (STATE.statsFiltreProduit) {
+    res = res.filter(function(f) {
+      const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
+      return lignes.some(function(l) { return (l.desc || '').trim() === STATE.statsFiltreProduit; });
+    });
+  }
+  return res;
+}
+function filtrerParClientStats(nomClient) {
+  STATE.statsFiltreClient = (STATE.statsFiltreClient === nomClient) ? null : nomClient;
+  renderStats();
+}
+function filtrerParProduitStats(desc) {
+  STATE.statsFiltreProduit = (STATE.statsFiltreProduit === desc) ? null : desc;
+  renderStats();
+}
+function retirerFiltreClientStats() { STATE.statsFiltreClient = null; renderStats(); }
+function retirerFiltreProduitStats() { STATE.statsFiltreProduit = null; renderStats(); }
+function effacerFiltresStats() {
+  STATE.statsFiltreClient = null;
+  STATE.statsFiltreProduit = null;
+  renderStats();
+}
+function renderFiltresActifsStats() {
+  const zone = el('stats-filtres-actifs');
+  if (!zone) return;
+  const chips = [];
+  if (STATE.statsFiltreClient) chips.push({ label: '👤 ' + STATE.statsFiltreClient, fn: 'retirerFiltreClientStats' });
+  if (STATE.statsFiltreProduit) chips.push({ label: '📦 ' + STATE.statsFiltreProduit, fn: 'retirerFiltreProduitStats' });
+  if (!chips.length) { zone.innerHTML = ''; return; }
+  zone.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
+    chips.map(function(c) {
+      return '<span style="background:#EFF6FF;color:#2563EB;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px">' + escapeHTML(c.label) + '<span onclick="' + c.fn + '()" style="cursor:pointer;font-weight:800">✕</span></span>';
+    }).join('') +
+    '<span onclick="effacerFiltresStats()" style="font-size:11px;color:#94A3B8;text-decoration:underline;cursor:pointer">Tout effacer</span>' +
+  '</div>';
+}
 function changerPeriodeStats(periode, btn) {
   STATE.statsPeriode = periode;
   document.querySelectorAll('#stats-periode-tabs .ftab').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
+  // NOUVEAU : affiche/masque le sélecteur de dates selon le mode choisi.
+  const zoneDate = el('stats-dates-perso');
+  if (zoneDate) zoneDate.style.display = (periode === 'personnalisee') ? 'flex' : 'none';
   renderStats();
   if (typeof renderRapportMargeChantiers === 'function') renderRapportMargeChantiers();
 }
@@ -42,7 +113,9 @@ function renderStats() {
   // "months" plus bas, construit séparément à partir de STATE.factures
   // directement) — seuls les totaux/répartition/tops respectent le
   // filtre de période choisi.
-  const f = filtrerParPeriode(STATE.factures || [], STATE.statsPeriode, 'date_emission');
+  let f = filtrerParPeriode(STATE.factures || [], STATE.statsPeriode, 'date_emission');
+  f = appliquerFiltresCroisesStats(f);
+  renderFiltresActifsStats();
   const d = STATE.devis || [];
   const now = new Date();
   const thisMonth = now.getMonth();
@@ -155,18 +228,18 @@ function renderStats() {
       <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;margin-top:12px">
         <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">🏆 Top clients</div>
         ${topClients.map((c,i)=>`
-          <div style="margin-bottom:12px">
+          <div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParClientStats(${JSON.stringify(c.nom)})">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="display:flex;align-items:center;gap:8px">
                 <div style="width:22px;height:22px;border-radius:50%;background:${['#2563EB','#059669','#D97706','#9333EA','#EF4444'][i]};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${i+1}</div>
-                <span style="font-size:12px;font-weight:600">${escapeHTML(c.nom)}</span>
+                <span style="font-size:12px;font-weight:600;${STATE.statsFiltreClient===c.nom?'text-decoration:underline':''}">${escapeHTML(c.nom)}</span>
               </div>
               <span style="font-size:12px;font-weight:700;color:#0F172A">${fmt(c.ca)} MAD</span>
             </div>
             <div style="height:5px;background:#F1F5F9;border-radius:3px">
               <div style="height:100%;background:${['#2563EB','#059669','#D97706','#9333EA','#EF4444'][i]};border-radius:3px;width:${Math.round(c.ca/maxClient*100)}%;transition:width 0.6s"></div>
             </div>
-            <div style="font-size:10px;color:#94A3B8;margin-top:2px">${c.count} facture(s)</div>
+            <div style="font-size:10px;color:#94A3B8;margin-top:2px">${c.count} facture(s) · toucher pour filtrer</div>
           </div>
         `).join('')}
       </div>`;
@@ -200,6 +273,79 @@ function renderStats() {
           <div style="background:#EF4444;width:${Math.round(retard/total2*100)}%;transition:width 0.6s"></div>
         </div>
       </div>`;
+  }
+
+  // NOUVEAU (retour utilisateur) : Top produits — regroupement par
+  // description de ligne (pas d'identifiant produit strict sur toutes
+  // les lignes), sur les mêmes factures déjà filtrées (période + client).
+  const produitEl = el('sa-top-produits');
+  if (produitEl) {
+    const produitMap = {};
+    f.forEach(function(fac) {
+      const lignes = typeof fac.lignes === 'string' ? JSON.parse(fac.lignes || '[]') : (fac.lignes || []);
+      lignes.forEach(function(l) {
+        const desc = (l.desc || '').trim();
+        if (!desc) return;
+        if (!produitMap[desc]) produitMap[desc] = { nom: desc, montant: 0, qte: 0 };
+        produitMap[desc].montant += (Number(l.qte)||0) * (Number(l.pu)||0);
+        produitMap[desc].qte += Number(l.qte)||0;
+      });
+    });
+    const topProduits = Object.values(produitMap).sort(function(a,b){return b.montant-a.montant;}).slice(0,5);
+    const maxProduit = topProduits[0]?.montant || 1;
+    if (topProduits.length) {
+      produitEl.innerHTML = '<div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9">' +
+        '<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">📦 Top produits / prestations</div>' +
+        topProduits.map(function(p, i) {
+          const couleur = ['#2563EB','#059669','#D97706','#9333EA','#EF4444'][i];
+          return '<div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParProduitStats(' + JSON.stringify(p.nom) + ')">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+              '<span style="font-size:12px;font-weight:600;' + (STATE.statsFiltreProduit===p.nom?'text-decoration:underline':'') + '">' + escapeHTML(p.nom) + '</span>' +
+              '<span style="font-size:12px;font-weight:700;color:#0F172A">' + fmt(p.montant) + ' MAD</span>' +
+            '</div>' +
+            '<div style="height:5px;background:#F1F5F9;border-radius:3px"><div style="height:100%;background:' + couleur + ';border-radius:3px;width:' + Math.round(p.montant/maxProduit*100) + '%"></div></div>' +
+            '<div style="font-size:10px;color:#94A3B8;margin-top:2px">' + p.qte + ' unité(s) vendue(s)</div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    } else {
+      produitEl.innerHTML = '';
+    }
+  }
+
+  // NOUVEAU : Répartition par mode de paiement — à partir des vrais
+  // paiements enregistrés (STATE.paiements), pas des factures elles-mêmes
+  // (une facture peut recevoir plusieurs paiements de modes différents).
+  const modeEl = el('sa-modes-paiement');
+  if (modeEl) {
+    const idsFacturesFiltrees = new Set(f.map(function(fac) { return fac.id; }));
+    const paiementsFiltres = (STATE.paiements || []).filter(function(p) { return idsFacturesFiltrees.has(p.facture_id); });
+    const modeMap = {};
+    paiementsFiltres.forEach(function(p) {
+      const mode = p.mode || 'non précisé';
+      modeMap[mode] = (modeMap[mode] || 0) + (Number(p.montant) || 0);
+    });
+    const modeLabels = { virement: '🏦 Virement', especes: '💵 Espèces', cheque: '📝 Chèque', carte: '💳 Carte' };
+    const totalPaiements = Object.values(modeMap).reduce(function(s,v){return s+v;}, 0);
+    const modes = Object.keys(modeMap).sort(function(a,b){return modeMap[b]-modeMap[a];});
+    if (modes.length) {
+      modeEl.innerHTML = '<div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9">' +
+        '<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">💰 Répartition par mode de paiement</div>' +
+        modes.map(function(mode) {
+          const montant = modeMap[mode];
+          const pct = totalPaiements > 0 ? Math.round(montant/totalPaiements*100) : 0;
+          return '<div style="margin-bottom:10px">' +
+            '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+              '<span style="font-size:12px;font-weight:600">' + (modeLabels[mode] || escapeHTML(mode)) + '</span>' +
+              '<span style="font-size:12px;font-weight:700">' + fmt(montant) + ' MAD (' + pct + '%)</span>' +
+            '</div>' +
+            '<div style="height:6px;background:#F1F5F9;border-radius:3px"><div style="height:100%;background:#2563EB;border-radius:3px;width:' + pct + '%"></div></div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    } else {
+      modeEl.innerHTML = '';
+    }
   }
 }
 function renderSearchResults(q) {
