@@ -120,6 +120,24 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .qa-ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
 .qa-lbl{font-size:10px;font-weight:600;color:var(--ink-soft);text-align:center}
 
+/* NOUVEAU (retour utilisateur) : refonte accueil — recherche, actions
+   principales distinctes, sections regroupées et nommées en minuscules
+   (pas de majuscules génériques). */
+.accueil-recherche{margin:14px 20px 4px;position:relative}
+.accueil-recherche input{width:100%;padding:12px 16px 12px 42px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);font-size:14px;font-family:inherit;color:var(--ink)}
+.accueil-recherche input::placeholder{color:var(--ink-soft)}
+.accueil-recherche .rc-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;opacity:0.6}
+
+.actions-principales{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 20px 4px}
+.action-principale{display:flex;align-items:center;gap:10px;padding:16px 14px;border-radius:16px;cursor:pointer;color:#fff}
+.action-principale.safran{background:linear-gradient(135deg,#C9971F,#B8860B)}
+.action-principale.zellige{background:linear-gradient(135deg,#1F6F72,#154F52)}
+.action-principale .ap-ico{font-size:24px}
+.action-principale .ap-txt{font-size:14px;font-weight:700}
+.action-principale .ap-sub{font-size:10px;opacity:0.85;font-weight:500}
+
+.groupe-label{font-size:12px;font-weight:700;color:var(--ink);padding:18px 20px 8px}
+
 /* CARDS */
 .card-list{padding:0 20px;display:flex;flex-direction:column;gap:8px}
 .card{background:var(--surface);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid var(--border);box-shadow:0 1px 3px rgba(42,36,32,0.05);transition:opacity 0.15s}
