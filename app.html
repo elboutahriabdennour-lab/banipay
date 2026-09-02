@@ -42,42 +42,57 @@
   <div id="alerte-bar" class="alerte-bar hidden" onclick="goScreen('relances',null)">
     <span>⚠️</span><div class="alerte-text" id="alerte-text">Factures en retard</div><div class="alerte-action">Voir →</div>
   </div>
-  <div class="sec-label">Actions rapides</div>
-  <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
-    <div class="qa-item" onclick="goScreen('mes-factures',null)"><div class="qa-ico" style="background:#E9F4F3">🧾</div><div class="qa-lbl">Facture</div></div>
-    <div class="qa-item" onclick="goScreen('devis-list',null)"><div class="qa-ico" style="background:#F7EFDC">📝</div><div class="qa-lbl">Devis</div></div>
-    <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
-    <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
-    <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){window._retourRapportStock='dashboard';goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock<span id="verrou-stock-dashboard"></span></div></div>
-  </div>
-  <div style="height:8px"></div>
-  <div class="quick-actions" style="grid-template-columns:repeat(5,1fr)">
-    <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E9F4F3">📊</div><div class="qa-lbl">Stats</div></div>
-    <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#EEF3E4">🧮</div><div class="qa-lbl">TVA</div></div>
-    <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#EDE6F0">👥</div><div class="qa-lbl">Clients</div></div>
-    <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
-    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
-  </div>
-  <div style="height:8px"></div>
-  <!-- NOUVEAU (retour utilisateur) : déplacés depuis Profil vers
-       l'accueil — mêmes fonctions/écrans exacts, juste un accès plus
-       direct depuis le tableau de bord. -->
-  <div class="quick-actions" style="grid-template-columns:repeat(3,1fr)">
-    <div class="qa-item" onclick="renderHubVentes();goScreen('hub-ventes',null)"><div class="qa-ico" style="background:#EEF3E4">💰</div><div class="qa-lbl">Ventes</div></div>
-    <div class="qa-item" onclick="window._retourBcRecus='dashboard';loadBCRecus();goScreen('bc-recus',null)"><div class="qa-ico" style="background:#EDE6F0">📋</div><div class="qa-lbl">BC reçus</div></div>
-    <div class="qa-item" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><div class="qa-ico" style="background:#EEF3E4">🏦</div><div class="qa-lbl">Relevés</div></div>
-  </div>
-  <div style="height:8px"></div>
-  <div class="quick-actions" style="grid-template-columns:repeat(3,1fr)">
-    <div class="qa-item" onclick="window._retourEmployes='dashboard';if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}"><div class="qa-ico" style="background:#E9F4F3">👥</div><div class="qa-lbl">Personnel<span id="verrou-rh-dashboard"></span></div></div>
-    <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
-    <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
-  </div>
-  <div style="height:8px"></div>
-  <div class="quick-actions" style="grid-template-columns:repeat(3,1fr)">
-    <div class="qa-item" onclick="window._retourMarche='dashboard';loadMarche();goScreen('marche',null)"><div class="qa-ico" style="background:#EDE6F0">🤝</div><div class="qa-lbl">Le Marché</div></div>
+
+  <!-- NOUVEAU (retour utilisateur) : recherche mise en avant, actions
+       principales distinctes du reste, tout le reste regroupé par
+       catégorie plutôt qu'une grille uniforme de 16 boutons. -->
+  <div class="accueil-recherche" onclick="goScreen('recherche',null)">
+    <span class="rc-ico">🔍</span>
+    <input placeholder="Rechercher une facture, un client..." readonly style="cursor:pointer">
   </div>
 
+  <div class="actions-principales">
+    <div class="action-principale safran" onclick="goScreen('mes-factures',null)">
+      <span class="ap-ico">🧾</span>
+      <div><div class="ap-txt">Facture</div><div class="ap-sub">Créer, envoyer, suivre</div></div>
+    </div>
+    <div class="action-principale zellige" onclick="goScreen('devis-list',null)">
+      <span class="ap-ico">📝</span>
+      <div><div class="ap-txt">Devis</div><div class="ap-sub">Créer, envoyer, suivre</div></div>
+    </div>
+  </div>
+
+  <div class="groupe-label">Achats &amp; ventes</div>
+  <div class="quick-actions">
+    <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
+    <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
+    <div class="qa-item" onclick="renderHubVentes();goScreen('hub-ventes',null)"><div class="qa-ico" style="background:#EEF3E4">💰</div><div class="qa-lbl">Ventes</div></div>
+    <div class="qa-item" onclick="window._retourBcRecus='dashboard';loadBCRecus();goScreen('bc-recus',null)"><div class="qa-ico" style="background:#EDE6F0">📋</div><div class="qa-lbl">BC reçus</div></div>
+  </div>
+
+  <div class="groupe-label">Gestion</div>
+  <div class="quick-actions">
+    <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){window._retourRapportStock='dashboard';goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock<span id="verrou-stock-dashboard"></span></div></div>
+    <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
+    <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#EDE6F0">👥</div><div class="qa-lbl">Clients</div></div>
+    <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#EEF3E4">🧮</div><div class="qa-lbl">TVA</div></div>
+  </div>
+
+  <div class="groupe-label">Suivi &amp; équipe</div>
+  <div class="quick-actions">
+    <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E9F4F3">📊</div><div class="qa-lbl">Stats</div></div>
+    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
+    <div class="qa-item" onclick="window._retourEmployes='dashboard';if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}"><div class="qa-ico" style="background:#E9F4F3">👥</div><div class="qa-lbl">Personnel<span id="verrou-rh-dashboard"></span></div></div>
+    <div class="qa-item" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><div class="qa-ico" style="background:#EEF3E4">🏦</div><div class="qa-lbl">Relevés</div></div>
+  </div>
+
+  <div class="groupe-label">Réseau Zelto</div>
+  <div class="quick-actions">
+    <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
+    <div class="qa-item" onclick="window._retourMarche='dashboard';loadMarche();goScreen('marche',null)"><div class="qa-ico" style="background:#EDE6F0">🤝</div><div class="qa-lbl">Le Marché</div></div>
+    <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
+  </div>
+  <div style="height:16px"></div>
 
 <!-- MODAL PAIEMENT -->
 
