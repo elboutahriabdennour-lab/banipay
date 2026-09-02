@@ -1044,24 +1044,43 @@
       <div class="p-card-title">Informations entreprise</div>
     </div>
     <div id="pv-objectif" style="display:none;background:#E9F4F3;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#A67A16"></div>
+    <!-- NOUVEAU (retour utilisateur) : même refonte que l'accueil —
+         action principale mise en avant, reste regroupé par catégorie
+         plutôt qu'une longue liste plate identique. -->
+    <div class="actions-principales" style="padding:14px 0 4px">
+      <div class="action-principale zellige" onclick="goProfilEdit()" style="grid-column:span 2">
+        <span class="ap-ico">✏️</span>
+        <div><div class="ap-txt">Modifier le profil</div><div class="ap-sub">Coordonnées, identifiants légaux, logo</div></div>
+      </div>
+    </div>
+
+    <div class="groupe-label">Mon entreprise</div>
     <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
+
     <!-- Section Mon Comptable -->
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">Mon comptable</div>
       <div id="mon-comptable-section" style="padding:14px 16px">Chargement...</div>
     </div>
+
+    <div class="groupe-label">Réseau Zelto</div>
     <!-- Section Parrainage (chantier ajouté) -->
-    <div style="margin:14px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
+    <div style="margin:0 20px 10px;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">🤝 Parrainer une entreprise</div>
       <div id="parrainage-content" style="padding:14px 16px">Chargement...</div>
     </div>
     <button class="p-btn" onclick="window._retourMarche='profil';loadMarche();goScreen('marche',null)" style="color:#7C5CA6">🤝 Le Marché</button>
+
+    <div class="groupe-label">Mon compte</div>
     <button class="p-btn" onclick="ouvrirHistoriqueSiAdmin()" style="color:#6B5F54">📋 Historique</button>
-    <button class="p-btn blue" onclick="goProfilEdit()">✏️ Modifier le profil</button>
     <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
     <button class="p-btn" onclick="goScreen('mon-forfait',null)" style="color:#C9971F">📦 Mon forfait</button>
+
+    <div class="groupe-label">Aide</div>
     <button class="p-btn" onclick="window._retourSupport='profil';window._retourQuiSommesNous='profil';goScreen('support',null)" style="color:#1F6F72">🆘 Support</button>
     <button class="p-btn" onclick="window._retourQuiSommesNous='profil';goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
+
+    <div style="height:8px"></div>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
   <div id="profil-edit" style="display:none;padding:0 16px">
