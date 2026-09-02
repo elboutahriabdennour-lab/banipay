@@ -62,7 +62,6 @@ footer{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:40px}
 <div class="page">
 
 <header>
-  <div style="text-align:left;margin-bottom:20px"><a href="index.html" style="color:var(--zellige);text-decoration:none;font-size:13px">← Retour à zelto.ma</a></div>
   <div class="logo">Zel<span>to</span></div>
   <h1>Tous les workflows, de bout en bout — avec schémas</h1>
 </header>
@@ -79,6 +78,9 @@ footer{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:40px}
     <li><a href="#w7">Mouvements de stock</a></li>
     <li><a href="#w8">Les QR codes de l'application</a></li>
     <li><a href="#w9">Suppression de compte</a></li>
+    <li><a href="#w10">Le Marché — publier et répondre</a></li>
+    <li><a href="#w11">Historique — traçabilité complète</a></li>
+    <li><a href="#w12">Suivi de contrats — alerte de renouvellement</a></li>
   </ol>
 </div>
 
@@ -315,6 +317,72 @@ footer{text-align:center;font-size:12px;color:var(--ink-soft);margin-top:40px}
     <line x1="590" y1="328" x2="410" y2="360" class="arr" marker-end="url(#a9)"/>
     <g class="c-red"><rect x="220" y="360" width="380" height="44" rx="8"/><text class="th" x="410" y="387" text-anchor="middle">Compte de connexion réellement supprimé</text></g>
   </g></svg>
+  </div>
+</section>
+
+<!-- 10. LE MARCHÉ -->
+<section id="w10">
+  <h2><span class="num">10</span> Le Marché — publier et répondre</h2>
+  <div class="desc">Un espace où les entreprises Zelto proposent leurs services ou recherchent un prestataire, avec prix, date limite et photo en option.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 300" width="780" height="300">
+    <defs><marker id="a10" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-purple"><rect x="20" y="30" width="220" height="66" rx="8"/><text class="th" x="130" y="52" text-anchor="middle">Publier une annonce</text><text class="ts" x="130" y="70" text-anchor="middle">🛠️ offre ou 🔍 demande</text><text class="ts" x="130" y="86" text-anchor="middle">prix, date, photo (optionnels)</text></g>
+    <line x1="240" y1="63" x2="280" y2="63" class="arr" marker-end="url(#a10)"/>
+    <g class="c-teal"><rect x="280" y="30" width="200" height="66" rx="8"/><text class="th" x="380" y="55" text-anchor="middle">Visible dans Le Marché</text><text class="ts" x="380" y="73" text-anchor="middle">accessible depuis l'accueil</text><text class="ts" x="380" y="89" text-anchor="middle">et le profil</text></g>
+    <line x1="480" y1="63" x2="520" y2="63" class="arr" marker-end="url(#a10)"/>
+    <g class="c-gray"><rect x="520" y="30" width="220" height="66" rx="8"/><text class="th" x="630" y="52" text-anchor="middle">Une autre entreprise</text><text class="ts" x="630" y="70" text-anchor="middle">consulte, filtre par type</text><text class="ts" x="630" y="86" text-anchor="middle">ou recherche un mot-clé</text></g>
+    <line x1="630" y1="96" x2="630" y2="128" class="arr" marker-end="url(#a10)"/>
+    <g class="c-amber"><rect x="520" y="128" width="220" height="56" rx="8"/><text class="th" x="630" y="150" text-anchor="middle">Ouvre l'annonce</text><text class="ts" x="630" y="168" text-anchor="middle">contact récupéré à l'ouverture</text></g>
+    <line x1="520" y1="156" x2="480" y2="156" stroke="#9C9186" stroke-width="1"/>
+    <line x1="480" y1="156" x2="480" y2="200" stroke="#9C9186" stroke-width="1"/>
+    <line x1="480" y1="200" x2="240" y2="200" class="arr" marker-end="url(#a10)"/>
+    <g class="c-green"><rect x="20" y="172" width="220" height="56" rx="8"/><text class="th" x="130" y="194" text-anchor="middle">Contact direct</text><text class="ts" x="130" y="212" text-anchor="middle">WhatsApp ou email</text></g>
+    <g class="c-purple"><rect x="20" y="244" width="240" height="44" rx="8"/><text class="t" x="140" y="271" text-anchor="middle">Auteur : marque "Pourvue" une fois réglée</text></g>
+  </svg>
+  </div>
+</section>
+
+<!-- 11. HISTORIQUE -->
+<section id="w11">
+  <h2><span class="num">11</span> Historique — traçabilité complète</h2>
+  <div class="desc">Toutes les opérations de l'entreprise sont tracées sans exception, avec l'identité réelle de la personne qui a agi — pas juste le compte principal. Réservé aux administrateurs.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 300" width="780" height="300">
+    <defs><marker id="a11" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-coral"><rect x="20" y="30" width="200" height="56" rx="8"/><text class="th" x="120" y="52" text-anchor="middle">Toute action</text><text class="ts" x="120" y="70" text-anchor="middle">facture, achat, équipe...</text></g>
+    <line x1="220" y1="58" x2="260" y2="58" class="arr" marker-end="url(#a11)"/>
+    <g class="c-coral"><rect x="260" y="30" width="240" height="56" rx="8"/><text class="th" x="380" y="52" text-anchor="middle">Enregistrée avec l'acteur réel</text><text class="ts" x="380" y="70" text-anchor="middle">pas juste le compte principal</text></g>
+    <line x1="500" y1="58" x2="540" y2="58" class="arr" marker-end="url(#a11)"/>
+    <g class="c-gray"><rect x="540" y="30" width="220" height="56" rx="8"/><text class="th" x="650" y="52" text-anchor="middle">Un administrateur ouvre</text><text class="ts" x="650" y="70" text-anchor="middle">Profil → Historique</text></g>
+    <line x1="650" y1="86" x2="650" y2="118" class="arr" marker-end="url(#a11)"/>
+    <line x1="600" y1="96" x2="130" y2="118" class="arr" marker-end="url(#a11)"/>
+    <g class="c-red"><rect x="30" y="118" width="200" height="56" rx="8"/><text class="th" x="130" y="140" text-anchor="middle">Non-admin</text><text class="ts" x="130" y="158" text-anchor="middle">accès refusé (app + base)</text></g>
+    <g class="c-green"><rect x="550" y="118" width="200" height="56" rx="8"/><text class="th" x="650" y="140" text-anchor="middle">Admin</text><text class="ts" x="650" y="158" text-anchor="middle">accès autorisé</text></g>
+    <line x1="650" y1="174" x2="650" y2="206" class="arr" marker-end="url(#a11)"/>
+    <g class="box"><rect x="440" y="206" width="320" height="66" rx="8"/><text class="th" x="600" y="228" text-anchor="middle">Filtres : acteur, type, action,</text><text class="ts" x="600" y="246" text-anchor="middle">recherche libre, période</text><text class="ts" x="600" y="262" text-anchor="middle">+ export CSV</text></g>
+  </svg>
+  </div>
+</section>
+
+<!-- 12. SUIVI DE CONTRATS -->
+<section id="w12">
+  <h2><span class="num">12</span> Suivi de contrats — alerte de renouvellement</h2>
+  <div class="desc">Un abonnement récurrent peut avoir une date de fin de contrat — une alerte prévient 30 jours avant l'échéance.</div>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 780 260" width="780" height="260">
+    <defs><marker id="a12" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#9C9186" stroke-width="1.5"/></marker></defs>
+    <g class="c-teal"><rect x="20" y="30" width="220" height="56" rx="8"/><text class="th" x="130" y="52" text-anchor="middle">Abonnement créé</text><text class="ts" x="130" y="70" text-anchor="middle">date de fin optionnelle</text></g>
+    <line x1="240" y1="58" x2="280" y2="58" class="arr" marker-end="url(#a12)"/>
+    <g class="c-amber"><rect x="280" y="30" width="240" height="56" rx="8"/><text class="th" x="400" y="52" text-anchor="middle">30 jours avant l'échéance</text><text class="ts" x="400" y="70" text-anchor="middle">alerte automatique générée</text></g>
+    <line x1="520" y1="58" x2="560" y2="58" class="arr" marker-end="url(#a12)"/>
+    <g class="c-gray"><rect x="560" y="30" width="200" height="56" rx="8"/><text class="th" x="660" y="52" text-anchor="middle">Notification reçue</text><text class="ts" x="660" y="70" text-anchor="middle">urgence si ≤ 7 jours</text></g>
+    <line x1="660" y1="86" x2="660" y2="118" class="arr" marker-end="url(#a12)"/>
+    <line x1="660" y1="118" x2="240" y2="140" stroke="#9C9186" stroke-width="1"/>
+    <g class="c-green"><rect x="20" y="112" width="220" height="56" rx="8"/><text class="th" x="130" y="134" text-anchor="middle">Renouveler</text><text class="ts" x="130" y="152" text-anchor="middle">nouvelle date de fin</text></g>
+    <line x1="130" y1="168" x2="130" y2="200" class="arr" marker-end="url(#a12)"/>
+    <g class="box"><rect x="20" y="200" width="220" height="44" rx="8"/><text class="t" x="130" y="227" text-anchor="middle">Tracé dans l'historique</text></g>
+  </svg>
   </div>
 </section>
 
