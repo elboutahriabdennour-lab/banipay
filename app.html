@@ -172,6 +172,7 @@
   <script src="js/auth.js?v=1787080599"></script>
   <script src="js/nav.js?v=1787080599"></script>
   <script src="js/marche.js?v=1787080599"></script>
+  <script src="js/contrats.js?v=1787080599"></script>
   <script src="js/factures.js?v=1787080599"></script>
   <script src="js/devis.js?v=1787080599"></script>
   <script src="js/clients.js?v=1787080599"></script>
@@ -246,6 +247,28 @@
 </div>
 
 <!-- LE MARCHÉ — offres et demandes de services -->
+<!-- MODÈLES DE CONTRATS -->
+<div class="screen" id="screen-contrats">
+  <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourContrats||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Modèles de contrats</div><div class="hero-sub-txt">Choisissez un type, remplissez, générez</div></div>
+  <div id="contrats-list"></div><div class="pb"></div>
+</div>
+
+<!-- NOUVEAU CONTRAT -->
+<div class="screen" id="screen-nouveau-contrat">
+  <div class="form-header"><div class="back-btn" onclick="goScreen('contrats',null)">←</div><div class="form-title" id="nc-titre">Contrat</div></div>
+  <div id="nc-alerte" style="margin:0 20px 16px;background:#FBF0DA;border-left:3px solid #C9971F;padding:10px 14px;font-size:12px;color:#7A5D14;border-radius:0 8px 8px 0"></div>
+  <div class="form-section">
+    <label class="f-lbl">Client / partenaire (optionnel)</label>
+    <select id="nc-client" class="f-inp" onchange="el('nc-client-nom-libre').style.display=this.value?'none':'block'" style="margin-bottom:6px"></select>
+    <input id="nc-client-nom-libre" class="f-inp" placeholder="Ou saisissez un nom directement">
+  </div>
+  <div id="nc-champs"></div>
+  <div class="send-row" style="grid-template-columns:1fr">
+    <button class="s-btn blue" onclick="genererDocumentContrat()">📄 Générer le document</button>
+  </div>
+</div>
+
 <div class="screen" id="screen-marche">
   <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourMarche||'profil',null)">←</button><div class="topbar-brand" style="flex:1">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="initNouvelleAnnonce();goScreen('nouvelle-annonce',null)">+ Publier</span></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Le Marché</div><div class="hero-sub-txt">Offres et demandes entre entreprises Zelto</div></div>
@@ -1056,6 +1079,7 @@
 
     <div class="groupe-label">Mon entreprise</div>
     <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
+    <button class="p-btn" onclick="window._retourContrats='profil';renderModelesContrats();goScreen('contrats',null)" style="color:#1F6F72">📄 Modèles de contrats</button>
 
     <!-- Section Mon Comptable -->
     <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
