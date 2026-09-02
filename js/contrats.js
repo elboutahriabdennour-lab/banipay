@@ -10,7 +10,7 @@ const MODELES_CONTRATS = {
     nom: 'Contrat de prestation de service',
     icone: '🤝',
     champs: [
-      { id: 'objet', label: 'Objet de la prestation', type: 'textarea', placeholder: 'Ex: Installation et maintenance du système électrique...' },
+      { id: 'objet', label: 'Objet de la prestation', type: 'textarea', placeholder: 'Ex: Conseil, développement, formation...' },
       { id: 'duree', label: 'Durée', type: 'text', placeholder: 'Ex: 3 mois, à compter du...' },
       { id: 'montant', label: 'Montant (MAD)', type: 'number' },
       { id: 'modalites_paiement', label: 'Modalités de paiement', type: 'text', placeholder: 'Ex: 50% à la signature, 50% à la livraison' },
@@ -30,26 +30,26 @@ const MODELES_CONTRATS = {
 <p>Tout litige relatif à l'exécution du présent contrat relève de la compétence des tribunaux du lieu du siège social du Prestataire.</p>`; }
   },
   sous_traitance: {
-    nom: 'Contrat de sous-traitance (BTP)',
-    icone: '🏗️',
+    nom: 'Contrat de sous-traitance',
+    icone: '📑',
     champs: [
-      { id: 'description_travaux', label: 'Description des travaux', type: 'textarea', placeholder: 'Ex: Travaux de carrelage sur le chantier situé à...' },
-      { id: 'delai', label: "Délai d'exécution", type: 'text', placeholder: 'Ex: 30 jours ouvrés à compter du...' },
-      { id: 'montant', label: 'Montant du marché (MAD)', type: 'number' },
+      { id: 'description_travaux', label: 'Description de la mission confiée', type: 'textarea', placeholder: 'Ex: Réalisation de...' },
+      { id: 'delai', label: "Délai d'exécution", type: 'text', placeholder: 'Ex: 30 jours à compter du...' },
+      { id: 'montant', label: 'Montant (MAD)', type: 'number' },
       { id: 'penalites', label: 'Pénalités de retard (optionnel)', type: 'text', placeholder: 'Ex: 0.5% du montant par jour de retard' },
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>Le Donneur d'ordre confie au Sous-traitant l'exécution des travaux suivants : ${d.description_travaux || '[à préciser]'}.</p>
+<p>Le Donneur d'ordre confie au Sous-traitant l'exécution de la mission suivante : ${d.description_travaux || '[à préciser]'}.</p>
 <h2>2. Délai d'exécution</h2>
 <p>${d.delai || '[à préciser]'}</p>
 <h2>3. Prix</h2>
-<p>Le montant du marché est fixé à ${d.montant ? fmt(d.montant) + ' MAD' : '[montant à préciser]'} TTC, révisable uniquement en cas de travaux supplémentaires dûment validés par écrit.</p>
+<p>Le montant convenu est fixé à ${d.montant ? fmt(d.montant) + ' MAD' : '[montant à préciser]'} TTC, révisable uniquement en cas de mission supplémentaire dûment validée par écrit.</p>
 ${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : ''}
 <h2>${d.penalites ? '5' : '4'}. Garanties et responsabilité</h2>
-<p>Le Sous-traitant demeure responsable de la bonne exécution des travaux qui lui sont confiés et garantit leur conformité aux normes en vigueur.</p>
+<p>Le Sous-traitant demeure responsable de la bonne exécution de la mission qui lui est confiée et garantit sa conformité aux normes en vigueur.</p>
 <h2>${d.penalites ? '6' : '5'}. Litiges</h2>
-<p>Tout litige relatif à l'exécution du présent contrat relève de la compétence des tribunaux du lieu du chantier.</p>`; }
+<p>Tout litige relatif à l'exécution du présent contrat relève de la compétence des tribunaux du lieu du siège social du Donneur d'ordre.</p>`; }
   },
   confidentialite: {
     nom: 'Accord de confidentialité (NDA)',
@@ -76,7 +76,7 @@ ${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : 
     alerteRenforcee: true,
     champs: [
       { id: 'type_contrat', label: 'Type de contrat', type: 'select', options: ['CDI', 'CDD'] },
-      { id: 'poste', label: 'Poste occupé', type: 'text', placeholder: 'Ex: Maçon, Comptable...' },
+      { id: 'poste', label: 'Poste occupé', type: 'text', placeholder: 'Ex: Assistant commercial, Développeur...' },
       { id: 'date_debut', label: 'Date de début', type: 'date' },
       { id: 'date_fin', label: 'Date de fin (si CDD)', type: 'date' },
       { id: 'salaire', label: 'Salaire mensuel brut (MAD)', type: 'number' },
@@ -113,6 +113,70 @@ ${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : 
 <p>Le présent accord ne crée ni société commune, ni lien de subordination entre les parties, qui demeurent chacune seule responsable de leur propre activité.</p>
 <h2>5. Litiges</h2>
 <p>Tout litige relatif à l'exécution du présent accord relève de la compétence des tribunaux compétents.</p>`; }
+  },
+  vente: {
+    nom: 'Contrat de vente (fourniture de biens)',
+    icone: '📦',
+    champs: [
+      { id: 'description_biens', label: 'Description des biens vendus', type: 'textarea', placeholder: 'Ex: 500 unités de...' },
+      { id: 'montant', label: 'Prix total (MAD)', type: 'number' },
+      { id: 'delai_livraison', label: 'Délai de livraison', type: 'text', placeholder: 'Ex: 15 jours à compter de la commande' },
+      { id: 'garantie', label: 'Garantie (optionnel)', type: 'text', placeholder: 'Ex: 12 mois contre tout défaut de fabrication' },
+    ],
+    corps: function(d) { return `
+<h2>1. Objet</h2>
+<p>Le Vendeur cède à l'Acheteur les biens suivants : ${d.description_biens || '[à préciser]'}.</p>
+<h2>2. Prix</h2>
+<p>Le prix total est fixé à ${d.montant ? fmt(d.montant) + ' MAD' : '[montant à préciser]'} TTC.</p>
+<h2>3. Livraison</h2>
+<p>${d.delai_livraison || '[à préciser]'}</p>
+${d.garantie ? '<h2>4. Garantie</h2><p>' + d.garantie + '</p>' : ''}
+<h2>${d.garantie ? '5' : '4'}. Transfert de propriété</h2>
+<p>Le transfert de propriété des biens intervient au paiement intégral du prix convenu.</p>
+<h2>${d.garantie ? '6' : '5'}. Litiges</h2>
+<p>Tout litige relatif à l'exécution du présent contrat relève de la compétence des tribunaux du lieu du siège social du Vendeur.</p>`; }
+  },
+  consultant: {
+    nom: 'Contrat de consultant / freelance',
+    icone: '💻',
+    champs: [
+      { id: 'mission', label: 'Description de la mission', type: 'textarea', placeholder: 'Ex: Accompagnement stratégique, développement d\'un site web...' },
+      { id: 'duree', label: 'Durée de la mission', type: 'text', placeholder: 'Ex: 2 mois, renouvelable' },
+      { id: 'tarif', label: 'Tarif (MAD)', type: 'text', placeholder: 'Ex: 500 MAD/jour, ou 8000 MAD forfait' },
+      { id: 'modalites_paiement', label: 'Modalités de paiement', type: 'text', placeholder: 'Ex: facturation mensuelle sur relevé de temps' },
+    ],
+    corps: function(d) { return `
+<h2>1. Objet</h2>
+<p>Le Client confie au Consultant la mission suivante, réalisée en toute indépendance : ${d.mission || '[à préciser]'}.</p>
+<h2>2. Durée</h2>
+<p>${d.duree || '[à préciser]'}</p>
+<h2>3. Rémunération</h2>
+<p>La rémunération est fixée à ${escapeHTML(d.tarif || '[à préciser]')}. ${d.modalites_paiement || ''}</p>
+<h2>4. Indépendance</h2>
+<p>Le Consultant exerce sa mission en toute indépendance, sans lien de subordination avec le Client, et demeure seul responsable de ses obligations sociales et fiscales.</p>
+<h2>5. Litiges</h2>
+<p>Tout litige relatif à l'exécution du présent contrat relève de la compétence des tribunaux compétents.</p>`; }
+  },
+  location: {
+    nom: 'Contrat de location de matériel',
+    icone: '🔧',
+    champs: [
+      { id: 'materiel', label: 'Matériel loué', type: 'textarea', placeholder: 'Ex: 1 véhicule utilitaire, 2 ordinateurs portables...' },
+      { id: 'duree', label: 'Durée de la location', type: 'text', placeholder: 'Ex: du ... au ..., ou reconduction mensuelle' },
+      { id: 'loyer', label: 'Loyer (MAD)', type: 'number' },
+      { id: 'depot_garantie', label: 'Dépôt de garantie (optionnel, MAD)', type: 'number' },
+    ],
+    corps: function(d) { return `
+<h2>1. Objet</h2>
+<p>Le Bailleur met à disposition du Locataire le matériel suivant : ${d.materiel || '[à préciser]'}.</p>
+<h2>2. Durée</h2>
+<p>${d.duree || '[à préciser]'}</p>
+<h2>3. Loyer</h2>
+<p>Le loyer est fixé à ${d.loyer ? fmt(d.loyer) + ' MAD' : '[montant à préciser]'}.${d.depot_garantie ? ' Un dépôt de garantie de ' + fmt(d.depot_garantie) + ' MAD est versé à la signature, restitué en fin de location sous déduction des dégradations éventuelles.' : ''}</p>
+<h2>4. Obligations du Locataire</h2>
+<p>Le Locataire s'engage à utiliser le matériel loué en bon père de famille et à le restituer dans l'état où il l'a reçu, usure normale exceptée.</p>
+<h2>5. Litiges</h2>
+<p>Tout litige relatif à l'exécution du présent contrat relève de la compétence des tribunaux du lieu du siège social du Bailleur.</p>`; }
   },
 };
 
