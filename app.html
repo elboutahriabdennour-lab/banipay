@@ -1782,17 +1782,6 @@
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
 </div>
-<!--
-  À AJOUTER dans app.html — juste après le </div> de fermeture de
-  "modal-mdp" (juste avant la ligne <input type="hidden" id="search-produit-inp">).
-
-  Ce sont les 3 fenêtres qui ont disparu du fichier : celle pour
-  ajouter une ligne de facture, celle pour ajouter une ligne de devis,
-  et celle du catalogue. Le code JS qui les pilote (confirmerLigne(),
-  confirmerLigneDevis(), filtrerProduits()...) existe déjà et n'a pas
-  besoin d'être touché — seul le HTML manquait.
--->
-
 <!-- MODAL AJOUTER LIGNE (FACTURE) -->
 <div class="modal-overlay" id="modal-ligne">
   <div class="modal">
@@ -1853,6 +1842,71 @@
     <button class="m-btn-sec" onclick="closeAllModals()">Fermer</button>
   </div>
 </div>
+
+<!-- MODAL AJOUTER LIGNE (ABONNEMENT) -->
+<div class="modal-overlay" id="modal-ligne-ab">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ Ajouter une ligne</div>
+    <label class="a-lbl">Description</label>
+    <input class="m-inp" id="mlab-desc" placeholder="Ex: Prestation de service">
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="mlab-qte" type="number" value="1" step="0.01">
+    <label class="a-lbl">Unité</label>
+    <select class="m-inp" id="mlab-unite">
+      <option value="u">Unité</option>
+      <option value="Fft">Forfait</option>
+      <option value="m²">m²</option>
+      <option value="j">Jour</option>
+      <option value="h">Heure</option>
+      <option value="kg">kg</option>
+    </select>
+    <label class="a-lbl">Prix unitaire HT (MAD)</label>
+    <input class="m-inp" id="mlab-pu" type="number" placeholder="0.00" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneAB()">✓ Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL AJOUTER LIGNE (ACHAT) -->
+<div class="modal-overlay" id="modal-ligne-achat">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ Ajouter une ligne</div>
+    <label class="a-lbl">Description</label>
+    <input class="m-inp" id="mla-desc" placeholder="Ex: Fournitures diverses">
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="mla-qte" type="number" value="1" step="0.01">
+    <label class="a-lbl">Unité</label>
+    <select class="m-inp" id="mla-unite">
+      <option value="u">Unité</option>
+      <option value="Fft">Forfait</option>
+      <option value="m²">m²</option>
+      <option value="j">Jour</option>
+      <option value="h">Heure</option>
+      <option value="kg">kg</option>
+    </select>
+    <label class="a-lbl">Prix unitaire HT (MAD)</label>
+    <input class="m-inp" id="mla-pu" type="number" placeholder="0.00" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneAchat()">✓ Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL ENVOYER (WhatsApp / Email / Lien / Zelto) -->
+<div class="modal-overlay" id="modal-envoyer">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="me-titre">Envoyer le document</div>
+    <button class="m-btn" style="background:#25D366;margin-bottom:8px" onclick="envoyerVia('whatsapp')">💬 WhatsApp</button>
+    <button class="m-btn" style="background:#1F6F72;margin-bottom:8px" onclick="envoyerVia('email')">✉️ Email</button>
+    <button class="m-btn" style="background:#6B5F54;margin-bottom:8px" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
+    <button class="m-btn" style="background:#C9971F;margin-bottom:8px" onclick="envoyerVia('banipay')">📲 Envoyer via Zelto</button>
+    <div id="me-banipay-picker" style="display:none;margin-top:8px;max-height:40vh;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
 <input type="hidden" id="search-produit-inp">
 <input type="hidden" id="filtre-categorie">
 <div class="toast" id="toast"></div>
