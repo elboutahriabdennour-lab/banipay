@@ -386,7 +386,6 @@ async function _continuerApresAuthentification(email, errEl, remember) {
     // Détecter le rôle depuis les metadata (défini à l'inscription)
     const metaRole = sb.user?.user_metadata?.role;
     let role = 'entreprise';
-    if (errEl) errEl.textContent = '⏳ Rôle détecté: ' + (metaRole || 'non défini');
 
     if (metaRole === 'comptable') {
       // Rôle explicitement défini comme comptable à l'inscription
