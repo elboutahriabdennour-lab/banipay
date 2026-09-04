@@ -1782,7 +1782,77 @@
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
 </div>
+<!--
+  À AJOUTER dans app.html — juste après le </div> de fermeture de
+  "modal-mdp" (juste avant la ligne <input type="hidden" id="search-produit-inp">).
 
+  Ce sont les 3 fenêtres qui ont disparu du fichier : celle pour
+  ajouter une ligne de facture, celle pour ajouter une ligne de devis,
+  et celle du catalogue. Le code JS qui les pilote (confirmerLigne(),
+  confirmerLigneDevis(), filtrerProduits()...) existe déjà et n'a pas
+  besoin d'être touché — seul le HTML manquait.
+-->
+
+<!-- MODAL AJOUTER LIGNE (FACTURE) -->
+<div class="modal-overlay" id="modal-ligne">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ Ajouter une ligne</div>
+    <label class="a-lbl">Description</label>
+    <input class="m-inp" id="ml-desc" placeholder="Ex: Prestation de service">
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="ml-qte" type="number" value="1" step="0.01">
+    <label class="a-lbl">Unité</label>
+    <select class="m-inp" id="ml-unite">
+      <option value="u">Unité</option>
+      <option value="Fft">Forfait</option>
+      <option value="m²">m²</option>
+      <option value="j">Jour</option>
+      <option value="h">Heure</option>
+      <option value="kg">kg</option>
+    </select>
+    <label class="a-lbl">Prix unitaire HT (MAD)</label>
+    <input class="m-inp" id="ml-pu" type="number" placeholder="0.00" step="0.01">
+    <button class="m-btn" onclick="confirmerLigne()">✓ Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL AJOUTER LIGNE (DEVIS) -->
+<div class="modal-overlay" id="modal-ligne-d">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ Ajouter une ligne</div>
+    <label class="a-lbl">Description</label>
+    <input class="m-inp" id="mld-desc" placeholder="Ex: Prestation de service">
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="mld-qte" type="number" value="1" step="0.01">
+    <label class="a-lbl">Unité</label>
+    <select class="m-inp" id="mld-unite">
+      <option value="u">Unité</option>
+      <option value="Fft">Forfait</option>
+      <option value="m²">m²</option>
+      <option value="j">Jour</option>
+      <option value="h">Heure</option>
+      <option value="kg">kg</option>
+    </select>
+    <label class="a-lbl">Prix unitaire HT (MAD)</label>
+    <input class="m-inp" id="mld-pu" type="number" placeholder="0.00" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneDevis()">✓ Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- MODAL CATALOGUE (choisir un article déjà enregistré) -->
+<div class="modal-overlay" id="modal-produits">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📦 Depuis le catalogue</div>
+    <input class="m-inp" id="search-produit" placeholder="🔍 Rechercher un article..." oninput="filtrerProduits()">
+    <div id="produits-picker" style="max-height:50vh;overflow-y:auto"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Fermer</button>
+  </div>
+</div>
 <input type="hidden" id="search-produit-inp">
 <input type="hidden" id="filtre-categorie">
 <div class="toast" id="toast"></div>
