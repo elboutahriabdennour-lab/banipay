@@ -106,9 +106,64 @@ async function importerClientDepuisLien() {
   }
 }
 
+// FIX (retour utilisateur) : cette fonction ne faisait jamais rien de ce
+// qu'elle prétend — elle ne lisait jamais la photo prise, ne décodait
+// aucun QR code, et n'affichait jamais aucun lien nulle part malgré le
+// message affiché. Le bouton "Ouvrir la caméra" était donc entièrement
+// non fonctionnel. Corrigé en utilisant jsQR (bibliothèque légère,
+// aucune dépendance) pour décoder réellement l'image prise, puis en
+// réutilisant importerClientDepuisLien() une fois le lien extrait —
+// même logique d'import que le champ "Via lien Zelto" juste au-dessus.
+//
+// NÉCESSITE d'ajouter dans app.html, avant la fermeture de </body> :
+// <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 async function importerClientDepuisQRImage(event) {
-  showToast('📷 Prenez une photo du QR, puis copiez le lien affiché', 'success');
+  const file = event.target.files[0];
   event.target.value = '';
+  if (!file) return;
+
+  if (typeof jsQR !== 'function') {
+    showToast('❌ Le lecteur de QR code n\'est pas encore installé — contactez le support', 'error');
+    return;
+  }
+
+  showToast('⏳ Lecture du QR code...');
+
+  try {
+    const dataUrl = await new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function(e) { resolve(e.target.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const image = await new Promise(function(resolve, reject) {
+      const img = new Image();
+      img.onload = function() { resolve(img); };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    const resultat = jsQR(imageData.data, imageData.width, imageData.height);
+
+    if (!resultat || !resultat.data) {
+      showToast('❌ Aucun QR code détecté sur cette photo — réessayez avec un cadrage net', 'error');
+      return;
+    }
+
+    const input = el('qr-link-input');
+    if (input) input.value = resultat.data;
+    await importerClientDepuisLien();
+  } catch(e) {
+    showToast('❌ Erreur lors de la lecture du QR code: ' + e.message, 'error');
+  }
 }
 
 async function chargerClientDepuisLien(lien) {
@@ -148,16 +203,10 @@ function renderClients() {
     c.nom.toLowerCase().includes(q) || (c.tel||'').includes(q) || (c.email||'').toLowerCase().includes(q)
   ) : STATE.clients;
 
-  // NOUVEAU (retour utilisateur) : le compteur reflète maintenant la
-  // recherche en cours, pas juste le total — "3 sur 12" plutôt que
-  // toujours "12", même en pleine recherche filtrée.
   const el_count = el('clients-count');
   if (el_count) el_count.textContent = q ? (filtered.length + ' sur ' + STATE.clients.length) : STATE.clients.length;
 
   if (!filtered.length) {
-    // NOUVEAU : distingue "aucun résultat pour cette recherche" de
-    // "vraiment aucun client" — avant, les deux affichaient exactement
-    // le même message, laissant croire à tort que le compte était vide.
     list.innerHTML = q
       ? `<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucun résultat pour "${escapeHTML(q)}"</div><div style="margin-top:8px"><span onclick="el('search-client-inp').value='';renderClients()" style="color:#1F6F72;font-weight:600;cursor:pointer;font-size:13px">Effacer la recherche</span></div></div>`
       : `<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun client</div></div>`;
@@ -186,9 +235,6 @@ function initNouveauClient() {
   });
 }
 
-// Point 2 (complément) : validation ICE/RC/IF réutilisable — la même
-// règle s'applique partout où ces identifiants sont saisis (profil
-// entreprise, client, fournisseur), pas seulement au profil.
 function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, rib, tel, email) {
   if (ice && !/^\d{15}$/.test(ice)) {
     showToast('❌ L\'ICE doit contenir exactement 15 chiffres (' + ice.length + ' saisi(s))', 'error');
@@ -202,9 +248,6 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, ri
     showToast('❌ L\'identifiant fiscal (IF) ne doit contenir que des chiffres', 'error');
     return false;
   }
-  // NOUVEAU (retour utilisateur) : Patente et CNSS n'étaient jamais
-  // vérifiés du tout — on pouvait y saisir n'importe quel texte alors
-  // que ce sont aussi des identifiants numériques marocains.
   if (patente && !/^\d+$/.test(patente)) {
     showToast('❌ Le numéro de Patente ne doit contenir que des chiffres', 'error');
     return false;
@@ -213,8 +256,6 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, ri
     showToast('❌ Le numéro CNSS ne doit contenir que des chiffres', 'error');
     return false;
   }
-  // NOUVEAU : le RIB marocain a un format officiel fixe (24 chiffres) —
-  // jamais vérifié jusqu'ici, alors que des paiements clients en dépendent.
   if (rib) {
     const ribNettoye = rib.replace(/\s/g, '');
     if (!/^\d{24}$/.test(ribNettoye)) {
@@ -222,9 +263,6 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, ri
       return false;
     }
   }
-  // NOUVEAU : numéro marocain classique (10 chiffres commençant par 0)
-  // ou format international (+212 suivi de 9 chiffres) — tolérant sur
-  // les espaces/tirets de mise en forme.
   if (tel) {
     const telNettoye = tel.replace(/[\s.\-]/g, '');
     const formatLocal = /^0\d{9}$/.test(telNettoye);
@@ -234,8 +272,6 @@ function validerIdentifiantsLegaux(ice, rc, identifiantFiscal, patente, cnss, ri
       return false;
     }
   }
-  // NOUVEAU : format email de base — attrape les fautes de frappe
-  // évidentes (email sans @, sans domaine...) avant l'enregistrement.
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showToast('❌ Adresse email invalide', 'error');
     return false;
@@ -275,7 +311,7 @@ async function sauvegarderClient() {
 function openDetailClient(id) {
   STATE.currentClient = STATE.clients.find(x=>x.id===id);
   if (!STATE.currentClient) return;
-  window._currentClientId = id; // FIX: variable manquante — bouton Supprimer était cassé
+  window._currentClientId = id;
   const c = STATE.currentClient;
   window._clientNom = c.nom;
   setEl('dc-nom', c.nom);
@@ -304,8 +340,6 @@ function openDetailClient(id) {
         <div class="card-end"><div class="card-amt">${fmt(f.ttc)} MAD</div><div class="badge b-${f.statut}">${badgeF(f.statut)}</div></div>
       </div>`).join('') || '<div style="color:#9C9186;font-size:13px;padding:8px 0">Aucune facture</div>';
   }
-  // NOUVEAU: historique complet — devis et paiements, en plus des
-  // factures (auparavant limité aux 5 dernières factures, rien d'autre).
   const devisEl = el('dc-devis');
   if (devisEl) {
     const cDevis = (STATE.devis || []).filter(d => d.client === c.nom);
@@ -363,9 +397,6 @@ async function supprimerClient(id) {
   if (!id || !confirm('Supprimer ce client ?')) return;
   const c = STATE.clients.find(x => x.id === id);
   try {
-    // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
-    // pouvait jamais supprimer un client — la clause WHERE ne
-    // correspondait jamais à la vraie ligne (créée sous l'id entreprise).
     await sb.del('clients',`id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
     STATE.clients = STATE.clients.filter(c=>c.id!==id);
     updateClientDatalist();
@@ -411,8 +442,6 @@ async function sauvegarderModifClient() {
   };
   showToast('⏳ Mise à jour...');
   try {
-    // FIX (audit) : même bug que supprimerClient — sans le fallback, la
-    // modification échouait silencieusement pour un membre d'équipe.
     await sb.patch('clients', `id=eq.${c.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, data);
     Object.assign(c, data);
     updateClientDatalist();
@@ -425,14 +454,6 @@ async function sauvegarderModifClient() {
 
 function modifierClient(id) { ouvrirModifClient(id); }
 
-// NOTE: importerDepuisLienForm(), remplirFormulaireClient(),
-// importerDepuisQRCodeForm() et importerClientVieLien() ont été retirées —
-// trois fonctions différentes qui refaisaient (mal) la même chose que
-// importerClientDepuisLien(), jamais appelées par aucun bouton, et
-// référençant des champs HTML (import-client-lien, cl-lien-import) qui
-// n'ont jamais existé. La seule fonction réellement branchée à l'interface
-// est importerClientDepuisLien(), plus haut dans ce fichier.
-
 function ouvrirMsgClient() {
   const c = STATE.currentClient;
   if (!c) return;
@@ -442,10 +463,6 @@ function ouvrirMsgClient() {
     showToast('Ce client n a pas de compte Zelto', 'error');
   }
 }
-
-// ============================================================
-// IMPORT / EXPORT CSV — CLIENTS
-// ============================================================
 
 function telechargerTemplateClientsCSV() {
   telechargerCSV(
@@ -465,13 +482,6 @@ function exporterClientsCSV() {
   showToast('✅ Export clients téléchargé !', 'success');
 }
 
-// ============================================================
-// SÉLECTEUR DE CLIENTS VISIBLE (facture / devis / abonnement)
-// ============================================================
-// FIX: le champ client ne s'appuyait que sur un <datalist>, invisible tant
-// qu'on ne commence pas à taper (et peu visible sur mobile) — l'utilisateur
-// n'avait donc aucun moyen de "voir" ses clients existants d'un coup d'œil.
-
 window._pickerClientTarget = null;
 
 function ouvrirPickerClients(targetInputId) {
@@ -489,9 +499,6 @@ function filtrerPickerClients() {
   });
   renderPickerClients(filtered);
 
-  // Recherche aussi dans l'annuaire Zelto (autres entreprises), en plus de
-  // sa propre liste de clients — même principe que le picker fournisseur
-  // du bon de commande.
   clearTimeout(window._timeoutRechercheClientAnnuaire);
   const zoneAnnuaire = document.getElementById('clients-picker-annuaire');
   if (zoneAnnuaire) zoneAnnuaire.innerHTML = '';
@@ -547,7 +554,6 @@ async function importerClientsCSV(event) {
     const rows = parseCSV(text);
     if (!rows.length) { showToast('Fichier CSV vide ou illisible', 'error'); return; }
 
-    // Colonnes acceptées (souples sur les noms de colonnes)
     const getVal = function(r, keys) {
       for (const k of keys) { if (r[k] !== undefined && r[k] !== '') return r[k]; }
       return '';
