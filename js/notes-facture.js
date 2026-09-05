@@ -29,7 +29,14 @@ function renderNotesFacture() {
   const zone = document.getElementById('notes-facture-zone');
   if (!zone) return;
   const notes = STATE._notesFactureListe || [];
-  const monRole = (typeof CPT !== 'undefined' && CPT.currentEntId) ? 'comptable' : 'entreprise';
+  // FIX (retour utilisateur) : comparait avant par ROLE ('entreprise' vs
+  // 'comptable'), pas par identité individuelle — dès qu'un 2e membre de
+  // l'équipe entreprise écrit une note, chacun voyait les notes de
+  // l'autre affichées comme les siennes propres, sans distinction de qui
+  // avait vraiment écrit quoi. Comparé maintenant sur l'identité réelle
+  // (auteur_id), le même principe que la correction déjà faite pour les
+  // devis (client_id) plus tôt ce soir.
+  const monId = sb.user?.id;
   zone.innerHTML =
     '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-top:14px">' +
       '<div style="font-size:12px;font-weight:700;margin-bottom:10px">💬 Notes' + (notes.length ? ' (' + notes.length + ')' : '') + '</div>' +
@@ -37,10 +44,11 @@ function renderNotesFacture() {
         (!notes.length
           ? '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucune note pour l\'instant</div>'
           : notes.map(function(n) {
-              const estMoi = n.auteur_role === monRole;
+              const estMoi = n.auteur_id === monId;
+              const nomAffiche = estMoi ? 'Vous' : (n.auteur_nom || (n.auteur_role === 'comptable' ? 'Comptable' : 'Entreprise'));
               return '<div style="display:flex;justify-content:' + (estMoi ? 'flex-end' : 'flex-start') + ';margin-bottom:8px">' +
                 '<div style="max-width:80%;background:' + (estMoi ? '#1F6F72' : '#F1EEE8') + ';color:' + (estMoi ? '#fff' : '#2A2420') + ';padding:8px 12px;border-radius:12px;font-size:12px">' +
-                  '<div style="font-size:9px;opacity:0.7;margin-bottom:2px">' + escapeHTML(n.auteur_nom || (n.auteur_role === 'comptable' ? 'Comptable' : 'Entreprise')) + '</div>' +
+                  '<div style="font-size:9px;opacity:0.7;margin-bottom:2px">' + escapeHTML(nomAffiche) + '</div>' +
                   escapeHTML(n.contenu||'') +
                 '</div></div>';
             }).join('')
