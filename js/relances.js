@@ -121,9 +121,6 @@ function ajouterNotificationsRelancesAchats() {
     });
   });
 }
-// Marque le rappel comme vu pour aujourd'hui (sans le "renvoyer" comme
-// côté vente, puisqu'il n'y a personne à qui écrire) — évite qu'il
-// réapparaisse en boucle une fois consulté.
 async function marquerRelanceAchatVue(achatId, type) {
   try {
     await sb.post('relances_achats_vues', {
@@ -193,7 +190,7 @@ async function sauvegarderParametresRelance() {
     relance_msg_retard: el('param-relance-msg-retard')?.value || '',
   };
   try {
-    await sb.patch('profils_entreprise', 'id=eq.' + sb.user.id, maj);
+    await sb.patch('profils_entreprise', 'id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
     Object.assign(STATE.profil, maj);
     showToast('✅ Paramètres de relance enregistrés', 'success');
   } catch(e) {
