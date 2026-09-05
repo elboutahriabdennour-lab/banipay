@@ -15,9 +15,6 @@ function ouvrirChatTicket(ticketId, sujet) {
   chargerMessagesTicket();
   clearInterval(STATE._chatPollTimer);
   STATE._chatPollTimer = setInterval(chargerMessagesTicket, 4000);
-  // NOUVEAU : écoute passive des demandes de partage d'écran/appel vocal
-  // — sans ça, il fallait que les deux côtés cliquent le même bouton
-  // dans le bon ordre pour que quoi que ce soit se passe.
   if (typeof demarrerEcouteDemandesAppel === 'function') demarrerEcouteDemandesAppel(ticketId);
   el('proposition-appel') && (el('proposition-appel').style.display = 'none');
 }
@@ -46,20 +43,26 @@ async function chargerMessagesTicket() {
 function renderMessagesTicket() {
   const zone = el('chat-ticket-messages');
   if (!zone) return;
-  // NOUVEAU : ne force le défilement vers le bas que si on y était déjà
-  // (à quelques pixels près) — avant, chaque actualisation (toutes les 4s)
-  // ramenait de force en bas, rendant impossible la lecture de
-  // l'historique remonté manuellement.
   const etaitEnBas = zone.scrollHeight - zone.scrollTop - zone.clientHeight < 60;
   const msgs = STATE._chatMessages || [];
   const monLabel = STATE.monRoleSupport ? 'agent' : 'user';
+  // FIX (retour utilisateur) : comparait avant uniquement par ROLE
+  // ('agent' vs 'user') — dès que 2 agents différents discutent sur le
+  // même ticket, chacun voyait les messages de l'autre agent affichés
+  // comme les siens propres, sans distinction de qui avait vraiment
+  // écrit quoi. Comparé maintenant par identité individuelle (auteur_id)
+  // quand la colonne existe — avec repli automatique sur l'ancien
+  // comportement par rôle si elle est absente, pour ne jamais rien
+  // casser si get_messages_ticket ne renvoie pas encore ce champ.
+  const monId = sb.user?.id;
   zone.innerHTML = !msgs.length
     ? '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Aucun message pour l\'instant</div>'
     : msgs.map(function(m) {
-        const estMoi = m.auteur === monLabel;
+        const estMoi = ('auteur_id' in m) ? (m.auteur_id === monId) : (m.auteur === monLabel);
+        const nomAffiche = estMoi ? 'Vous' : (m.auteur_nom || (m.auteur === 'agent' ? 'Support' : 'Client'));
         return '<div style="display:flex;justify-content:' + (estMoi ? 'flex-end' : 'flex-start') + ';margin-bottom:8px">' +
           '<div style="max-width:75%;background:' + (estMoi ? '#1F6F72' : '#F1EEE8') + ';color:' + (estMoi ? '#fff' : '#2A2420') + ';padding:8px 12px;border-radius:14px;font-size:13px">' +
-            (!estMoi ? '<div style="font-size:10px;opacity:0.7;margin-bottom:2px">' + escapeHTML(m.auteur_nom || (m.auteur === 'agent' ? 'Support' : 'Client')) + '</div>' : '') +
+            '<div style="font-size:10px;opacity:0.7;margin-bottom:2px">' + escapeHTML(nomAffiche) + '</div>' +
             escapeHTML(m.contenu||'') +
           '</div></div>';
       }).join('');
@@ -81,14 +84,6 @@ async function envoyerMessageTicket() {
   } catch(e) { showToast('Erreur envoi: ' + e.message, 'error'); }
 }
 
-// NOTE : demanderPartageEcranDepuisChat() et demanderAppelVocalDepuisChat()
-// sont maintenant définies dans partage-ecran.js (nouveau flux demande/
-// acceptation explicite, plus fiable que l'ancienne version où les deux
-// côtés devaient cliquer le même bouton dans le bon ordre).
-
-// ============================================================
-// "MES TICKETS" — écran utilisateur (pas agent)
-// ============================================================
 STATE.mesTicketsSupport = STATE.mesTicketsSupport || [];
 
 async function chargerMesTicketsSupport() {
