@@ -17,11 +17,11 @@ const MODELES_CONTRATS = {
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>Le présent contrat a pour objet : ${d.objet || '[à préciser]'}.</p>
+<p>Le présent contrat a pour objet : ${escapeHTML(d.objet) || '[à préciser]'}.</p>
 <h2>2. Durée</h2>
-<p>${d.duree || '[à préciser]'}</p>
+<p>${escapeHTML(d.duree) || '[à préciser]'}</p>
 <h2>3. Prix et modalités de paiement</h2>
-<p>Le prix de la prestation est fixé à ${d.montant ? fmt(d.montant) + ' MAD' : '[montant à préciser]'} TTC. ${d.modalites_paiement || ''}</p>
+<p>Le prix de la prestation est fixé à ${d.montant ? fmt(d.montant) + ' MAD' : '[montant à préciser]'} TTC. ${escapeHTML(d.modalites_paiement) || ''}</p>
 <h2>4. Obligations du Prestataire</h2>
 <p>Le Prestataire s'engage à exécuter la prestation avec diligence et selon les règles de l'art, dans le respect des délais convenus.</p>
 <h2>5. Résiliation</h2>
@@ -40,12 +40,12 @@ const MODELES_CONTRATS = {
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>Le Donneur d'ordre confie au Sous-traitant l'exécution de la mission suivante : ${d.description_travaux || '[à préciser]'}.</p>
+<p>Le Donneur d'ordre confie au Sous-traitant l'exécution de la mission suivante : ${escapeHTML(d.description_travaux) || '[à préciser]'}.</p>
 <h2>2. Délai d'exécution</h2>
-<p>${d.delai || '[à préciser]'}</p>
+<p>${escapeHTML(d.delai) || '[à préciser]'}</p>
 <h2>3. Prix</h2>
 <p>Le montant convenu est fixé à ${d.montant ? fmt(d.montant) + ' MAD' : '[montant à préciser]'} TTC, révisable uniquement en cas de mission supplémentaire dûment validée par écrit.</p>
-${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : ''}
+${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + escapeHTML(d.penalites) + '</p>' : ''}
 <h2>${d.penalites ? '5' : '4'}. Garanties et responsabilité</h2>
 <p>Le Sous-traitant demeure responsable de la bonne exécution de la mission qui lui est confiée et garantit sa conformité aux normes en vigueur.</p>
 <h2>${d.penalites ? '6' : '5'}. Litiges</h2>
@@ -60,13 +60,13 @@ ${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : 
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>Dans le cadre de : ${d.contexte || '[à préciser]'}, les parties peuvent être amenées à échanger des informations confidentielles. Le présent accord a pour objet de définir les conditions dans lesquelles ces informations seront protégées.</p>
+<p>Dans le cadre de : ${escapeHTML(d.contexte) || '[à préciser]'}, les parties peuvent être amenées à échanger des informations confidentielles. Le présent accord a pour objet de définir les conditions dans lesquelles ces informations seront protégées.</p>
 <h2>2. Définition des informations confidentielles</h2>
 <p>Sont considérées comme confidentielles toutes informations techniques, commerciales, financières ou stratégiques communiquées par l'une des parties à l'autre, quelle que soit leur forme (écrite, orale, électronique).</p>
 <h2>3. Obligations</h2>
 <p>Chaque partie s'engage à ne pas divulguer les informations confidentielles reçues à des tiers, et à ne les utiliser que dans le cadre défini ci-dessus.</p>
 <h2>4. Durée</h2>
-<p>Les obligations de confidentialité s'appliquent pendant ${d.duree_confidentialite || '[durée à préciser]'}, y compris après la fin de la collaboration entre les parties.</p>
+<p>Les obligations de confidentialité s'appliquent pendant ${escapeHTML(d.duree_confidentialite) || '[durée à préciser]'}, y compris après la fin de la collaboration entre les parties.</p>
 <h2>5. Litiges</h2>
 <p>Tout litige relatif à l'exécution du présent accord relève de la compétence des tribunaux compétents.</p>`; }
   },
@@ -84,9 +84,9 @@ ${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : 
     ],
     corps: function(d) { return `
 <h2>1. Engagement</h2>
-<p>L'Employeur engage le Salarié en qualité de ${d.poste || '[poste à préciser]'}, dans le cadre d'un contrat à durée ${d.type_contrat === 'CDD' ? 'déterminée' : 'indéterminée'}, à compter du ${d.date_debut ? formatDate(d.date_debut) : '[date à préciser]'}${d.type_contrat === 'CDD' && d.date_fin ? ' jusqu\'au ' + formatDate(d.date_fin) : ''}.</p>
+<p>L'Employeur engage le Salarié en qualité de ${escapeHTML(d.poste) || '[poste à préciser]'}, dans le cadre d'un contrat à durée ${d.type_contrat === 'CDD' ? 'déterminée' : 'indéterminée'}, à compter du ${d.date_debut ? formatDate(d.date_debut) : '[date à préciser]'}${d.type_contrat === 'CDD' && d.date_fin ? ' jusqu\'au ' + formatDate(d.date_fin) : ''}.</p>
 <h2>2. Période d'essai</h2>
-<p>${d.periode_essai || '[à préciser conformément au Code du travail]'}</p>
+<p>${escapeHTML(d.periode_essai) || '[à préciser conformément au Code du travail]'}</p>
 <h2>3. Rémunération</h2>
 <p>Le Salarié percevra une rémunération mensuelle brute de ${d.salaire ? fmt(d.salaire) + ' MAD' : '[montant à préciser]'}, versée conformément à la législation en vigueur (CNSS, IR).</p>
 <h2>4. Obligations des parties</h2>
@@ -104,11 +104,11 @@ ${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : 
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>${d.objet_partenariat || '[à préciser]'}</p>
+<p>${escapeHTML(d.objet_partenariat) || '[à préciser]'}</p>
 <h2>2. Durée</h2>
-<p>${d.duree || '[à préciser]'}</p>
+<p>${escapeHTML(d.duree) || '[à préciser]'}</p>
 <h2>3. Conditions financières</h2>
-<p>${d.conditions_financieres || '[à préciser]'}</p>
+<p>${escapeHTML(d.conditions_financieres) || '[à préciser]'}</p>
 <h2>4. Indépendance des parties</h2>
 <p>Le présent accord ne crée ni société commune, ni lien de subordination entre les parties, qui demeurent chacune seule responsable de leur propre activité.</p>
 <h2>5. Litiges</h2>
@@ -125,12 +125,12 @@ ${d.penalites ? '<h2>4. Pénalités de retard</h2><p>' + d.penalites + '</p>' : 
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>Le Vendeur cède à l'Acheteur les biens suivants : ${d.description_biens || '[à préciser]'}.</p>
+<p>Le Vendeur cède à l'Acheteur les biens suivants : ${escapeHTML(d.description_biens) || '[à préciser]'}.</p>
 <h2>2. Prix</h2>
 <p>Le prix total est fixé à ${d.montant ? fmt(d.montant) + ' MAD' : '[montant à préciser]'} TTC.</p>
 <h2>3. Livraison</h2>
-<p>${d.delai_livraison || '[à préciser]'}</p>
-${d.garantie ? '<h2>4. Garantie</h2><p>' + d.garantie + '</p>' : ''}
+<p>${escapeHTML(d.delai_livraison) || '[à préciser]'}</p>
+${d.garantie ? '<h2>4. Garantie</h2><p>' + escapeHTML(d.garantie) + '</p>' : ''}
 <h2>${d.garantie ? '5' : '4'}. Transfert de propriété</h2>
 <p>Le transfert de propriété des biens intervient au paiement intégral du prix convenu.</p>
 <h2>${d.garantie ? '6' : '5'}. Litiges</h2>
@@ -147,11 +147,11 @@ ${d.garantie ? '<h2>4. Garantie</h2><p>' + d.garantie + '</p>' : ''}
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>Le Client confie au Consultant la mission suivante, réalisée en toute indépendance : ${d.mission || '[à préciser]'}.</p>
+<p>Le Client confie au Consultant la mission suivante, réalisée en toute indépendance : ${escapeHTML(d.mission) || '[à préciser]'}.</p>
 <h2>2. Durée</h2>
-<p>${d.duree || '[à préciser]'}</p>
+<p>${escapeHTML(d.duree) || '[à préciser]'}</p>
 <h2>3. Rémunération</h2>
-<p>La rémunération est fixée à ${escapeHTML(d.tarif || '[à préciser]')}. ${d.modalites_paiement || ''}</p>
+<p>La rémunération est fixée à ${escapeHTML(d.tarif || '[à préciser]')}. ${escapeHTML(d.modalites_paiement) || ''}</p>
 <h2>4. Indépendance</h2>
 <p>Le Consultant exerce sa mission en toute indépendance, sans lien de subordination avec le Client, et demeure seul responsable de ses obligations sociales et fiscales.</p>
 <h2>5. Litiges</h2>
@@ -168,9 +168,9 @@ ${d.garantie ? '<h2>4. Garantie</h2><p>' + d.garantie + '</p>' : ''}
     ],
     corps: function(d) { return `
 <h2>1. Objet</h2>
-<p>Le Bailleur met à disposition du Locataire le matériel suivant : ${d.materiel || '[à préciser]'}.</p>
+<p>Le Bailleur met à disposition du Locataire le matériel suivant : ${escapeHTML(d.materiel) || '[à préciser]'}.</p>
 <h2>2. Durée</h2>
-<p>${d.duree || '[à préciser]'}</p>
+<p>${escapeHTML(d.duree) || '[à préciser]'}</p>
 <h2>3. Loyer</h2>
 <p>Le loyer est fixé à ${d.loyer ? fmt(d.loyer) + ' MAD' : '[montant à préciser]'}.${d.depot_garantie ? ' Un dépôt de garantie de ' + fmt(d.depot_garantie) + ' MAD est versé à la signature, restitué en fin de location sous déduction des dégradations éventuelles.' : ''}</p>
 <h2>4. Obligations du Locataire</h2>
