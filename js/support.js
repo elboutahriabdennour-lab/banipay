@@ -44,16 +44,6 @@ async function envoyerTicketSupport() {
   }
 }
 
-// ============================================================
-// ESPACE AGENT SUPPORT — accès réservé, voir migration_phase31
-// ============================================================
-// PÉRIMÈTRE : la personne doit déjà avoir un compte Zelto (entreprise ou
-// comptable). Son accès à ce tableau de bord se débloque uniquement si son
-// email figure dans la table agents_support (ajout manuel via Supabase
-// Table Editor pour le premier agent — pas d'auto-inscription possible,
-// volontairement, pour éviter qu'un accès aussi sensible se donne tout
-// seul).
-
 async function ouvrirEspaceSupport() {
   if (!sb.user?.id) {
     showToast('Connectez-vous d\'abord avec votre compte Zelto', 'error');
@@ -89,10 +79,6 @@ STATE.statsSupport = STATE.statsSupport || null;
 STATE.agentsSupport = STATE.agentsSupport || [];
 STATE._ongletSupport = STATE._ongletSupport || 'tickets';
 
-// ============================================================
-// VUE À ONGLETS — Tickets / Statistiques / Agents (Agents visible par
-// tous les agents, gestion réservée aux admins — voir migration_phase39)
-// ============================================================
 function switchOngletSupport(onglet) {
   STATE._ongletSupport = onglet;
   document.querySelectorAll('#screen-espace-support .support-tab').forEach(function(b) {
@@ -118,8 +104,6 @@ async function chargerTicketsSupport() {
     STATE.ticketsSupport = resp.ok ? ((await resp.json()) || []) : [];
   } catch(e) { STATE.ticketsSupport = []; }
 
-  // NOUVEAU : compteurs de messages, pour voir l'historique de
-  // discussion d'un coup d'œil sans ouvrir chaque ticket.
   try {
     const respC = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_compteurs_messages_tickets', {
       method: 'POST',
@@ -137,6 +121,7 @@ async function chargerTicketsSupport() {
 function renderTicketsSupport() {
   const container = el('tickets-support-liste');
   if (!container) return;
+  const monId = sb.user?.id;
   const tickets = STATE.ticketsSupport || [];
   const filtre = STATE._filtreTicketsSupport || 'tous';
   const filtres = filtre === 'tous' ? tickets : tickets.filter(function(t) { return t.statut === filtre; });
@@ -160,13 +145,43 @@ function renderTicketsSupport() {
             return '<div style="font-size:11px;color:#1F6F72;background:#E9F4F3;padding:6px 8px;border-radius:8px;margin-bottom:8px">💬 ' + c.nb_messages + ' message(s) — dernier (' + (c.dernier_auteur === 'agent' ? 'vous' : 'client') + ') : "' + escapeHTML((c.dernier_message||'').slice(0,60)) + (c.dernier_message && c.dernier_message.length > 60 ? '…' : '') + '"</div>';
           })() +
           '<div style="font-size:10px;color:#9C9186;margin-bottom:8px">' + formatDateTime(t.created_at) + '</div>' +
-          '<div style="display:flex;gap:6px">' +
+          // FIX (retour utilisateur) : aucune notion d'assignation
+          // n'existait — tous les agents voyaient tous les tickets sans
+          // distinction de qui traite quoi. Le bandeau ci-dessous
+          // affiche l'agent en charge s'il y en a un (n'affiche rien
+          // silencieusement si le champ assigne_a_nom n'est pas encore
+          // renvoyé par get_tous_tickets_support, pour ne jamais rien
+          // casser avant la migration SQL correspondante).
+          (t.assigne_a_nom ? '<div style="font-size:11px;font-weight:600;color:' + (t.assigne_a === monId ? '#6E8F4E' : '#B8860B') + ';margin-bottom:8px">👤 Pris en charge par ' + (t.assigne_a === monId ? 'vous' : escapeHTML(t.assigne_a_nom)) + '</div>' : '') +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+            (!t.assigne_a || t.assigne_a === monId ? '<button onclick="prendreEnChargeTicket(' + t.id + ')" style="flex:1;padding:7px;background:' + (t.assigne_a === monId ? '#F1EEE8' : '#FBF0DA') + ';color:' + (t.assigne_a === monId ? '#6B5F54' : '#A67A16') + ';border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">' + (t.assigne_a === monId ? '↩️ Libérer' : '🙋 Prendre en charge') + '</button>' : '') +
             (t.statut !== 'en_cours' ? '<button onclick="changerStatutTicket(' + t.id + ',\'en_cours\')" style="flex:1;padding:7px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⏳ En cours</button>' : '') +
             (t.statut !== 'resolu' ? '<button onclick="changerStatutTicket(' + t.id + ',\'resolu\')" style="flex:1;padding:7px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Résolu</button>' : '') +
             '<button onclick="ouvrirChatTicket(' + t.id + ',\'' + escapeHTML(t.sujet||'').replace(/'/g,"\\'") + '\')" style="flex:1;padding:7px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">💬 Discuter</button>' +
           '</div>' +
         '</div>';
       }).join('');
+}
+
+// NOUVEAU (retour utilisateur) : prendre en charge un ticket, ou le
+// libérer si on l'avait déjà pris. Nécessite la migration SQL associée
+// (colonne assigne_a + fonction assigner_ticket_support) — si elle n'a
+// pas encore été exécutée, affiche une erreur claire plutôt que de
+// planter silencieusement.
+async function prendreEnChargeTicket(ticketId) {
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/assigner_ticket_support', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_ticket_id: ticketId })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(function() { return {}; });
+      showToast('❌ ' + (err.message || 'Impossible — la migration SQL a-t-elle été exécutée ?'), 'error');
+      return;
+    }
+    await chargerTicketsSupport();
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
 
 function filtrerTicketsSupport(filtre, btn) {
@@ -176,9 +191,6 @@ function filtrerTicketsSupport(filtre, btn) {
   renderTicketsSupport();
 }
 
-// ============================================================
-// ONGLET STATISTIQUES
-// ============================================================
 async function chargerStatsSupport() {
   const zone = el('support-stats-content');
   if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
@@ -214,10 +226,6 @@ function renderStatsSupport() {
   '</div>';
 }
 
-// ============================================================
-// ONGLET AGENTS — visible par tous les agents, gestion (ajout/retrait)
-// réservée aux admins.
-// ============================================================
 async function chargerAgentsSupport() {
   const zone = el('support-agents-content');
   if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
@@ -266,9 +274,6 @@ async function ajouterAgentSupport() {
   if (!email || !email.includes('@')) { showToast('Entrez un email valide', 'error'); return; }
   showToast('⏳ Envoi de l\'invitation...');
   try {
-    // Passe par la fonction Edge (invite-support-agent) plutôt que
-    // d'ajouter directement en base — ça envoie une vraie invitation par
-    // email, pas juste un ajout silencieux dans la liste blanche.
     const resp = await fetch(SUPABASE_URL + '/functions/v1/invite-support-agent', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
@@ -313,9 +318,6 @@ async function changerStatutTicket(ticketId, statut) {
   }
 }
 
-// ============================================================
-// CHATBOT FAQ — mots-clés, pas une IA (voir note en tête de fichier)
-// ============================================================
 const FAQ_ZELTO = [
   { mots: ['facture', 'créer une facture', 'nouvelle facture'], reponse: 'Pour créer une facture : Dashboard → "Facture" (action rapide), remplissez le client et les lignes, puis "Sauvegarder".' },
   { mots: ['devis'], reponse: 'Pour créer un devis : Dashboard → "Devis", remplissez le client et les lignes. Une fois accepté par le client, vous pouvez le convertir en facture d\'un clic.' },
