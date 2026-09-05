@@ -26,12 +26,40 @@ function renderProfil() {
     ['RC',p.rc],['IF',p.identifiant_fiscal],['ICE',p.ice],
     ['Patente',p.patente],['CNSS',p.cnss],['🏦 Banque',p.banque],['RIB',p.rib],
     ['📅 Conditions',p.conditions],
+    // NOUVEAU (retour utilisateur) : informations légales complémentaires.
+    ['💰 Capital social',p.capital_social?fmt(p.capital_social)+' MAD':null],
+    ['📅 Date de création',p.date_creation?formatDate(p.date_creation):null],
+    ['📊 Régime fiscal',p.regime_fiscal==='reel'?'Réel':p.regime_fiscal==='forfaitaire'?'Forfaitaire':null],
   ].filter(([,v])=>v);
   const infosCard = el('pv-infos-card');
   if (infosCard) infosCard.innerHTML =
     `<div class="p-card-title">Informations entreprise</div>` +
     fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('') +
     `<div class="p-row"><span class="p-lbl">🎨 Couleur PDF</span><span class="p-val"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${p.couleur_accent||'#C9971F'};vertical-align:middle;margin-right:6px;border:1px solid #E3DCCF"></span>${p.couleur_accent||'#C9971F'}</span></div>`;
+
+  // NOUVEAU (retour utilisateur) : profil public — description et
+  // réseaux sociaux, affichés dans une carte séparée si l'élément HTML
+  // existe (n'affiche rien si aucune de ces infos n'est renseignée).
+  const publicCard = el('pv-public-card');
+  if (publicCard) {
+    const reseaux = [
+      p.facebook ? `<a href="${escapeHTML(p.facebook)}" target="_blank" style="margin-right:10px">📘 Facebook</a>` : '',
+      p.instagram ? `<a href="${escapeHTML(p.instagram)}" target="_blank" style="margin-right:10px">📸 Instagram</a>` : '',
+      p.linkedin ? `<a href="${escapeHTML(p.linkedin)}" target="_blank">💼 LinkedIn</a>` : '',
+    ].filter(Boolean).join('');
+    const infosPubliques = [
+      ['🕐 Horaires',p.horaires],
+      ["📍 Zone d'intervention",p.zone_intervention],
+      ['💳 Moyens de paiement',p.moyens_paiement],
+    ].filter(([,v])=>v);
+    const rienAAfficher = !p.description && !reseaux && !infosPubliques.length;
+    publicCard.innerHTML = rienAAfficher ? '' :
+      `<div class="p-card-title">Profil public</div>` +
+      (p.description ? `<div style="font-size:12px;color:#2A2420;padding:8px 0;white-space:pre-wrap">${escapeHTML(p.description)}</div>` : '') +
+      infosPubliques.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${escapeHTML(v)}</span></div>`).join('') +
+      (reseaux ? `<div style="padding:10px 0;font-size:12px">${reseaux}</div>` : '');
+  }
+
   const publicUrl = window.location.origin+window.location.pathname+'?profil='+id;
   setEl('pv-lien', publicUrl);
   const qrContainer = el('qr-canvas-container');
@@ -57,6 +85,15 @@ function goProfilEdit(show=true) {
     'pe-rib':'rib','pe-conditions':'conditions',
     'pe-numerotation':'numerotation','pe-objectif':'objectif_mensuel',
     'pe-couleur':'couleur_accent',
+    // NOUVEAU (retour utilisateur) : légal complémentaire + profil
+    // public. Le site web réutilise "pe-web"/"web", déjà existant
+    // ci-dessus — pas de doublon créé.
+    'pe-capital-social':'capital_social','pe-date-creation':'date_creation',
+    'pe-regime-fiscal':'regime_fiscal',
+    'pe-description':'description','pe-facebook':'facebook',
+    'pe-instagram':'instagram','pe-linkedin':'linkedin',
+    'pe-horaires':'horaires','pe-zone-intervention':'zone_intervention',
+    'pe-moyens-paiement':'moyens_paiement',
   };
   Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#C9971F':'');});
   if (typeof initSignatureEntrepriseCanvas === 'function') {
@@ -74,11 +111,35 @@ async function saveProfil() {
     'pe-rib':'rib','pe-conditions':'conditions',
     'pe-numerotation':'numerotation','pe-objectif':'objectif_mensuel',
     'pe-couleur':'couleur_accent',
+    // NOUVEAU (retour utilisateur) : même liste que dans goProfilEdit() —
+    // les 2 doivent toujours rester synchronisées.
+    'pe-capital-social':'capital_social','pe-date-creation':'date_creation',
+    'pe-regime-fiscal':'regime_fiscal',
+    'pe-description':'description','pe-facebook':'facebook',
+    'pe-instagram':'instagram','pe-linkedin':'linkedin',
+    'pe-horaires':'horaires','pe-zone-intervention':'zone_intervention',
+    'pe-moyens-paiement':'moyens_paiement',
   };
   Object.entries(map).forEach(([id,key])=>{
     const e=el(id);
     if(e){ data[key]=e.value.trim(); STATE.profil[key]=e.value.trim(); }
   });
+  // NOUVEAU (retour utilisateur) : capital_social est une colonne
+  // numérique — une chaîne vide envoyée par la ligne générique
+  // ci-dessus aurait fait échouer TOUTE la sauvegarde, pas seulement ce
+  // champ. Converti explicitement, vide -> null.
+  if ('capital_social' in data) {
+    const val = parseFloat(data.capital_social);
+    data.capital_social = isNaN(val) ? null : val;
+    STATE.profil.capital_social = data.capital_social;
+  }
+  // date_creation est une colonne "date" — une chaîne vide y est
+  // refusée par Postgres, contrairement à une colonne "text". Vide ->
+  // null, comme pour capital_social ci-dessus.
+  if ('date_creation' in data && !data.date_creation) {
+    data.date_creation = null;
+    STATE.profil.date_creation = null;
+  }
   if (typeof getSignatureEntrepriseDataUrl === 'function') {
     const sigDataUrl = getSignatureEntrepriseDataUrl();
     if (sigDataUrl !== null) {
@@ -451,6 +512,28 @@ async function deleteAccount() {
   } catch(e) { showToast('❌ ' + e.message, 'error'); }
 }
 let _archiveType = '';
+// ============================================================
+// FIX (retour utilisateur + bug plus profond trouve en creusant) :
+// deux problemes distincts corriges ici.
+//
+// 1) Aucun moyen d'OUVRIR un document archive n'a jamais existe --
+//    seulement un bouton supprimer.
+//
+// 2) Plus grave : ce bouton supprimer lui-meme ne fonctionnait
+//    probablement pas non plus. La version originale attachait le
+//    clic via `card.querySelector('.del-archive-btn').onclick = ...`
+//    PUIS convertissait la carte en simple texte (`card.outerHTML`)
+//    avant de l'inserer dans la page. Or transformer un element en
+//    texte fait perdre tout gestionnaire de clic attache en JavaScript
+//    (`.onclick = ...`) -- ce n'est conserve que si le clic est ecrit
+//    directement dans le HTML (`onclick="..."`). Autrement dit, les
+//    boutons de cette liste n'avaient jamais aucune action reelle.
+//
+// Corrige en utilisant la delegation d'evenements (un seul ecouteur
+// pose une fois sur le conteneur, qui identifie ensuite sur quel
+// bouton on a clique) -- le meme mecanisme deja utilise avec succes
+// ailleurs dans l'app.
+// ============================================================
 function renderArchive() {
   const list = el('archive-list');
   const count = el('archive-count');
@@ -462,18 +545,41 @@ function renderArchive() {
     return;
   }
   list.innerHTML = docs.map(function(d) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.margin = '0 20px 10px';
-    card.innerHTML = '<div style="display:flex;align-items:center;gap:12px">' +
-      '<div style="width:40px;height:40px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center;font-size:20px">' + (d.icon||'\u{1F4C4}') + '</div>' +
-      '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + escapeHTML(d.nom) + '</div>' +
-      '<div style="font-size:11px;color:#9C9186">' + d.type + ' · ' + (d.date||'') + '</div></div>' +
-      '<button data-id="' + d.id + '" class="del-archive-btn" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">\u{1F5D1}\uFE0F</button>' +
+    return '<div class="card" style="margin:0 20px 10px">' +
+      '<div style="display:flex;align-items:center;gap:12px">' +
+        '<div class="archive-ouvrir" data-id="' + d.id + '" style="display:flex;align-items:center;gap:12px;flex:1;cursor:pointer">' +
+          '<div style="width:40px;height:40px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center;font-size:20px">' + (d.icon||'\u{1F4C4}') + '</div>' +
+          '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + escapeHTML(d.nom) + '</div>' +
+          '<div style="font-size:11px;color:#9C9186">' + d.type + ' · ' + (d.date||'') + '</div></div>' +
+        '</div>' +
+        '<button data-id="' + d.id + '" class="archive-supprimer" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">\u{1F5D1}\uFE0F</button>' +
+      '</div>' +
     '</div>';
-    card.querySelector('.del-archive-btn').onclick = function() { supprimerDocArchive(this.dataset.id); };
-    return card.outerHTML;
   }).join('');
+
+  if (list.dataset.clickBound !== '1') {
+    list.dataset.clickBound = '1';
+    list.addEventListener('click', function(e) {
+      const zoneOuvrir = e.target.closest('.archive-ouvrir');
+      if (zoneOuvrir) { ouvrirDocumentArchive(zoneOuvrir.dataset.id); return; }
+      const btnSupprimer = e.target.closest('.archive-supprimer');
+      if (btnSupprimer) { supprimerDocArchive(btnSupprimer.dataset.id); return; }
+    });
+  }
+}
+
+// NOUVEAU (retour utilisateur) : reutilise exactement le meme
+// mecanisme deja en place pour les releves bancaires
+// (telechargerFichierBase64), qui fonctionne deja correctement
+// ailleurs dans l'app.
+function ouvrirDocumentArchive(id) {
+  const d = (STATE.archive || []).find(function(x) { return String(x.id) === String(id); });
+  if (!d || !d.data) { showToast('Fichier introuvable', 'error'); return; }
+  if (typeof telechargerFichierBase64 === 'function') {
+    telechargerFichierBase64(d.data, d.nom || 'document');
+  } else {
+    window.open(d.data, '_blank');
+  }
 }
 function ajouterDocumentArchive(type) {
   _archiveType = type;
