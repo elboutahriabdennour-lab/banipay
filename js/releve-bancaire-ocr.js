@@ -9,7 +9,26 @@
 // Chaque suggestion reste à vérifier — rien n'est jamais lié
 // automatiquement sans confirmation.
 
-async function lireReleveBancaire(pdfDataUrl) {
+// FIX (retour utilisateur) : n'acceptait que les PDF — beaucoup de
+// banques marocaines proposent aussi (ou uniquement) un export Excel du
+// relevé, généralement bien plus fiable à lire qu'un PDF scanné
+// puisque les colonnes (date, libellé, montant) sont déjà séparées
+// proprement, contrairement à un texte brut à deviner par regex.
+// Détecte maintenant le type de fichier reçu et redirige vers la bonne
+// méthode de lecture — le reste de l'app (rapprochement, affichage,
+// confirmation) ne change pas, quel que soit le format d'origine.
+async function lireReleveBancaire(fichierDataUrl) {
+  const estExcel = /^data:application\/(vnd\.openxmlformats-officedocument\.spreadsheetml|vnd\.ms-excel)/.test(fichierDataUrl)
+    || /^data:.*;base64,/.test(fichierDataUrl) === false; // repli si le type mime n'est pas reconnu du tout
+  if (estExcel) {
+    return await _lireReleveBancaireExcel(fichierDataUrl);
+  }
+  return await _lireReleveBancairePdf(fichierDataUrl);
+}
+
+// Lecture PDF (comportement historique, inchangé) — extraction du texte
+// brut, puis mêmes heuristiques regex qu'avant.
+async function _lireReleveBancairePdf(pdfDataUrl) {
   try {
     await _chargerPdfJs();
   } catch(e) {
@@ -31,9 +50,89 @@ async function lireReleveBancaire(pdfDataUrl) {
     }
     return _extraireTransactionsReleve(texte);
   } catch(e) {
-    console.warn('lireReleveBancaire:', e);
+    console.warn('_lireReleveBancairePdf:', e);
     return null;
   }
+}
+
+// NOUVEAU : lecture d'un relevé au format Excel (.xlsx/.xls) — réutilise
+// SheetJS, déjà chargée ailleurs dans l'app pour l'export comptable
+// (voir _chargerSheetJS() dans finance.js), pas de nouvelle dépendance.
+// Plus fiable que le PDF : les colonnes sont déjà séparées par la
+// banque, on n'a pas besoin de deviner où finit la date et où commence
+// le montant dans une seule ligne de texte brut.
+async function _lireReleveBancaireExcel(excelDataUrl) {
+  try {
+    if (typeof _chargerSheetJS === 'function') await _chargerSheetJS();
+    if (typeof XLSX === 'undefined') {
+      console.warn('SheetJS indisponible — lecture automatique du relevé Excel impossible');
+      return null;
+    }
+    const base64 = excelDataUrl.split(',')[1];
+    const binaire = atob(base64);
+    const octets = new Uint8Array(binaire.length);
+    for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
+    const classeur = XLSX.read(octets, { type: 'array', cellDates: true });
+    const premierOnglet = classeur.Sheets[classeur.SheetNames[0]];
+    const lignes = XLSX.utils.sheet_to_json(premierOnglet, { defval: '' });
+    return _extraireTransactionsReleveExcel(lignes);
+  } catch(e) {
+    console.warn('_lireReleveBancaireExcel:', e);
+    return null;
+  }
+}
+
+// Heuristique sur les en-têtes de colonnes — volontairement tolérante,
+// puisque chaque banque nomme ses colonnes différemment (Date/Date
+// opération/Date valeur, Libellé/Description/Intitulé, un seul montant
+// signé OU deux colonnes Débit/Crédit séparées).
+function _extraireTransactionsReleveExcel(lignes) {
+  const transactions = [];
+
+  function valeurColonne(ligne, cles) {
+    const clesLigne = Object.keys(ligne);
+    for (const cle of clesLigne) {
+      const cleNormalisee = cle.toLowerCase().trim();
+      if (cles.some(function(k) { return cleNormalisee.includes(k); })) {
+        return ligne[cle];
+      }
+    }
+    return '';
+  }
+
+  lignes.forEach(function(ligne) {
+    const brutDate = valeurColonne(ligne, ['date opération', 'date operation', 'date valeur', 'date']);
+    const description = String(valeurColonne(ligne, ['libellé', 'libelle', 'description', 'intitulé', 'intitule', 'objet'])).trim();
+    if (!description) return;
+
+    let dateBrute = '';
+    if (brutDate instanceof Date) {
+      dateBrute = String(brutDate.getDate()).padStart(2,'0') + '/' + String(brutDate.getMonth()+1).padStart(2,'0') + '/' + brutDate.getFullYear();
+    } else if (brutDate) {
+      dateBrute = String(brutDate).trim();
+    }
+
+    // Soit un montant unique signé, soit deux colonnes Débit/Crédit
+    // séparées — on prend celle qui est non vide, en valeur absolue
+    // (le sens n'a pas d'importance ici, seul le montant compte pour le
+    // rapprochement par égalité).
+    const montantUnique = valeurColonne(ligne, ['montant']);
+    const debit = valeurColonne(ligne, ['débit', 'debit']);
+    const credit = valeurColonne(ligne, ['crédit', 'credit']);
+
+    let montant = null;
+    [montantUnique, debit, credit].forEach(function(v) {
+      if (montant !== null) return;
+      const nettoye = String(v).replace(/\s/g, '').replace(',', '.');
+      const val = parseFloat(nettoye);
+      if (!isNaN(val) && val !== 0) montant = Math.abs(val);
+    });
+    if (montant === null || montant <= 0 || montant > 10000000) return;
+
+    transactions.push({ dateBrute: dateBrute, description: description.slice(0, 80), montant: montant });
+  });
+
+  return transactions;
 }
 
 function _extraireTransactionsReleve(texte) {
