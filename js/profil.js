@@ -568,18 +568,58 @@ function renderArchive() {
   }
 }
 
-// NOUVEAU (retour utilisateur) : reutilise exactement le meme
-// mecanisme deja en place pour les releves bancaires
-// (telechargerFichierBase64), qui fonctionne deja correctement
-// ailleurs dans l'app.
+// FIX (retour utilisateur) : ouvrait auparavant un téléchargement
+// automatique et immédiat, sans jamais permettre de simplement
+// consulter le document d'abord. Affiche maintenant un vrai aperçu
+// plein écran (image ou PDF selon le type), avec un bouton
+// "Télécharger" séparé, à utiliser seulement si on veut vraiment garder
+// une copie du fichier sur l'appareil.
 function ouvrirDocumentArchive(id) {
   const d = (STATE.archive || []).find(function(x) { return String(x.id) === String(id); });
   if (!d || !d.data) { showToast('Fichier introuvable', 'error'); return; }
-  if (typeof telechargerFichierBase64 === 'function') {
-    telechargerFichierBase64(d.data, d.nom || 'document');
+
+  const estImage = /^data:image\//.test(d.data);
+  const estPdf = /^data:application\/pdf/.test(d.data);
+
+  const overlay = document.createElement('div');
+  overlay.id = 'apercu-archive-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column';
+
+  const barre = document.createElement('div');
+  barre.style.cssText = 'background:linear-gradient(135deg,#241F1B,#1F6F72);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0';
+  barre.innerHTML =
+    '<button id="apercu-archive-fermer" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Fermer</button>' +
+    '<div style="flex:1;color:#fff;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHTML(d.nom || 'Document') + '</div>' +
+    '<button id="apercu-archive-telecharger" style="background:#C9971F;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⬇️ Télécharger</button>';
+
+  const zoneContenu = document.createElement('div');
+  zoneContenu.style.cssText = 'flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:#000';
+
+  if (estImage) {
+    zoneContenu.innerHTML = '<img src="' + d.data + '" style="max-width:100%;max-height:100%;object-fit:contain">';
+  } else if (estPdf) {
+    zoneContenu.innerHTML = '<iframe src="' + d.data + '" style="width:100%;height:100%;border:none;background:#fff"></iframe>';
   } else {
-    window.open(d.data, '_blank');
+    // Type non prévisualisable (ex: .docx) — pas de bloqueur, juste un
+    // message clair invitant à télécharger pour l'ouvrir.
+    zoneContenu.innerHTML = '<div style="color:#fff;text-align:center;padding:24px"><div style="font-size:40px;margin-bottom:12px">📄</div><div style="font-size:13px;opacity:0.8">Aperçu non disponible pour ce type de fichier<br>Téléchargez-le pour l\'ouvrir</div></div>';
   }
+
+  overlay.appendChild(barre);
+  overlay.appendChild(zoneContenu);
+  document.body.appendChild(overlay);
+
+  document.getElementById('apercu-archive-fermer').onclick = function() { overlay.remove(); };
+  document.getElementById('apercu-archive-telecharger').onclick = function() {
+    if (typeof telechargerFichierBase64 === 'function') {
+      telechargerFichierBase64(d.data, d.nom || 'document');
+    } else {
+      const a = document.createElement('a');
+      a.href = d.data;
+      a.download = d.nom || 'document';
+      a.click();
+    }
+  };
 }
 function ajouterDocumentArchive(type) {
   _archiveType = type;
