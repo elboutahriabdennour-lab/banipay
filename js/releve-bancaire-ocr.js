@@ -23,10 +23,6 @@ async function lireReleveBancaire(pdfDataUrl) {
     for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
     const doc = await pdfjsLib.getDocument({ data: octets }).promise;
     let texte = '';
-    // NOUVEAU : contrairement à une facture (info sur la 1ère page), un
-    // relevé mensuel peut compter de nombreuses transactions sur
-    // plusieurs pages — limite montée à 20 pages (un relevé mensuel
-    // dépasse rarement cette longueur).
     const nbPages = Math.min(doc.numPages, 20);
     for (let p = 1; p <= nbPages; p++) {
       const page = await doc.getPage(p);
@@ -40,10 +36,6 @@ async function lireReleveBancaire(pdfDataUrl) {
   }
 }
 
-// Détecte les lignes ressemblant à une transaction : une date, puis du
-// texte, puis un montant. Volontairement tolérant sur les formats de
-// date et de montant (espaces, virgule ou point comme séparateur
-// décimal, espace comme séparateur de milliers).
 function _extraireTransactionsReleve(texte) {
   const transactions = [];
   const lignes = texte.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
@@ -59,39 +51,49 @@ function _extraireTransactionsReleve(texte) {
     const montant = parseFloat(montantBrut);
     if (isNaN(montant) || montant <= 0 || montant > 10000000) continue;
 
-    // Description : tout ce qui reste entre la date et le montant
     const description = ligne
       .replace(m[1], '')
       .replace(m[2], '')
       .replace(/[|;]/g, ' ')
       .trim()
       .slice(0, 80);
-    if (description.length < 3) continue; // trop court pour être fiable
+    if (description.length < 3) continue;
 
     transactions.push({ dateBrute: dateBrute, description: description, montant: montant });
   }
   return transactions;
 }
 
-// Pour chaque transaction, cherche des factures dont le montant TTC est
-// proche (tolérance de 1 MAD pour absorber d'éventuels arrondis) et qui
-// ne sont pas déjà marquées payées — jamais de lien automatique, juste
-// une proposition que l'entreprise doit confirmer elle-même.
+// FIX (retour utilisateur) : ne cherchait auparavant que du côté des
+// factures de vente (encaissements clients) — un virement SORTANT vers
+// un fournisseur, même correspondant exactement à un achat déjà
+// enregistré, s'affichait toujours comme "aucune correspondance",
+// puisque STATE.achats n'était jamais consulté. Cherche désormais des
+// deux côtés, et marque chaque correspondance par son type (_type)
+// pour que l'affichage et la confirmation sachent quelle table mettre
+// à jour.
 function suggererRapprochements(transactions) {
   const facturesCandidates = (STATE.factures || []).filter(function(f) {
     return f.statut !== 'payee' && f.statut !== 'refusee';
   });
+  const achatsCandidats = (STATE.achats || []).filter(function(a) {
+    return a.statut !== 'payee';
+  });
   return transactions.map(function(t) {
-    const correspondances = facturesCandidates.filter(function(f) {
+    const correspondancesFactures = facturesCandidates.filter(function(f) {
       return Math.abs(Number(f.ttc || 0) - t.montant) < 1;
+    }).map(function(f) {
+      return { id: f.id, ref: f.ref, client: f.client, _type: 'facture' };
     });
-    return Object.assign({}, t, { correspondances: correspondances });
+    const correspondancesAchats = achatsCandidats.filter(function(a) {
+      return Math.abs(Number(a.ttc || 0) - t.montant) < 1;
+    }).map(function(a) {
+      return { id: a.id, ref: a.ref_fournisseur || '', client: a.fournisseur || '', _type: 'achat' };
+    });
+    return Object.assign({}, t, { correspondances: correspondancesFactures.concat(correspondancesAchats) });
   });
 }
 
-// ============================================================
-// AFFICHAGE — déclenché depuis l'écran Relevés, sur un relevé déjà uploadé
-// ============================================================
 async function analyserReleve(releveId) {
   const releve = (STATE.releves || []).find(function(r) { return String(r.id) === String(releveId); });
   if (!releve) return;
@@ -125,22 +127,33 @@ function renderTransactionsReleve() {
         '</div>' +
         (aDesCorrespondances
           ? t.correspondances.map(function(f) {
-              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',' + i + ')" style="width:100%;padding:9px;background:#EEF3E4;color:#55702E;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">✅ Lier à la facture ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + '</button>';
+              const estAchat = f._type === 'achat';
+              const libelle = estAchat ? 'l\'achat' : 'la facture';
+              const couleurFond = estAchat ? '#F5E4E1' : '#EEF3E4';
+              const couleurTexte = estAchat ? '#8E2E24' : '#55702E';
+              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + '</button>';
             }).join('')
-          : '<div style="font-size:11px;color:#9C9186">Aucune facture correspondante trouvée</div>') +
+          : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
       '</div>';
     }).join('');
 }
 
-// Marque la facture comme payée — ne fait RIEN d'automatique au-delà de
-// cette seule confirmation explicite de la personne.
-async function confirmerRapprochementReleve(factureId, indexTransaction) {
-  if (typeof marquerPayee === 'function') {
-    await marquerPayee(factureId);
+// FIX (retour utilisateur) : prend maintenant un paramètre type
+// ('facture' ou 'achat') pour mettre à jour la bonne table — auparavant
+// cette fonction ne savait faire que des factures de vente.
+async function confirmerRapprochementReleve(id, type, indexTransaction) {
+  if (type === 'achat') {
+    try {
+      await sb.patch('factures_achat', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'payee' });
+      const a = (STATE.achats || []).find(function(x) { return String(x.id) === String(id); });
+      if (a) a.statut = 'payee';
+    } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
+  } else if (typeof marquerPayee === 'function') {
+    await marquerPayee(id);
   } else {
     try {
-      await sb.patch('factures', 'id=eq.' + factureId + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'payee' });
-      const f = (STATE.factures || []).find(function(x) { return String(x.id) === String(factureId); });
+      await sb.patch('factures', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'payee' });
+      const f = (STATE.factures || []).find(function(x) { return String(x.id) === String(id); });
       if (f) f.statut = 'payee';
     } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
   }
@@ -149,5 +162,5 @@ async function confirmerRapprochementReleve(factureId, indexTransaction) {
     STATE._transactionsReleveActuel[indexTransaction]._traitee = true;
   }
   renderTransactionsReleve();
-  showToast('✅ Facture rapprochée', 'success');
+  showToast(type === 'achat' ? '✅ Achat rapproché' : '✅ Facture rapprochée', 'success');
 }
