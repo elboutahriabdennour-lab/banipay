@@ -60,11 +60,20 @@ async function lireFactureParOCR(imageDataUrl) {
     if (suggestions.date && el('achat-date') && !el('achat-date').value) {
       el('achat-date').value = suggestions.date;
     }
+    // FIX (retour utilisateur) : le montant — le champ le plus risqué en
+    // cas d'erreur de lecture (une virgule mal interprétée peut
+    // transformer 1250 en 12,50 sans que rien ne l'indique) — était
+    // ajouté directement à la ligne d'achat sans jamais demander
+    // confirmation. Le nom du fournisseur et la date restent pré-remplis
+    // sans confirmation bloquante (déjà visuellement signalés en orange,
+    // risque bien moindre qu'un montant faux), mais le montant demande
+    // désormais une confirmation explicite avant d'être ajouté.
     if (suggestions.montantTTC && !STATE.lignesAchat.length) {
-      // Propose une ligne unique avec le montant détecté — l'utilisateur
-      // peut la modifier ou la remplacer par des lignes détaillées.
-      STATE.lignesAchat.push({ desc: 'Ligne suggérée par lecture automatique (à vérifier)', qte: 1, pu: suggestions.montantTTC, unite: 'u', produit_id: null });
-      if (typeof renderLignesAchat === 'function') renderLignesAchat();
+      const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nAjouter une ligne avec ce montant ? Vérifiez-le bien avant de confirmer.');
+      if (confirme) {
+        STATE.lignesAchat.push({ desc: 'Ligne suggérée par lecture automatique (à vérifier)', qte: 1, pu: suggestions.montantTTC, unite: 'u', produit_id: null });
+        if (typeof renderLignesAchat === 'function') renderLignesAchat();
+      }
     }
   } catch(e) {
     if (zoneStatut) {
@@ -74,20 +83,6 @@ async function lireFactureParOCR(imageDataUrl) {
     }
   }
 }
-// ============================================================
-// LECTURE DE PDF — factures électroniques (Maroc Telecom, Orange, et
-// autres fournisseurs qui envoient un PDF généré par ordinateur, pas
-// scanné). Contrairement à la photo, on ne fait PAS d'OCR ici : ces PDF
-// contiennent déjà le texte en tant que tel (pas une image du texte), donc
-// on l'extrait directement — plus fiable et plus rapide qu'une OCR sur un
-// rendu de page. Réutilise les mêmes heuristiques de détection que la
-// photo (_extraireSuggestionsFacture), donc les mêmes limites
-// s'appliquent : suggestions à vérifier, jamais enregistrées telles
-// quelles.
-// PÉRIMÈTRE HONNÊTE : ceci ne se connecte à AUCUN compte Maroc Telecom /
-// Orange / autre — pas d'accès API chez ces fournisseurs. L'utilisateur
-// doit lui-même récupérer le PDF (email, espace client) et l'importer ici
-// manuellement.
 let _pdfjsChargement = null;
 function _chargerPdfJs() {
   if (typeof pdfjsLib !== 'undefined') return Promise.resolve();
@@ -118,16 +113,12 @@ async function lireFacturePDF(pdfDataUrl) {
   const preview = el('achat-pj-preview');
   if (preview) preview.appendChild(zoneStatut);
   try {
-    // data:application/pdf;base64,XXXX -> ArrayBuffer attendu par pdf.js
     const base64 = pdfDataUrl.split(',')[1];
     const binaire = atob(base64);
     const octets = new Uint8Array(binaire.length);
     for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
     const doc = await pdfjsLib.getDocument({ data: octets }).promise;
     let texte = '';
-    // On se limite aux 3 premières pages — largement suffisant pour une
-    // facture (le total/fournisseur/date sont quasi toujours sur la
-    // première page), et ça évite de traiter un PDF de 50 pages inutilement.
     const nbPages = Math.min(doc.numPages, 3);
     for (let p = 1; p <= nbPages; p++) {
       const page = await doc.getPage(p);
@@ -150,9 +141,14 @@ async function lireFacturePDF(pdfDataUrl) {
     if (suggestions.date && el('achat-date') && !el('achat-date').value) {
       el('achat-date').value = suggestions.date;
     }
+    // FIX (retour utilisateur) : même correctif que pour la lecture par
+    // photo — voir le commentaire détaillé dans lireFactureParOCR().
     if (suggestions.montantTTC && !STATE.lignesAchat.length) {
-      STATE.lignesAchat.push({ desc: 'Ligne suggérée par lecture automatique du PDF (à vérifier)', qte: 1, pu: suggestions.montantTTC, unite: 'u', produit_id: null });
-      if (typeof renderLignesAchat === 'function') renderLignesAchat();
+      const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nAjouter une ligne avec ce montant ? Vérifiez-le bien avant de confirmer.');
+      if (confirme) {
+        STATE.lignesAchat.push({ desc: 'Ligne suggérée par lecture automatique du PDF (à vérifier)', qte: 1, pu: suggestions.montantTTC, unite: 'u', produit_id: null });
+        if (typeof renderLignesAchat === 'function') renderLignesAchat();
+      }
     }
   } catch(e) {
     if (zoneStatut) {
@@ -162,23 +158,13 @@ async function lireFacturePDF(pdfDataUrl) {
     }
   }
 }
-// Heuristiques simples sur le texte brut extrait par l'OCR
 function _extraireSuggestionsFacture(texte) {
   const suggestions = { fournisseur: null, date: null, montantTTC: null };
-  // Date : formats JJ/MM/AAAA ou JJ-MM-AAAA
   const matchDate = texte.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if (matchDate) {
     const j = matchDate[1].padStart(2,'0'), m = matchDate[2].padStart(2,'0'), a = matchDate[3];
     suggestions.date = a + '-' + m + '-' + j;
   }
-  // FIX (retour utilisateur) : l'ancienne version cherchait "TOTAL TTC"
-  // OU "TOTAL" tout court dans UN SEUL motif — un simple "TOTAL" tout
-  // seul matchait presque toujours "TOTAL HT" (le montant hors taxe,
-  // donc plus petit et FAUX) ou même "Sous-total", avant même d'arriver
-  // au vrai "TOTAL TTC" plus loin dans le texte. Désormais, chaque motif
-  // est essayé séparément, dans un ordre de priorité explicite — le
-  // repli sur "TOTAL" seul exclut maintenant explicitement "TOTAL HT"
-  // et "SOUS-TOTAL", qui ne sont jamais le bon montant.
   const motifsMontant = [
     /TOTAL\s*TTC[^\d]{0,15}(\d[\d\s.,]{1,12}\d)/i,
     /MONTANT\s*TTC[^\d]{0,15}(\d[\d\s.,]{1,12}\d)/i,
@@ -192,13 +178,6 @@ function _extraireSuggestionsFacture(texte) {
     const val = parseFloat(brut);
     if (!isNaN(val) && val > 0 && val < 10000000) { suggestions.montantTTC = val; break; }
   }
-  // Fournisseur : première ligne non vide avec au moins 3 lettres, en
-  // écartant les lignes qui ressemblent à une date ou un numéro seul —
-  // heuristique volontairement simple (souvent le nom de l'entreprise est
-  // en haut du document).
-  // FIX (retour utilisateur) : le titre du document ("FACTURE", "DEVIS"...)
-  // est presque toujours la toute première ligne — sans cette exclusion,
-  // c'est LUI qui était systématiquement suggéré comme nom du fournisseur.
   const motsTitreAExclure = /^(FACTURE|DEVIS|BON\s*DE\s*(LIVRAISON|COMMANDE)|RE[CÇ]U|TICKET|INVOICE|QUITTANCE|ORIGINAL|DUPLICATA)S?\s*(N[°O]?\.?\s*[\d-]*)?$/i;
   const lignes = texte.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
   for (const ligne of lignes.slice(0, 8)) {
