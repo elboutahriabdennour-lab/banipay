@@ -584,6 +584,14 @@ async function voirDocumentDepuisNotification(type, docId) {
 STATE._historiqueEcrans = STATE._historiqueEcrans || [];
 
 function goScreen(name, options) {
+  // FIX (bug trouvé — bouton déconnexion) : sb.logout() (config.js) vide
+  // entièrement STATE avant de le réinitialiser partiellement — sans
+  // jamais recréer _historiqueEcrans. Sans cette ligne, l'appel suivant
+  // à goScreen('auth') plantait immédiatement sur .push() d'un tableau
+  // devenu undefined, bloquant l'écran en plein milieu de la
+  // déconnexion. Remise ici, à chaque appel, pour que goScreen() se
+  // répare toute seule quelle que soit la raison de la disparition.
+  STATE._historiqueEcrans = STATE._historiqueEcrans || [];
   const skipHistory = options === null || (options && options.skipHistory);
   const ecranActuel = document.querySelector('.screen.active')?.id?.replace('screen-', '');
   if (!skipHistory && ecranActuel && ecranActuel !== name) {
