@@ -18,8 +18,6 @@ STATE.statsFiltreProduit = STATE.statsFiltreProduit || null;
 function filtrerParPeriode(items, periode, champDate) {
   if (periode === 'tout') return items;
   const maintenant = new Date();
-  // NOUVEAU : période personnalisée — bornes inclusives, ignore les
-  // éléments sans date exploitable, même prudence que les autres modes.
   if (periode === 'personnalisee') {
     const debut = el('stats-date-debut')?.value;
     const fin = el('stats-date-fin')?.value;
@@ -52,9 +50,6 @@ function appliquerDatesPersonnalisees() {
   renderStats();
   if (typeof renderRapportMargeChantiers === 'function') renderRapportMargeChantiers();
 }
-// NOUVEAU : applique les filtres croisés (client/produit) par-dessus le
-// filtre de période — factorisé ici pour être utilisé identiquement
-// partout (totaux, graphique, tops, répartition).
 function appliquerFiltresCroisesStats(factures) {
   let res = factures;
   if (STATE.statsFiltreClient) {
@@ -101,7 +96,6 @@ function changerPeriodeStats(periode, btn) {
   STATE.statsPeriode = periode;
   document.querySelectorAll('#stats-periode-tabs .ftab').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  // NOUVEAU : affiche/masque le sélecteur de dates selon le mode choisi.
   const zoneDate = el('stats-dates-perso');
   if (zoneDate) zoneDate.style.display = (periode === 'personnalisee') ? 'flex' : 'none';
   renderStats();
@@ -109,10 +103,6 @@ function changerPeriodeStats(periode, btn) {
 }
 
 function renderStats() {
-  // NOUVEAU : la vue 12 mois glissants reste toujours complète (voir
-  // "months" plus bas, construit séparément à partir de STATE.factures
-  // directement) — seuls les totaux/répartition/tops respectent le
-  // filtre de période choisi.
   let f = filtrerParPeriode(STATE.factures || [], STATE.statsPeriode, 'date_emission');
   f = appliquerFiltresCroisesStats(f);
   renderFiltresActifsStats();
@@ -275,9 +265,6 @@ function renderStats() {
       </div>`;
   }
 
-  // NOUVEAU (retour utilisateur) : Top produits — regroupement par
-  // description de ligne (pas d'identifiant produit strict sur toutes
-  // les lignes), sur les mêmes factures déjà filtrées (période + client).
   const produitEl = el('sa-top-produits');
   if (produitEl) {
     const produitMap = {};
@@ -313,9 +300,6 @@ function renderStats() {
     }
   }
 
-  // NOUVEAU : Répartition par mode de paiement — à partir des vrais
-  // paiements enregistrés (STATE.paiements), pas des factures elles-mêmes
-  // (une facture peut recevoir plusieurs paiements de modes différents).
   const modeEl = el('sa-modes-paiement');
   if (modeEl) {
     const idsFacturesFiltrees = new Set(f.map(function(fac) { return fac.id; }));
@@ -377,33 +361,49 @@ function renderSearchResults(q) {
 }
 let _annuaireData = [];
 let _annuaireSecteur = '';
+// FIX (retour utilisateur) : rien n'excluait explicitement les comptes
+// agents support de l'annuaire public. En pratique, un email agent ne
+// peut normalement pas non plus créer un profil entreprise/comptable
+// (voir la vérification email_est_agent_support() dans doSignup(),
+// auth.js) — donc ce cas ne devrait jamais se produire par construction.
+// Ce filtre ajoute quand même une vraie barrière ici, en plus de celle
+// à l'inscription, plutôt que de compter uniquement sur cette règle
+// pour ne jamais être contournée ou changée par erreur plus tard.
+async function _recupererEmailsAgentsSupport() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/agents_support?select=email', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!r.ok) return new Set();
+    const agents = (await r.json()) || [];
+    return new Set(agents.map(function(a) { return (a.email || '').toLowerCase(); }));
+  } catch(e) {
+    return new Set();
+  }
+}
 async function loadAnnuaire() {
   try {
-    // NOUVEAU (audit) : on récupère aussi annuaire_contact_visible pour
-    // savoir si l'entreprise a choisi de masquer son téléphone/email dans
-    // l'annuaire public. Par défaut (valeur NULL ou true), le contact
-    // reste visible — comportement inchangé pour les comptes existants.
-    // NOUVEAU (chantier ajouté) : rc/identifiant_fiscal/ice/adresse
-    // ajoutés à la sélection pour calculer le badge "Profil complet" —
-    // mêmes critères que renderProfil() dans profil.js, réutilisés ici
-    // pour rester cohérent avec ce que l'entreprise voit sur son propre
-    // profil.
+    const emailsAgents = await _recupererEmailsAgentsSupport();
     const rEnt = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=raison,secteur,ville,tel,email,id_unique,annuaire_contact_visible,adresse,rc,identifiant_fiscal,ice&raison=not.is.null&order=raison.asc&limit=100', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
-    const entreprises = ((await rEnt.json()) || []).map(function(e) {
-      const visible = e.annuaire_contact_visible !== false;
-      return Object.assign({}, e, { _type: 'entreprise', tel: visible ? e.tel : '', email: visible ? e.email : '' });
-    });
+    const entreprises = ((await rEnt.json()) || [])
+      .filter(function(e) { return !emailsAgents.has((e.email || '').toLowerCase()); })
+      .map(function(e) {
+        const visible = e.annuaire_contact_visible !== false;
+        return Object.assign({}, e, { _type: 'entreprise', tel: visible ? e.tel : '', email: visible ? e.email : '' });
+      });
     let comptables = [];
     try {
       const rCpt = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?select=nom,cabinet,tel,email,annuaire_contact_visible&nom=not.is.null&order=nom.asc&limit=100', {
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
       });
-      comptables = ((await rCpt.json()) || []).map(function(c) {
-        const visible = c.annuaire_contact_visible !== false;
-        return { raison: c.cabinet || c.nom, secteur: 'Comptabilité', ville: '', tel: visible ? c.tel : '', email: visible ? c.email : '', id_unique: null, _type: 'comptable', _nomPerso: c.nom };
-      });
+      comptables = ((await rCpt.json()) || [])
+        .filter(function(c) { return !emailsAgents.has((c.email || '').toLowerCase()); })
+        .map(function(c) {
+          const visible = c.annuaire_contact_visible !== false;
+          return { raison: c.cabinet || c.nom, secteur: 'Comptabilité', ville: '', tel: visible ? c.tel : '', email: visible ? c.email : '', id_unique: null, _type: 'comptable', _nomPerso: c.nom };
+        });
     } catch(eCpt) {}
     _annuaireData = entreprises.concat(comptables);
     filtrerAnnuaire();
@@ -432,11 +432,8 @@ function filtrerAnnuaire() {
     return;
   }
   const secteurEmoji = { 'BTP & Construction':'🏗️', 'Commerce & Négoce':'🛒', 'Transport & Logistique':'🚛', 'Conseil & Expertise':'💼', 'Informatique & Tech':'💻', 'Santé & Médical':'🏥', 'Immobilier':'🏠', 'Artisanat':'🪡', 'Comptabilité':'🧮' };
-  // NOUVEAU (chantier ajouté) : mêmes critères que renderProfil() dans
-  // profil.js — cohérent avec ce que l'entreprise voit déjà sur son
-  // propre profil, pas une nouvelle définition de "complet" inventée ici.
   function estProfilComplet(e) {
-    if (e._type === 'comptable') return false; // pas de notion de complétude pour un cabinet ici
+    if (e._type === 'comptable') return false;
     const requis = ['raison', 'adresse', 'tel', 'rc', 'identifiant_fiscal', 'ice'];
     return requis.every(function(k) { return !!e[k]; });
   }
