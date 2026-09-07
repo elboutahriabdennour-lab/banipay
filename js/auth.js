@@ -503,12 +503,27 @@ async function _continuerApresAuthentification(email, errEl, remember) {
       }
 
       if (errEl) errEl.textContent = '';
-      goScreen('dashboard');
-      showToast('✅ Bienvenue !', 'success');
-      // FIX (bug signalé) : sans cette vérification, l'onboarding se
-      // réaffichait à CHAQUE connexion réussie, pas seulement la
-      // première — rien ne mémorisait jamais qu'il avait déjà été vu.
-      if (typeof afficherOnboarding === 'function' && !STATE.profil?.onboarding_vu) setTimeout(afficherOnboarding, 600);
+      // NOUVEAU (retour utilisateur) : profil entreprise obligatoire —
+      // raison sociale, secteur, RC, IF et ICE doivent être renseignés
+      // avant de pouvoir utiliser l'app normalement. Redéclenché à
+      // chaque connexion tant que ce n'est pas complet, pas seulement
+      // une fois à l'inscription.
+      const p = STATE.profil || {};
+      const profilIncomplet = !p.raison || !p.secteur || !p.rc || !p.identifiant_fiscal || !p.ice;
+      if (profilIncomplet) {
+        goScreen('profil');
+        setTimeout(function() {
+          if (typeof goProfilEdit === 'function') goProfilEdit(true);
+          showToast('⚠️ Complétez vos informations légales pour continuer', 'error');
+        }, 200);
+      } else {
+        goScreen('dashboard');
+        showToast('✅ Bienvenue !', 'success');
+        // FIX (bug signalé) : sans cette vérification, l'onboarding se
+        // réaffichait à CHAQUE connexion réussie, pas seulement la
+        // première — rien ne mémorisait jamais qu'il avait déjà été vu.
+        if (typeof afficherOnboarding === 'function' && !STATE.profil?.onboarding_vu) setTimeout(afficherOnboarding, 600);
+      }
     }
   } catch(e) {
     if (errEl) errEl.textContent = '❌ ' + (e.message || 'Erreur lors du chargement du compte');
