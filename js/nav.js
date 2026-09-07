@@ -14,9 +14,6 @@ async function genNotifications() {
 
   if (email) {
     try {
-      // FIX: fonction RPC SECURITY DEFINER — élimine toute dépendance à une
-      // policy RLS (authenticated ou anon) sur notifications_app, qui
-      // s'est révélée peu fiable des deux côtés.
       const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
         method: 'POST',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
@@ -78,8 +75,6 @@ function genAlertes() {
   }
 
   if (typeof ajouterNotificationsRelances === 'function') ajouterNotificationsRelances();
-  // NOUVEAU (chantier ajouté) : alerte de dépassement de budget chantier
-  // — voir finance.js pour le calcul.
   if (typeof ajouterNotificationsDepassementChantier === 'function') ajouterNotificationsDepassementChantier();
   if (typeof ajouterNotificationsContratsAExpirer === 'function') ajouterNotificationsContratsAExpirer();
 
@@ -101,18 +96,13 @@ function genAlertes() {
 function mettreAJourBadgeNotif() {
   const badge = document.getElementById('notif-badge');
   if (badge) {
-    // FIX: depuis que get_mes_notifications() renvoie aussi l'historique
-    // des notifications déjà lues (voir migration_phase27), le badge ne
-    // doit compter que celles qui restent à traiter — sinon il afficherait
-    // un chiffre qui ne baisse jamais vraiment.
     const count = (STATE.notifications || []).filter(function(n) {
-      return n.raw ? !n.raw.lue : true; // notifications locales (relances, etc.) toujours comptées
+      return n.raw ? !n.raw.lue : true;
     }).length;
     badge.textContent = count > 99 ? '99+' : count;
     badge.style.display = count > 0 ? 'flex' : 'none';
   }
 }
-
 
 function badgeF(s) { return {attente:'En attente',retard:'Retard',payee:'Payée',envoyee:'Envoyée'}[s]||s; }
 
@@ -123,9 +113,6 @@ function badgeDV(s) { return {envoye:'Envoyé',accepte:'Accepté',refuse:'Refus�
 // ============================================================
 
 async function chargerInvitationsComptableEnAttente() {
-  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
-  // voyait jamais les invitations comptable en attente de l'entreprise —
-  // la requête filtrait sur son propre id.
   const uid = STATE.entrepriseId || sb.user?.id;
   const emailEnt = sb.user?.email;
   let invitationsCpt = [];
@@ -172,9 +159,6 @@ function htmlInvitationsCpt(invitationsCpt) {
     }).join('');
 }
 
-// NOUVEAU: horodatage relatif façon Facebook ("à l'instant", "il y a 5
-// min", "il y a 2h", "hier", "il y a 3 jours"...) — jusqu'ici aucune
-// notification n'affichait quand elle était arrivée.
 function tempsRelatif(dateStr) {
   if (!dateStr) return '';
   const date = new Date(dateStr);
@@ -194,9 +178,6 @@ function tempsRelatif(dateStr) {
 function htmlListeNotifications(allNotifs) {
   if (!allNotifs.length) return '';
   const typeIco = { tva_declaree:'📊', remarque_comptable:'📝', devis:'📝', facture:'🧾', invitation_comptable:'🤝', invitation_acceptee:'✅', facture_recue:'🧾', devis_recu:'📝', bc_repondu:'📋', bc_recu:'📋', demande_devis:'📥', devis_reponse:'✅', facture_reponse:'✅', avoir_recu:'↩️', bl_recu:'📦', ticket_reponse:'🎫', forfait_change:'📦', invitation_equipe:'🤝', invitation_equipe_cabinet:'🤝' };
-  // NOUVEAU: séparateur visuel avant la première notification déjà lue —
-  // rend l'historique explicite plutôt que de mélanger silencieusement
-  // non-lues et déjà traitées dans la même liste.
   let separateurAjoute = false;
   return allNotifs.map(function(n) {
     const estLue = n.raw ? !!n.raw.lue : false;
@@ -206,22 +187,9 @@ function htmlListeNotifications(allNotifs) {
       separateur = '<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase">Historique</div>';
     }
     const typeReel = n.raw && n.raw.type;
-    // isDoc : devis/facture REÇU(E) — ouvre le document avec Accepter/
-    // Attente/Refuser (comportement déjà en place).
     const isDoc = typeReel === 'facture_recue' || typeReel === 'devis_recu';
-    // isReponse : NOUVEAU — l'émetteur est notifié que SON devis/facture a
-    // été accepté(e)/refusé(e)/mis(e) en attente. Si accepté ET que c'est
-    // un devis : bouton direct pour le convertir en facture.
     const isReponse = typeReel === 'devis_reponse' || typeReel === 'facture_reponse';
-    // isDemande : NOUVEAU — un client a demandé un devis. Ouvre l'écran
-    // dédié qui montre le message complet (pas tronqué) + bouton "Créer
-    // le devis".
     const isDemande = typeReel === 'demande_devis';
-    // FIX (bug signalé) : une invitation comptable arrivait bien comme
-    // notification, mais rien ne la rendait cliquable — le comptable la
-    // voyait sans aucun moyen de l'ouvrir pour accepter ou refuser depuis
-    // ce panneau (le vrai bouton Accepter/Refuser n'existe que dans son
-    // onglet "Notifs" dédié, jamais ici).
     const isInvitationCpt = typeReel === 'invitation_comptable';
     const estCliquable = isDoc || isReponse || isDemande || isInvitationCpt;
     let meta = {};
@@ -243,8 +211,6 @@ function htmlListeNotifications(allNotifs) {
       (isDemande ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir la demande complète et y répondre</div>' : '') +
       (isInvitationCpt ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour accepter ou refuser</div>' : '') +
       (n._relanceFactureId ? '<button class="btn-envoyer-relance" data-facture-id="' + n._relanceFactureId + '" data-type-relance="' + n._relanceType + '" style="margin-top:8px;width:100%;padding:6px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📤 Envoyer la relance</button>' : '') +
-      // NOUVEAU (chantier ajouté) : côté achat, pas de destinataire à qui
-      // écrire — juste un bouton pour marquer comme vu et arrêter le rappel.
       (n._relanceAchatId ? '<button class="btn-vu-relance-achat" data-achat-id="' + n._relanceAchatId + '" data-type-relance="' + n._relanceAchatType + '" style="margin-top:8px;width:100%;padding:6px;background:#6B5F54;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">👍 Vu, ne plus rappeler aujourd\'hui</button>' : '') +
       '</div></div>';
   }).join('');
@@ -262,8 +228,6 @@ async function gererClicNotification(e) {
     if (typeof envoyerRelance === 'function') await envoyerRelance(fid, type);
     return;
   }
-  // NOUVEAU (chantier ajouté) : bouton "Vu, ne plus rappeler aujourd'hui"
-  // sur un rappel de paiement fournisseur.
   const btnVuAchat = e.target.closest('.btn-vu-relance-achat');
   if (btnVuAchat) {
     const aid = parseInt(btnVuAchat.dataset.achatId);
@@ -282,8 +246,6 @@ async function gererClicNotification(e) {
     const invData = await invResp.json();
     const inv = invData && invData[0];
 
-    // FIX (audit) : sans le fallback, l'invitation était rattachée à
-    // l'id du membre d'équipe qui clique, pas à la vraie entreprise.
     await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
@@ -320,7 +282,6 @@ async function gererClicNotification(e) {
   }
   const btnR = e.target.closest('.btn-refuse-cpt-inv');
   if (btnR) {
-    // FIX (audit workflow) : même anti-pattern
     const rRef = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + btnR.dataset.id, {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
@@ -334,10 +295,6 @@ async function gererClicNotification(e) {
     return true;
   }
 
-  // Accepter / Mettre en attente / Refuser une facture/devis reçu via
-  // Zelto directement depuis la notification — vérifié EN PREMIER, car
-  // ces boutons sont imbriqués dans la zone cliquable "voir le document"
-  // (sinon le clic sur un bouton déclencherait aussi l'ouverture du PDF).
   const btnDA = e.target.closest('.btn-doc-accept');
   const btnDAtt = e.target.closest('.btn-doc-attente');
   const btnDR = e.target.closest('.btn-doc-refuse');
@@ -353,35 +310,21 @@ async function gererClicNotification(e) {
     const patchBody = {}; patchBody[champ] = valeur;
     if (btnDA) patchBody.signature_data = 'TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
     try {
-      // FIX: cette action modifie un devis/facture qui appartient à une
-      // AUTRE entreprise (l'émetteur) — utiliser la session du destinataire
-      // (sb.token) se heurte presque certainement à la RLS ("seul le
-      // propriétaire peut modifier"). Le lien public (?doc=...) utilise
-      // déjà la clé anonyme pour cette même action et fonctionne — on
-      // aligne ce chemin dessus plutôt que d'utiliser sb.token.
       await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
         method: 'PATCH',
         headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify(patchBody)
       });
       if (nid && !btnDAtt) {
-        // On ne marque "lu" qu'en cas de décision définitive — la mise en
-        // attente laisse la notification active pour y revenir facilement.
         await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
           method: 'POST',
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
           body: JSON.stringify({ p_id: nid })
         });
       }
-      // FIX/NOUVEAU: quand une FACTURE reçue via compte Zelto est
-      // acceptée, elle s'enregistre automatiquement côté achats du client
-      // — plus besoin de la ressaisir manuellement.
       if (btnDA && t === 'facture' && typeof enregistrerAchatDepuisFactureAcceptee === 'function') {
         await enregistrerAchatDepuisFactureAcceptee(docId);
       }
-      // NOUVEAU: quand un DEVIS reçu via compte Zelto est accepté, un bon
-      // de commande se génère automatiquement chez le client, adressé à
-      // l'entreprise émettrice — formalise la commande sans ressaisie.
       if (btnDA && t === 'devis' && typeof enregistrerBCDepuisDevisAccepte === 'function') {
         await enregistrerBCDepuisDevisAccepte(docId);
       }
@@ -394,8 +337,6 @@ async function gererClicNotification(e) {
     return true;
   }
 
-  // NOUVEAU : bouton "Convertir en facture" sur une notification de
-  // réponse (devis accepté).
   const btnConv = e.target.closest('.btn-convertir-facture');
   if (btnConv) {
     const docId = parseInt(btnConv.dataset.docid);
@@ -404,9 +345,6 @@ async function gererClicNotification(e) {
     return true;
   }
 
-  // NOUVEAU : toucher une notification "demande de devis" ouvre l'écran
-  // dédié — message complet (pas tronqué à 100 caractères comme dans
-  // l'aperçu de la notification) + bouton "Créer le devis".
   const notifDemande = e.target.closest('.notif-demande-view');
   if (notifDemande && !e.target.closest('button')) {
     fermerNotifDropdown();
@@ -415,8 +353,6 @@ async function gererClicNotification(e) {
     return true;
   }
 
-  // NOUVEAU : toucher une notification de réponse (hors bouton) ouvre le
-  // document concerné, pour voir son détail complet.
   const notifReponse = e.target.closest('.notif-reponse-view');
   if (notifReponse && !e.target.closest('button')) {
     const t = notifReponse.dataset.type;
@@ -427,9 +363,6 @@ async function gererClicNotification(e) {
     return true;
   }
 
-  // Toucher la notification elle-même (hors boutons, vérifié après) ouvre
-  // le PDF — c'est LE point demandé : cliquer sur la notif emmène vers le
-  // contenu (devis/facture), avec les boutons Accepter/Attente/Refuser.
   const notifDoc = e.target.closest('.notif-doc-view');
   if (notifDoc) {
     const t = notifDoc.dataset.type;
@@ -440,23 +373,10 @@ async function gererClicNotification(e) {
     }
     return true;
   }
-  // FIX (bug signalé) : toucher une notification d'invitation comptable
-  // (hors bouton) ouvre l'onglet "Notifs" du tableau de bord comptable —
-  // c'est le SEUL endroit où les vrais boutons Accepter/Refuser existent
-  // pour ce type d'invitation. Avant ce correctif, cliquer ici ne faisait
-  // strictement rien (aucun gestionnaire ne correspondait).
   const notifInvCpt = e.target.closest('.notif-invitation-cpt-view');
   if (notifInvCpt && !e.target.closest('button')) {
     fermerNotifDropdown();
     goScreen('comptable', null);
-    // FIX (bug signalé) : goScreen('comptable') déclenche déjà
-    // automatiquement renderComptableDashboard() (tableau de bord par
-    // défaut) — appeler switchCptNav('notifs') immédiatement après
-    // créait une vraie course entre 2 rendus asynchrones qui écrivent
-    // au même endroit (#cpt-main-content). Le tableau de bord gagnait
-    // parfois, laissant l'onglet Notifs vide. Un court délai laisse le
-    // rendu par défaut se terminer avant de basculer — même principe
-    // déjà utilisé ailleurs dans ce code (voir 'profil' juste au-dessus).
     setTimeout(function() {
       if (typeof switchCptNav === 'function') switchCptNav('notifs');
     }, 400);
@@ -482,10 +402,6 @@ async function renderNotifScreen() {
     return;
   }
 
-  // Les alertes n'ont pas de statut "lu" en base (ce ne sont pas des
-  // événements ponctuels) — htmlListeNotifications gère très bien ce cas
-  // (n.raw absent => jamais "lue", pas de bouton d'action), donc on la
-  // réutilise telle quelle plutôt que de dupliquer le HTML.
   list.innerHTML = htmlListeNotifications(alertes);
 
   if (list.dataset.clickBound === '1') return;
@@ -496,17 +412,7 @@ async function renderNotifScreen() {
 // ============================================================
 // PANNEAU DÉROULANT FAÇON FACEBOOK (depuis la cloche du dashboard)
 // ============================================================
-// FIX/NOUVEAU: au lieu de naviguer vers un écran plein page, un petit
-// panneau s'ouvre sous la cloche avec toutes les notifications — clic sur
-// une notification de devis/facture = ouvre directement le PDF avec
-// Accepter/Attente/Refuser. À l'ouverture, les notifications purement
-// informatives (invitation, TVA déclarée, remarque — sans bouton d'action)
-// sont marquées lues automatiquement, pour que le compteur sur la cloche
-// ne reste plus cumulatif indéfiniment (seules les factures/devis reçus non
-// encore traités continuent de compter, à juste titre).
 
-// NOUVEAU: "Tout marquer comme lu" en un clic, façon Facebook — jusqu'ici
-// il fallait traiter chaque notification une par une.
 async function marquerToutesNotificationsLues() {
   const email = sb.user?.email;
   if (!email) return;
@@ -516,10 +422,6 @@ async function marquerToutesNotificationsLues() {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_email: email })
     });
-    // FIX (audit workflow) : fetch() ne lève une exception qu'en cas
-    // d'échec réseau, pas en cas d'erreur HTTP — sans cette vérification,
-    // un échec silencieux affichait quand même "Tout marqué comme lu"
-    // alors que les notifications restaient non lues en base.
     if (!r.ok) { showToast('Erreur — réessayez', 'error'); return; }
     showToast('✅ Tout marqué comme lu', 'success');
     fermerNotifDropdown();
@@ -572,9 +474,6 @@ async function toggleNotifDropdown(event) {
   panel.addEventListener('click', function(e) { gererClicNotification(e); });
   setTimeout(function() { document.addEventListener('click', _fermerNotifDropdownSiExterieur, true); }, 50);
 
-  // Ouvrir la cloche = tout marquer comme lu, sans exception. Le badge ne
-  // doit plus jamais rester affiché une fois le panneau consulté — il ne
-  // réapparaîtra que si une VRAIE nouvelle notification arrive ensuite.
   const aMarquer = allNotifs.filter(function(n) { return n.raw && n.id; });
   for (const n of aMarquer) {
     try {
@@ -586,8 +485,6 @@ async function toggleNotifDropdown(event) {
     } catch(eMarq) {}
   }
   if (aMarquer.length) {
-    // Retirer ces notifications de l'état local et rafraîchir le badge
-    // sans attendre le prochain cycle de polling (30s).
     const idsMarques = aMarquer.map(function(n) { return n.id; });
     STATE.notifications = STATE.notifications.filter(function(n) { return !idsMarques.includes(n.id); });
     mettreAJourBadgeNotif();
@@ -598,9 +495,6 @@ async function toggleNotifDropdown(event) {
   }
 }
 
-
-// Ouvre le PDF d'un devis/facture reçu directement depuis sa notification,
-// avec les mêmes boutons Accepter/Attente/Refuser que le lien public.
 async function voirDocumentDepuisNotification(type, docId) {
   if (!type || !docId) {
     showToast('❌ Impossible d\'ouvrir cette notification', 'error');
@@ -680,8 +574,22 @@ async function voirDocumentDepuisNotification(type, docId) {
   }
 }
 
+// FIX (retour utilisateur) : chaque bouton retour avait une cible fixe
+// codée en dur (souvent 'dashboard'), sans savoir d'où l'utilisateur
+// venait réellement — ouvrir "Devis" ou "Factures" depuis le hub Ventes
+// puis appuyer sur retour ramenait à l'accueil au lieu du hub Ventes,
+// sautant un niveau de navigation. Corrigé avec une vraie pile d'écrans
+// visités : goScreen() enregistre maintenant chaque écran affiché, et
+// goBack() revient exactement à l'écran précédent, quel qu'il soit.
+STATE._historiqueEcrans = STATE._historiqueEcrans || [];
 
-function goScreen(name) {
+function goScreen(name, options) {
+  const skipHistory = options === null || (options && options.skipHistory);
+  const ecranActuel = document.querySelector('.screen.active')?.id?.replace('screen-', '');
+  if (!skipHistory && ecranActuel && ecranActuel !== name) {
+    STATE._historiqueEcrans.push(ecranActuel);
+    if (STATE._historiqueEcrans.length > 30) STATE._historiqueEcrans.shift();
+  }
   const publicScreens = ['auth', 'definir-mot-passe'];
   if (!publicScreens.includes(name) && !sb.token && !['portail','profil-public'].includes(name)) {
     if (name !== 'auth') { goScreen('auth'); return; }
@@ -703,14 +611,6 @@ function goScreen(name) {
   const _activeNav = _navMap[name];
   if (_activeNav) { const _nb = document.getElementById(_activeNav); if(_nb) _nb.classList.add('active'); }
 
-  // FIX MAJEUR: chaque valeur ci-dessous était une référence "nue" à une
-  // fonction (ex: 'tva': renderTVA). En JavaScript, cet objet est
-  // reconstruit à CHAQUE appel de goScreen() — et si UNE SEULE de ces
-  // fonctions n'existe pas (bug de nommage, fichier manquant comme
-  // stats.js), la construction de tout l'objet plante immédiatement,
-  // cassant la navigation vers TOUS les écrans, pas seulement celui
-  // concerné. On enveloppe donc chaque référence dans une vérification
-  // typeof, pour qu'une fonction manquante n'affecte plus qu'elle-même.
   function _safe(fn, nomFn) {
     return typeof fn === 'function' ? fn : function() { console.warn('Fonction manquante: ' + nomFn); };
   }
@@ -774,6 +674,14 @@ function goScreen(name) {
     'demande-devis-fournisseur': function() {},
   };
   if (actions[name]) actions[name]();
+}
+
+// NOUVEAU (retour utilisateur) : revient exactement à l'écran précédent
+// réellement visité, plutôt qu'à une cible fixe. ecranDeSecours sert de
+// repli si l'historique est vide (lien direct, rechargement de page).
+function goBack(ecranDeSecours) {
+  const precedent = STATE._historiqueEcrans.pop();
+  goScreen(precedent || ecranDeSecours || 'dashboard', { skipHistory: true });
 }
 
 // FIX MAJEUR: initRecherche() n'existait nulle part (même souci que
