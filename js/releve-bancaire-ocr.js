@@ -3,11 +3,30 @@
 // PÉRIMÈTRE HONNÊTE : les relevés bancaires marocains ont des mises en
 // page très différentes d'une banque à l'autre — contrairement aux
 // factures d'achat (assez similaires entre elles), il n'existe pas de
-// format universel. Cette première version utilise une heuristique
-// générique (ligne = date + description + montant) qui fonctionnera
-// raisonnablement sur beaucoup de relevés, mais certainement pas tous.
-// Chaque suggestion reste à vérifier — rien n'est jamais lié
-// automatiquement sans confirmation.
+// format universel. Plutôt que d'écrire des règles séparées pour chaque
+// banque (risqué sans avoir de vrais relevés de chacune pour les
+// valider), l'heuristique générique ci-dessous reconnaît désormais un
+// vocabulaire élargi couvrant les termes les plus courants employés par
+// les banques marocaines sur leurs relevés (français, parfois anglais
+// pour les comptes en devises). Chaque suggestion reste à vérifier —
+// rien n'est jamais lié automatiquement sans confirmation.
+
+// Liste des banques marocaines proposées dans le sélecteur — stockée
+// avec chaque relevé importé, pour affichage et pour affiner la lecture
+// au fil du temps si des retours précis remontent sur une banque donnée.
+const BANQUES_MAROCAINES = [
+  'Attijariwafa Bank', 'Bank of Africa (BOA)', 'Banque Populaire',
+  'Société Générale Maroc', 'BMCI', 'CIH Bank', 'Crédit Agricole du Maroc',
+  'Al Barid Bank', 'CFG Bank', 'Crédit du Maroc', 'Bank Al Yousr',
+  'Bank Assafa', 'Umnia Bank', 'Autre / non listée',
+];
+
+function remplirSelecteurBanques() {
+  const select = el('releve-banque');
+  if (!select) return;
+  select.innerHTML = '<option value="">Sélectionner votre banque...</option>' +
+    BANQUES_MAROCAINES.map(function(b) { return '<option value="' + escapeHTML(b) + '">' + escapeHTML(b) + '</option>'; }).join('');
+}
 
 // FIX (retour utilisateur) : n'acceptait que les PDF — beaucoup de
 // banques marocaines proposent aussi (ou uniquement) un export Excel du
@@ -101,8 +120,21 @@ function _extraireTransactionsReleveExcel(lignes) {
   }
 
   lignes.forEach(function(ligne) {
-    const brutDate = valeurColonne(ligne, ['date opération', 'date operation', 'date valeur', 'date']);
-    const description = String(valeurColonne(ligne, ['libellé', 'libelle', 'description', 'intitulé', 'intitule', 'objet'])).trim();
+    // Vocabulaire élargi — couvre les intitulés de colonnes les plus
+    // courants observés chez les banques marocaines (Attijariwafa,
+    // BOA, Banque Populaire, CIH, SGMA, BMCI, CAM, Al Barid Bank...),
+    // en français et parfois en anglais pour les comptes en devises.
+    const brutDate = valeurColonne(ligne, [
+      'date opération', 'date operation', 'date opé', 'date ope',
+      'date valeur', 'date comptable', 'date exécution', 'date execution',
+      'transaction date', 'value date', 'date',
+    ]);
+    const description = String(valeurColonne(ligne, [
+      'libellé', 'libelle', 'description', 'intitulé', 'intitule',
+      'objet', 'nature', 'nature opération', 'nature operation',
+      'détail', 'detail', 'motif', 'référence', 'reference',
+      'narrative', 'particulars',
+    ])).trim();
     if (!description) return;
 
     let dateBrute = '';
@@ -116,9 +148,9 @@ function _extraireTransactionsReleveExcel(lignes) {
     // séparées — on prend celle qui est non vide, en valeur absolue
     // (le sens n'a pas d'importance ici, seul le montant compte pour le
     // rapprochement par égalité).
-    const montantUnique = valeurColonne(ligne, ['montant']);
-    const debit = valeurColonne(ligne, ['débit', 'debit']);
-    const credit = valeurColonne(ligne, ['crédit', 'credit']);
+    const montantUnique = valeurColonne(ligne, ['montant', 'amount', 'somme']);
+    const debit = valeurColonne(ligne, ['débit', 'debit', 'sortie', 'retrait', 'withdrawal']);
+    const credit = valeurColonne(ligne, ['crédit', 'credit', 'entrée', 'entree', 'dépôt', 'depot', 'deposit']);
 
     let montant = null;
     [montantUnique, debit, credit].forEach(function(v) {
@@ -135,24 +167,53 @@ function _extraireTransactionsReleveExcel(lignes) {
   return transactions;
 }
 
+// FIX (retour utilisateur) : élargi pour couvrir plus de mises en page
+// bancaires marocaines — certaines banques utilisent un tiret bas ou un
+// espace comme séparateur de milliers dans le montant (ex: "1 234,50"
+// ou "1_234.50"), et certaines affichent la date en fin de ligne plutôt
+// qu'en début (date valeur après le libellé). Deux motifs sont
+// désormais essayés — date en début, puis date en fin — pour couvrir
+// les deux mises en page les plus fréquentes.
 function _extraireTransactionsReleve(texte) {
   const transactions = [];
   const lignes = texte.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
 
-  const motifLigne = /(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}).{3,80}?([\d\s]{1,9}[.,]\d{2})\s*$/;
+  // FIX (autotest) : le premier motif doit être ancré en tout début de
+  // ligne (^) — sans cet ancrage, une date présente n'importe où dans une
+  // ligne "description d'abord, date ensuite" était quand même happée
+  // par ce motif en premier (l'ordre de test étant motif 1 puis motif 2),
+  // en coupant le montant au mauvais endroit et en le rendant invalide.
+  const motifsLigne = [
+    // Date en tout début de ligne, montant en fin (mise en page la plus courante)
+    /^\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}).{3,80}?([\d\s_]{1,9}[.,]\d{2})\s*$/,
+    // Date en fin de ligne (certaines banques affichent le libellé puis
+    // la date valeur juste avant le montant)
+    /^(.{3,80}?)(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}).{0,20}?([\d\s_]{1,9}[.,]\d{2})\s*$/,
+  ];
 
   for (const ligne of lignes) {
-    const m = ligne.match(motifLigne);
-    if (!m) continue;
+    let dateBrute = null, montantBrutTexte = null, descriptionBrute = ligne;
 
-    const dateBrute = m[1];
-    const montantBrut = m[2].replace(/\s/g, '').replace(',', '.');
+    const m1 = ligne.match(motifsLigne[0]);
+    if (m1) {
+      dateBrute = m1[1];
+      montantBrutTexte = m1[2];
+      descriptionBrute = ligne.replace(m1[1], '').replace(m1[2], '');
+    } else {
+      const m2 = ligne.match(motifsLigne[1]);
+      if (m2) {
+        descriptionBrute = m2[1];
+        dateBrute = m2[2];
+        montantBrutTexte = m2[3];
+      }
+    }
+    if (!dateBrute || !montantBrutTexte) continue;
+
+    const montantBrut = montantBrutTexte.replace(/[\s_]/g, '').replace(',', '.');
     const montant = parseFloat(montantBrut);
     if (isNaN(montant) || montant <= 0 || montant > 10000000) continue;
 
-    const description = ligne
-      .replace(m[1], '')
-      .replace(m[2], '')
+    const description = descriptionBrute
       .replace(/[|;]/g, ' ')
       .trim()
       .slice(0, 80);
