@@ -155,8 +155,29 @@ function renderListeEntreprises(filtre) {
   let ents = CPT.entreprises;
   if (filtre === 'action') ents = ents.filter(function(e) { return e._etat === 'rouge'; });
   if (filtre === 'orange') ents = ents.filter(function(e) { return e._etat === 'orange'; });
+  // NOUVEAU (retour utilisateur) : recherche par nom d'entreprise sur le
+  // tableau de bord principal du comptable — jusqu'ici, cette recherche
+  // n'existait que dans le détail d'UNE entreprise déjà ouverte (pour ses
+  // factures/achats), jamais pour retrouver rapidement UNE entreprise
+  // précise parmi toutes celles du portefeuille.
+  //
+  // FIX (autotest) : ignore les accents des deux côtés de la comparaison
+  // — sans ça, taper "batir" ne trouvait pas "Bâtir Maroc", un cas très
+  // probable puisque beaucoup de gens tapent sans accents par habitude.
+  function _sansAccents(s) {
+    return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+  const q = _sansAccents((CPT.rechercheEntreprise || '').trim().toLowerCase());
+  if (q) {
+    ents = ents.filter(function(e) {
+      const nom = _sansAccents((e.profil?.raison || e.entreprise_email || '').toLowerCase());
+      return nom.includes(q);
+    });
+  }
   if (!ents.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">🏢</div><div class="empty-title">Aucune entreprise</div><div>Invitez vos clients a vous donner acces</div></div>';
+    list.innerHTML = q
+      ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune entreprise pour "' + escapeHTML(q) + '"</div></div>'
+      : '<div class="empty"><div class="empty-ico">🏢</div><div class="empty-title">Aucune entreprise</div><div>Invitez vos clients a vous donner acces</div></div>';
     return;
   }
   list.innerHTML = ents.map(function(inv) {
@@ -1276,6 +1297,9 @@ function switchCptNav(tab) {
         kpiBox(tvaKo, 'TVA a verifier', '#7C5CA6', '#EDE6F0') +
       '</div>' +
       (nbEnts === 0 ? _cptEmptyState() : '') +
+      '<div style="padding:0 16px 8px">' +
+        '<input id="cpt-recherche-entreprise" class="f-inp" placeholder="🔍 Rechercher une entreprise..." oninput="CPT.rechercheEntreprise=this.value;renderListeEntreprises()" value="' + escapeHTML(CPT.rechercheEntreprise || '') + '">' +
+      '</div>' +
       '<div style="padding:0 16px 4px;display:flex;justify-content:space-between;align-items:center">' +
         '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186">Mes entreprises</div>' +
         '<div style="display:flex;gap:6px">' +
@@ -1295,6 +1319,7 @@ function switchCptNav(tab) {
   } else if (tab === 'entreprises') {
     content.innerHTML =
       '<div style="padding:16px">' +
+        '<input id="cpt-recherche-entreprise-2" class="f-inp" placeholder="🔍 Rechercher une entreprise..." oninput="CPT.rechercheEntreprise=this.value;renderListeEntreprises()" value="' + escapeHTML(CPT.rechercheEntreprise || '') + '" style="margin-bottom:12px">' +
         '<div style="display:flex;gap:8px;margin-bottom:14px">' +
           '<button onclick="trierEntreprises(\'action\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#FBF0DA;color:#1F6F72;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🔴 Priorite</button>' +
           '<button onclick="trierEntreprises(\'lettrage\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#F7EFDC;color:#B8860B;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">Lettrage ↑</button>' +
