@@ -419,7 +419,23 @@
         <select id="releve-mois" class="f-inp" style="flex:1"><option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option><option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option><option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option><option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option></select>
         <select id="releve-annee" class="f-inp" style="flex:1"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select>
       </div>
-      <input id="releve-banque" class="f-inp" placeholder="Nom de la banque..." style="margin-bottom:10px">
+      <select id="releve-banque" class="f-inp" style="margin-bottom:10px">
+        <option value="">Sélectionner votre banque...</option>
+        <option value="Attijariwafa Bank">Attijariwafa Bank</option>
+        <option value="Bank of Africa (BOA)">Bank of Africa (BOA)</option>
+        <option value="Banque Populaire">Banque Populaire</option>
+        <option value="Société Générale Maroc">Société Générale Maroc</option>
+        <option value="BMCI">BMCI</option>
+        <option value="CIH Bank">CIH Bank</option>
+        <option value="Crédit Agricole du Maroc">Crédit Agricole du Maroc</option>
+        <option value="Al Barid Bank">Al Barid Bank</option>
+        <option value="CFG Bank">CFG Bank</option>
+        <option value="Crédit du Maroc">Crédit du Maroc</option>
+        <option value="Bank Al Yousr">Bank Al Yousr</option>
+        <option value="Bank Assafa">Bank Assafa</option>
+        <option value="Umnia Bank">Umnia Bank</option>
+        <option value="Autre">Autre / non listée</option>
+      </select>
       <label style="display:block;background:#fff;border:2px dashed #C9D9AE;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#6E8F4E;font-weight:600">📎 Sélectionner le relevé (PDF, image ou Excel)<input type="file" id="releve-file-input" accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls" style="display:none" onchange="uploadReleve(event)"></label>
     </div>
   </div>
