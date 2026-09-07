@@ -589,16 +589,20 @@ function renderCptAchats() {
     filtreStatutHtml +
     '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1EEE8">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Achat</div>' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Voir</div>' +
       '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
       '<div style="font-size:11px;font-weight:800;color:#7C5CA6;text-align:center">T</div>' +
     '</div>' +
     achats.map(function(a) {
       const ctrl = (CPT.currentControlesAchats || []).find(function(c) { return String(c.facture_id) === String(a.id); }) || {};
-      return '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+      return '<div style="display:grid;grid-template-columns:1fr 40px 44px 44px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
         '<div>' +
           '<div style="font-size:12px;font-weight:700">' + escapeHTML(a.fournisseur || '') + '</div>' +
           '<div style="font-size:11px;color:#6B5F54">' + (a.ref_fournisseur || '') + ' · ' + fmt(a.ttc || 0) + ' MAD · ' + (a.date_achat || '') + '</div>' +
           '<span style="background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[a.statut] || '') + '</span>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:center">' +
+          '<button class="btn-voir-achat" data-achatid="' + a.id + '" title="Visualiser l achat" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #E0B6AC;background:#F5E4E1;color:#8E2E24;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-lettr-achat" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
@@ -611,12 +615,106 @@ function renderCptAchats() {
   if (list.dataset.clickBoundAchat !== '1') {
     list.dataset.clickBoundAchat = '1';
     list.addEventListener('click', function(e) {
+      const btnVoir = e.target.closest('.btn-voir-achat');
+      if (btnVoir) { ouvrirAchatComptable(btnVoir.dataset.achatid); return; }
       const btnL = e.target.closest('.btn-lettr-achat');
       if (btnL) { toggleControleAchatRapide(btnL.dataset.achatid, 'lettre', btnL); return; }
       const btnT = e.target.closest('.btn-tva-achat');
       if (btnT) { toggleControleAchatRapide(btnT.dataset.achatid, 'tva_verifie', btnT); return; }
     });
   }
+}
+
+// NOUVEAU (retour utilisateur) : jusqu'ici, rien ne permettait jamais de
+// marquer un achat comme "consulté" — contrairement aux factures (voir
+// ouvrirFactureComptable), qui ont un vrai écran de détail déclenchant
+// automatiquement cette case au premier affichage. Résultat concret :
+// les achats restaient éternellement comptés dans "À contrôler" au
+// tableau de bord, quoi que le comptable fasse. Ce nouvel écran suit
+// exactement le même principe que celui des factures.
+async function ouvrirAchatComptable(achatId) {
+  const a = (CPT.currentAchats || []).find(function(x) { return String(x.id) === String(achatId); });
+  if (!a) { showToast('❌ Achat introuvable', 'error'); return; }
+  let ctrl = (CPT.currentControlesAchats || []).find(function(c) { return String(c.facture_id) === String(achatId); }) || {};
+  if (!ctrl.consulte) {
+    try {
+      const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/toggle_controle_achat', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_achat_id: String(achatId), p_entreprise_id: CPT.currentEntrepriseId, p_champ: 'consulte', p_valeur: true })
+      });
+      if (resp.ok) {
+        const resultat = await resp.json();
+        if (resultat) {
+          ctrl = resultat;
+          const local = (CPT.currentControlesAchats || []).find(function(c) { return String(c.facture_id) === String(achatId); });
+          if (local) { Object.assign(local, resultat); } else { CPT.currentControlesAchats = CPT.currentControlesAchats || []; CPT.currentControlesAchats.push(resultat); }
+          const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === CPT.currentEntrepriseId; });
+          if (inv) {
+            const lc = (inv._controlesAchats || []).find(function(c) { return String(c.facture_id) === String(achatId); });
+            if (lc) { Object.assign(lc, resultat); } else { inv._controlesAchats = inv._controlesAchats || []; inv._controlesAchats.push(resultat); }
+            inv._etat = calculerEtat(inv);
+          }
+          const globalCtrl = (CPT.allControlesAchats || []).find(function(c) { return String(c.facture_id) === String(achatId); });
+          if (globalCtrl) { Object.assign(globalCtrl, resultat); } else { CPT.allControlesAchats = CPT.allControlesAchats || []; CPT.allControlesAchats.push(resultat); }
+        }
+      }
+      // Si la RPC refuse 'consulte' comme champ valide (pas encore mis à
+      // jour côté base), on continue quand même — l'achat s'affiche
+      // normalement, seul le comptage "À contrôler" restera imprécis
+      // pour cet achat jusqu'à la mise à jour de la fonction SQL.
+    } catch(e) { console.warn('ouvrirAchatComptable (consulte):', e); }
+  }
+  const overlay = document.createElement('div');
+  overlay.id = 'achat-comptable-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F1EEE8;overflow-y:auto;font-family:inherit';
+  overlay.innerHTML =
+    '<div style="background:linear-gradient(135deg,#241F1B,#8E2E24);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">' +
+      '<button class="close-achat-overlay" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
+      '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(a.ref_fournisseur || 'Achat') + '</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">' + escapeHTML(a.fournisseur || '') + '</div></div>' +
+    '</div>' +
+    '<div style="margin:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:10px">' +
+        '<div><div style="font-size:10px;color:#9C9186">Date</div><div style="font-size:12px;font-weight:600">' + (a.date_achat || '') + '</div></div>' +
+        '<div><div style="font-size:10px;color:#9C9186">TTC</div><div style="font-size:18px;font-weight:800">' + fmt(a.ttc || 0) + ' MAD</div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<div style="flex:1;background:#F1EEE8;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#9C9186">HT</div><div style="font-size:12px;font-weight:600">' + fmt(a.ht || 0) + '</div></div>' +
+        '<div style="flex:1;background:#EDE6F0;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#7C5CA6">TVA</div><div style="font-size:12px;font-weight:600;color:#7C5CA6">' + fmt(a.tva || 0) + '</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:12px">Checklist</div>' +
+      '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA">' +
+        '<div><div style="font-size:12px;font-weight:600">Lettrage</div></div>' +
+        '<button class="btn-lettr-achat-ov" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.lettre ? '#B8860B' : '#E3DCCF') + ';background:' + (ctrl.lettre ? '#F7EFDC' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.lettre ? '☑' : '☐') + '</button>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;padding:10px 0">' +
+        '<div><div style="font-size:12px;font-weight:600">TVA verifiee</div></div>' +
+        '<button class="btn-tva-achat-ov" data-achatid="' + a.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';background:' + (ctrl.tva_verifie ? '#EDE6F0' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.tva_verifie ? '☑' : '☐') + '</button>' +
+      '</div>' +
+    '</div>' +
+    '<div style="height:40px"></div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('.close-achat-overlay').onclick = function() { overlay.remove(); };
+  // FIX (autotest) : toggleControleAchatRapide() est asynchrone — sans
+  // l'attendre, la mise à jour visuelle ci-dessous lisait l'ancienne
+  // valeur (avant que le vrai changement soit connu), affichant parfois
+  // l'état inverse de la réalité jusqu'au prochain rendu.
+  const btnLOv = overlay.querySelector('.btn-lettr-achat-ov');
+  if (btnLOv) btnLOv.onclick = async function() {
+    await toggleControleAchatRapide(achatId, 'lettre', btnLOv);
+    btnLOv.textContent = btnLOv.dataset.lettre === '1' ? '☑' : '☐';
+    btnLOv.style.borderColor = btnLOv.dataset.lettre === '1' ? '#B8860B' : '#E3DCCF';
+    btnLOv.style.background = btnLOv.dataset.lettre === '1' ? '#F7EFDC' : '#fff';
+  };
+  const btnTOv = overlay.querySelector('.btn-tva-achat-ov');
+  if (btnTOv) btnTOv.onclick = async function() {
+    await toggleControleAchatRapide(achatId, 'tva_verifie', btnTOv);
+    btnTOv.textContent = btnTOv.dataset.tva === '1' ? '☑' : '☐';
+    btnTOv.style.borderColor = btnTOv.dataset.tva === '1' ? '#7C5CA6' : '#E3DCCF';
+    btnTOv.style.background = btnTOv.dataset.tva === '1' ? '#EDE6F0' : '#fff';
+  };
 }
 
 async function toggleControleAchatRapide(achatId, champ, btn) {
