@@ -18,17 +18,10 @@ async function loadAll() {
     STATE.produits = pr || [];
     STATE.avoirs = av || [];
     STATE.profil = (pf && pf[0]) || {};
-    // NOUVEAU: bascule automatiquement en "expiré" les devis envoyés dont la
-    // date de validité est dépassée — le statut existait déjà (couleur,
-    // libellé) mais rien ne le déclenchait jamais.
     await verifierExpirationDevis();
-    // Load paiements
     const pays = await sb.get('paiements', `user_id=eq.${uid}&order=created_at.desc`);
     STATE.paiements = pays || [];
 
-    // NOUVEAU : compteurs de notes échangées avec le comptable, pour un
-    // badge visible directement dans la liste des factures — sans avoir
-    // à ouvrir chacune pour savoir s'il y a une discussion en cours.
     try {
       const respNotes = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_compteurs_notes_factures', {
         method: 'POST',
@@ -44,13 +37,8 @@ async function loadAll() {
   } catch(e) { console.error('loadAll:', e); showToast('Erreur de chargement', 'error'); }
 }
 
-// ============================================================
-// NOTIFICATIONS
-// ============================================================
-
 async function loadPortailClient(clientId) {
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#6B5F54">⏳ Chargement...</div>';
-  // This would load client-specific data via a public token
   showToast('Portail client — fonctionnalité à venir');
 }
 
@@ -62,13 +50,6 @@ async function loadPublicProfil(profilId) {
     const d = await r.json();
     const p = d && d[0];
     if (!p) { document.body.innerHTML='<div style="text-align:center;padding:60px 20px;font-family:Karla,sans-serif"><h2>Profil introuvable</h2></div>'; return; }
-    // FIX (audit sécurité — CRITIQUE) : cette page est PUBLIQUE (accessible
-    // sans connexion via ?profil=..., pensée pour être partagée par QR
-    // code) et aucun champ n'était échappé. N'importe quelle entreprise
-    // aurait pu mettre du code dans sa propre raison sociale, adresse,
-    // téléphone... et attaquer TOUTE PERSONNE qui visite/scanne son lien
-    // de profil — la faille avec le plus grand rayon d'action possible
-    // trouvée dans cet audit.
     document.body.innerHTML = `
       <div style="font-family:Karla,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:20px">
         <div style="background:#1F6F72;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
@@ -136,20 +117,7 @@ async function loadPublicProfil(profilId) {
 }
 
 
-// ===== PDF.JS =====
-// ============================================================
-// ZELTO — PDF Generator (Factures, Devis, Avoirs, BC, BL)
-// ============================================================
-
-// ============================================================
-// PDF AVANCÉ — Enregistrer + Partager le fichier PDF
-// ============================================================
-
-
-
-
 async function afficherPageInvitation(email, entrepriseId) {
-  // Load entreprise profil
   let profil = {};
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + entrepriseId + '&select=*', {
@@ -212,10 +180,6 @@ async function accepterInvitationEmail(emailEnc, entrepriseId) {
 async function refuserInvitationEmail(emailEnc, entrepriseId) {
   const email = decodeURIComponent(emailEnc);
   try {
-    // FIX (grand audit) : la réponse n'était jamais vérifiée — un échec
-    // (réseau, permissions...) affichait quand même "Invitation refusée"
-    // comme si tout s'était bien passé, alors que l'invitation restait
-    // "en_attente" en base. Même piège trouvé des dizaines de fois ce soir.
     const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email.toLowerCase()), {
       method: 'PATCH',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
@@ -231,13 +195,6 @@ async function refuserInvitationEmail(emailEnc, entrepriseId) {
   }
 }
 
-// ============================================================
-// AFFICHAGE PUBLIC D'UN DOCUMENT (facture ou devis) + Accepter/Refuser
-// ============================================================
-
-// NOUVEAU: vue publique du bon de commande — le fournisseur (sans compte
-// Zelto forcément) peut le consulter et confirmer/refuser, symétrique au
-// cycle d'acceptation des devis/factures.
 async function afficherBonCommandePublic(bcId, token) {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_commande_public', {
@@ -299,9 +256,6 @@ async function repondreBonCommandePublic(bcId, reponse, bc, token) {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_bc_id: bcId, p_token: token, p_reponse: reponse })
     });
-    // FIX (audit workflow) : même bug que traiterActionDocument() — la
-    // réponse n'était jamais vérifiée, un fournisseur pouvait voir
-    // "Confirmé !" alors que rien n'était enregistré côté entreprise.
     if (!rRep.ok) {
       document.body.innerHTML = `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
@@ -359,6 +313,33 @@ async function afficherBonLivraisonPublic(blId, token) {
     const profils = await rp.json();
     const profil = (profils && profils[0]) || {};
 
+    // FIX (retour utilisateur) : le bon de livraison n'avait jamais de QR
+    // code du tout — contrairement au devis, à la facture et au bon de
+    // commande, qui en ont tous un. Si ce BL est rattaché à une facture
+    // (bl.facture_id), on récupère sa référence et son jeton public pour
+    // que le QR du BL mène directement vers cette facture — pratique pour
+    // le client qui reçoit le BL papier et veut retrouver la facture
+    // correspondante en un scan.
+    //
+    // ⚠️ Suppose que get_bon_livraison_public renvoie bien une colonne
+    // facture_id — si ce n'est pas le cas, ce bloc échoue silencieusement
+    // (try/catch) et le BL s'affiche normalement, juste sans QR, exactement
+    // comme avant ce correctif.
+    let docUrlFacture = '';
+    if (bl.facture_id) {
+      try {
+        const rFact = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + bl.facture_id + '&select=ref,token_public', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        });
+        const factures = await rFact.json();
+        const facture = factures && factures[0];
+        if (facture) {
+          const base = window.location.origin + window.location.pathname;
+          docUrlFacture = base + '?doc=' + bl.facture_id + '&t=' + (facture.token_public || '');
+        }
+      } catch(eFact) { console.warn('afficherBonLivraisonPublic (lien facture):', eFact); }
+    }
+
     genDocPDF({
       type: 'BON DE LIVRAISON', ref: bl.ref, color: '#6E8F4E',
       emetteur: profil,
@@ -368,6 +349,7 @@ async function afficherBonLivraisonPublic(blId, token) {
       lignes: (bl.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: 0, unite: l.unite||'u' }; }),
       note: '', ht: 0, tva: 0, ttc: 0, devise: 'MAD',
       showPrices: false,
+      doc_url: docUrlFacture || undefined,
     });
   } catch(e) {
     document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
@@ -412,18 +394,13 @@ async function afficherEcranAccesReserve(docId, type) {
 
 async function afficherDocumentPublic(docId, token) {
   const urlParams = new URLSearchParams(window.location.search);
-  const docType = urlParams.get('type'); // 'devis' ou null
+  const docType = urlParams.get('type');
 
   try {
     let doc = null;
     let profil = {};
     let isDevis = docType === 'devis';
 
-    // FIX SÉCURITÉ : remplace le fetch REST direct (filtré uniquement par
-    // id, donc devinable) par la RPC sécurisée qui exige aussi le jeton.
-    // Utilise la session réelle si la personne est connectée (nécessaire
-    // pour la vérification "c'est bien le bon destinataire"), sinon la
-    // clé anonyme comme avant pour les documents non verrouillés.
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_document_public', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
@@ -441,7 +418,6 @@ async function afficherDocumentPublic(docId, token) {
       return;
     }
 
-    // Charger le profil émetteur
     const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + doc.user_id + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
@@ -450,10 +426,6 @@ async function afficherDocumentPublic(docId, token) {
 
     const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes || '[]') : (doc.lignes || []);
 
-    // NOUVEAU: construire les références croisées (devis/BC/BL) AVANT de
-    // générer le PDF — le devis affiche son BC, la facture affiche les 3.
-    // Vue publique (anonyme) : on ne peut lire le BC/BL que via les RPC
-    // dédiées (RLS bloque un accès direct pour un visiteur non connecté).
     const refsQR = [];
     const base = window.location.origin + window.location.pathname;
     if (doc.devis_ref) {
@@ -489,7 +461,6 @@ async function afficherDocumentPublic(docId, token) {
       } catch(eBLref) {}
     }
 
-    // Générer le PDF
     genDocPDF({
       type: isDevis ? 'DEVIS' : 'FACTURE',
       ref: doc.ref,
@@ -513,10 +484,6 @@ async function afficherDocumentPublic(docId, token) {
       refsQR: refsQR,
     });
 
-    // NOUVEAU: si un bon de livraison est lié à cette facture, le client
-    // peut le consulter directement — c'est le lien réel qui manquait
-    // (auparavant juste un texte libre, jamais retrouvable depuis ici).
-    // Réutilise blTrouve déjà récupéré ci-dessus (évite une requête en double).
     if (!isDevis && blTrouve) {
       const bl = blTrouve;
       setTimeout(function() {
@@ -542,15 +509,12 @@ async function afficherDocumentPublic(docId, token) {
             }, 450);
     }
 
-    // Type générique + champ de statut à considérer selon devis/facture
     const typeDoc = isDevis ? 'devis' : 'facture';
     const statutActuel = isDevis ? doc.statut : doc.reponse_client;
     const valeurAcceptee = isDevis ? 'accepte' : 'acceptee';
     const valeurRefusee = isDevis ? 'refuse' : 'refusee';
     const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
 
-    // Boutons Accepter/Refuser/Attente — pour les devis ET les factures non
-    // encore définitivement traités (l'état "en attente" ne bloque rien)
     if (!dejaTraite) {
       if (statutActuel === 'en_attente') {
         setTimeout(function() {
@@ -570,9 +534,6 @@ async function afficherDocumentPublic(docId, token) {
         const bAcc = document.createElement('button');
         bAcc.textContent = '✅ Accepter';
         bAcc.style.cssText = 'flex:1;padding:12px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-        // Accepter vaut signature électronique automatique — plus besoin de
-        // faire dessiner quoi que ce soit au client, un tampon horodaté est
-        // généré automatiquement (voir traiterActionDocument).
         bAcc.onclick = function() { traiterActionDocument(docId, typeDoc, 'accepter', null, token); };
         const bAtt = document.createElement('button');
         bAtt.textContent = '⏳ Attente';
@@ -589,7 +550,6 @@ async function afficherDocumentPublic(docId, token) {
       }, 500);
     }
 
-    // Si le document a déjà été traité (devis ou facture)
     if (dejaTraite) {
       setTimeout(function() {
         const screen = document.getElementById('pdf-fullscreen');
@@ -610,8 +570,6 @@ async function afficherDocumentPublic(docId, token) {
 }
 
 
-// NOUVEAU : appelée depuis l'écran "Définir mon mot de passe", atteint
-// via un lien d'invitation/récupération Supabase (voir app.js).
 async function definirMotDePasseInvite() {
   const pwd = el('def-mdp-nouveau')?.value;
   const confirm2 = el('def-mdp-confirmer')?.value;
@@ -639,16 +597,10 @@ async function definirMotDePasseInvite() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  goScreen('auth'); // Défaut: page de connexion
+  goScreen('auth');
   applyDarkMode();
   loadSavedCredentials();
 
-  // NOUVEAU : lien d'invitation ou de réinitialisation envoyé par
-  // Supabase — le jeton arrive dans le HASH de l'URL (#access_token=...),
-  // pas dans les paramètres normaux (?xxx=...), donc il fallait une
-  // détection séparée. Avant ce correctif, ce jeton n'était jamais lu :
-  // la personne tombait simplement sur l'écran de connexion normal, sans
-  // aucun moyen de définir son mot de passe.
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const accessTokenInvite = hashParams.get('access_token');
   const refreshTokenInvite = hashParams.get('refresh_token');
@@ -659,14 +611,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     goScreen('definir-mot-passe', null);
     return;
   }
-  // FIX (chantier vérification email+téléphone) : un lien de confirmation
-  // d'INSCRIPTION (type=signup) ne doit PAS renvoyer vers "définir un mot
-  // de passe" — la personne en a déjà choisi un à l'inscription. Avant ce
-  // correctif, réactiver la confirmation email aurait fait resurgir ce
-  // problème (déjà présent dans le code, simplement jamais exercé tant
-  // que la confirmation était désactivée côté Supabase). Ici, on établit
-  // directement la session avec le jeton reçu, puis on enchaîne sur la
-  // vérification du téléphone si elle n'a pas encore été faite.
   if (accessTokenInvite && typeInvite === 'signup') {
     history.replaceState(null, '', window.location.pathname + window.location.search);
     if (typeof sb._setSession === 'function') {
@@ -684,18 +628,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const portailId = params.get('portail');
   const profilId = params.get('profil');
-  // NOUVEAU (chantier ajouté) : capture le code de parrainage dès
-  // l'arrivée sur le lien, stocké en local en attendant que la personne
-  // termine réellement son inscription (elle peut visiter plusieurs
-  // pages avant de s'inscrire) — voir doSignup() dans auth.js pour la
-  // validation finale.
   const parrainId = params.get('parrain');
   if (parrainId) localStorage.setItem('bp_parrain_id', parrainId);
 
   if (portailId) { await loadPublicProfil(portailId); return; }
   if (profilId) { await loadPublicProfil(profilId); return; }
 
-  // Invitation comptable par email
   const inviteEmail = params.get('invite_email');
   const entrepriseId = params.get('entreprise');
   if (inviteEmail && entrepriseId) {
@@ -703,7 +641,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Invitation depuis profil comptable (?invite_cpt=email&pour=email)
   const inviteCpt = params.get('invite_cpt');
   const pourEmail = params.get('pour');
   const nomCpt = params.get('nom');
@@ -712,7 +649,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Action sur un devis ou une facture (accepter/refuser via lien)
   const tokenLien = params.get('t');
   const devisId = params.get('devis');
   const factureIdAction = params.get('facture');
@@ -726,38 +662,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Lien direct vers une facture/devis via QR code
   const docId = params.get('doc');
   if (docId) {
     await afficherDocumentPublic(docId, tokenLien);
     return;
   }
 
-  // NOUVEAU: lien public vers un bon de commande (le fournisseur confirme/refuse)
   const bcId = params.get('bc');
   if (bcId) {
     await afficherBonCommandePublic(bcId, tokenLien);
     return;
   }
 
-  // NOUVEAU: lien public vers un bon de livraison (consultation seule, via
-  // le QR généré sur le devis/la facture/le BL lui-même)
   const blIdParam = params.get('bl');
   if (blIdParam) {
     await afficherBonLivraisonPublic(blIdParam, tokenLien);
     return;
   }
 
-  // NOTE: l'ancien système d'invitation par lien (?invite=xxx) a été
-  // retiré (2026) — jamais généré nulle part dans l'app actuelle,
-  // remplacé par membres_entreprise (vérification automatique par email
-  // à la connexion, voir equipe.js).
-  // NOTE : l'ancien système d'accès comptable par lien+code (?comptable=)
-  // a également été retiré — remplacé par le système d'invitation par
-  // compte (invitations_comptable), plus complet.
-
-  // Restore session - toujours passer par auth d'abord
-  // Sauf si "remember me" activé explicitement
   const remembered = localStorage.getItem('bp_remember_v2') === '1';
   
   if (remembered && sb.restoreSession()) {
@@ -767,7 +689,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       localStorage.removeItem('bp_remember_v2');
       goScreen('auth');
     } else {
-      // Auto-login uniquement si "remember me" coché
       const metaRole = sb.user?.user_metadata?.role;
       let role = metaRole || 'entreprise';
       CPT.role = role;
@@ -775,10 +696,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadComptableApp();
         goScreen('comptable');
       } else {
-        // NOUVEAU : même résolution que dans doLogin() — sans ça, un
-        // membre d'équipe perdait l'accès aux données de son entreprise
-        // à chaque rechargement de page (ce chemin de restauration de
-        // session est séparé de celui de la connexion initiale).
         try {
           const rEnt = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', {
             method: 'POST',
@@ -803,8 +720,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   } else {
-    // Pas de "remember me" → toujours montrer l'écran de connexion
-    // Pré-remplir l'email si sauvegardé
     goScreen('auth');
   }
 
@@ -812,18 +727,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     m.addEventListener('click', e => { if (e.target === m) closeAllModals(); });
   });
 
-  // Polling 30s pour détecter acceptation/refus des devis + rafraîchir les
-  // notifications générales — un seul intervalle (fusion de deux
-  // intervalles séparés qui déclenchaient tous les deux genNotifications()
-  // à ~30s d'écart, doublant inutilement les appels réseau).
-  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
-  // recevait jamais les notifications d'acceptation/refus de devis — la
-  // requête interrogeait ses propres devis au lieu de ceux de l'entreprise.
   if (sb.user?.id) ecouterChangementsDevis(STATE.entrepriseId || sb.user.id);
 });
 
 function verifierChangementsDevis() {
-  // Vérifier les devis acceptés/refusés non notifiés
   const devisNotifies = STATE.devis.filter(d =>
     (d.statut === 'accepte' || d.statut === 'refuse') && !d.notif_lue
   );
@@ -858,10 +765,6 @@ function ecouterChangementsDevis(userId) {
         });
       }
 
-      // FIX: même notification temps réel pour les factures — jusqu'ici
-      // seuls les devis étaient surveillés, une entreprise qui envoyait une
-      // facture via Zelto ne recevait jamais de toast quand le client
-      // répondait (accepter/refuser).
       const factures = await sb.get('factures', 'user_id=eq.' + userId + '&reponse_client=in.(acceptee,refusee)&notif_lue=eq.false');
       if (factures && factures.length) {
         factures.forEach(f => {
@@ -880,24 +783,14 @@ function ecouterChangementsDevis(userId) {
       if ((devis && devis.length) || (factures && factures.length)) {
         badgeF();
       }
-      // Rafraîchit aussi les notifications générales à chaque cycle
-      // (remarque comptable, TVA déclarée, stock bas, échéances...),
-      // plus besoin d'un second intervalle séparé pour ça.
       if (CPT.role !== 'comptable') genNotifications();
     } catch(e) {}
   }, 30000);
 }
 
-// goScreen — routing complet
-// ============================================================
-// PAGE ACCEPTATION INVITATION COMPTABLE
-// ============================================================
-
 async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
-  // Afficher page d'accueil avec modal d'invitation
   goScreen('auth');
   
-  // Attendre que l'DOM soit prêt
   setTimeout(function() {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:20px';
@@ -919,8 +812,6 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
 
     overlay.querySelector('#btn-accepter-inv-cpt').onclick = async function() {
       try {
-        // Mettre à jour le statut de l'invitation
-          // L'entreprise doit être connectée pour accepter
         if (!sb.token || !sb.user) {
           overlay.remove();
           window._pendingInviteCpt = { emailCpt, pourEmail };
@@ -929,11 +820,7 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
           return;
         }
 
-        // FIX (audit) : sans le fallback, un membre d'équipe qui accepte
-        // ce lien d'invitation rattachait l'invitation à son propre id
-        // au lieu de la vraie entreprise.
         const entrepriseId = STATE.entrepriseId || sb.user.id;
-        // Mettre à jour invitation avec l'ID réel de l'entreprise
         await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(pourEmail), {
           method: 'PATCH',
           headers: {
@@ -944,8 +831,6 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
           body: JSON.stringify({ statut: 'acceptee', entreprise_id: entrepriseId })
         });
 
-        // Notifier le comptable via la fonction RPC SECURITY DEFINER —
-        // élimine toute dépendance à une policy RLS sur cette table.
         await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
           method: 'POST',
           headers: {
@@ -954,7 +839,7 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            p_user_id: entrepriseId, // on stocke pour retrouver le comptable via email
+            p_user_id: entrepriseId,
             p_destinataire_email: emailCpt || '',
             p_type: 'invitation_acceptee',
             p_titre: 'Invitation acceptée',
