@@ -384,7 +384,7 @@ async function _recupererEmailsAgentsSupport() {
 async function loadAnnuaire() {
   try {
     const emailsAgents = await _recupererEmailsAgentsSupport();
-    const rEnt = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=raison,secteur,ville,tel,email,id_unique,annuaire_contact_visible,adresse,rc,identifiant_fiscal,ice&raison=not.is.null&order=raison.asc&limit=100', {
+    const rEnt = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?select=id,raison,secteur,ville,tel,email,id_unique,annuaire_contact_visible,adresse,rc,identifiant_fiscal,ice&raison=not.is.null&order=raison.asc&limit=100', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
     });
     const entreprises = ((await rEnt.json()) || [])
@@ -438,7 +438,7 @@ function filtrerAnnuaire() {
     return requis.every(function(k) { return !!e[k]; });
   }
   list.innerHTML = data.map(e => `
-    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic('${escapeHTML(e.email||'').replace(/'/g,"\\'")}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${escapeHTML(e.tel||'').replace(/'/g,"\\'")}')` : `voirProfilEntreprise('${e.id_unique||''}')`}">
+    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic('${escapeHTML(e.email||'').replace(/'/g,"\\'")}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${escapeHTML(e.tel||'').replace(/'/g,"\\'")}')` : `ouvrirActionsEntreprise('${e.id_unique||''}','${e.id||''}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${escapeHTML(e.tel||'').replace(/'/g,"\\'")}','${escapeHTML(e.email||'').replace(/'/g,"\\'")}')`}">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
         <div style="flex:1">
@@ -450,6 +450,52 @@ function filtrerAnnuaire() {
       </div>
     </div>
   `).join('');
+}
+// NOUVEAU (retour utilisateur) : cliquer sur une entreprise dans
+// l'annuaire ouvrait auparavant directement un nouvel onglet vers sa
+// page publique — sans jamais proposer les vraies actions utiles
+// directement : voir son QR code, lui écrire, ou lui demander un devis.
+function ouvrirActionsEntreprise(idUnique, id, raison, tel, email) {
+  const url = window.location.origin + window.location.pathname + '?profil=' + idUnique;
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=1F6F72&bgcolor=ffffff&data=' + encodeURIComponent(url);
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px;max-width:420px;width:100%;text-align:center">' +
+      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 16px"></div>' +
+      '<div style="font-size:16px;font-weight:700;margin-bottom:16px">' + escapeHTML(raison) + '</div>' +
+      '<img src="' + qrUrl + '" style="width:140px;height:140px;margin-bottom:16px" alt="QR code">' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        (id ? '<button class="btn-annuaire-discuter" style="padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💬 Discuter</button>' : '') +
+        '<button class="btn-annuaire-devis" style="padding:12px;background:#FBF0DA;color:#A67A16;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>' +
+        '<button class="btn-annuaire-voir-profil" style="padding:12px;background:#F1EEE8;color:#2A2420;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📄 Voir le profil complet</button>' +
+        '<button class="btn-annuaire-fermer" style="padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
+      '</div>' +
+    '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+
+  const btnDiscuter = overlay.querySelector('.btn-annuaire-discuter');
+  if (btnDiscuter) btnDiscuter.onclick = function() {
+    overlay.remove();
+    if (typeof demarrerConversation === 'function') demarrerConversation(id, email, sb.user?.email);
+  };
+  overlay.querySelector('.btn-annuaire-devis').onclick = function() {
+    overlay.remove();
+    goScreen('demande-devis-fournisseur', null);
+    setTimeout(function() {
+      const champLien = el('ddf-fournisseur-lien');
+      const champNom = el('ddf-fournisseur-nom');
+      if (champLien) champLien.value = url;
+      if (champNom) champNom.value = raison;
+    }, 150);
+  };
+  overlay.querySelector('.btn-annuaire-voir-profil').onclick = function() {
+    overlay.remove();
+    window.open(url, '_blank');
+  };
+  overlay.querySelector('.btn-annuaire-fermer').onclick = function() { overlay.remove(); };
 }
 function voirProfilEntreprise(idUnique) {
   if (!idUnique) return;
