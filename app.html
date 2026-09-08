@@ -2069,6 +2069,23 @@
     <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📊 Statistiques avancées</div>
+      <!-- NOUVEAU (retour utilisateur) : filtres client, catégorie, montant
+           — partagés avec l'écran Stats classique (même variables). -->
+      <input id="dashboard-avance-filtre-client" class="f-inp" placeholder="🔍 Filtrer par client..." oninput="appliquerFiltreClientAvance(this.value)" style="margin-bottom:8px">
+      <select id="dashboard-avance-filtre-categorie" class="f-inp" style="margin-bottom:8px" onchange="appliquerFiltreCategorieAvance(this.value)">
+        <option value="">Toutes catégories</option>
+        <option value="service">Prestation de service</option>
+        <option value="produit">Produit / Marchandise</option>
+        <option value="main-oeuvre">Main d'oeuvre</option>
+        <option value="transport">Transport</option>
+        <option value="autre">Autre</option>
+      </select>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <input type="number" id="dashboard-avance-montant-min" class="f-inp" placeholder="Montant min" style="flex:1" onchange="appliquerFiltreMontantAvance()">
+        <span style="font-size:12px;color:#9C9186">à</span>
+        <input type="number" id="dashboard-avance-montant-max" class="f-inp" placeholder="Montant max" style="flex:1" onchange="appliquerFiltreMontantAvance()">
+      </div>
+      <div id="dashboard-avance-filtres-actifs"></div>
       <div id="dashboard-avance-content"></div>
     </div>
     <div style="height:30px"></div>
