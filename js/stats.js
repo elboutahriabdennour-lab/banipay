@@ -200,7 +200,7 @@ function renderStats() {
   const maxClient = topClients[0]?.ca || 1;
   const grid = el('stats-grid');
   if (grid) grid.innerHTML = `
-    <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;grid-column:span 2">
+    <div style="background:#fff;border-radius:16px;padding:12px;border:1px solid #F1F5F9;grid-column:span 2">
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px 12px">
         <div style="text-align:center">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94A3B8;margin-bottom:6px">CA Total</div>
@@ -231,7 +231,7 @@ function renderStats() {
   `;
   const monthly = el('sa-monthly');
   if (monthly) {
-    const W=300, H=100, PX=24, PY=16;
+    const W=300, H=65, PX=20, PY=10;
     const pts = months.map((m,i) => ({
       x: PX + i*(W-PX*2)/(months.length-1),
       y: PY + (1 - m.ca/maxCA)*(H-PY*2),
@@ -242,7 +242,7 @@ function renderStats() {
     const pathP = pts.map((p,i) => (i===0?'M':'L')+p.x.toFixed(1)+','+p.yp.toFixed(1)).join(' ');
     const area = path+' L'+pts[pts.length-1].x.toFixed(1)+','+(H-PY)+' L'+PX+','+(H-PY)+' Z';
     monthly.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;margin-top:12px">
+      <div style="background:#fff;border-radius:16px;padding:12px;border:1px solid #F1F5F9;margin-top:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <div style="font-size:13px;font-weight:700;color:#0F172A">📈 CA mensuel</div>
           <div style="font-size:11px;color:#64748B">Ce mois: <strong style="color:#2563EB">${fmt(caMois)} MAD</strong></div>
@@ -269,7 +269,7 @@ function renderStats() {
   const topEl = el('sa-top-clients');
   if (topEl && topClients.length) {
     topEl.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;margin-top:12px">
+      <div style="background:#fff;border-radius:16px;padding:12px;border:1px solid #F1F5F9;margin-top:8px">
         <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">🏆 Top clients</div>
         ${topClients.map((c,i)=>`
           <div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParClientStats(${JSON.stringify(c.nom)})">
@@ -295,7 +295,7 @@ function renderStats() {
     const retard = f.filter(x=>x.statut==='retard').length;
     const total2 = Math.max(f.length, 1);
     repEl.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9;margin-top:12px">
+      <div style="background:#fff;border-radius:16px;padding:12px;border:1px solid #F1F5F9;margin-top:8px">
         <div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">📊 Répartition</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
           <div style="text-align:center;background:#ECFDF5;border-radius:10px;padding:10px">
@@ -335,7 +335,7 @@ function renderStats() {
     const topProduits = Object.values(produitMap).sort(function(a,b){return b.montant-a.montant;}).slice(0,5);
     const maxProduit = topProduits[0]?.montant || 1;
     if (topProduits.length) {
-      produitEl.innerHTML = '<div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9">' +
+      produitEl.innerHTML = '<div style="background:#fff;border-radius:16px;padding:12px;border:1px solid #F1F5F9">' +
         '<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">📦 Top produits / prestations</div>' +
         topProduits.map(function(p, i) {
           const couleur = ['#2563EB','#059669','#D97706','#9333EA','#EF4444'][i];
@@ -367,7 +367,7 @@ function renderStats() {
     const totalPaiements = Object.values(modeMap).reduce(function(s,v){return s+v;}, 0);
     const modes = Object.keys(modeMap).sort(function(a,b){return modeMap[b]-modeMap[a];});
     if (modes.length) {
-      modeEl.innerHTML = '<div style="background:#fff;border-radius:16px;padding:16px;border:1px solid #F1F5F9">' +
+      modeEl.innerHTML = '<div style="background:#fff;border-radius:16px;padding:12px;border:1px solid #F1F5F9">' +
         '<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:14px">💰 Répartition par mode de paiement</div>' +
         modes.map(function(mode) {
           const montant = modeMap[mode];
