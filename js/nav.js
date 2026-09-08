@@ -655,7 +655,10 @@ function goScreen(name, options) {
     'tva': _safe(typeof renderTVA!=='undefined'?renderTVA:undefined,'renderTVA'),
     'position-financiere': _safe(typeof renderPositionFinanciere!=='undefined'?renderPositionFinanciere:undefined,'renderPositionFinanciere'),
     'rapport-stock': function() { if (typeof renderRapportStock === 'function') renderRapportStock(); },
-    'dashboard-avance': function() { if (typeof renderDashboardAvance === 'function') renderDashboardAvance(); },
+    // FUSION (retour utilisateur) : l'ancien écran dashboard-avance est
+    // devenu l'onglet "Prévision" de l'écran Stats — redirige au lieu
+    // d'afficher un écran qui n'existe plus.
+    'dashboard-avance': function() { goScreen('stats', null); setTimeout(function() { if (typeof switchStatsOnglet === 'function') switchStatsOnglet('prevision'); }, 50); },
     'recherche': _safe(typeof initRecherche!=='undefined'?initRecherche:undefined,'initRecherche'),
     'notifications': _safe(typeof renderNotifScreen!=='undefined'?renderNotifScreen:undefined,'renderNotifScreen'),
     'audit': _safe(typeof renderJournalAudit!=='undefined'?renderJournalAudit:undefined,'renderJournalAudit'),
