@@ -232,6 +232,60 @@ function _extraireTransactionsReleve(texte) {
 // deux côtés, et marque chaque correspondance par son type (_type)
 // pour que l'affichage et la confirmation sachent quelle table mettre
 // à jour.
+// FIX (retour utilisateur) : ne comparait auparavant que par montant —
+// une transaction correspondant par hasard au même montant qu'une
+// facture totalement différente se serait quand même proposée en
+// premier. Le nom (client/fournisseur) et la date sont maintenant aussi
+// utilisés, mais uniquement pour CLASSER les propositions par ordre de
+// fiabilité — le montant reste le seul critère obligatoire (une facture
+// dont le montant ne correspond pas n'est jamais proposée du tout).
+// Tout reste des suggestions à vérifier soi-même, jamais un lien
+// automatique — rien n'est modifié en base tant que l'entreprise n'a
+// pas cliqué "Lier" explicitement.
+function _sansAccents(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Transforme une date de relevé (JJ/MM/AAAA, JJ-MM-AAAA...) en objet
+// Date exploitable — tolérant sur le séparateur, comme le reste de la
+// lecture de relevé.
+function _parserDateReleve(dateBrute) {
+  const m = String(dateBrute || '').match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if (!m) return null;
+  const jour = parseInt(m[1], 10), mois = parseInt(m[2], 10) - 1;
+  let annee = parseInt(m[3], 10);
+  if (annee < 100) annee += 2000;
+  const d = new Date(annee, mois, jour);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Score de fiabilité d'une correspondance : le montant est déjà garanti
+// exact avant d'arriver ici (filtré en amont) — ce score ne fait que
+// classer les meilleures propositions en tête, jamais exclure quoi que
+// ce soit sur cette seule base.
+function _scoreCorrespondance(nomDoc, dateDoc, descriptionTransaction, dateTransactionBrute) {
+  let score = 0;
+  const nomNorm = _sansAccents(String(nomDoc || '').toLowerCase()).trim();
+  const descNorm = _sansAccents(String(descriptionTransaction || '').toLowerCase());
+  if (nomNorm && nomNorm.length >= 3 && descNorm.includes(nomNorm)) {
+    score += 2; // nom retrouvé tel quel dans le libellé de la transaction
+  } else if (nomNorm && nomNorm.length >= 3) {
+    // Correspondance partielle : au moins un mot du nom (3+ lettres)
+    // apparaît dans le libellé — utile pour "SARL Bâtir Maroc" vs
+    // "VIR BATIR MAROC SARL", ordre des mots différent.
+    const motsNom = nomNorm.split(/\s+/).filter(function(m) { return m.length >= 3; });
+    if (motsNom.some(function(mot) { return descNorm.includes(mot); })) score += 1;
+  }
+  const dDoc = dateDoc ? new Date(dateDoc) : null;
+  const dTrans = _parserDateReleve(dateTransactionBrute);
+  if (dDoc && dTrans && !isNaN(dDoc.getTime())) {
+    const ecartJours = Math.abs((dTrans - dDoc) / 86400000);
+    if (ecartJours <= 3) score += 2;
+    else if (ecartJours <= 10) score += 1;
+  }
+  return score;
+}
+
 function suggererRapprochements(transactions) {
   const facturesCandidates = (STATE.factures || []).filter(function(f) {
     return f.statut !== 'payee' && f.statut !== 'refusee';
@@ -243,14 +297,19 @@ function suggererRapprochements(transactions) {
     const correspondancesFactures = facturesCandidates.filter(function(f) {
       return Math.abs(Number(f.ttc || 0) - t.montant) < 1;
     }).map(function(f) {
-      return { id: f.id, ref: f.ref, client: f.client, _type: 'facture' };
+      const score = _scoreCorrespondance(f.client, f.echeance || f.date_emission, t.description, t.dateBrute);
+      return { id: f.id, ref: f.ref, client: f.client, _type: 'facture', _score: score };
     });
     const correspondancesAchats = achatsCandidats.filter(function(a) {
       return Math.abs(Number(a.ttc || 0) - t.montant) < 1;
     }).map(function(a) {
-      return { id: a.id, ref: a.ref_fournisseur || '', client: a.fournisseur || '', _type: 'achat' };
+      const score = _scoreCorrespondance(a.fournisseur, a.echeance || a.date_achat, t.description, t.dateBrute);
+      return { id: a.id, ref: a.ref_fournisseur || '', client: a.fournisseur || '', _type: 'achat', _score: score };
     });
-    return Object.assign({}, t, { correspondances: correspondancesFactures.concat(correspondancesAchats) });
+    // Meilleur score (nom + date les plus proches) affiché en premier —
+    // toujours une proposition, jamais un choix imposé.
+    const toutes = correspondancesFactures.concat(correspondancesAchats).sort(function(a, b) { return b._score - a._score; });
+    return Object.assign({}, t, { correspondances: toutes });
   });
 }
 
@@ -291,7 +350,14 @@ function renderTransactionsReleve() {
               const libelle = estAchat ? 'l\'achat' : 'la facture';
               const couleurFond = estAchat ? '#F5E4E1' : '#EEF3E4';
               const couleurTexte = estAchat ? '#8E2E24' : '#55702E';
-              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + '</button>';
+              // NOUVEAU (retour utilisateur) : badge de confiance basé sur
+              // le nom + la date, en plus du montant déjà garanti exact —
+              // aide à repérer en un coup d'œil la proposition la plus
+              // fiable quand plusieurs factures ont le même montant.
+              const badge = f._score >= 3 ? '<span style="background:#1F6F72;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓✓ Forte correspondance</span>'
+                : f._score >= 1 ? '<span style="background:#C9971F;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓ Correspondance partielle</span>'
+                : '<span style="background:#9C9186;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">Montant seul</span>';
+              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + '</button>';
             }).join('')
           : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
       '</div>';
