@@ -37,7 +37,6 @@ function filterDevis(f, btn) {
 }
 
 function initNouveauDevis(prefill) {
-  // Populate client suggestions
   const _dl2 = document.getElementById('client-datalist-devis');
   if (_dl2 && STATE.clients) {
     _dl2.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
@@ -85,8 +84,6 @@ function openAddLigneDevis() {
   el('mld-unite') && (el('mld-unite').value = 'u');
   el('modal-ligne-d')?.classList.add('active');
   setTimeout(() => el('mld-desc')?.focus(), 100);
-  // NOUVEAU (chantier ajouté) : même suggestion de prix que côté facture
-  // — voir chercherHistoriquePrixClient() dans factures.js.
   const champDesc = el('mld-desc');
   if (champDesc && !champDesc.dataset.suggestionPrixAttachee && typeof afficherSuggestionPrixClient === 'function') {
     champDesc.addEventListener('blur', function() { afficherSuggestionPrixClient('d-client', 'mld-desc'); });
@@ -106,7 +103,6 @@ function confirmerLigneDevis() {
   renderLignesD();
 }
 
-// NOUVEAU: liste des BC disponibles à lier à ce devis
 function remplirPickerBCPourDevis() {
   const sel = el('d-bc-lie');
   if (!sel) return;
@@ -124,12 +120,10 @@ async function sauvegarderDevis() {
   const ht = STATE.lignesD.reduce((s,l)=>s+l.qte*l.pu,0);
   showToast('⏳ Sauvegarde...');
   try {
-    // NOUVEAU : si ce client est un compte Zelto déjà connu (choisi dans
-    // l'annuaire, pas juste tapé), on verrouille le devis à SON compte —
-    // lui seul (connecté) pourra l'ouvrir/agir dessus via le lien public.
     const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === client; });
     const r = await sb.post('devis', {
       user_id: (STATE.entrepriseId || sb.user.id),
+      cree_par: sb.user.id,
       ref: el('d-ref')?.value,
       client, chantier: el('d-chantier')?.value.trim(),
       date_emission: el('d-date')?.value,
@@ -148,9 +142,6 @@ async function sauvegarderDevis() {
   } catch(e) { showToast('❌ '+e.message, 'error'); }
 }
 
-// NOUVEAU: l'entreprise peut résoudre elle-même un devis en attente/envoyé
-// (accepté ou refusé), sans dépendre du client qui n'a peut-être jamais agi
-// via le lien (réponse reçue par téléphone, par exemple).
 async function resoudreManuellementDevis(id, nouveauStatut) {
   const d = STATE.devis.find(function(x) { return x.id === id; });
   if (!d) return;
@@ -209,14 +200,10 @@ function renderDetailDevis() {
   if (!actEl) return;
   const actions = [];
 
-  // Badge statut
   const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#9C9186', en_attente:'#B8860B' };
   const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré', en_attente:'⏳ En attente (client)' };
   actions.push(`<div style="background:${statutColors[d.statut]||'#6B5F54'}20;border-left:3px solid ${statutColors[d.statut]||'#6B5F54'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#6B5F54'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
 
-  // NOUVEAU: si le devis est "en attente" (mis de côté par le client, ou
-  // simplement pas encore de réponse), l'entreprise peut le résoudre
-  // elle-même — utile si le client a répondu par téléphone par exemple.
   if (d.statut === 'envoye' || d.statut === 'en_attente') {
     actions.push(`<div style="display:flex;gap:8px;margin-bottom:4px">
       <button class="action-item success" style="flex:1;margin-bottom:0" onclick="resoudreManuellementDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>
@@ -224,10 +211,8 @@ function renderDetailDevis() {
     </div>`);
   }
 
-  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte Zelto) — en premier
   actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
 
-  // Actions selon statut
   if (d.statut === 'envoye') {
     actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>`);
     actions.push(`<button class="action-item danger" onclick="changerStatutDevis(${d.id},'refuse')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusé</button>`);
@@ -236,10 +221,6 @@ function renderDetailDevis() {
     actions.push(`<button class="action-item" style="color:#C9971F;border-left-color:#C9971F" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#E9F4F3">🧾</div>Convertir en facture</button>`);
   }
 
-  // Partage
-  // FIX: boutons "Partager WhatsApp" / "Partager / Copier lien" retirés —
-  // redondants avec le bouton "Envoyer" unifié (WhatsApp/Email/Lien/Zelto)
-  // déjà en premier dans cette liste d'actions.
   actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#F7EFDC">📄</div>Voir PDF</button>`);
   actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
   actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
@@ -247,8 +228,6 @@ function renderDetailDevis() {
 }
 
 async function changerStatutDevis(id, statut) {
-  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
-  // pouvait jamais changer le statut d'un devis créé sous l'id entreprise.
   await sb.patch('devis', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, {statut});
   const d = STATE.devis.find(x=>x.id===id); if(d) d.statut=statut;
   STATE.currentDevis = d; renderDetailDevis();
@@ -261,7 +240,7 @@ async function convertirEnFacture(id) {
   try {
     const ht = d.ht; const ref = getRef('FAC', STATE.factures);
     const r = await sb.post('factures', {
-      user_id: (STATE.entrepriseId || sb.user.id), ref, client: d.client, chantier: d.chantier,
+      user_id: (STATE.entrepriseId || sb.user.id), cree_par: sb.user.id, ref, client: d.client, chantier: d.chantier,
       date_emission: today(), paiement: 'virement', statut: 'envoyee',
       lignes: d.lignes, ht, tva: ht*0.2, ttc: ht*1.2, devis_ref: d.ref,
       bc_id: d.bc_id || null,
@@ -271,10 +250,6 @@ async function convertirEnFacture(id) {
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
     await sb.patch('devis',`id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`,{statut:'converti',facture_ref:ref});
     d.statut='converti'; d.facture_ref=ref;
-    // FIX: la conversion devis→facture ne décrémentait jamais le stock,
-    // contrairement à la création directe d'une facture — deux chemins
-    // vers le même résultat (une facture avec des lignes liées au
-    // catalogue), un seul des deux mettait le stock à jour.
     if (typeof decrementerStockDepuisLignes === 'function') await decrementerStockDepuisLignes(d.lignes, ref);
     showToast('🎉 Facture '+ref+' créée !','success');
     setTimeout(()=>goScreen('dashboard'),1200);
@@ -284,8 +259,6 @@ async function convertirEnFacture(id) {
 async function supprimerDevis(id) {
   if (!confirm('Supprimer ce devis ?')) return;
   const d = STATE.devis.find(x=>x.id===id);
-  // FIX (audit) : même bug — la suppression échouait silencieusement
-  // pour un membre d'équipe (clause WHERE ne correspondant jamais).
   await sb.del('devis',`id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
   STATE.devis = STATE.devis.filter(x=>x.id!==id);
   showToast('Supprimé'); goScreen('devis-list');
@@ -298,10 +271,6 @@ function dupliquerDevis(id) {
   goScreen('nouveau-devis');
   showToast('📋 Devis dupliqué');
 }
-
-// ============================================================
-// AVOIR
-// ============================================================
 
 function initAvoir() {
   el('av-client') && (el('av-client').value = '');
@@ -341,21 +310,12 @@ async function sauvegarderAvoir() {
       facture_origine_ref:STATE.factures.find(f=>String(f.id)===el('av-facture-origine')?.value)?.ref||''
     });
     STATE.avoirs.unshift(r[0]);
-    // L'avoir est un document distinct - ne pas modifier la facture d'origine
-    // Lier l'avoir à la facture d'origine pour référence uniquement
     const factureId = el('av-facture-origine')?.value;
     if (factureId) {
       const f = STATE.factures.find(x => String(x.id) === factureId);
       if (f && el('av-motif')?.value === 'annulation') {
-        // Annulation totale : marquer la facture comme annulée (pas payée)
         await sb.patch('factures', 'id=eq.' + f.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'annulee' });
         f.statut = 'annulee';
-        // FIX (audit) : l'avoir n'a pas de lignes détaillées (juste un
-        // montant global), donc on ne peut pas savoir QUOI restaurer en
-        // général — mais pour une annulation TOTALE d'une facture liée,
-        // on connaît ses vraies lignes (avec produit_id) : on restaure le
-        // stock sur celles-ci. Sans ça, annuler une facture ne rendait
-        // jamais les articles vendus au stock.
         try {
           const lignesOrigine = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
           for (const ligne of lignesOrigine) {
@@ -368,9 +328,6 @@ async function sauvegarderAvoir() {
     }
     showToast('✅ Avoir émis !', 'success');
 
-    // NOUVEAU : si ce client a un compte Zelto lié, il est prévenu qu'un
-    // avoir a été émis sur sa facture — avant, aucune notification n'était
-    // envoyée dans ce cas.
     const clientInfo = STATE.clients.find(function(c) { return c.nom === client; });
     if (clientInfo && clientInfo.reference_id) {
       try {
@@ -390,26 +347,11 @@ async function sauvegarderAvoir() {
       } catch(eNotifAvoir) {}
     }
 
-    // Aller vers la liste des avoirs
     setTimeout(() => goScreen('avoir-list'), 800);
   } catch(e){showToast('❌ '+e.message,'error');}
 }
 
-// ============================================================
-// BON DE COMMANDE
-// ============================================================
-
-// ============================================================
-// SÉLECTION FOURNISSEUR POUR LE BON DE COMMANDE
-// (existant dans l'historique / lien Zelto / recherche annuaire)
-// ============================================================
-
-// ============================================================
-// PICKER FOURNISSEUR GÉNÉRIQUE — utilisé par le Bon de commande, la
-// facture d'achat, et la demande de devis fournisseur. Combine : (1)
-// l'historique des fournisseurs déjà utilisés dans CETTE entreprise
-// (achats + BC confondus), (2) une recherche dans l'annuaire Zelto.
-window._pickerFournisseurCtx = null; // { champNom, champId }
+window._pickerFournisseurCtx = null;
 
 function ouvrirPickerFournisseur(champNom, champId) {
   window._pickerFournisseurCtx = { champNom: champNom, champId: champId || null };
@@ -419,13 +361,11 @@ function ouvrirPickerFournisseur(champNom, champId) {
   setTimeout(function() { el('search-fournisseur-bc')?.focus(); }, 100);
 }
 
-// Conservé pour compatibilité — le BC utilisait cette fonction directement.
 function ouvrirPickerFournisseurBC() {
   ouvrirPickerFournisseur('bc-fournisseur', 'bc-fournisseur-id');
 }
 
 function afficherFournisseursHistoriqueBC(filtreTexte) {
-  // Union des fournisseurs déjà vus dans les achats ET les bons de commande
   const nomsAchats = (STATE.achats || []).map(function(a) { return a.fournisseur; });
   const nomsBC = (STATE.bonsCommande || []).map(function(bc) { return bc.fournisseur; });
   const noms = Array.from(new Set(nomsAchats.concat(nomsBC).filter(Boolean)));
@@ -444,8 +384,6 @@ function rechercherFournisseurBC() {
   afficherFournisseursHistoriqueBC(q);
   clearTimeout(_timeoutRechercheFournisseurBC);
   if (q.length < 2) return;
-  // Recherche dans l'annuaire Zelto (profils_entreprise) après une courte
-  // pause, pour ne pas spammer une requête à chaque frappe.
   _timeoutRechercheFournisseurBC = setTimeout(async function() {
     try {
       const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?raison=ilike.*' + encodeURIComponent(q) + '*&select=id,raison,secteur,ville&limit=10', {
@@ -465,9 +403,6 @@ function rechercherFournisseurBC() {
 }
 
 function choisirFournisseurBC(nom, id) {
-  // Écrit dans le champ ciblé — soit celui du contexte générique (achat,
-  // demande de devis...), soit par défaut celui du BC pour compatibilité
-  // avec les anciens appels directs.
   const ctx = window._pickerFournisseurCtx || { champNom: 'bc-fournisseur', champId: 'bc-fournisseur-id' };
   el(ctx.champNom) && (el(ctx.champNom).value = nom);
   if (ctx.champId) el(ctx.champId) && (el(ctx.champId).value = id || '');
@@ -559,15 +494,10 @@ function genBonCommandePDF() {
   });
 }
 
-// NOUVEAU: enregistre le bon de commande en base (auparavant : PDF à la
-// volée, jamais sauvegardé — aucun historique, aucune liste possible).
 async function sauvegarderBonCommande() {
   const fournisseur = el('bc-fournisseur')?.value.trim();
   if (!fournisseur || !STATE.lignesBC.length) { showToast('Remplissez le formulaire', 'error'); return; }
   const bc = {
-    // FIX (audit) : même bug que sauvegarderAchat — sans ce fallback, un
-    // bon de commande créé par un membre d'équipe serait invisible pour
-    // le reste de l'entreprise.
     user_id: (STATE.entrepriseId || sb.user?.id),
     ref: el('bc-ref')?.value,
     fournisseur: fournisseur,
@@ -590,17 +520,10 @@ async function sauvegarderBonCommande() {
   } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
 
-// NOUVEAU: envoyer le BC au fournisseur — lien public où il peut confirmer
-// ou refuser, symétrique au cycle devis (accepter/refuser).
-// NOUVEAU: quand un client (avec compte Zelto) accepte un devis reçu, un
-// bon de commande se crée automatiquement chez lui, adressé à
-// l'entreprise émettrice du devis — même principe que l'achat
-// auto-enregistré à l'acceptation d'une facture (achats.js).
 async function enregistrerBCDepuisDevisAccepte(devisId) {
   const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
   try {
-    // Éviter les doublons si la notification est traitée deux fois
     const existant = (STATE.bonsCommande || []).find(function(bc) { return bc.devis_source_id === parseInt(devisId); });
     if (existant) return;
 
@@ -640,8 +563,6 @@ async function enregistrerBCDepuisDevisAccepte(devisId) {
       STATE.bonsCommande.unshift(result[0] || bc);
       showToast('📋 Bon de commande ' + bc.ref + ' généré automatiquement', 'success');
       if (typeof logAudit === 'function') logAudit('bon_commande', (result[0]||bc).id, 'creation', 'Auto — depuis devis ' + (d.ref||''));
-      // Notifie le fournisseur (l'entreprise émettrice du devis) — ce BC
-      // étant auto-confirmé, il doit apparaître immédiatement chez lui.
       try {
         await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_bc_recu', {
           method: 'POST',
@@ -658,18 +579,12 @@ async function enregistrerBCDepuisDevisAccepte(devisId) {
 async function envoyerBonCommande(id) {
   const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
   if (!bc) return;
-  // FIX (grand audit) : un échec silencieux ici laissait quand même
-  // partager le lien avec "Lien copié" en succès, alors que le statut
-  // du bon de commande restait incorrect côté Zelto (jamais passé à
-  // "envoyé").
   let statutMisAJour = true;
   try {
     await sb.patch('bons_commande', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'envoye' });
     bc.statut = 'envoye';
   } catch(e) { statutMisAJour = false; console.warn('Mise à jour statut BC:', e); }
 
-  // NOUVEAU: si le fournisseur a un compte Zelto, il reçoit une
-  // notification directe (en plus du lien partageable ci-dessous).
   if (bc.fournisseur_id) {
     try {
       await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_bc_recu', {
@@ -691,18 +606,8 @@ async function envoyerBonCommande(id) {
   renderBonsCommandeListe();
 }
 
-// ============================================================
-// BC REÇUS (côté fournisseur) — conversion en facture
-// ============================================================
 STATE.bcRecus = STATE.bcRecus || [];
 
-// ============================================================
-// FACTURES REÇUES D'AUTRES ENTREPRISES ZELTO — moitié manquante du
-// marché B2B (le côté vendeur existait déjà via BC reçus/conversion).
-// Complète la boucle : quand un fournisseur Zelto facture une entreprise
-// Zelto, cette dernière voit la facture arriver ici et la convertit en
-// achat sans ressaisie.
-// ============================================================
 async function loadFacturesRecues() {
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_factures_recues', {
@@ -749,6 +654,7 @@ async function convertirFactureEnAchat(factureId) {
 
     const achat = {
       user_id: (STATE.entrepriseId || sb.user.id),
+      cree_par: sb.user.id,
       fournisseur: fournisseurProfil.raison || 'Fournisseur Zelto',
       fournisseur_id: facture.user_id || null,
       fournisseur_banipay: true,
@@ -770,8 +676,6 @@ async function convertirFactureEnAchat(factureId) {
       STATE.achats = STATE.achats || [];
       STATE.achats.unshift(r[0]);
       facture.achat_genere_id = r[0].id;
-      // Persiste le marquage côté facture (on n'en est pas propriétaire,
-      // même principe que marquer_bc_converti pour les BC reçus).
       try {
         await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_facture_importee', {
           method: 'POST',
@@ -823,8 +727,6 @@ function renderBCRecus() {
       }).join('');
 }
 
-// Convertit un BC reçu en facture, pré-remplie et liée (bc_id), adressée
-// au client qui a émis ce bon de commande.
 async function convertirBCEnFacture(bcId) {
   const bc = (STATE.bcRecus || []).find(function(x) { return x.id === bcId; });
   if (!bc) return;
@@ -838,6 +740,7 @@ async function convertirBCEnFacture(bcId) {
 
     const facture = {
       user_id: (STATE.entrepriseId || sb.user.id),
+      cree_par: sb.user.id,
       ref: getRef('FAC', STATE.factures || []),
       client: client.raison || 'Client Zelto',
       date_emission: today(),
@@ -848,10 +751,6 @@ async function convertirBCEnFacture(bcId) {
       bc_id: bc.id,
       devise: 'MAD', montant_recu: 0,
       note: 'Générée à partir du bon de commande ' + (bc.ref||''),
-      // FIX (même trou que le décrément de stock trouvé plus tôt) : cette
-      // facture concerne un BC reçu d'une AUTRE entreprise Zelto — son
-      // compte réel (bc.user_id) est connu avec certitude, donc on
-      // verrouille directement dessus.
       destinataire_id: bc.user_id || null,
     };
 
@@ -859,11 +758,7 @@ async function convertirBCEnFacture(bcId) {
     if (r && r.length) {
       STATE.factures.unshift(r[0]);
       bc.facture_generee_id = r[0].id;
-      // FIX: même trou que convertirEnFacture — la facturation d'un BC
-      // reçu ne décrémentait jamais le stock.
       if (typeof decrementerStockDepuisLignes === 'function') await decrementerStockDepuisLignes(facture.lignes, facture.ref);
-      // Persiste le marquage côté BC (le fournisseur n'est pas propriétaire
-      // de cette ligne, d'où la RPC dédiée plutôt qu'un simple patch).
       try {
         await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_bc_converti', {
           method: 'POST',
@@ -916,7 +811,6 @@ function renderBonsCommandeListe() {
   }).join('');
 }
 
-// NOUVEAU: suppression individuelle — n'existait pas du tout jusqu'ici.
 async function supprimerBonCommande(id) {
   if (!confirm('Supprimer ce bon de commande ?')) return;
   try {
@@ -953,9 +847,6 @@ function initBonLivraison(prefill) {
   renderLignesBL();
 }
 
-// NOUVEAU: sélecteur de la facture liée (remplace le champ texte libre
-// "Facture réf" — c'est ce vrai lien qui permet au client de retrouver le
-// bon de livraison depuis sa facture).
 function renderPickerFactureBL() {
   const sel = el('bl-facture-liee');
   if (!sel) return;
@@ -1001,8 +892,6 @@ function genBonLivraisonPDF(refFactureLiee, blIdPourQR, blTokenPourQR) {
   const client = el('bl-client')?.value.trim();
   if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
 
-  // NOUVEAU: le BL doit afficher le devis ET le BC liés (via la facture),
-  // plus son propre QR (pour qu'on puisse le retrouver/vérifier).
   const refsQR = [];
   const factureLiee = window._blFactureId ? (STATE.factures || []).find(function(f) { return f.id === window._blFactureId; }) : null;
   if (factureLiee) {
@@ -1035,9 +924,6 @@ function genBonLivraisonPDF(refFactureLiee, blIdPourQR, blTokenPourQR) {
   });
 }
 
-// NOUVEAU: enregistre le BL en base avec un vrai facture_id — c'est ce qui
-// permet au client de le retrouver depuis sa facture (voir
-// afficherDocumentPublic dans app.js).
 async function sauvegarderBonLivraison() {
   const client = el('bl-client')?.value.trim();
   if (!client || !STATE.lignesBL.length) { showToast('Remplissez le formulaire', 'error'); return; }
@@ -1045,8 +931,6 @@ async function sauvegarderBonLivraison() {
   const factureLiee = factureId ? (STATE.factures || []).find(function(f) { return f.id === factureId; }) : null;
 
   const bl = {
-    // FIX (audit) : même bug — bon de livraison invisible pour le reste
-    // de l'entreprise sans ce fallback.
     user_id: (STATE.entrepriseId || sb.user?.id),
     ref: el('bl-ref')?.value,
     client: client,
@@ -1064,8 +948,6 @@ async function sauvegarderBonLivraison() {
       showToast('✅ Bon de livraison enregistré' + (factureLiee ? ' et lié à ' + factureLiee.ref : ''), 'success');
       genBonLivraisonPDF(factureLiee ? factureLiee.ref : '', (result[0]||bl).id, (result[0]||bl).token_public);
 
-      // NOUVEAU : si ce client a un compte Zelto lié, il est prévenu
-      // qu'un bon de livraison a été créé — avant, aucune notification.
       const clientInfo = STATE.clients.find(function(c) { return c.nom === client; });
       if (clientInfo && clientInfo.reference_id) {
         try {
@@ -1128,17 +1010,10 @@ function voirBonLivraison(id) {
   genBonLivraisonPDF(facture ? facture.ref : '', bl.id, bl.token_public);
 }
 
-// NOUVEAU: création directe depuis une facture — pré-remplit client +
-// lignes + lie automatiquement le facture_id (le moyen le plus fiable
-// d'avoir une liaison correcte, sans ressaisie).
 function creerBonLivraisonDepuisFacture(factureId) {
   const f = (STATE.factures || []).find(function(x) { return x.id === factureId; });
   if (!f) return;
   const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
-  // FIX: goScreen('bon-livraison') appelle initBonLivraison() SANS argument
-  // (remise à zéro) — on navigue donc D'ABORD, puis on applique le
-  // pré-remplissage APRÈS, sinon la navigation écraserait immédiatement ce
-  // qu'on vient de préparer.
   goScreen('bon-livraison');
   initBonLivraison({
     client: f.client,
@@ -1193,7 +1068,6 @@ function previewAvoirPDF() {
   const client = el('av-client')?.value.trim();
   if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
   const ht = parseFloat(el('av-montant')?.value) || 0;
-  // Trouver la facture d'origine
   const factureId = el('av-facture-origine')?.value;
   const factureOrig = factureId ? STATE.factures.find(x => String(x.id) === factureId) : null;
   const motifLabels = {
@@ -1218,10 +1092,6 @@ function previewAvoirPDF() {
     showStamp: false,
   });
 }
-
-// ============================================================
-// LISTE DES AVOIRS
-// ============================================================
 
 function renderAvoirList() {
   const list = el('avoir-list-items');
@@ -1273,23 +1143,6 @@ function exportAvoirPDF(id) {
   });
 }
 
-
-
-// NOTE : les anciennes fonctions dédiées partagerDevisWhatsApp() et
-// partagerDevisNatif() ont été retirées (2026) — remplacées depuis par
-// la fonction générique envoyerVia() (produits.js), qui gère devis/BC/
-// facture de façon uniforme (WhatsApp, email, lien, compte Zelto).
-
-// ============================================================
-// ACCEPTER / REFUSER — DEVIS ET FACTURES (via lien public)
-// ============================================================
-
-// Fonction générique : gère à la fois les devis (champ `statut`) et les
-// factures (champ `reponse_client`, car les factures n'avaient pas de
-// champ de réponse client dédié avant).
-// NOUVEAU: bascule en "expiré" tout devis envoyé dont la date de validité
-// (date_emission + validite jours) est dépassée. Le statut/couleur/libellé
-// "expire" existaient déjà dans l'affichage mais rien ne le déclenchait.
 async function verifierExpirationDevis() {
   const aujourdHui = new Date();
   const aExpirer = (STATE.devis || []).filter(function(d) {
@@ -1319,7 +1172,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
   const libelleAction = action === 'accepter' ? 'Acceptation' : action === 'refuser' ? 'Refus' : 'Mise en attente';
   const iconAction = action === 'accepter' ? '✅' : action === 'refuser' ? '❌' : '⏳';
 
-  // Afficher une page de confirmation propre
   document.body.innerHTML = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
       <div style="font-size:48px;margin-bottom:16px">${iconAction}</div>
@@ -1329,10 +1181,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
   `;
 
   try {
-    // FIX SÉCURITÉ : remplace le fetch REST direct (filtré uniquement par
-    // id, donc devinable) par la RPC sécurisée qui exige aussi le jeton.
-    // Utilise la session réelle si connectée, nécessaire pour vérifier
-    // "c'est bien le bon destinataire" sur un document verrouillé.
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_document_public', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
@@ -1342,10 +1190,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
     if (d && d._verrouille) { if (typeof afficherEcranAccesReserve === 'function') afficherEcranAccesReserve(docId, type); return; }
     if (!d) { document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial">' + (isFacture ? 'Facture' : 'Devis') + ' introuvable</div>'; return; }
 
-    // FIX: un document déjà accepté ou refusé ne doit plus jamais changer
-    // d'état — que ce soit via un lien réutilisé (ancien message WhatsApp/
-    // email), un double-clic, ou un rechargement de page. "En attente" ne
-    // verrouille rien : le client peut toujours accepter/refuser après.
     const statutActuel = d[champ];
     const dejaTraite = statutActuel === valeurAcceptee || statutActuel === valeurRefusee;
     if (dejaTraite) {
@@ -1364,10 +1208,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
       return;
     }
 
-    // Mettre à jour le statut / la réponse client
-    // FIX SÉCURITÉ : remplace le PATCH direct (filtré uniquement par id,
-    // donc n'importe qui pouvait accepter/refuser n'importe quel document
-    // en devinant son identifiant) par la RPC sécurisée qui exige le jeton.
     const signatureFinale = action === 'accepter'
       ? (signatureData || ('TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })))
       : null;
@@ -1376,13 +1216,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_doc_id: docId, p_token: token, p_type: type, p_action: action, p_signature: signatureFinale })
     });
-    // FIX (audit workflow — important) : avant, cette réponse n'était
-    // jamais vérifiée. fetch() ne lève une exception qu'en cas d'échec
-    // réseau, PAS en cas d'erreur HTTP (400/403/500) — donc si la RPC
-    // refusait silencieusement (jeton limite, politique de sécurité, panne
-    // passagère), le client voyait quand même l'écran "Accepté !" alors
-    // que rien n'était enregistré côté entreprise. Un vrai risque de litige
-    // commercial ("j'ai pourtant accepté ce devis").
     if (!rReponse.ok) {
       document.body.innerHTML = `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
@@ -1395,12 +1228,8 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
       return;
     }
 
-    // Journal d'audit (côté émetteur du document — utilise sa propre session si connectée)
     try { await logAudit(libelleDoc, docId, action === 'accepter' ? 'acceptation' : action === 'refuser' ? 'refus' : 'mise en attente', d.ref || ''); } catch(eAudit) {}
 
-    // FIX: envoie une VRAIE notification stockée à l'émetteur (fournisseur)
-    // — avant, seul un recalcul local sans bouton signalait qu'un devis
-    // était accepté, et rien n'existait pour les factures.
     try {
       await fetch(SUPABASE_URL + '/rest/v1/rpc/notifier_reponse_document', {
         method: 'POST',
@@ -1409,7 +1238,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
       });
     } catch(eNotif) {}
 
-    // Page de confirmation
     const messageFinal = action === 'accepter'
       ? 'L\u2019entreprise a \u00e9t\u00e9 notifi\u00e9e. Elle vous contactera prochainement.'
       : action === 'refuser'
@@ -1435,9 +1263,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
         <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect">4</span>s...</div>
       </div>
     `;
-    // NOUVEAU: bouton manuel de conversion en BC — complète la génération
-    // automatique (qui ne se déclenche que via le panneau de
-    // notifications) pour couvrir aussi ce cas du lien autonome.
     const btnBCManuel = document.getElementById('btn-convertir-bc-manuel');
     if (btnBCManuel) {
       btnBCManuel.onclick = async function() {
@@ -1447,8 +1272,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
         btnBCManuel.textContent = '✅ Bon de commande généré';
       };
     }
-    // NOUVEAU: retour automatique à l'accueil après 4 secondes, avec un
-    // petit compte à rebours visible plutôt qu'une redirection surprise.
     let secondesRestantes = 4;
     const intervalRedirect = setInterval(function() {
       secondesRestantes--;
@@ -1464,7 +1287,6 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
   }
 }
 
-// Alias de compatibilité pour les anciens liens ?devis=ID&action=...
 async function traiterActionDevis(devisId, action) {
   return traiterActionDocument(devisId, 'devis', action);
 }
