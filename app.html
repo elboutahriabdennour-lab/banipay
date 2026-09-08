@@ -1191,7 +1191,12 @@
     <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div>
   </div>
   <div class="sec-label">Statistiques</div>
-  <div style="padding:0 20px 16px"><span onclick="goScreen('dashboard-avance',null)" style="font-size:12px;color:#1F6F72;text-decoration:underline;cursor:pointer">📊 Voir les statistiques avancées</span></div>
+  <!-- FUSION (retour utilisateur) : 3 onglets au lieu de 2 écrans séparés -->
+  <div style="padding:0 20px 14px;display:flex;gap:6px">
+    <button id="stats-onglet-ensemble" onclick="switchStatsOnglet('ensemble')" style="flex:1;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Vue d'ensemble</button>
+    <button id="stats-onglet-detail" onclick="switchStatsOnglet('detail')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Détail</button>
+    <button id="stats-onglet-prevision" onclick="switchStatsOnglet('prevision')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Prévision</button>
+  </div>
   <!-- NOUVEAU (retour utilisateur) : filtre de période -->
   <div id="stats-periode-tabs" style="display:flex;gap:6px;padding:0 20px 14px;overflow-x:auto">
     <button class="ftab active" onclick="changerPeriodeStats('tout',this)">Tout</button>
@@ -1231,19 +1236,33 @@
   </div>
   <!-- NOUVEAU : filtres croisés actifs (clic sur un client/produit) -->
   <div id="stats-filtres-actifs" style="padding:0 20px 10px"></div>
-  <div style="padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" id="stats-grid"></div>
-  <div style="padding:0 20px;margin-bottom:16px" id="sa-monthly"></div>
-  <div style="padding:0 20px" id="chart-bars"></div>
-  <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
-  <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
-  <div style="padding:0 20px;margin-top:16px" id="sa-top-produits"></div>
-  <div style="padding:0 20px;margin-top:16px" id="sa-modes-paiement"></div>
-  <!-- Rapport de marge par chantier (chantier ajouté) -->
-  <div class="sec-label" style="margin-top:8px">📊 Rentabilité par chantier / projet</div>
-  <div style="padding:0 20px 20px" id="rapport-marge-chantiers-content"></div>
-  <div style="padding:0 20px 20px">
-    <button onclick="goScreen('carnet-chantier',null);setTimeout(initCarnetChantier,50)" style="width:100%;padding:12px;background:#fff;border:1.5px solid #E3DCCF;color:#241F1B;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Ouvrir le carnet de chantier / projet</button>
+
+  <!-- ONGLET 1 — VUE D'ENSEMBLE -->
+  <div id="stats-panneau-ensemble">
+    <div style="padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px" id="stats-grid"></div>
+    <div style="padding:0 20px;margin-bottom:16px" id="sa-monthly"></div>
+    <div style="padding:0 20px" id="chart-bars"></div>
+    <div style="padding:0 20px;margin-top:16px" id="sa-repartition"></div>
   </div>
+
+  <!-- ONGLET 2 — DÉTAIL -->
+  <div id="stats-panneau-detail" style="display:none">
+    <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
+    <div style="padding:0 20px;margin-top:16px" id="sa-top-produits"></div>
+    <div style="padding:0 20px;margin-top:16px" id="sa-modes-paiement"></div>
+    <!-- Rapport de marge par chantier (chantier ajouté) -->
+    <div class="sec-label" style="margin-top:8px">📊 Rentabilité par chantier / projet</div>
+    <div style="padding:0 20px 20px" id="rapport-marge-chantiers-content"></div>
+    <div style="padding:0 20px 20px">
+      <button onclick="goScreen('carnet-chantier',null);setTimeout(initCarnetChantier,50)" style="width:100%;padding:12px;background:#fff;border:1.5px solid #E3DCCF;color:#241F1B;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Ouvrir le carnet de chantier / projet</button>
+    </div>
+  </div>
+
+  <!-- ONGLET 3 — PRÉVISION (ex "Statistiques avancées") -->
+  <div id="stats-panneau-prevision" style="display:none">
+    <div style="padding:0 20px 20px" id="stats-panneau-prevision-contenu"></div>
+  </div>
+
   <div class="pb"></div>
 </div>
 
@@ -2064,32 +2083,11 @@
   </div>
 
   <!-- RAPPORT DE STOCK -->
-  <!-- TABLEAU DE BORD AVANCÉ -->
-  <div class="screen" id="screen-dashboard-avance">
-    <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div></div>
-    <div style="padding:12px 20px 0">
-      <div class="sec-label" style="padding:0 0 12px">📊 Statistiques avancées</div>
-      <!-- NOUVEAU (retour utilisateur) : filtres client, catégorie, montant
-           — partagés avec l'écran Stats classique (même variables). -->
-      <input id="dashboard-avance-filtre-client" class="f-inp" placeholder="🔍 Filtrer par client..." oninput="appliquerFiltreClientAvance(this.value)" style="margin-bottom:8px">
-      <select id="dashboard-avance-filtre-categorie" class="f-inp" style="margin-bottom:8px" onchange="appliquerFiltreCategorieAvance(this.value)">
-        <option value="">Toutes catégories</option>
-        <option value="service">Prestation de service</option>
-        <option value="produit">Produit / Marchandise</option>
-        <option value="main-oeuvre">Main d'oeuvre</option>
-        <option value="transport">Transport</option>
-        <option value="autre">Autre</option>
-      </select>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <input type="number" id="dashboard-avance-montant-min" class="f-inp" placeholder="Montant min" style="flex:1" onchange="appliquerFiltreMontantAvance()">
-        <span style="font-size:12px;color:#9C9186">à</span>
-        <input type="number" id="dashboard-avance-montant-max" class="f-inp" placeholder="Montant max" style="flex:1" onchange="appliquerFiltreMontantAvance()">
-      </div>
-      <div id="dashboard-avance-filtres-actifs"></div>
-      <div id="dashboard-avance-content"></div>
-    </div>
-    <div style="height:30px"></div>
-  </div>
+  <!-- FUSION (retour utilisateur) : l'ancien écran "Statistiques avancées"
+       est maintenant l'onglet "Prévision" de l'écran Stats (voir
+       screen-stats plus haut) — ce bloc séparé n'existe plus. Si un
+       ancien lien y mène encore quelque part, goScreen('dashboard-avance')
+       redirige automatiquement (voir nav.js). -->
 
   <!-- REGISTRE DU PERSONNEL (RH) -->
   <div class="screen" id="screen-employes">
