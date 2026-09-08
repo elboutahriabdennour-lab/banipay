@@ -4,10 +4,6 @@ STATE.achats = STATE.achats || [];
 STATE.achatFiltreActuel = 'tous';
 STATE.lignesAchat = STATE.lignesAchat || [];
 
-// ============================================================
-// CHARGEMENT
-// ============================================================
-
 async function loadAchats() {
   try {
     const uid = STATE.entrepriseId || sb.user?.id;
@@ -17,10 +13,6 @@ async function loadAchats() {
   } catch(e) { STATE.achats = []; }
   renderAchats();
 }
-
-// ============================================================
-// LISTE ACHATS
-// ============================================================
 
 function filtrerAchats(filtre, btn) {
   STATE.achatFiltreActuel = filtre;
@@ -40,7 +32,6 @@ function renderAchats() {
   else if (filtre === 'payee') achats = achats.filter(function(a) { return a.statut === 'payee'; });
   else if (filtre === 'banipay') achats = achats.filter(function(a) { return a.fournisseur_banipay; });
 
-  // Total
   const total = achats.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
   setEl('achats-total', fmt(total) + ' MAD');
 
@@ -71,10 +62,6 @@ function renderAchats() {
   }).join('');
 }
 
-// ============================================================
-// IMPORT FOURNISSEUR BANIPAY (profil)
-// ============================================================
-
 async function importerFournisseurZelto() {
   const lien = (el('achat-fournisseur-lien')?.value || '').trim();
   if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
@@ -84,14 +71,12 @@ async function importerFournisseurZelto() {
   try {
     const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
 
-    // CAS 0: Lien direct vers une FACTURE (?doc=xxx) — import complet de la facture
     const docId = url.searchParams.get('doc');
     if (docId) {
       await importerAchatDepuisFactureId(docId);
       return;
     }
 
-    // CAS 1: Lien profil entreprise (?profil=xxx ou ?portail=xxx)
     const profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
     if (profilId) {
       const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
@@ -105,7 +90,6 @@ async function importerFournisseurZelto() {
       return;
     }
 
-    // CAS 2: Lien profil comptable (?comptable=CPT-xxxx)
     const comptableId = url.searchParams.get('comptable');
     if (comptableId) {
       const invResp = await fetch(
@@ -140,17 +124,6 @@ function remplirFournisseur(nom, id, isZelto) {
   if (el('achat-fournisseur-lien')) el('achat-fournisseur-lien').value = '';
 }
 
-// ============================================================
-// IMPORT D'ACHAT DEPUIS UNE FACTURE REÇUE (lien ?doc=, QR, ou auto)
-// ============================================================
-// NOUVEAU: trois façons d'ajouter un achat — saisie manuelle (déjà existante
-// ci-dessus), lien d'une facture reçue, scan du QR code d'une facture. Et le
-// cas idéal : enregistrement 100% automatique à l'acceptation (voir plus bas).
-
-// Récupère une facture publique (par id) via la clé anon, comme le fait déjà
-// la page de consultation publique — ne dépend d'aucun droit RLS particulier
-// puisque c'est la même lecture que celle utilisée pour afficher un devis/
-// une facture reçue par lien.
 async function _fetchFacturePublique(factureId) {
   const r = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + factureId + '&select=*', {
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -167,8 +140,6 @@ async function _fetchProfilPublic(userId) {
   return (data && data[0]) || {};
 }
 
-// Pré-remplit le formulaire "Nouvelle achat" à partir d'une facture reçue,
-// identifiée par son id (extrait d'un lien ?doc=xxx ou d'un QR code scanné).
 async function importerAchatDepuisFactureId(factureId) {
   showToast('⏳ Chargement de la facture...');
   try {
@@ -181,8 +152,6 @@ async function importerAchatDepuisFactureId(factureId) {
     el('achat-date') && (el('achat-date').value = f.date_emission || today());
     el('achat-echeance') && (el('achat-echeance').value = f.echeance || '');
     el('achat-tva-taux') && (el('achat-tva-taux').value = f.ht > 0 ? Math.round((f.tva / f.ht) * 100) : 20);
-    // NOUVEAU: reprend les lignes telles quelles depuis la facture reçue —
-    // plus besoin de ressaisir chaque article, la ventilation est déjà là.
     const lignesFacture = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
     STATE.lignesAchat = lignesFacture.map(function(l) {
       return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u', produit_id: null };
@@ -195,16 +164,6 @@ async function importerAchatDepuisFactureId(factureId) {
     showToast('Erreur: ' + e.message, 'error');
   }
 }
-
-// NOTE: importerAchatDepuisLienFacture() a été retirée — elle référençait un
-// champ HTML qui n'a jamais existé et n'était appelée par aucun bouton. Sa
-// fonctionnalité est déjà couverte par importerFournisseurBaniPay() (le
-// champ "Fournisseur sur BaniPay ?" détecte déjà les liens ?doc=... via son
-// bouton "Import").
-
-// ============================================================
-// SCAN QR CODE RÉEL (jsQR, chargé à la demande depuis un CDN)
-// ============================================================
 
 let _jsQRPromise = null;
 function _chargerJsQR() {
@@ -220,8 +179,6 @@ function _chargerJsQR() {
   return _jsQRPromise;
 }
 
-// Ouvre la caméra et scanne en continu jusqu'à détecter un QR code Zelto
-// (lien contenant ?doc=... ou ?profil=...), puis importe automatiquement.
 async function scannerQRAchat() {
   showToast('⏳ Ouverture de la caméra...');
   try {
@@ -305,17 +262,10 @@ async function traiterLienScanne(texte) {
   }
 }
 
-// ============================================================
-// ENREGISTREMENT 100% AUTOMATIQUE À L'ACCEPTATION
-// ============================================================
-// Le cas idéal demandé : quand le fournisseur émet une facture via Zelto
-// et que le client l'accepte (depuis ses propres notifications, donc avec sa
-// session authentifiée), l'achat s'enregistre tout seul, sans aucune saisie.
 async function enregistrerAchatDepuisFactureAcceptee(factureId) {
   const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
   try {
-    // Éviter les doublons si la notification est traitée deux fois
     const existant = (STATE.achats || []).find(function(a) { return a.facture_source_id === String(factureId); });
     if (existant) return;
 
@@ -326,6 +276,7 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
 
     const achat = {
       user_id: uid,
+      cree_par: sb.user?.id,
       fournisseur: emetteur.raison || 'Fournisseur Zelto',
       fournisseur_id: f.user_id,
       fournisseur_banipay: true,
@@ -338,9 +289,6 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
       ttc: f.ttc || 0,
       categorie: 'autre',
       statut: 'attente',
-      // NOUVEAU: reprend les lignes de la facture reçue telles quelles
-      // (non liées au catalogue — les deux entreprises ont des catalogues
-      // distincts, impossible de deviner une correspondance automatique).
       lignes: lignesFacture.map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u', produit_id: null }; }),
       note: 'Enregistré automatiquement à l\'acceptation de la facture ' + (f.ref || ''),
       facture_source_id: String(factureId),
@@ -359,17 +307,6 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
     console.warn('enregistrerAchatDepuisFactureAcceptee:', e);
   }
 }
-
-// ============================================================
-// CALCUL TOTAUX
-// ============================================================
-
-// ============================================================
-// LIGNES D'ACHAT (désignation, quantité, prix, article lié)
-// ============================================================
-// NOUVEAU: un achat s'itemise maintenant en lignes, comme une facture/devis
-// — chaque ligne peut optionnellement être liée à un article du catalogue,
-// ce qui alimente automatiquement le stock à l'enregistrement.
 
 function renderLignesAchat() {
   const c = el('achat-lignes-container');
@@ -408,7 +345,6 @@ function confirmerLigneAchat() {
   renderLignesAchat();
 }
 
-// Choisir un article du catalogue pré-remplit la ligne ET la lie au stock
 function ouvrirCatalogueAchat() {
   el('search-produit') && (el('search-produit').value = '');
   window._catalogueModePourAchat = true;
@@ -416,7 +352,6 @@ function ouvrirCatalogueAchat() {
   el('modal-produits')?.classList.add('active');
 }
 
-// Étend ajouterDepuisCatalogue (produits.js) pour aussi gérer le contexte achat
 function ajouterDepuisCatalogueAchatSiActif(produitId) {
   if (!window._catalogueModePourAchat) return false;
   window._catalogueModePourAchat = false;
@@ -439,10 +374,6 @@ function calcAchatTotaux() {
   setEl('achat-ttc-display', fmt(ttc) + ' MAD');
 }
 
-// ============================================================
-// PIÈCE JOINTE
-// ============================================================
-
 function previewAchatPJ(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -452,10 +383,6 @@ function previewAchatPJ(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     const isImage = file.type.startsWith('image/');
-    // NOUVEAU (retour utilisateur) : bouton pour retirer la photo/pièce
-    // jointe avant d'enregistrer — jusqu'ici, la seule façon de "changer
-    // d'avis" était de choisir un autre fichier, aucun moyen de repartir
-    // sans aucune pièce jointe du tout.
     const boutonRetirer = '<button type="button" onclick="retirerPhotoAchat()" style="margin-top:6px;width:100%;padding:8px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer cette pièce jointe</button>';
     preview.innerHTML = (isImage
       ? '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #E3DCCF">'
@@ -464,19 +391,11 @@ function previewAchatPJ(event) {
     STATE._achatPJData = e.target.result;
     STATE._achatPJNom = file.name;
 
-    // NOUVEAU: lecture automatique basique (OCR) — extrait le texte de la
-    // photo et propose fournisseur/date/montant en pré-remplissage. À
-    // calibrer : c'est de la reconnaissance de texte + heuristiques
-    // simples, pas une IA qui "comprend" la facture — à vérifier/corriger
-    // systématiquement avant d'enregistrer.
     if (isImage && typeof lireFactureParOCR === 'function' && (typeof aAccesFeature !== 'function' || aAccesFeature('ocr_achats'))) lireFactureParOCR(e.target.result);
     else if (file.type === 'application/pdf' && typeof lireFacturePDF === 'function' && (typeof aAccesFeature !== 'function' || aAccesFeature('ocr_achats'))) lireFacturePDF(e.target.result);
   };
   reader.readAsDataURL(file);
 }
-// NOUVEAU (retour utilisateur) : retire la pièce jointe choisie, remet
-// aussi les 2 champs input file à vide (sinon re-choisir EXACTEMENT le
-// même fichier ensuite ne redéclencherait pas l'évènement "change").
 function retirerPhotoAchat() {
   STATE._achatPJData = null;
   STATE._achatPJNom = null;
@@ -488,18 +407,6 @@ function retirerPhotoAchat() {
   if (inputGalerie) inputGalerie.value = '';
   showToast('Pièce jointe retirée', 'default');
 }
-
-// ============================================================
-// LIER À UN ARTICLE DU CATALOGUE (alimente le stock automatiquement)
-// ============================================================
-
-// NOTE: renderAchatProduitPicker() a été retirée — remplacée par les lignes
-// itemisées, chacune pouvant être liée individuellement au catalogue via
-// ouvrirCatalogueAchat().
-
-// ============================================================
-// SAUVEGARDER ACHAT
-// ============================================================
 
 async function sauvegarderAchat() {
   if (typeof verifierConnexionRequise === 'function' && !verifierConnexionRequise()) return;
@@ -519,18 +426,12 @@ async function sauvegarderAchat() {
   const ttc = ht + tva;
 
   const achat = {
-    // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe
-    // créant un achat l'enregistrait sous son propre id — l'achat
-    // devenait invisible pour le reste de l'entreprise.
     user_id: (STATE.entrepriseId || sb.user?.id),
+    cree_par: sb.user?.id,
     fournisseur: fournisseur,
     fournisseur_id: el('achat-fournisseur-id')?.value || null,
     fournisseur_banipay: el('achat-fournisseur-banipay')?.value === '1',
     ref_fournisseur: el('achat-ref')?.value || '',
-    // NOUVEAU (chantier ajouté) : lecture défensive — fonctionne dès que
-    // le champ "achat-chantier" existera dans le formulaire HTML (pas
-    // encore ajouté, en attente de app.html), sans rien casser en
-    // attendant (el(...)?.value renvoie simplement undefined -> '').
     chantier: el('achat-chantier')?.value.trim() || '',
     date_achat: el('achat-date')?.value || new Date().toISOString().split('T')[0],
     echeance: el('achat-echeance')?.value || null,
@@ -559,9 +460,6 @@ async function sauvegarderAchat() {
       STATE._achatPJNom = null;
       window._achatFactureLieeId = null;
 
-      // NOUVEAU: chaque ligne liée à un article du catalogue alimente le
-      // stock automatiquement (entrée), avec son propre coût unitaire —
-      // remplace l'ancien lien unique "un achat = un seul article".
       if (typeof enregistrerEntreeStock === 'function') {
         for (const l of lignesEnregistrees) {
           if (l.produit_id && Number(l.qte) > 0) {
@@ -579,13 +477,6 @@ async function sauvegarderAchat() {
   }
 }
 
-// ============================================================
-// DÉTAIL ACHAT
-// ============================================================
-
-// NOUVEAU: visualiser la facture d'origine d'un achat (celle envoyée par le
-// fournisseur via Zelto, ou importée par lien) — réutilise les mêmes
-// helpers déjà utilisés pour l'import.
 async function voirFactureOrigineAchat(factureId) {
   showToast('⏳ Chargement de la facture...');
   try {
@@ -734,9 +625,6 @@ async function marquerAchatPaye(id) {
   const a = STATE.achats.find(function(x) { return x.id === id; });
   if (!a || a.statut === 'payee') return;
   try {
-    // NOUVEAU (export comptable complet) : la date de paiement est
-    // enregistrée en plus du statut — nécessaire pour générer une vraie
-    // écriture de règlement fournisseur dans l'export comptable.
     const dateAujourdhui = new Date().toISOString().split('T')[0];
     await sb.patch('factures_achat', 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { statut: 'payee', date_paiement: dateAujourdhui });
     a.statut = 'payee';
