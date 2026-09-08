@@ -42,8 +42,6 @@ function renderTVA() {
 function renderDashboard() {
   const factures = STATE.factures || [];
 
-  // Total à recevoir : somme des soldes restants (TTC - déjà reçu) sur les
-  // factures actives (ni payées, ni annulées, ni brouillons)
   const facturesActives = factures.filter(function(f) {
     return f.statut !== 'payee' && f.statut !== 'annulee' && f.statut !== 'brouillon';
   });
@@ -61,7 +59,6 @@ function renderDashboard() {
   setEl('stat-attente', nbAttente);
   setEl('stat-retard', nbRetard);
 
-  // Bandeau d'alerte si des factures sont en retard
   const alerteBar = el('alerte-bar');
   if (alerteBar) {
     if (nbRetard > 0) {
@@ -72,7 +69,6 @@ function renderDashboard() {
     }
   }
 
-  // Initiales de l'avatar (à partir de la raison sociale)
   const avatar = el('user-avatar');
   if (avatar) {
     const raison = STATE.profil?.raison || sb.user?.email || 'AB';
@@ -84,9 +80,6 @@ function renderDashboard() {
   renderObjectifMensuel();
   renderFactureList();
 
-  // NOUVEAU: résumé des achats en attente, visible directement depuis
-  // l'accueil (demande explicite : voir les factures d'achat dans toutes
-  // les parties de l'app, pas seulement l'écran Achats).
   const carteAchats = el('dashboard-achats-resume');
   if (carteAchats) {
     const achatsEnAttente = (STATE.achats || []).filter(function(a) { return a.statut !== 'payee'; });
@@ -99,7 +92,6 @@ function renderDashboard() {
     }
   }
 
-  // Badges cloche/messagerie déjà gérés par genNotifications()/messages.js
   if (typeof genNotifications === 'function') genNotifications();
 }
 
@@ -159,12 +151,7 @@ function setFilter(f, btn) {
   renderFactureList();
 }
 
-// ============================================================
-// STATS
-// ============================================================
-
 function initNouvelle(prefill) {
-  // Populate client suggestions
   const _dl = document.getElementById('client-datalist');
   if (_dl && STATE.clients) {
     _dl.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
@@ -179,9 +166,7 @@ function initNouvelle(prefill) {
   el('f-statut') && (el('f-statut').value = prefill?.statut || 'envoyee');
   el('f-echeance') && (el('f-echeance').value = prefill?.echeance || '');
   el('f-note') && (el('f-note').value = prefill?.note || '');
-  // Devise buttons
   document.querySelectorAll('.devise-btn-f').forEach(b => b.classList.toggle('active', b.dataset.devise === STATE.deviseF));
-  // Client autocomplete
   updateClientDatalist();
   renderLignesF();
 }
@@ -211,11 +196,10 @@ function renderLignesF() {
 function supprimerLigneF(i) { STATE.lignesF.splice(i, 1); renderLignesF(); }
 
 function updateTotauxF() {
-  // TVA calculée ligne par ligne selon taux de chaque produit
   const ht = STATE.lignesF.reduce((s, l) => s + (Number(l.qte)||0) * (Number(l.pu)||0), 0);
   const tva = STATE.lignesF.reduce((s, l) => {
     const lineHt = (Number(l.qte)||0) * (Number(l.pu)||0);
-    const taux = Number(l.tva) >= 0 ? Number(l.tva) : 20; // défaut 20% si non défini
+    const taux = Number(l.tva) >= 0 ? Number(l.tva) : 20;
     return s + lineHt * taux / 100;
   }, 0);
   const ttc = ht + tva;
@@ -224,14 +208,6 @@ function updateTotauxF() {
   setEl('total-ttc', fmt(ttc) + ' ' + STATE.deviseF);
 }
 
-// ============================================================
-// HISTORIQUE DE PRIX PAR CLIENT (chantier ajouté)
-// ============================================================
-// Cherche, dans les factures et devis déjà enregistrés pour CE client
-// précis, la dernière fois qu'une prestation à la description proche a
-// été vendue, et à quel prix — pour éviter les incohérences de tarif
-// d'une fois sur l'autre. Ne bloque jamais la saisie, juste une
-// suggestion informative.
 function chercherHistoriquePrixClient(clientNom, description) {
   if (!clientNom || !description || description.trim().length < 3) return null;
   const descNorm = description.trim().toLowerCase();
@@ -256,8 +232,6 @@ function chercherHistoriquePrixClient(clientNom, description) {
   }
   return null;
 }
-// Affiche la suggestion (si trouvée) sous forme de toast informatif —
-// n'importe où un champ description + client existe déjà.
 function afficherSuggestionPrixClient(clientElId, descElId) {
   const clientNom = (el(clientElId)?.value || '').trim();
   const description = (el(descElId)?.value || '').trim();
@@ -274,9 +248,6 @@ function openAddLigne() {
   el('ml-unite') && (el('ml-unite').value = 'u');
   el('modal-ligne')?.classList.add('active');
   setTimeout(() => el('ml-desc')?.focus(), 100);
-  // NOUVEAU (chantier ajouté) : suggestion de prix dès que la personne
-  // quitte le champ description, sans avoir besoin de toucher au HTML —
-  // l'écouteur est attaché une seule fois (dataset comme garde-fou).
   const champDesc = el('ml-desc');
   if (champDesc && !champDesc.dataset.suggestionPrixAttachee) {
     champDesc.addEventListener('blur', function() { afficherSuggestionPrixClient('f-client', 'ml-desc'); });
@@ -318,9 +289,6 @@ function filtrerProduits() {
 }
 
 function ajouterDepuisCatalogue(id) {
-  // NOUVEAU: le même catalogue est réutilisé pour les lignes d'achat — si
-  // c'est ce contexte qui l'a ouvert, on route vers la ligne d'achat au
-  // lieu de la ligne de facture.
   if (typeof ajouterDepuisCatalogueAchatSiActif === 'function' && ajouterDepuisCatalogueAchatSiActif(id)) return;
   const p = STATE.produits.find(x => x.id === id);
   if (!p) return;
@@ -331,9 +299,6 @@ function ajouterDepuisCatalogue(id) {
 }
 
 async function sauvegarderFacture(isDraft = false) {
-  // NOUVEAU (mode hors-ligne, version prudente) : un brouillon reste
-  // volontairement autorisé sans connexion (c'est justement le cas déjà
-  // géré en local) — seule la vraie sauvegarde finale est bloquée.
   if (!isDraft && typeof verifierConnexionRequise === 'function' && !verifierConnexionRequise()) return;
   const client = el('f-client')?.value.trim();
   if (!client) { showToast('Entrez le nom du client', 'error'); return; }
@@ -351,6 +316,7 @@ async function sauvegarderFacture(isDraft = false) {
     const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === client; });
     const body = {
       user_id: (STATE.entrepriseId || sb.user.id),
+      cree_par: sb.user.id,
       ref: el('f-ref')?.value,
       client, chantier: el('f-chantier')?.value.trim(),
       date_emission: el('f-date')?.value,
@@ -366,7 +332,6 @@ async function sauvegarderFacture(isDraft = false) {
     };
     const r = await sb.post('factures', body);
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
-    // Auto-add client if new
     autoAddClient(client);
     showToast(isDraft ? '📋 Brouillon sauvegardé' : '✅ Facture enregistrée !', 'success');
     logAudit('facture', r[0].id, 'creation', (r[0].ref || '') + ' — ' + client + ' — ' + fmt(body.ttc) + ' MAD');
@@ -383,13 +348,6 @@ async function dupliquerFacture(id) {
   showToast('📋 Facture dupliquée');
 }
 
-// ============================================================
-// DETAIL FACTURE
-// ============================================================
-
-// NOUVEAU: l'entreprise peut résoudre elle-même la réponse client d'une
-// facture (acceptée/refusée), sans dépendre du lien public (réponse reçue
-// par un autre canal, par exemple).
 async function resoudreManuellementFacture(id, nouvelleReponse) {
   const f = STATE.factures.find(function(x) { return x.id === id; });
   if (!f) return;
@@ -440,7 +398,6 @@ function renderDetail() {
   const metaParts = [f.ref, f.date_emission||'', f.echeance ? 'Éch: '+f.echeance : '', f.paiement||''].filter(Boolean);
   setEl('detail-ref', metaParts.join(' · '));
 
-  // Paiement progress
   const prog = el('detail-paiement-prog');
   if (prog && recu > 0) {
     prog.style.display = 'block';
@@ -450,7 +407,6 @@ function renderDetail() {
     if (bar) bar.style.width = pct + '%';
   } else if (prog) prog.style.display = 'none';
 
-  // Lignes
   const lignesEl = el('detail-lignes');
   if (lignesEl) lignesEl.innerHTML = (f.lignes||[]).map(l => `
     <div class="d-ligne">
@@ -461,9 +417,7 @@ function renderDetail() {
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
     </div>`).join('');
 
-  // Totaux
   const totEl = el('detail-totals');
-  // NOUVEAU: avoirs déjà émis contre cette facture (liés par référence)
   const avoirsLies = (STATE.avoirs || []).filter(function(a) { return a.facture_origine_ref === f.ref; });
   const totalAvoirs = avoirsLies.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
   if (totEl) totEl.innerHTML = `
@@ -475,17 +429,12 @@ function renderDetail() {
     ${totalAvoirs > 0 ? `<div class="d-tot-row" style="color:#7C5CA6"><span>Avoir(s) émis (${avoirsLies.length})</span><span>-${fmt(totalAvoirs)} ${dv}</span></div>
     <div class="d-tot-row" style="font-weight:700"><span>Net après avoir</span><span>${fmt(Math.max(0, f.ttc - totalAvoirs))} ${dv}</span></div>` : ''}`;
 
-  // Actions
-  // Note
   const noteEl = el('detail-note');
   if (noteEl) {
     if (f.note) { noteEl.textContent = f.note; noteEl.parentElement.style.display = 'block'; }
     else { noteEl.parentElement.style.display = 'none'; }
   }
 
-  // NOUVEAU: vue globale — tous les documents liés à cette vente en un
-  // coup d'œil (devis d'origine, bon de commande, bon de livraison),
-  // cliquables pour ouvrir chacun directement.
   const docsLiesEl = el('detail-docs-lies');
   if (docsLiesEl) {
     const liens = [];
@@ -511,7 +460,6 @@ function renderDetail() {
       }).join('');
   }
 
-  // Chantier
   const chantEl = el('detail-chantier');
   if (chantEl) {
     if (f.chantier) { chantEl.textContent = f.chantier; chantEl.parentElement.style.display = 'block'; }
@@ -521,15 +469,11 @@ function renderDetail() {
   if (!actEl) return;
   const actions = [];
 
-  // NOUVEAU: affichage de la réponse du client (accepté/refusé/en attente)
-  // — jusqu'ici totalement invisible dans le propre écran de l'entreprise.
   const reponseLabels = { acceptee: '✅ Client : Accepté', refusee: '❌ Client : Refusé', en_attente: '⏳ Client : En attente' };
   const reponseColors = { acceptee: '#6E8F4E', refusee: '#8E2E24', en_attente: '#B8860B' };
   if (f.reponse_client && reponseLabels[f.reponse_client]) {
     actions.push(`<div style="background:${reponseColors[f.reponse_client]}20;border-left:3px solid ${reponseColors[f.reponse_client]};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${reponseColors[f.reponse_client]};margin-bottom:4px">${reponseLabels[f.reponse_client]}</div>`);
   }
-  // NOUVEAU: résolution manuelle si le client n'a pas encore répondu ou a
-  // mis en attente — utile si la réponse arrive par un autre canal (téléphone).
   if (!f.reponse_client || f.reponse_client === 'en_attente') {
     actions.push(`<div style="display:flex;gap:8px;margin-bottom:4px">
       <button class="action-item success" style="flex:1;margin-bottom:0" onclick="resoudreManuellementFacture(${f.id},'acceptee')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer acceptée</button>
@@ -537,7 +481,6 @@ function renderDetail() {
     </div>`);
   }
 
-  // Bouton "Envoyer" unifié (WhatsApp / Email / Lien / Compte Zelto) — en premier
   actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
   if (f.statut !== 'payee') {
     actions.push(`<button class="action-item success" onclick="marquerPayee(${f.id})"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer payée</button>`);
@@ -545,22 +488,14 @@ function renderDetail() {
     if (['attente','envoyee'].includes(f.statut))
       actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="marquerRetard(${f.id})"><div class="action-ico" style="background:#F7EFDC">⚠️</div>Marquer en retard</button>`);
   }
-  // PDF actions
   actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#E9F4F3">👁️</div>Aperçu PDF</button>`);
   actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="typeof telechargerXMLUBLFacture==='function' && telechargerXMLUBLFacture(${f.id})"><div class="action-ico" style="background:#F7EFDC">🧬</div>Export XML UBL (préparation DGI)${typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('export_ubl') : ''}</button>`);
   actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#E9F4F3">💾</div>Enregistrer PDF</button>`);
-  // FIX: bouton "Partager la facture" retiré — redondant avec "Envoyer"
-  // (déjà en premier dans cette liste), qui couvre WhatsApp/Email/Lien/Zelto.
-  // "Relance WhatsApp" est conservé : usage distinct (relance d'impayé avec
-  // message de rappel), pas un simple partage initial.
   actions.push(`<button class="action-item whatsapp" onclick="relancerWhatsApp(${f.id})"><div class="action-ico" style="background:#EEF3E4">📱</div>Relance WhatsApp</button>`);
-  // Avoir depuis cette facture
   actions.push(`<button class="action-item" style="color:#7C5CA6;border-left-color:#7C5CA6" onclick="creerAvoirDepuisFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">↩️</div>Créer un avoir</button>`);
   actions.push(`<button class="action-item" style="color:#55702E;border-left-color:#55702E" onclick="creerBonLivraisonDepuisFacture(${f.id})"><div class="action-ico" style="background:#EEF3E4">📦</div>Créer un bon de livraison</button>`);
-  // Paiements
   actions.push(`<button class="action-item" onclick="ouvrirAcomptes(${f.id})"><div class="action-ico" style="background:#EEF3E4">💰</div>Versements & acomptes</button>`);
   actions.push(`<button class="action-item" onclick="genRecuPaiement(${f.id})"><div class="action-ico" style="background:#EEF3E4">🧾</div>Reçu de paiement</button>`);
-  // Autres
   actions.push(`<button class="action-item" onclick="dupliquerFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
   actions.push(`<button class="action-item danger" onclick="supprimerFacture(${f.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
   actEl.innerHTML = actions.join('');
@@ -569,9 +504,6 @@ function renderDetail() {
 async function marquerPayee(id) {
   const f = STATE.factures.find(x => x.id === id);
   if (!f) return;
-  // FIX (audit) : sans le fallback entrepriseId, un membre d'équipe ne
-  // pouvait jamais marquer une facture comme payée (clause WHERE ne
-  // correspondant jamais à la vraie ligne).
   await sb.patch('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, { statut: 'payee', montant_recu: f.ttc });
   f.statut = 'payee'; f.montant_recu = f.ttc;
   STATE.currentFacture = f;
@@ -581,7 +513,6 @@ async function marquerPayee(id) {
 }
 
 async function marquerRetard(id) {
-  // FIX (audit) : même bug
   await sb.patch('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, { statut: 'retard' });
   const f = STATE.factures.find(x => x.id === id);
   if (f) { f.statut = 'retard'; STATE.currentFacture = f; renderDetail(); }
@@ -591,17 +522,12 @@ async function marquerRetard(id) {
 async function supprimerFacture(id) {
   if (!confirm('Supprimer cette facture ?')) return;
   const f = STATE.factures.find(x => x.id === id);
-  // FIX (audit) : même bug
   await sb.del('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
   STATE.factures = STATE.factures.filter(x => x.id !== id);
   showToast('Facture supprimée');
   logAudit('facture', id, 'suppression', f?.ref || '');
   goScreen('dashboard');
 }
-
-// ============================================================
-// PAIEMENTS PARTIELS
-// ============================================================
 
 function ouvrirPaiementPartiel(id) {
   STATE.currentFacture = STATE.factures.find(f => f.id === id);
@@ -623,16 +549,8 @@ async function confirmerPaiement() {
   if (montant <= 0) { showToast('Entrez un montant', 'error'); return; }
   const newRecu = Math.min(Number(f.ttc), (Number(f.montant_recu||0) + montant));
   const newStatut = newRecu >= Number(f.ttc) ? 'payee' : f.statut;
-  // FIX (audit) : sans le fallback, un membre d'équipe ne pouvait
-  // jamais enregistrer un paiement sur une facture de l'entreprise.
   await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, { montant_recu: newRecu, statut: newStatut });
   f.montant_recu = newRecu; f.statut = newStatut;
-  // Save paiement record
-  // FIX (grand audit) : le solde de la facture était déjà mis à jour
-  // avant ce bloc, mais un échec silencieux ici faisait que le message
-  // de succès s'affichait quand même — la facture semblait bien payée,
-  // mais cette transaction précise n'apparaîtrait jamais dans
-  // l'Historique des paiements.
   let paiementEnregistre = true;
   try {
     await sb.post('paiements', { user_id: (STATE.entrepriseId || sb.user.id), facture_id: f.id, montant, date: el('pp-date')?.value, mode: el('pp-mode')?.value || 'virement' });
@@ -645,10 +563,6 @@ async function confirmerPaiement() {
     showToast(`⚠️ Solde mis à jour, mais l'historique de ce paiement n'a pas pu être enregistré`, 'error');
   }
 }
-
-// ============================================================
-// RECU DE PAIEMENT
-// ============================================================
 
 function genRecuPaiement(id) {
   const f = STATE.factures.find(x => x.id === id);
@@ -684,10 +598,6 @@ function genRecuPaiement(id) {
   ouvrirPDFViewer(html, f.ref);
 }
 
-// ============================================================
-// EXPORT CSV
-// ============================================================
-
 function exporterTout() {
   if (!STATE.factures.length) { showToast('Aucune facture', 'error'); return; }
   const rows = [['Ref','Client','Date','Échéance','Statut','HT','TVA','TTC','Devise','Mode','Reçu','Restant']];
@@ -706,10 +616,6 @@ function exporterTout() {
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
   showToast('📊 CSV téléchargé !', 'success');
 }
-
-// ============================================================
-// WHATSAPP RELANCE
-// ============================================================
 
 function relancerWhatsApp(id) {
   const f = STATE.factures.find(x => x.id === id);
@@ -736,10 +642,6 @@ function relancerWhatsApp(id) {
   window.open('https://wa.me/?text=' + msg, '_blank');
 }
 
-// ============================================================
-// PARTAGE NATIF
-// ============================================================
-
 async function partagerDoc(type, id) {
   const p = STATE.profil;
   let doc, titre, texte;
@@ -761,13 +663,9 @@ async function partagerDoc(type, id) {
   navigator.clipboard?.writeText(texte).then(() => showToast('✅ Copié !', 'success'));
 }
 
-// ============================================================
-// AUTO-ADD CLIENT
-// ============================================================
-
 function autoAddClient(nom) {
   if (!nom || STATE.clients.find(c => c.nom.toLowerCase() === nom.toLowerCase())) return;
-  if (STATE.limiteClients != null && (STATE.clients || []).length >= STATE.limiteClients) return; // silencieux ici — la facture elle-même n'est pas bloquée, seul l'ajout auto du client au carnet est sauté
+  if (STATE.limiteClients != null && (STATE.clients || []).length >= STATE.limiteClients) return;
   sb.post('clients', { user_id: (STATE.entrepriseId || sb.user.id), nom }).then(r => {
     if (r && r.length > 0) { STATE.clients.push(r[0]); }
   }).catch(() => {});
@@ -775,9 +673,6 @@ function autoAddClient(nom) {
 
 function updateClientDatalist() {
   const dl = el('client-datalist');
-  // FIX (audit sécurité) : le nom du client s'insérait sans échappement
-  // dans l'attribut value — un nom contenant un guillemet aurait cassé
-  // la structure HTML de la page (voire permis d'injecter des attributs).
   if (dl) dl.innerHTML = STATE.clients.map(c => `<option value="${escapeHTML(c.nom)}">`).join('');
 }
 
@@ -787,24 +682,17 @@ function updateClientDatalist() {
 // ZELTO — Devis, Avoir, BC, BL
 // ============================================================
 
-// ============================================================
-// DEVIS
-// ============================================================
-
 function creerAvoirDepuisFacture(id) {
   const f = STATE.factures.find(x => x.id === id);
   if (!f) return;
-  // Navigate to avoir screen and prefill
   goScreen('avoir');
   setTimeout(() => {
     el('av-client') && (el('av-client').value = f.client);
     el('av-date') && (el('av-date').value = today());
     el('av-ref') && (el('av-ref').value = getRef('AV', STATE.avoirs));
     el('av-montant') && (el('av-montant').value = Number(f.ht).toFixed(2));
-    // Select the facture in dropdown
     const sel = el('av-facture-origine');
     if (sel) {
-      // Rebuild options and select this facture
       sel.innerHTML = '<option value="">Sélectionner...</option>' +
         STATE.factures.map(fx => '<option value="' + fx.id + '"' + (fx.id===f.id?' selected':'') + '>' + fx.ref + ' — ' + escapeHTML(fx.client) + ' — ' + fmt(fx.ttc) + ' MAD</option>').join('');
     }
@@ -816,9 +704,7 @@ function creerAvoirDepuisFacture(id) {
 function enregistrerPDFFacture(id) {
   const f = STATE.factures.find(x => x.id === id);
   if (!f) return;
-  // Generate HTML content
   const html = buildPDFHTML(f);
-  // Download as HTML file (user can print to PDF)
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -837,7 +723,6 @@ async function partagerFacturePDF(id) {
   const html = buildPDFHTML(f);
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const file = new File([blob], f.ref + '.html', { type: 'text/html' });
-  // Try native share with file
   if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({
@@ -849,7 +734,6 @@ async function partagerFacturePDF(id) {
       return;
     } catch(e) { if (e.name === 'AbortError') return; }
   }
-  // Fallback: share text link + info
   const p = STATE.profil;
   const texte = [
     'Facture ' + f.ref,
@@ -867,20 +751,12 @@ async function partagerFacturePDF(id) {
 }
 
 function buildPDFHTML(f) {
-  // Calls genDocPDF logic and returns the HTML string
-  const p = STATE.profil;
-  const dv = f.devise||'MAD';
-  const legalParts = [p.rc?'RC: '+p.rc:null,p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:null,p.ice?'ICE: '+p.ice:null].filter(Boolean).join(' · ');
-  const lignesHTML = (f.lignes||[]).map((l,i) =>
-    '<tr style="background:' + (i%2===0?'#F1EEE8':'#fff') + '"><td style="padding:8px 12px;font-size:12px">' + escapeHTML(l.desc||'') + '<\/td><td style="padding:8px 12px;text-align:center;font-size:12px">' + l.qte + ' ' + (l.unite||'') + '<\/td><td style="padding:8px 12px;text-align:right;font-size:12px">' + fmt(l.pu) + '<\/td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">' + fmt(l.qte*l.pu) + '<\/td><\/tr>'
-  ).join('');
   return exportPDFString(f);
 }
 
 function exportPDFString(factureOrId) {
   const f = typeof factureOrId === 'object' ? factureOrId : STATE.factures.find(x => x.id === factureOrId);
   if (!f) return '';
-  // Use genDocPDF but capture the HTML instead of opening viewer
   const p = STATE.profil;
   const accent = p.couleur_accent || '#C9971F';
   const dv = f.devise||'MAD';
@@ -898,10 +774,6 @@ function calculerSoldeFacture(factureId) {
   const paye = Number(f.montant_recu || 0);
   return { total, paye, restant: Math.max(0, total - paye) };
 }
-
-// ============================================================
-// VALIDATION FORMULAIRES
-// ============================================================
 
 function ouvrirNouvelAcompte() {
   el('ac-montant') && (el('ac-montant').value = '');
@@ -924,7 +796,6 @@ async function confirmerAcompte() {
   const newStatut = newRecu >= Number(f.ttc) - 0.01 ? 'payee' : f.statut;
   showToast('⏳ Enregistrement...');
   try {
-    // FIX (audit) : même bug
     await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, {
       montant_recu: newRecu, statut: newStatut
     });
@@ -982,10 +853,6 @@ function ouvrirAcomptes(id) {
   goScreen('acomptes');
 }
 
-// ============================================================
-// HISTORIQUE PAIEMENTS
-// ============================================================
-
 async function renderHistoriquePaiements(factureId) {
   const f = STATE.factures.find(x => x.id === factureId);
   if (!f) return;
@@ -1028,7 +895,6 @@ async function supprimerPaiement(paiementId, factureId) {
     if (p?.[0]) {
       const newRecu = Math.max(0, Number(f.montant_recu) - Number(p[0].montant));
       await sb.del('paiements', `id=eq.${paiementId}`);
-      // FIX (audit) : même bug
       await sb.patch('factures', `id=eq.${f.id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`, {
         montant_recu: newRecu,
         statut: newRecu >= Number(f.ttc) - 0.01 ? 'payee' : 'envoyee'
@@ -1040,10 +906,6 @@ async function supprimerPaiement(paiementId, factureId) {
     showToast('Paiement supprimé', 'success');
   } catch(e) { showToast('❌ Erreur', 'error'); }
 }
-
-// ============================================================
-// RELANCES
-// ============================================================
 
 function renderRelances() {
   const retard = STATE.factures.filter(f => f.statut === 'retard');
@@ -1108,7 +970,3 @@ ${p.tel||''}`
   );
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
-
-// ============================================================
-// PARAMÈTRES
-// ============================================================
