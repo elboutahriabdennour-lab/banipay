@@ -98,7 +98,7 @@ function renderDashboardAvance() {
     const h = Math.round((v / maxCA) * 100);
     const label = nomsMois[parseInt(mois12[i].split('-')[1]) - 1];
     return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">' +
-      '<div style="width:100%;max-width:22px;height:100px;display:flex;align-items:flex-end">' +
+      '<div style="width:100%;max-width:18px;height:65px;display:flex;align-items:flex-end">' +
         '<div style="width:100%;height:' + h + '%;background:#C9971F;border-radius:3px 3px 0 0" title="' + fmt(v) + ' MAD"></div>' +
       '</div>' +
       '<div style="font-size:9px;color:#9C9186">' + label + '</div>' +
@@ -107,9 +107,9 @@ function renderDashboardAvance() {
 
   container.innerHTML =
     '<div style="font-size:13px;font-weight:700;margin-bottom:8px">📈 Chiffre d\'affaires — 12 derniers mois</div>' +
-    '<div style="display:flex;gap:4px;align-items:flex-end;background:#fff;border-radius:12px;padding:12px;margin-bottom:16px;border:1px solid #E3DCCF">' + barresCA + '</div>' +
+    '<div style="display:flex;gap:4px;align-items:flex-end;background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #E3DCCF">' + barresCA + '</div>' +
 
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">' +
       '<div style="background:#EEF3E4;border-radius:12px;padding:12px">' +
         '<div style="font-size:11px;color:#55702E;font-weight:600">💰 Marge estimée</div>' +
         '<div style="font-size:18px;font-weight:800;color:#55702E">' + fmt(margeTotale) + ' MAD</div>' +
@@ -122,7 +122,7 @@ function renderDashboardAvance() {
     '</div>' +
 
     '<div style="font-size:13px;font-weight:700;margin-bottom:8px">🏆 Top 5 clients</div>' +
-    '<div style="background:#fff;border-radius:12px;border:1px solid #E3DCCF;margin-bottom:16px">' +
+    '<div style="background:#fff;border-radius:12px;border:1px solid #E3DCCF;margin-bottom:10px">' +
       (topClients.length ? topClients.map(function(c, i) {
         return '<div style="display:flex;justify-content:space-between;padding:10px 14px;' + (i<topClients.length-1?'border-bottom:1px solid #F1EEE8':'') + '">' +
           '<span style="font-size:12px">' + (i+1) + '. ' + escapeHTML(c[0]) + '</span>' +
@@ -132,7 +132,7 @@ function renderDashboardAvance() {
     '</div>' +
 
     '<div style="font-size:13px;font-weight:700;margin-bottom:8px">📦 Top 5 produits/prestations</div>' +
-    '<div style="background:#fff;border-radius:12px;border:1px solid #E3DCCF;margin-bottom:16px">' +
+    '<div style="background:#fff;border-radius:12px;border:1px solid #E3DCCF;margin-bottom:10px">' +
       (topProduits.length ? topProduits.map(function(pr, i) {
         return '<div style="display:flex;justify-content:space-between;padding:10px 14px;' + (i<topProduits.length-1?'border-bottom:1px solid #F1EEE8':'') + '">' +
           '<span style="font-size:12px">' + (i+1) + '. ' + escapeHTML(pr[0]) + '</span>' +
