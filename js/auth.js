@@ -509,7 +509,12 @@ async function _continuerApresAuthentification(email, errEl, remember) {
       // chaque connexion tant que ce n'est pas complet, pas seulement
       // une fois à l'inscription.
       const p = STATE.profil || {};
-      const profilIncomplet = !p.raison || !p.secteur || !p.rc || !p.identifiant_fiscal || !p.ice;
+      // FIX (cas signalé) : l'auto-entrepreneur n'a pas de RC — l'exiger
+      // dans tous les cas l'aurait bloqué indéfiniment, sans jamais
+      // pouvoir remplir ce champ (le formulaire le dit déjà lui-même :
+      // "l'auto-entrepreneur n'en a pas, laissez vide").
+      const rcRequis = p.forme !== 'Auto-entrepreneur';
+      const profilIncomplet = !p.raison || !p.secteur || (rcRequis && !p.rc) || !p.identifiant_fiscal || !p.ice;
       if (profilIncomplet) {
         goScreen('profil');
         setTimeout(function() {
