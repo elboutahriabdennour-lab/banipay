@@ -10,8 +10,30 @@ function renderDashboardAvance() {
   const container = el('dashboard-avance-content');
   if (!container) return;
 
-  const factures = (STATE.factures || []).filter(function(f) { return f.statut === 'payee'; });
+  // NOUVEAU (retour utilisateur) : réutilise les mêmes filtres que l'écran
+  // Stats classique (client, catégorie, montant) — un seul jeu de filtres
+  // partagé entre les deux écrans plutôt que d'en dupliquer un second.
+  // Le statut n'est volontairement PAS filtrable ici : cet écran mélange
+  // déjà des factures payées (CA, marge, top) et non payées (prévision de
+  // trésorerie) par construction — un filtre de statut unique n'aurait pas
+  // de sens cohérent sur les deux sections à la fois.
+  function _passeFiltresAvances(f) {
+    if (STATE.statsFiltreClient && f.client !== STATE.statsFiltreClient) return false;
+    if (STATE.statsFiltreMontantMin != null && Number(f.ttc||0) < STATE.statsFiltreMontantMin) return false;
+    if (STATE.statsFiltreMontantMax != null && Number(f.ttc||0) > STATE.statsFiltreMontantMax) return false;
+    if (STATE.statsFiltreCategorie) {
+      const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
+      const produitsCategorie = {};
+      (STATE.produits || []).forEach(function(p) { produitsCategorie[p.id] = p.categorie; });
+      if (!lignes.some(function(l) { return l.produit_id && produitsCategorie[l.produit_id] === STATE.statsFiltreCategorie; })) return false;
+    }
+    return true;
+  }
+
+  const factures = (STATE.factures || []).filter(function(f) { return f.statut === 'payee'; }).filter(_passeFiltresAvances);
   const achats = STATE.achats || [];
+
+  renderFiltresActifsAvancesStats();
 
   // ---- CA par mois (12 derniers mois) ----
   const mois12 = [];
@@ -62,7 +84,7 @@ function renderDashboardAvance() {
   });
   const previsions = mois3.map(function(m) {
     const aRecevoir = (STATE.factures || []).filter(function(f) {
-      return f.statut !== 'payee' && f.statut !== 'annulee' && f.statut !== 'brouillon' && (f.echeance||'').substring(0,7) === m;
+      return f.statut !== 'payee' && f.statut !== 'annulee' && f.statut !== 'brouillon' && (f.echeance||'').substring(0,7) === m && _passeFiltresAvances(f);
     }).reduce(function(s,f) { return s + Math.max(0,(f.ttc||0)-(f.montant_recu||0)); }, 0);
     const aPayer = achats.filter(function(a) {
       return a.statut !== 'payee' && (a.echeance||a.date_achat||'').substring(0,7) === m;
@@ -131,4 +153,34 @@ function renderDashboardAvance() {
       }).join('') +
     '</div>' +
     '<div style="font-size:10px;color:#9C9186;text-align:center;padding:8px">Estimation basée sur les échéances déjà enregistrées — ne remplace pas une vraie prévision de trésorerie professionnelle.</div>';
+}
+
+// NOUVEAU (retour utilisateur) : affiche les filtres actifs (client,
+// catégorie, montant — partagés avec l'écran Stats classique) en haut de
+// cet écran, avec la possibilité de les retirer un par un.
+function renderFiltresActifsAvancesStats() {
+  const zone = el('dashboard-avance-filtres-actifs');
+  if (!zone) return;
+  const chips = [];
+  if (STATE.statsFiltreClient) chips.push({ label: '👤 ' + STATE.statsFiltreClient, fn: "STATE.statsFiltreClient=null;renderDashboardAvance()" });
+  if (STATE.statsFiltreCategorie) chips.push({ label: '📂 ' + STATE.statsFiltreCategorie, fn: "STATE.statsFiltreCategorie='';renderDashboardAvance()" });
+  if (STATE.statsFiltreMontantMin != null || STATE.statsFiltreMontantMax != null) {
+    const txt = (STATE.statsFiltreMontantMin != null ? fmt(STATE.statsFiltreMontantMin) : '0') + ' → ' + (STATE.statsFiltreMontantMax != null ? fmt(STATE.statsFiltreMontantMax) : '∞') + ' MAD';
+    chips.push({ label: '💰 ' + txt, fn: "STATE.statsFiltreMontantMin=null;STATE.statsFiltreMontantMax=null;renderDashboardAvance()" });
+  }
+  if (!chips.length) { zone.innerHTML = ''; return; }
+  zone.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px">' +
+    chips.map(function(c) {
+      return '<span style="background:#EFF6FF;color:#2563EB;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px">' + escapeHTML(c.label) + '<span onclick="' + c.fn + '" style="cursor:pointer;font-weight:800">✕</span></span>';
+    }).join('') +
+  '</div>';
+}
+function appliquerFiltreClientAvance(nom) { STATE.statsFiltreClient = nom || null; renderDashboardAvance(); }
+function appliquerFiltreCategorieAvance(cat) { STATE.statsFiltreCategorie = cat || ''; renderDashboardAvance(); }
+function appliquerFiltreMontantAvance() {
+  const min = el('dashboard-avance-montant-min')?.value;
+  const max = el('dashboard-avance-montant-max')?.value;
+  STATE.statsFiltreMontantMin = min ? parseFloat(min) : null;
+  STATE.statsFiltreMontantMax = max ? parseFloat(max) : null;
+  renderDashboardAvance();
 }
