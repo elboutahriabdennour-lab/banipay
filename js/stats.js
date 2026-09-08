@@ -14,6 +14,12 @@ STATE.statsPeriode = STATE.statsPeriode || 'tout';
 // ou un produit filtre tout le reste du tableau de bord.
 STATE.statsFiltreClient = STATE.statsFiltreClient || null;
 STATE.statsFiltreProduit = STATE.statsFiltreProduit || null;
+// NOUVEAU (retour utilisateur) : filtres avancés supplémentaires —
+// statut, catégorie d'article, et plage de montant.
+STATE.statsFiltreStatut = STATE.statsFiltreStatut || '';
+STATE.statsFiltreCategorie = STATE.statsFiltreCategorie || '';
+STATE.statsFiltreMontantMin = STATE.statsFiltreMontantMin || null;
+STATE.statsFiltreMontantMax = STATE.statsFiltreMontantMax || null;
 
 function filtrerParPeriode(items, periode, champDate) {
   if (periode === 'tout') return items;
@@ -61,6 +67,23 @@ function appliquerFiltresCroisesStats(factures) {
       return lignes.some(function(l) { return (l.desc || '').trim() === STATE.statsFiltreProduit; });
     });
   }
+  if (STATE.statsFiltreStatut) {
+    res = res.filter(function(f) { return f.statut === STATE.statsFiltreStatut; });
+  }
+  if (STATE.statsFiltreCategorie) {
+    const produitsCategorie = {};
+    (STATE.produits || []).forEach(function(p) { produitsCategorie[p.id] = p.categorie; });
+    res = res.filter(function(f) {
+      const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
+      return lignes.some(function(l) { return l.produit_id && produitsCategorie[l.produit_id] === STATE.statsFiltreCategorie; });
+    });
+  }
+  if (STATE.statsFiltreMontantMin != null) {
+    res = res.filter(function(f) { return Number(f.ttc || 0) >= STATE.statsFiltreMontantMin; });
+  }
+  if (STATE.statsFiltreMontantMax != null) {
+    res = res.filter(function(f) { return Number(f.ttc || 0) <= STATE.statsFiltreMontantMax; });
+  }
   return res;
 }
 function filtrerParClientStats(nomClient) {
@@ -73,17 +96,48 @@ function filtrerParProduitStats(desc) {
 }
 function retirerFiltreClientStats() { STATE.statsFiltreClient = null; renderStats(); }
 function retirerFiltreProduitStats() { STATE.statsFiltreProduit = null; renderStats(); }
+function changerFiltreStatutStats(statut) { STATE.statsFiltreStatut = statut; renderStats(); }
+function changerFiltreCategorieStats(cat) { STATE.statsFiltreCategorie = cat; renderStats(); }
+function appliquerFiltreMontantStats() {
+  const min = el('stats-montant-min')?.value;
+  const max = el('stats-montant-max')?.value;
+  STATE.statsFiltreMontantMin = min ? parseFloat(min) : null;
+  STATE.statsFiltreMontantMax = max ? parseFloat(max) : null;
+  renderStats();
+}
+function retirerFiltreMontantStats() {
+  STATE.statsFiltreMontantMin = null;
+  STATE.statsFiltreMontantMax = null;
+  el('stats-montant-min') && (el('stats-montant-min').value = '');
+  el('stats-montant-max') && (el('stats-montant-max').value = '');
+  renderStats();
+}
 function effacerFiltresStats() {
   STATE.statsFiltreClient = null;
   STATE.statsFiltreProduit = null;
+  STATE.statsFiltreStatut = '';
+  STATE.statsFiltreCategorie = '';
+  STATE.statsFiltreMontantMin = null;
+  STATE.statsFiltreMontantMax = null;
+  el('stats-filtre-statut') && (el('stats-filtre-statut').value = '');
+  el('stats-filtre-categorie') && (el('stats-filtre-categorie').value = '');
+  el('stats-montant-min') && (el('stats-montant-min').value = '');
+  el('stats-montant-max') && (el('stats-montant-max').value = '');
   renderStats();
 }
 function renderFiltresActifsStats() {
   const zone = el('stats-filtres-actifs');
   if (!zone) return;
+  const statutLabels = { attente: 'En attente', retard: 'En retard', payee: 'Payée', envoyee: 'Envoyée' };
   const chips = [];
   if (STATE.statsFiltreClient) chips.push({ label: '👤 ' + STATE.statsFiltreClient, fn: 'retirerFiltreClientStats' });
   if (STATE.statsFiltreProduit) chips.push({ label: '📦 ' + STATE.statsFiltreProduit, fn: 'retirerFiltreProduitStats' });
+  if (STATE.statsFiltreStatut) chips.push({ label: '🏷️ ' + (statutLabels[STATE.statsFiltreStatut] || STATE.statsFiltreStatut), fn: "changerFiltreStatutStats('')" });
+  if (STATE.statsFiltreCategorie) chips.push({ label: '📂 ' + STATE.statsFiltreCategorie, fn: "changerFiltreCategorieStats('')" });
+  if (STATE.statsFiltreMontantMin != null || STATE.statsFiltreMontantMax != null) {
+    const txt = (STATE.statsFiltreMontantMin != null ? fmt(STATE.statsFiltreMontantMin) : '0') + ' → ' + (STATE.statsFiltreMontantMax != null ? fmt(STATE.statsFiltreMontantMax) : '∞') + ' MAD';
+    chips.push({ label: '💰 ' + txt, fn: 'retirerFiltreMontantStats' });
+  }
   if (!chips.length) { zone.innerHTML = ''; return; }
   zone.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
     chips.map(function(c) {
