@@ -597,6 +597,11 @@ function renderTransactionsReleve() {
               return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + infoAcompte + '</button>';
             }).join('')
           : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
+        // NOUVEAU (retour utilisateur) : accès au rapprochement multiple
+        // directement depuis chaque transaction — utile quand un seul
+        // virement doit en fait couvrir plusieurs factures/achats à la
+        // fois (un client qui règle 3 factures d'un coup, par exemple).
+        '<button onclick="ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:7px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">🔗 Répartir sur plusieurs factures/achats</button>' +
       '</div>';
     }).join('');
 }
@@ -715,7 +720,11 @@ function ouvrirRapprochementDepuisFacture(factureId, type) {
           '</div>' +
         '</div>';
       }).join('') +
-      '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
+      // NOUVEAU (retour utilisateur) : accès direct au réglage en
+      // plusieurs virements (acompte + solde, tranches...) depuis cette
+      // même liste.
+      '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove();ouvrirRapprochementMultipleFacture(\'' + factureId + '\',\'' + (type||'facture') + '\')" style="width:100%;padding:10px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;margin-bottom:6px">🔗 Régler avec plusieurs virements (acompte + solde...)</button>' +
+      '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -771,4 +780,256 @@ async function confirmerCreationRegle(nomCible, type) {
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
   }
+}
+
+// ============================================================
+// RAPPROCHEMENT MULTIPLE (retour utilisateur) — deux scénarios réels
+// pris en charge, chacun avec son propre outil dédié :
+//
+//   A) UN virement couvre PLUSIEURS factures (un client règle 3
+//      factures d'un coup dans un seul paiement) —
+//      ouvrirRapprochementMultipleTransaction()
+//
+//   B) UNE facture est réglée en PLUSIEURS virements dans le temps
+//      (acompte ce mois, solde le mois prochain, éventuellement une
+//      troisième tranche encore après) —
+//      ouvrirRapprochementMultipleFacture()
+//
+// Dans les deux cas : sélection multiple avec case à cocher, total
+// affiché en temps réel comparé à ce qui est attendu, indicateur clair
+// "✅ Équilibré" / "⚠️ Écart de X MAD" — impossible de confirmer tant
+// que ce n'est pas cohérent (ou explicitement accepté comme partiel).
+// Toujours des suggestions à vérifier, rien n'est automatique.
+// ============================================================
+
+STATE._selectionRapprochementMultiple = STATE._selectionRapprochementMultiple || {};
+
+// ------------------------------------------------------------
+// SCÉNARIO A : un virement -> plusieurs factures/achats
+// ------------------------------------------------------------
+function ouvrirRapprochementMultipleTransaction(indexTransaction) {
+  const t = STATE._transactionsReleveActuel && STATE._transactionsReleveActuel[indexTransaction];
+  if (!t) return;
+  const montantTransaction = Math.abs(t.montant);
+  const estEntree = t.montant >= 0;
+
+  // Ne propose que le bon côté selon le sens du virement — une entrée ne
+  // peut régler que des factures de vente, une sortie que des achats.
+  const candidats = estEntree
+    ? (STATE.factures || []).filter(function(f) { return (Number(f.ttc)||0) - (Number(f.montant_recu)||0) > 0.5; })
+        .map(function(f) { return { id: f.id, type: 'facture', nom: f.client, ref: f.ref, solde: (Number(f.ttc)||0) - (Number(f.montant_recu)||0) }; })
+    : (STATE.achats || []).filter(function(a) { return (Number(a.ttc)||0) - (Number(a.montant_recu)||0) > 0.5; })
+        .map(function(a) { return { id: a.id, type: 'achat', nom: a.fournisseur, ref: a.ref_fournisseur, solde: (Number(a.ttc)||0) - (Number(a.montant_recu)||0) }; });
+
+  STATE._selectionRapprochementMultiple = { indexTransaction: indexTransaction, montantTransaction: montantTransaction, coches: {} };
+
+  const overlay = document.createElement('div');
+  overlay.id = 'rapprochement-multiple-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto">' +
+      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🔗 Rapprochement multiple</div>' +
+      '<div style="font-size:12px;color:#9C9186;margin-bottom:6px">' + escapeHTML(t.description) + ' — ' + (estEntree?'+':'') + fmt(t.montant) + ' MAD</div>' +
+      '<div style="font-size:11px;color:#6B5F54;margin-bottom:14px">Cochez une ou plusieurs ' + (estEntree?'factures':'achats') + ' à régler avec ce virement.</div>' +
+      '<div id="rapprochement-multiple-liste">' +
+        (candidats.length ? candidats.map(function(c) {
+          return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #E3DCCF;border-radius:10px;margin-bottom:6px;cursor:pointer">' +
+            '<input type="checkbox" onchange="_toggleSelectionRapprochementMultiple(\'' + c.id + '\',\'' + c.type + '\',' + c.solde + ',this.checked)" style="width:18px;height:18px">' +
+            '<div style="flex:1"><div style="font-size:12px;font-weight:600">' + escapeHTML(c.ref||'') + ' — ' + escapeHTML(c.nom||'') + '</div>' +
+            '<div style="font-size:11px;color:#9C9186">Solde restant : ' + fmt(c.solde) + ' MAD</div></div>' +
+          '</label>';
+        }).join('') : '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucune ' + (estEntree?'facture':'achat') + ' avec un solde restant à régler.</div>') +
+      '</div>' +
+      '<div id="rapprochement-multiple-total" style="margin-top:12px;padding:12px;border-radius:10px;background:#F1EEE8;font-size:13px;font-weight:700;text-align:center">Sélectionné : 0 MAD / ' + fmt(montantTransaction) + ' MAD</div>' +
+      '<button id="rapprochement-multiple-confirmer" onclick="confirmerRapprochementMultipleTransaction()" disabled style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#9C9186;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit">✅ Confirmer le rapprochement</button>' +
+      '<button onclick="document.getElementById(\'rapprochement-multiple-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
+    '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function _toggleSelectionRapprochementMultiple(id, type, solde, coche) {
+  const sel = STATE._selectionRapprochementMultiple;
+  if (coche) sel.coches[type + ':' + id] = { id: id, type: type, solde: solde };
+  else delete sel.coches[type + ':' + id];
+  _majAffichageTotalMultiple();
+}
+
+// Calcule le total sélectionné et met à jour l'indicateur — vert si le
+// montant total sélectionné correspond au virement (à 1 MAD près, pour
+// les arrondis), orange s'il reste un écart mais dans un sens qui reste
+// plausible (ex: virement plus grand que la somme sélectionnée), rouge
+// si la sélection dépasse le montant du virement (impossible à répartir
+// sans dépasser ce qui a réellement été reçu/payé).
+function _majAffichageTotalMultiple() {
+  const sel = STATE._selectionRapprochementMultiple;
+  const zone = el('rapprochement-multiple-total');
+  const btn = el('rapprochement-multiple-confirmer');
+  if (!zone || !sel) return;
+  const totalSelectionne = Object.values(sel.coches).reduce(function(s, c) { return s + Math.min(c.solde, sel.montantTransaction); }, 0);
+  const ecart = sel.montantTransaction - totalSelectionne;
+
+  let couleur, texte, peutConfirmer;
+  if (Math.abs(ecart) < 1) {
+    couleur = '#EEF3E4'; texte = '✅ Équilibré — ' + fmt(totalSelectionne) + ' / ' + fmt(sel.montantTransaction) + ' MAD'; peutConfirmer = true;
+    zone.style.color = '#55702E';
+  } else if (ecart > 0) {
+    couleur = '#FBF0DA'; texte = '⚠️ Reste ' + fmt(ecart) + ' MAD non affecté — ' + fmt(totalSelectionne) + ' / ' + fmt(sel.montantTransaction) + ' MAD'; peutConfirmer = totalSelectionne > 0;
+    zone.style.color = '#A67A16';
+  } else {
+    couleur = '#F5E4E1'; texte = '❌ Dépasse le virement de ' + fmt(-ecart) + ' MAD — décochez une ligne'; peutConfirmer = false;
+    zone.style.color = '#8E2E24';
+  }
+  zone.style.background = couleur;
+  zone.textContent = texte;
+  if (btn) {
+    btn.disabled = !peutConfirmer;
+    btn.style.background = peutConfirmer ? '#1F6F72' : '#EAE4DA';
+    btn.style.color = peutConfirmer ? '#fff' : '#9C9186';
+    btn.style.cursor = peutConfirmer ? 'pointer' : 'not-allowed';
+  }
+}
+
+// Applique la répartition : chaque facture/achat coché reçoit au
+// maximum son propre solde restant, prélevé sur le montant du virement,
+// dans l'ordre où elles ont été cochées — jusqu'à épuisement du
+// virement ou couverture complète de la sélection.
+async function confirmerRapprochementMultipleTransaction() {
+  const sel = STATE._selectionRapprochementMultiple;
+  if (!sel) return;
+  const t = STATE._transactionsReleveActuel[sel.indexTransaction];
+  let restantAAffecter = sel.montantTransaction;
+
+  for (const cle in sel.coches) {
+    const c = sel.coches[cle];
+    if (restantAAffecter <= 0.5) break;
+    const montantAlloue = Math.min(c.solde, restantAAffecter);
+    await _appliquerAllocationRapprochement(c.id, c.type, montantAlloue, t);
+    restantAAffecter -= montantAlloue;
+  }
+
+  if (STATE._transactionsReleveActuel[sel.indexTransaction]) {
+    STATE._transactionsReleveActuel[sel.indexTransaction].correspondances = [];
+    STATE._transactionsReleveActuel[sel.indexTransaction]._traitee = true;
+  }
+  document.getElementById('rapprochement-multiple-overlay')?.remove();
+  renderTransactionsReleve();
+  showToast('✅ Rapprochement multiple confirmé', 'success');
+}
+
+// Fonction partagée par les deux scénarios — applique une allocation
+// (potentiellement partielle) d'un virement vers UN document précis, et
+// journalise cette allocation dans son historique.
+async function _appliquerAllocationRapprochement(id, type, montantAlloue, transaction) {
+  const table = type === 'achat' ? 'factures_achat' : 'factures';
+  const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+  const doc = collection.find(function(x) { return String(x.id) === String(id); });
+  if (!doc) return;
+
+  const refAllocation = (transaction.dateBrute||'') + '|' + montantAlloue.toFixed(2) + '|' + (transaction.description||'').slice(0,60);
+  const montantRecuActuel = Number(doc.montant_recu) || 0;
+  const nouveauMontantRecu = Math.min(Number(doc.ttc) || 0, montantRecuActuel + montantAlloue);
+  const soldeCouvert = (Number(doc.ttc) || 0) - nouveauMontantRecu <= 0.5;
+  const listeTransactions = (doc.transactions_bancaires_liees || []).concat([refAllocation]);
+
+  const maj = { montant_recu: nouveauMontantRecu, transactions_bancaires_liees: listeTransactions };
+  if (soldeCouvert) maj.statut = 'payee';
+
+  try {
+    await sb.patch(table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
+    Object.assign(doc, maj);
+  } catch(e) { console.warn('_appliquerAllocationRapprochement:', e); }
+}
+
+// ------------------------------------------------------------
+// SCÉNARIO B : une facture -> plusieurs virements (acompte, tranches,
+// solde) — sélection multiple en une fois, plutôt que de confirmer
+// chaque virement séparément l'un après l'autre.
+// ------------------------------------------------------------
+function ouvrirRapprochementMultipleFacture(factureId, type) {
+  const doc = type === 'achat'
+    ? (STATE.achats || []).find(function(x) { return String(x.id) === String(factureId); })
+    : (STATE.factures || []).find(function(x) { return String(x.id) === String(factureId); });
+  if (!doc) return;
+  const transactionsDisponibles = STATE._transactionsReleveActuel || [];
+  if (!transactionsDisponibles.length) {
+    showToast('⚠️ Ouvrez d\'abord un relevé et cliquez "Analyser"', 'error');
+    return;
+  }
+  const soldeRestant = (Number(doc.ttc) || 0) - (Number(doc.montant_recu) || 0);
+  // Ne propose que les transactions du bon sens : une facture de vente
+  // attend des entrées, un achat attend des sorties.
+  const candidats = transactionsDisponibles.map(function(t, idx) { return { t: t, idx: idx }; })
+    .filter(function(c) { return type === 'achat' ? c.t.montant <= 0 : c.t.montant >= 0; });
+
+  STATE._selectionRapprochementMultipleFacture = { factureId: factureId, type: type, soldeRestant: soldeRestant, coches: {} };
+
+  const overlay = document.createElement('div');
+  overlay.id = 'rapprochement-multiple-facture-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto">' +
+      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🔗 Régler avec plusieurs virements</div>' +
+      '<div style="font-size:12px;color:#9C9186;margin-bottom:14px">' + escapeHTML(doc.ref || doc.ref_fournisseur || '') + ' — solde restant : ' + fmt(soldeRestant) + ' MAD</div>' +
+      '<div style="font-size:11px;color:#6B5F54;margin-bottom:10px">Utile pour un acompte suivi d\'un solde, ou plusieurs tranches — cochez tout ce qui doit être appliqué à cette facture.</div>' +
+      (candidats.length ? candidats.map(function(c) {
+        const signe = c.t.montant >= 0 ? '+' : '';
+        return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #E3DCCF;border-radius:10px;margin-bottom:6px;cursor:pointer">' +
+          '<input type="checkbox" onchange="_toggleSelectionRapprochementMultipleFacture(' + c.idx + ',' + Math.abs(c.t.montant) + ',this.checked)" style="width:18px;height:18px">' +
+          '<div style="flex:1"><div style="font-size:12px">' + escapeHTML(c.t.dateBrute) + ' · ' + escapeHTML(c.t.description) + '</div>' +
+          '<div style="font-size:12px;font-weight:700;color:' + (c.t.montant>=0?'#55702E':'#B23A2E') + '">' + signe + fmt(c.t.montant) + ' MAD</div></div>' +
+        '</label>';
+      }).join('') : '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucune transaction du bon sens disponible dans le relevé actuellement ouvert.</div>') +
+      '<div id="rapprochement-multiple-facture-total" style="margin-top:12px;padding:12px;border-radius:10px;background:#F1EEE8;font-size:13px;font-weight:700;text-align:center">Sélectionné : 0 MAD / ' + fmt(soldeRestant) + ' MAD restant</div>' +
+      '<button id="rapprochement-multiple-facture-confirmer" onclick="confirmerRapprochementMultipleFacture()" disabled style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#9C9186;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit">✅ Confirmer</button>' +
+      '<button onclick="document.getElementById(\'rapprochement-multiple-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
+    '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function _toggleSelectionRapprochementMultipleFacture(idxTransaction, montant, coche) {
+  const sel = STATE._selectionRapprochementMultipleFacture;
+  if (coche) sel.coches[idxTransaction] = montant;
+  else delete sel.coches[idxTransaction];
+
+  const zone = el('rapprochement-multiple-facture-total');
+  const btn = el('rapprochement-multiple-facture-confirmer');
+  const total = Object.values(sel.coches).reduce(function(s, m) { return s + m; }, 0);
+  const ecart = sel.soldeRestant - total;
+  let peutConfirmer;
+  if (Math.abs(ecart) < 1) {
+    zone.style.background = '#EEF3E4'; zone.style.color = '#55702E';
+    zone.textContent = '✅ Équilibré — ' + fmt(total) + ' / ' + fmt(sel.soldeRestant) + ' MAD'; peutConfirmer = true;
+  } else if (ecart > 0) {
+    zone.style.background = '#FBF0DA'; zone.style.color = '#A67A16';
+    zone.textContent = '⚠️ Restera ' + fmt(ecart) + ' MAD après ces virements — ' + fmt(total) + ' / ' + fmt(sel.soldeRestant) + ' MAD'; peutConfirmer = total > 0;
+  } else {
+    zone.style.background = '#F5E4E1'; zone.style.color = '#8E2E24';
+    zone.textContent = '❌ Dépasse le solde restant de ' + fmt(-ecart) + ' MAD'; peutConfirmer = false;
+  }
+  if (btn) {
+    btn.disabled = !peutConfirmer;
+    btn.style.background = peutConfirmer ? '#1F6F72' : '#EAE4DA';
+    btn.style.color = peutConfirmer ? '#fff' : '#9C9186';
+    btn.style.cursor = peutConfirmer ? 'pointer' : 'not-allowed';
+  }
+}
+
+async function confirmerRapprochementMultipleFacture() {
+  const sel = STATE._selectionRapprochementMultipleFacture;
+  if (!sel) return;
+  for (const idxStr in sel.coches) {
+    const idx = parseInt(idxStr);
+    const t = STATE._transactionsReleveActuel[idx];
+    if (!t) continue;
+    await _appliquerAllocationRapprochement(sel.factureId, sel.type, Math.abs(t.montant), t);
+    t.correspondances = [];
+    t._traitee = true;
+  }
+  document.getElementById('rapprochement-multiple-facture-overlay')?.remove();
+  renderTransactionsReleve();
+  showToast('✅ Rapprochement multiple confirmé', 'success');
 }
