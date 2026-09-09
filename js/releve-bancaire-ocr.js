@@ -361,17 +361,72 @@ function _scoreDate(dateDoc, dateTransactionBrute) {
   return 0;
 }
 
-// Score global pondéré : le montant compte le plus (c'est le signal le
-// plus fiable en pratique), le nom ensuite, la date en dernier (souvent
-// décalée pour des raisons purement bancaires, sans rapport avec un
-// mauvais rapprochement).
-function _scoreGlobalCorrespondance(montantDoc, montantTransaction, nomDoc, descriptionTransaction, dateDoc, dateTransactionBrute) {
+// NOUVEAU (retour utilisateur) : les règles apprises sont chargées une
+// fois par session et gardées en mémoire — évite de refaire un appel
+// réseau à chaque transaction analysée. STATE.reglesRapprochement est un
+// tableau de { motif, nom_cible, type }.
+async function chargerReglesRapprochement() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/regles_rapprochement?user_id=eq.' + (STATE.entrepriseId || sb.user?.id), {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    STATE.reglesRapprochement = r.ok ? ((await r.json()) || []) : [];
+  } catch(e) { STATE.reglesRapprochement = []; }
+}
+
+// Cherche si une règle apprise correspond au libellé de la transaction —
+// retourne le nom cible enregistré si oui, sinon null. Recherche
+// insensible aux accents/casse, comme le reste du système.
+function _regleCorrespondante(descriptionTransaction, type) {
+  const descNorm = _sansAccents(String(descriptionTransaction || '').toLowerCase());
+  const regles = STATE.reglesRapprochement || [];
+  const trouvee = regles.find(function(r) {
+    return r.type === type && descNorm.includes(_sansAccents(String(r.motif || '').toLowerCase()));
+  });
+  return trouvee || null;
+}
+
+// NOUVEAU (retour utilisateur) : détecte si la référence de la facture/
+// de l'achat (ex: "FAC-2026-001") apparaît telle quelle dans le libellé
+// bancaire — arrive quand le client indique la référence en communication
+// du virement. Signal très fiable quand présent, quasiment jamais un
+// hasard vu la précision d'une référence de facture.
+function _scoreReference(refDoc, descriptionTransaction) {
+  const refNorm = _sansAccents(String(refDoc || '').toLowerCase()).replace(/\s/g, '');
+  const descNorm = _sansAccents(String(descriptionTransaction || '').toLowerCase()).replace(/\s/g, '');
+  if (refNorm && refNorm.length >= 4 && descNorm.includes(refNorm)) return 1;
+  return 0;
+}
+
+// Score global pondéré et EXPLICABLE — chaque composante est renvoyée en
+// détail, affichable pour que l'entreprise comprenne pourquoi une
+// proposition est classée où elle l'est (pas une boîte noire).
+// Une règle apprise ou une référence retrouvée dans le libellé sont des
+// signaux quasi certains — ils dominent largement le score final dès
+// qu'ils sont présents, même si montant/nom/date sont imparfaits.
+function _scoreGlobalCorrespondance(montantDoc, montantTransaction, nomDoc, descriptionTransaction, dateDoc, dateTransactionBrute, refDoc, type) {
   const sMontant = _scoreMontant(montantDoc, montantTransaction);
   const sNom = _similariteNom(nomDoc, descriptionTransaction);
   const sDate = _scoreDate(dateDoc, dateTransactionBrute);
+  const sReference = _scoreReference(refDoc, descriptionTransaction);
+  const regle = _regleCorrespondante(descriptionTransaction, type);
+  // Une règle apprise dit explicitement "ce libellé = ce client/fournisseur"
+  // — mais le NOM CIBLE de la règle doit encore correspondre au document
+  // évalué (une règle sert à plusieurs factures du même client, pas à en
+  // désigner une seule) : le score de règle ne s'applique que si le nom du
+  // document correspond au nom_cible de la règle trouvée.
+  const sRegle = (regle && _sansAccents(String(nomDoc||'').toLowerCase()).includes(_sansAccents(String(regle.nom_cible||'').toLowerCase()))) ? 1 : 0;
+
+  const base = sMontant * 0.45 + sNom * 0.25 + sDate * 0.15 + sReference * 0.15;
+  // Référence et règle sont des signaux quasi certains : s'ils sont
+  // présents, on relève fortement le plancher du score plutôt que de le
+  // simplement additionner — pour qu'une référence exacte l'emporte
+  // même face à un montant très différent (règlement partiel imprévu).
+  const total = Math.max(base, sReference >= 1 ? 0.85 : 0, sRegle >= 1 ? 0.8 : 0);
+
   return {
-    total: sMontant * 0.5 + sNom * 0.3 + sDate * 0.2,
-    detail: { montant: sMontant, nom: sNom, date: sDate }
+    total: total,
+    detail: { montant: sMontant, nom: sNom, date: sDate, reference: sReference, regle: sRegle > 0 }
   };
 }
 
@@ -397,7 +452,7 @@ function suggererRapprochements(transactions) {
   return transactions.map(function(t) {
     const correspondancesFactures = facturesCandidates.map(function(f) {
       const soldeRestant = (Number(f.ttc) || 0) - (Number(f.montant_recu) || 0);
-      const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, f.client, t.description, f.echeance || f.date_emission, t.dateBrute);
+      const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, f.client, t.description, f.echeance || f.date_emission, t.dateBrute, f.ref, 'facture');
       // NOUVEAU (retour utilisateur) : nombre de transactions déjà liées
       // à cette facture (acomptes précédents) — information utile, pas
       // un blocage, puisqu'un paiement en plusieurs fois est normal.
@@ -407,7 +462,7 @@ function suggererRapprochements(transactions) {
 
     const correspondancesAchats = achatsCandidats.map(function(a) {
       const soldeRestant = (Number(a.ttc) || 0) - (Number(a.montant_recu) || 0);
-      const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, a.fournisseur, t.description, a.echeance || a.date_achat, t.dateBrute);
+      const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, a.fournisseur, t.description, a.echeance || a.date_achat, t.dateBrute, a.ref_fournisseur, 'achat');
       const dejaLiees = (a.transactions_bancaires_liees || []).length;
       return { id: a.id, ref: a.ref_fournisseur || '', client: a.fournisseur || '', _type: 'achat', _score: s.total, _detail: s.detail, _soldeRestant: soldeRestant, _dejaLiees: dejaLiees };
     }).filter(function(c) { return c._score >= SEUIL_MINIMAL; });
@@ -423,6 +478,10 @@ async function analyserReleve(releveId) {
   const releve = (STATE.releves || []).find(function(r) { return String(r.id) === String(releveId); });
   if (!releve) return;
   showToast('🔍 Lecture du relevé en cours...');
+  // NOUVEAU (retour utilisateur) : charge les règles de rapprochement
+  // apprises avant de lancer le matching — sans ça, une règle enregistrée
+  // lors d'une session précédente ne serait jamais prise en compte.
+  if (!STATE.reglesRapprochement) await chargerReglesRapprochement();
   const transactions = await lireReleveBancaire(releve.data);
   if (!transactions || !transactions.length) {
     showToast('⚠️ Aucune transaction reconnue dans ce relevé — la mise en page de cette banque n\'est peut-être pas encore prise en charge', 'error');
@@ -549,6 +608,13 @@ async function confirmerRapprochementReleve(id, type, indexTransaction) {
 // relevés déjà importés et analysés en mémoire cette session, propose
 // les transactions qui correspondent le mieux à cette facture précise.
 // ============================================================
+// NOUVEAU (retour utilisateur) : montre désormais TOUTES les
+// transactions bancaires disponibles pour cette facture, pas seulement
+// celles au-dessus d'un seuil de score — l'entreprise peut ainsi choisir
+// elle-même une transaction que l'algorithme aurait mal classée, plutôt
+// que de ne jamais la voir du tout. Le détail du score (montant/nom/
+// date/référence/règle) est affiché pour chaque ligne, pas une boîte
+// noire.
 function ouvrirRapprochementDepuisFacture(factureId, type) {
   const doc = type === 'achat'
     ? (STATE.achats || []).find(function(x) { return String(x.id) === String(factureId); })
@@ -566,35 +632,97 @@ function ouvrirRapprochementDepuisFacture(factureId, type) {
   }
 
   const nomDoc = type === 'achat' ? doc.fournisseur : doc.client;
-  // FIX (retour utilisateur) : compare au solde RESTANT dû, pas au
-  // montant total — cohérent avec suggererRapprochements(), pour gérer
-  // correctement les acomptes/paiements déjà partiellement reçus.
   const soldeRestant = (Number(doc.ttc) || 0) - (Number(doc.montant_recu) || 0);
   const dateDoc = doc.echeance || doc.date_emission || doc.date_achat;
 
+  // FIX (retour utilisateur) : plus AUCUN seuil de score ici — toute
+  // transaction du relevé ouvert est listée, même avec un score de 0.
+  // Le seuil de suggererRapprochements() reste utile pour ne pas noyer
+  // l'écran de rapprochement automatique, mais ici l'entreprise a
+  // délibérément ouvert cette liste pour UNE facture précise — elle
+  // doit tout voir.
   const candidats = transactionsDisponibles.map(function(t, idx) {
-    const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, nomDoc, t.description, dateDoc, t.dateBrute);
-    return { t: t, idx: idx, score: s.total };
-  }).filter(function(c) { return c.score >= 0.15; }).sort(function(a, b) { return b.score - a.score; });
+    const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, nomDoc, t.description, dateDoc, t.dateBrute, doc.ref || doc.ref_fournisseur, type || 'facture');
+    return { t: t, idx: idx, score: s.total, detail: s.detail };
+  }).sort(function(a, b) { return b.score - a.score; });
 
   const overlay = document.createElement('div');
   overlay.id = 'rapprochement-depuis-facture-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML =
-    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:75vh;overflow-y:auto">' +
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:78vh;overflow-y:auto">' +
       '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
-      '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🔗 Rapprocher avec une transaction</div>' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🏦 Toutes les opérations bancaires</div>' +
       '<div style="font-size:12px;color:#9C9186;margin-bottom:14px">' + escapeHTML(doc.ref || doc.ref_fournisseur || '') + ' — solde restant : ' + fmt(soldeRestant) + ' MAD</div>' +
-      (candidats.length
-        ? candidats.map(function(c) {
-            const badge = c.score >= 0.75 ? '✓✓' : c.score >= 0.5 ? '✓' : '?';
-            return '<button onclick="confirmerRapprochementReleve(\'' + factureId + '\',\'' + (type||'facture') + '\',' + c.idx + ')" style="width:100%;padding:10px;background:#F1EEE8;border:none;border-radius:10px;font-size:12px;text-align:left;margin-bottom:6px;cursor:pointer;font-family:inherit">' +
-              '<strong>' + badge + '</strong> ' + escapeHTML(c.t.dateBrute) + ' · ' + escapeHTML(c.t.description) + ' — ' + fmt(c.t.montant) + ' MAD' +
-            '</button>';
-          }).join('')
-        : '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucune transaction du relevé actuellement ouvert ne correspond, même approximativement, à ce montant.</div>') +
+      candidats.map(function(c) {
+        const badge = c.detail.regle ? '🔒 Règle' : c.detail.reference >= 1 ? '🎯 Réf. trouvée' : c.score >= 0.75 ? '✓✓ Forte' : c.score >= 0.5 ? '✓ Probable' : c.score >= 0.15 ? '? Faible' : '— Aucun signal';
+        const couleurBadge = c.detail.regle || c.detail.reference >= 1 ? '#1F6F72' : c.score >= 0.75 ? '#1F6F72' : c.score >= 0.5 ? '#C9971F' : '#9C9186';
+        return '<div style="border:1px solid #E3DCCF;border-radius:10px;padding:10px;margin-bottom:8px">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+            '<span style="font-size:11px;color:#6B5F54">' + escapeHTML(c.t.dateBrute) + '</span>' +
+            '<span style="font-size:9px;font-weight:700;color:#fff;background:' + couleurBadge + ';padding:1px 6px;border-radius:6px">' + badge + '</span>' +
+          '</div>' +
+          '<div style="font-size:12px;margin-bottom:6px">' + escapeHTML(c.t.description) + ' — <strong>' + fmt(c.t.montant) + ' MAD</strong></div>' +
+          '<div style="display:flex;gap:6px">' +
+            '<button onclick="confirmerRapprochementReleve(\'' + factureId + '\',\'' + (type||'facture') + '\',' + c.idx + ');document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="flex:1;padding:7px;background:#EEF3E4;color:#55702E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Lier</button>' +
+            '<button onclick="ouvrirCreationRegle(' + c.idx + ',' + JSON.stringify(nomDoc) + ',' + JSON.stringify(type||'facture') + ')" style="padding:7px 10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">🔒 Créer une règle</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') +
       '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+}
+
+// NOUVEAU (retour utilisateur) : ouvre une petite fenêtre pour confirmer
+// le mot-clé à mémoriser comme règle — pré-rempli avec un extrait du
+// libellé de la transaction, modifiable avant d'enregistrer. Une règle
+// dit "quand ce mot apparaît dans un virement, c'est toujours ce
+// client/fournisseur" — utile quand la banque affiche un nom très
+// différent de la raison sociale enregistrée (nom du gérant, ancien
+// nom, abréviation...).
+function ouvrirCreationRegle(indexTransaction, nomCible, type) {
+  const t = STATE._transactionsReleveActuel && STATE._transactionsReleveActuel[indexTransaction];
+  if (!t) return;
+  const motifSuggere = (t.description || '').trim();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'creation-regle-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%">' +
+      '<div style="font-size:14px;font-weight:700;margin-bottom:6px">🔒 Créer une règle de rapprochement</div>' +
+      '<div style="font-size:11px;color:#9C9186;margin-bottom:12px">Quand un virement contient ce mot, il sera automatiquement proposé pour <strong>' + escapeHTML(nomCible) + '</strong>.</div>' +
+      '<label style="font-size:11px;font-weight:600;color:#6B5F54;display:block;margin-bottom:4px">Mot-clé à reconnaître</label>' +
+      '<input id="regle-motif-input" class="f-inp" value="' + escapeHTML(motifSuggere) + '" style="margin-bottom:12px">' +
+      '<div style="display:flex;gap:8px">' +
+        '<button onclick="document.getElementById(\'creation-regle-overlay\').remove()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
+        '<button onclick="confirmerCreationRegle(' + JSON.stringify(nomCible) + ',' + JSON.stringify(type) + ')" style="flex:1;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enregistrer</button>' +
+      '</div>' +
+    '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  setTimeout(function() { el('regle-motif-input')?.focus(); }, 100);
+}
+
+async function confirmerCreationRegle(nomCible, type) {
+  const motif = (el('regle-motif-input')?.value || '').trim();
+  if (!motif || motif.length < 3) { showToast('Entrez au moins 3 caractères', 'error'); return; }
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/regles_rapprochement', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ user_id: (STATE.entrepriseId || sb.user.id), motif: motif, nom_cible: nomCible, type: type })
+    }).then(async function(r) {
+      if (r.ok) {
+        const data = await r.json();
+        STATE.reglesRapprochement = (STATE.reglesRapprochement || []).concat(data);
+      }
+    });
+    document.getElementById('creation-regle-overlay')?.remove();
+    showToast('✅ Règle enregistrée — "' + motif + '" sera reconnu automatiquement', 'success');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
 }
