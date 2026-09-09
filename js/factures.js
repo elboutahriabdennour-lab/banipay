@@ -460,6 +460,27 @@ function renderDetail() {
       }).join('');
   }
 
+  // NOUVEAU (retour utilisateur) : historique des transactions bancaires
+  // déjà rapprochées avec cette facture — visible directement ici,
+  // chaque ligne rappelant sa date, son libellé et le montant appliqué.
+  const rapprochementsEl = el('detail-rapprochements');
+  if (rapprochementsEl) {
+    const transactionsLiees = f.transactions_bancaires_liees || [];
+    if (!transactionsLiees.length) {
+      rapprochementsEl.innerHTML = '';
+    } else {
+      rapprochementsEl.innerHTML =
+        '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🏦 Rapprochements bancaires (' + transactionsLiees.length + ')</div>' +
+        transactionsLiees.map(function(ref) {
+          const parts = String(ref).split('|');
+          return '<div style="background:#EEF3E4;border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:12px">' +
+            '<div style="display:flex;justify-content:space-between"><span style="color:#6B5F54">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#55702E">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
+            (parts[2] ? '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
+          '</div>';
+        }).join('');
+    }
+  }
+
   const chantEl = el('detail-chantier');
   if (chantEl) {
     if (f.chantier) { chantEl.textContent = f.chantier; chantEl.parentElement.style.display = 'block'; }
@@ -485,6 +506,11 @@ function renderDetail() {
   if (f.statut !== 'payee') {
     actions.push(`<button class="action-item success" onclick="marquerPayee(${f.id})"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer payée</button>`);
     actions.push(`<button class="action-item" onclick="ouvrirPaiementPartiel(${f.id})"><div class="action-ico" style="background:#E9F4F3">💰</div>Enregistrer un paiement</button>`);
+    // NOUVEAU (retour utilisateur) : accès direct au rapprochement
+    // bancaire depuis la facture elle-même — jusqu'ici, cette
+    // fonctionnalité n'existait que côté relevé, sans aucun bouton
+    // visible ici pour la déclencher.
+    actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="typeof ouvrirRapprochementDepuisFacture==='function' && ouvrirRapprochementDepuisFacture(${f.id},'facture')"><div class="action-ico" style="background:#E9F4F3">🏦</div>Rapprocher avec un relevé bancaire</button>`);
     if (['attente','envoyee'].includes(f.statut))
       actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="marquerRetard(${f.id})"><div class="action-ico" style="background:#F7EFDC">⚠️</div>Marquer en retard</button>`);
   }
