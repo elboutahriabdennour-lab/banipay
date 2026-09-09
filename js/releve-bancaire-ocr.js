@@ -510,9 +510,45 @@ function suggererRapprochements(transactions) {
   });
 }
 
+// FIX (retour utilisateur) : STATE._transactionsReleveActuel n'existait
+// qu'en mémoire vive — changer d'écran ne le viderait normalement pas,
+// mais recharger la page (ou une session qui se réinitialise) faisait
+// tout disparaître, y compris les transactions déjà traitées, obligeant
+// à tout ré-analyser depuis zéro. Sauvegardé maintenant dans le
+// stockage local du navigateur, par relevé — restauré automatiquement
+// si ce même relevé est réanalysé plus tard, sans perdre l'état déjà
+// confirmé.
+function _cleStockageReleve(releveId) {
+  return 'bp_releve_transactions_' + releveId;
+}
+function _sauvegarderTransactionsReleveLocal(releveId, transactions) {
+  try {
+    localStorage.setItem(_cleStockageReleve(releveId), JSON.stringify(transactions));
+  } catch(e) { console.warn('Sauvegarde locale du relevé impossible:', e); }
+}
+function _chargerTransactionsReleveLocal(releveId) {
+  try {
+    const brut = localStorage.getItem(_cleStockageReleve(releveId));
+    return brut ? JSON.parse(brut) : null;
+  } catch(e) { return null; }
+}
+
 async function analyserReleve(releveId) {
   const releve = (STATE.releves || []).find(function(r) { return String(r.id) === String(releveId); });
   if (!releve) return;
+
+  // Restaure directement depuis le stockage local si ce relevé a déjà
+  // été analysé auparavant — évite de tout refaire, et conserve l'état
+  // de ce qui était déjà confirmé.
+  const dejaAnalyse = _chargerTransactionsReleveLocal(releveId);
+  if (dejaAnalyse && dejaAnalyse.length) {
+    STATE._transactionsReleveActuel = dejaAnalyse;
+    STATE._releveActuelId = releveId;
+    renderTransactionsReleve();
+    goScreen('rapprochement-releve', null);
+    return;
+  }
+
   showToast('🔍 Lecture du relevé en cours...');
   // NOUVEAU (retour utilisateur) : charge les règles de rapprochement
   // apprises avant de lancer le matching — sans ça, une règle enregistrée
@@ -525,15 +561,30 @@ async function analyserReleve(releveId) {
   }
   const avecSuggestions = suggererRapprochements(transactions);
   STATE._transactionsReleveActuel = avecSuggestions;
+  STATE._releveActuelId = releveId;
+  _sauvegarderTransactionsReleveLocal(releveId, avecSuggestions);
   renderTransactionsReleve();
   goScreen('rapprochement-releve', null);
 }
 
-// Construit et parse le résumé texte stocké dans transaction_bancaire_ref
-// — format simple "date|montant|description", pour rester lisible en
-// base directement (utile si un jour quelqu'un regarde la table).
+// NOUVEAU (retour utilisateur) : force une vraie relecture du fichier,
+// en ignorant la version sauvegardée localement — utile si le relevé a
+// changé, ou en cas de doute sur la fiabilité de ce qui est affiché.
+async function reanalyserReleveDepuisZero(releveId) {
+  try { localStorage.removeItem(_cleStockageReleve(releveId)); } catch(e) {}
+  await analyserReleve(releveId);
+}
+
+// FIX (retour utilisateur) : "4000" et "4000.00" désignaient la même
+// transaction mais étaient deux chaînes DIFFÉRENTES pour la détection
+// "déjà rapprochée" — un montant sans décimales fixes ici, un autre
+// avec .toFixed(2) dans _appliquerAllocationRapprochement(). Résultat
+// concret : une facture déjà rapprochée réapparaissait comme "à
+// rapprocher" à chaque nouvel import du même relevé, obligeant à tout
+// refaire. Format maintenant strictement identique partout dans ce
+// fichier — voir aussi _appliquerAllocationRapprochement().
 function _construireRefTransaction(t) {
-  return (t.dateBrute || '') + '|' + (t.montant || '') + '|' + (t.description || '').slice(0, 60);
+  return (t.dateBrute || '') + '|' + Math.abs(Number(t.montant) || 0).toFixed(2) + '|' + (t.description || '').slice(0, 60);
 }
 
 function renderTransactionsReleve() {
@@ -641,6 +692,10 @@ async function confirmerRapprochementReleve(id, type, indexTransaction) {
     STATE._transactionsReleveActuel[indexTransaction].correspondances = [];
     STATE._transactionsReleveActuel[indexTransaction]._traitee = true;
   }
+  // FIX (retour utilisateur) : sans cette sauvegarde, l'état "déjà
+  // rapprochée" ne survivait pas à un changement de page ou un
+  // rechargement — il fallait tout refaire à chaque fois.
+  if (STATE._releveActuelId) _sauvegarderTransactionsReleveLocal(STATE._releveActuelId, STATE._transactionsReleveActuel);
   renderTransactionsReleve();
   showToast(soldeCouvert
     ? (type === 'achat' ? '✅ Achat soldé' : '✅ Facture soldée')
@@ -913,6 +968,7 @@ async function confirmerRapprochementMultipleTransaction() {
     STATE._transactionsReleveActuel[sel.indexTransaction].correspondances = [];
     STATE._transactionsReleveActuel[sel.indexTransaction]._traitee = true;
   }
+  if (STATE._releveActuelId) _sauvegarderTransactionsReleveLocal(STATE._releveActuelId, STATE._transactionsReleveActuel);
   document.getElementById('rapprochement-multiple-overlay')?.remove();
   renderTransactionsReleve();
   showToast('✅ Rapprochement multiple confirmé', 'success');
@@ -1029,6 +1085,7 @@ async function confirmerRapprochementMultipleFacture() {
     t.correspondances = [];
     t._traitee = true;
   }
+  if (STATE._releveActuelId) _sauvegarderTransactionsReleveLocal(STATE._releveActuelId, STATE._transactionsReleveActuel);
   document.getElementById('rapprochement-multiple-facture-overlay')?.remove();
   renderTransactionsReleve();
   showToast('✅ Rapprochement multiple confirmé', 'success');
