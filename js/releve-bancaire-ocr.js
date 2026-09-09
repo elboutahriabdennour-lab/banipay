@@ -232,16 +232,21 @@ function _extraireTransactionsReleve(texte) {
 // deux côtés, et marque chaque correspondance par son type (_type)
 // pour que l'affichage et la confirmation sachent quelle table mettre
 // à jour.
-// FIX (retour utilisateur) : ne comparait auparavant que par montant —
-// une transaction correspondant par hasard au même montant qu'une
-// facture totalement différente se serait quand même proposée en
-// premier. Le nom (client/fournisseur) et la date sont maintenant aussi
-// utilisés, mais uniquement pour CLASSER les propositions par ordre de
-// fiabilité — le montant reste le seul critère obligatoire (une facture
-// dont le montant ne correspond pas n'est jamais proposée du tout).
-// Tout reste des suggestions à vérifier soi-même, jamais un lien
-// automatique — rien n'est modifié en base tant que l'entreprise n'a
-// pas cliqué "Lier" explicitement.
+//
+// FIX (retour utilisateur) : en pratique, aucun des 3 critères n'est
+// jamais parfaitement exact — le montant peut différer (frais bancaires,
+// règlement partiel, arrondi), le nom peut être tronqué/mal orthographié
+// par la banque, et la date d'opération bancaire tombe souvent plusieurs
+// jours après la date de la facture (délai de traitement, weekend...).
+// Exiger une correspondance exacte sur l'un de ces 3 critères pour
+// même APPARAÎTRE dans la liste ratait donc trop de vrais rapprochements.
+//
+// Refait ici avec un vrai score de similarité sur chacun des 3 critères
+// (tolérance large sur le montant, distance de Levenshtein sur le nom,
+// tolérance élargie sur la date), combinés en un score global — une
+// facture apparaît dès qu'elle a un minimum de signaux cohérents, pas
+// besoin qu'un seul critère soit parfait. Toujours des suggestions à
+// vérifier soi-même, jamais un lien automatique.
 function _sansAccents(s) {
   return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -259,31 +264,106 @@ function _parserDateReleve(dateBrute) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// Score de fiabilité d'une correspondance : le montant est déjà garanti
-// exact avant d'arriver ici (filtré en amont) — ce score ne fait que
-// classer les meilleures propositions en tête, jamais exclure quoi que
-// ce soit sur cette seule base.
-function _scoreCorrespondance(nomDoc, dateDoc, descriptionTransaction, dateTransactionBrute) {
-  let score = 0;
+// Distance de Levenshtein classique (nombre minimal de modifications
+// pour passer d'une chaîne à l'autre) — permet de détecter un nom mal
+// orthographié ou tronqué par la banque, pas seulement une correspondance
+// exacte ou une sous-chaîne.
+function _distanceLevenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  const ligne = new Array(n + 1);
+  for (let j = 0; j <= n; j++) ligne[j] = j;
+  for (let i = 1; i <= m; i++) {
+    let precedent = ligne[0];
+    ligne[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const temp = ligne[j];
+      ligne[j] = a[i-1] === b[j-1] ? precedent : 1 + Math.min(precedent, ligne[j], ligne[j-1]);
+      precedent = temp;
+    }
+  }
+  return ligne[n];
+}
+
+// Similarité de 0 (rien en commun) à 1 (identique) entre un nom connu
+// (client/fournisseur) et le libellé brut de la transaction — combine
+// une recherche de sous-chaîne/mots (rapide, gère l'ordre différent des
+// mots) et la distance de Levenshtein (gère les fautes de frappe/troncatures).
+function _similariteNom(nomDoc, descriptionTransaction) {
   const nomNorm = _sansAccents(String(nomDoc || '').toLowerCase()).trim();
   const descNorm = _sansAccents(String(descriptionTransaction || '').toLowerCase());
-  if (nomNorm && nomNorm.length >= 3 && descNorm.includes(nomNorm)) {
-    score += 2; // nom retrouvé tel quel dans le libellé de la transaction
-  } else if (nomNorm && nomNorm.length >= 3) {
-    // Correspondance partielle : au moins un mot du nom (3+ lettres)
-    // apparaît dans le libellé — utile pour "SARL Bâtir Maroc" vs
-    // "VIR BATIR MAROC SARL", ordre des mots différent.
-    const motsNom = nomNorm.split(/\s+/).filter(function(m) { return m.length >= 3; });
-    if (motsNom.some(function(mot) { return descNorm.includes(mot); })) score += 1;
-  }
+  if (!nomNorm || nomNorm.length < 2) return 0;
+
+  if (descNorm.includes(nomNorm)) return 1; // nom complet retrouvé tel quel
+
+  const motsNom = nomNorm.split(/\s+/).filter(function(m) { return m.length >= 3; });
+  const motsDesc = descNorm.split(/\s+/).filter(function(m) { return m.length >= 3; });
+  if (!motsNom.length) return 0;
+
+  // Pour chaque mot du nom, cherche le meilleur mot correspondant dans la
+  // description (sous-chaîne, ou Levenshtein tolérant ~30% de différence
+  // pour absorber une faute de frappe/troncature de la banque).
+  let scoreMots = 0;
+  motsNom.forEach(function(mot) {
+    let meilleur = 0;
+    motsDesc.forEach(function(motDesc) {
+      if (motDesc.includes(mot) || mot.includes(motDesc)) { meilleur = Math.max(meilleur, 1); return; }
+      const dist = _distanceLevenshtein(mot, motDesc);
+      const sim = 1 - dist / Math.max(mot.length, motDesc.length);
+      meilleur = Math.max(meilleur, sim);
+    });
+    scoreMots += meilleur >= 0.7 ? meilleur : 0; // ignore les correspondances trop faibles
+  });
+  return Math.min(1, scoreMots / motsNom.length);
+}
+
+// Score de montant : 1 = identique, dégressif selon l'écart en % du
+// montant — tolère un règlement partiel, des frais bancaires déduits, un
+// arrondi, tout en restant strict au-delà d'un certain écart pour ne pas
+// proposer n'importe quoi.
+function _scoreMontant(montantDoc, montantTransaction) {
+  const doc = Number(montantDoc) || 0;
+  const trans = Number(montantTransaction) || 0;
+  if (doc <= 0) return 0;
+  const ecart = Math.abs(doc - trans);
+  const ecartPct = ecart / doc;
+  if (ecart < 1) return 1;
+  if (ecartPct <= 0.02) return 0.9;
+  if (ecartPct <= 0.05) return 0.7;
+  if (ecartPct <= 0.10) return 0.5;
+  if (ecartPct <= 0.20) return 0.25;
+  return 0;
+}
+
+// Score de date : dégressif selon l'écart en jours — une opération
+// bancaire tombe souvent plusieurs jours après la date de la facture
+// (délai de traitement, weekend, virement programmé...), tolérance donc
+// plus large qu'un simple "même jour".
+function _scoreDate(dateDoc, dateTransactionBrute) {
   const dDoc = dateDoc ? new Date(dateDoc) : null;
   const dTrans = _parserDateReleve(dateTransactionBrute);
-  if (dDoc && dTrans && !isNaN(dDoc.getTime())) {
-    const ecartJours = Math.abs((dTrans - dDoc) / 86400000);
-    if (ecartJours <= 3) score += 2;
-    else if (ecartJours <= 10) score += 1;
-  }
-  return score;
+  if (!dDoc || !dTrans || isNaN(dDoc.getTime())) return 0;
+  const ecartJours = Math.abs((dTrans - dDoc) / 86400000);
+  if (ecartJours <= 2) return 1;
+  if (ecartJours <= 7) return 0.7;
+  if (ecartJours <= 15) return 0.4;
+  if (ecartJours <= 30) return 0.15;
+  return 0;
+}
+
+// Score global pondéré : le montant compte le plus (c'est le signal le
+// plus fiable en pratique), le nom ensuite, la date en dernier (souvent
+// décalée pour des raisons purement bancaires, sans rapport avec un
+// mauvais rapprochement).
+function _scoreGlobalCorrespondance(montantDoc, montantTransaction, nomDoc, descriptionTransaction, dateDoc, dateTransactionBrute) {
+  const sMontant = _scoreMontant(montantDoc, montantTransaction);
+  const sNom = _similariteNom(nomDoc, descriptionTransaction);
+  const sDate = _scoreDate(dateDoc, dateTransactionBrute);
+  return {
+    total: sMontant * 0.5 + sNom * 0.3 + sDate * 0.2,
+    detail: { montant: sMontant, nom: sNom, date: sDate }
+  };
 }
 
 function suggererRapprochements(transactions) {
@@ -293,21 +373,25 @@ function suggererRapprochements(transactions) {
   const achatsCandidats = (STATE.achats || []).filter(function(a) {
     return a.statut !== 'payee';
   });
+  // Seuil minimal pour même apparaître comme proposition — évite de
+  // noyer l'entreprise sous des dizaines de factures sans aucun rapport
+  // réel, tout en restant assez large pour capter un règlement partiel
+  // avec un nom mal reconnu, par exemple.
+  const SEUIL_MINIMAL = 0.3;
+
   return transactions.map(function(t) {
-    const correspondancesFactures = facturesCandidates.filter(function(f) {
-      return Math.abs(Number(f.ttc || 0) - t.montant) < 1;
-    }).map(function(f) {
-      const score = _scoreCorrespondance(f.client, f.echeance || f.date_emission, t.description, t.dateBrute);
-      return { id: f.id, ref: f.ref, client: f.client, _type: 'facture', _score: score };
-    });
-    const correspondancesAchats = achatsCandidats.filter(function(a) {
-      return Math.abs(Number(a.ttc || 0) - t.montant) < 1;
-    }).map(function(a) {
-      const score = _scoreCorrespondance(a.fournisseur, a.echeance || a.date_achat, t.description, t.dateBrute);
-      return { id: a.id, ref: a.ref_fournisseur || '', client: a.fournisseur || '', _type: 'achat', _score: score };
-    });
-    // Meilleur score (nom + date les plus proches) affiché en premier —
-    // toujours une proposition, jamais un choix imposé.
+    const correspondancesFactures = facturesCandidates.map(function(f) {
+      const s = _scoreGlobalCorrespondance(f.ttc, t.montant, f.client, t.description, f.echeance || f.date_emission, t.dateBrute);
+      return { id: f.id, ref: f.ref, client: f.client, _type: 'facture', _score: s.total, _detail: s.detail };
+    }).filter(function(c) { return c._score >= SEUIL_MINIMAL; });
+
+    const correspondancesAchats = achatsCandidats.map(function(a) {
+      const s = _scoreGlobalCorrespondance(a.ttc, t.montant, a.fournisseur, t.description, a.echeance || a.date_achat, t.dateBrute);
+      return { id: a.id, ref: a.ref_fournisseur || '', client: a.fournisseur || '', _type: 'achat', _score: s.total, _detail: s.detail };
+    }).filter(function(c) { return c._score >= SEUIL_MINIMAL; });
+
+    // Meilleur score global en premier — toujours une proposition,
+    // jamais un choix imposé.
     const toutes = correspondancesFactures.concat(correspondancesAchats).sort(function(a, b) { return b._score - a._score; });
     return Object.assign({}, t, { correspondances: toutes });
   });
@@ -354,9 +438,11 @@ function renderTransactionsReleve() {
               // le nom + la date, en plus du montant déjà garanti exact —
               // aide à repérer en un coup d'œil la proposition la plus
               // fiable quand plusieurs factures ont le même montant.
-              const badge = f._score >= 3 ? '<span style="background:#1F6F72;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓✓ Forte correspondance</span>'
-                : f._score >= 1 ? '<span style="background:#C9971F;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓ Correspondance partielle</span>'
-                : '<span style="background:#9C9186;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">Montant seul</span>';
+              // Nouveaux seuils : le score global va maintenant de 0 à 1
+              // (pondération montant 50% / nom 30% / date 20%).
+              const badge = f._score >= 0.75 ? '<span style="background:#1F6F72;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓✓ Forte correspondance</span>'
+                : f._score >= 0.5 ? '<span style="background:#C9971F;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓ Correspondance probable</span>'
+                : '<span style="background:#9C9186;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">? À vérifier</span>';
               return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + '</button>';
             }).join('')
           : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
