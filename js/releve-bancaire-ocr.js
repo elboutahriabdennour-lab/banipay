@@ -144,24 +144,31 @@ function _extraireTransactionsReleveExcel(lignes) {
       dateBrute = String(brutDate).trim();
     }
 
-    // Soit un montant unique signé, soit deux colonnes Débit/Crédit
-    // séparées — on prend celle qui est non vide, en valeur absolue
-    // (le sens n'a pas d'importance ici, seul le montant compte pour le
-    // rapprochement par égalité).
+    // FIX (retour utilisateur) : le sens de l'opération (entrée/sortie)
+    // était perdu ici — Math.abs() effaçait le signe, qu'il vienne d'un
+    // montant unique déjà signé (négatif = sortie) ou d'une colonne
+    // Débit/Crédit séparée. Sans cette info, une sortie d'argent (vers un
+    // fournisseur) pouvait se faire proposer contre une facture de vente,
+    // et inversement — un vrai risque de confusion. Le signe est
+    // maintenant conservé : sens = 'sortie' (débit) ou 'entree' (crédit).
     const montantUnique = valeurColonne(ligne, ['montant', 'amount', 'somme']);
     const debit = valeurColonne(ligne, ['débit', 'debit', 'sortie', 'retrait', 'withdrawal']);
     const credit = valeurColonne(ligne, ['crédit', 'credit', 'entrée', 'entree', 'dépôt', 'depot', 'deposit']);
 
-    let montant = null;
-    [montantUnique, debit, credit].forEach(function(v) {
-      if (montant !== null) return;
-      const nettoye = String(v).replace(/\s/g, '').replace(',', '.');
-      const val = parseFloat(nettoye);
-      if (!isNaN(val) && val !== 0) montant = Math.abs(val);
-    });
+    let montant = null, sens = null;
+    if (String(debit).trim() && parseFloat(String(debit).replace(/\s/g,'').replace(',','.')) !== 0 && !isNaN(parseFloat(String(debit).replace(/\s/g,'').replace(',','.')))) {
+      montant = Math.abs(parseFloat(String(debit).replace(/\s/g,'').replace(',','.')));
+      sens = 'sortie';
+    } else if (String(credit).trim() && parseFloat(String(credit).replace(/\s/g,'').replace(',','.')) !== 0 && !isNaN(parseFloat(String(credit).replace(/\s/g,'').replace(',','.')))) {
+      montant = Math.abs(parseFloat(String(credit).replace(/\s/g,'').replace(',','.')));
+      sens = 'entree';
+    } else if (String(montantUnique).trim()) {
+      const val = parseFloat(String(montantUnique).replace(/\s/g,'').replace(',','.'));
+      if (!isNaN(val) && val !== 0) { montant = Math.abs(val); sens = val < 0 ? 'sortie' : 'entree'; }
+    }
     if (montant === null || montant <= 0 || montant > 10000000) return;
 
-    transactions.push({ dateBrute: dateBrute, description: description.slice(0, 80), montant: montant });
+    transactions.push({ dateBrute: dateBrute, description: description.slice(0, 80), montant: montant, sens: sens });
   });
 
   return transactions;
@@ -219,7 +226,27 @@ function _extraireTransactionsReleve(texte) {
       .slice(0, 80);
     if (description.length < 3) continue;
 
-    transactions.push({ dateBrute: dateBrute, description: description, montant: montant });
+    // NOUVEAU (retour utilisateur) : tente de détecter le sens de
+    // l'opération — moins fiable qu'en Excel (pas de vraies colonnes
+    // séparées dans du texte brut), mais deux indices restent
+    // exploitables : un signe moins explicite juste avant le montant, ou
+    // des mots-clés typiques du libellé. Si aucun des deux ne permet de
+    // trancher, sens reste indéfini plutôt que d'inventer une réponse.
+    let sens = null;
+    const positionMontant = ligne.lastIndexOf(montantBrutTexte);
+    if (positionMontant > 0 && ligne[positionMontant - 1] === '-') {
+      sens = 'sortie';
+    } else {
+      const descNorm = _sansAccents(description.toLowerCase());
+      const motsCles = {
+        sortie: ['vir emis', 'virement emis', 'prlv', 'prelevement', 'retrait', 'paiement carte', 'cheque emis', 'frais'],
+        entree: ['vir recu', 'virement recu', 'depot', 'remise cheque', 'versement'],
+      };
+      if (motsCles.sortie.some(function(m) { return descNorm.includes(m); })) sens = 'sortie';
+      else if (motsCles.entree.some(function(m) { return descNorm.includes(m); })) sens = 'entree';
+    }
+
+    transactions.push({ dateBrute: dateBrute, description: description, montant: montant, sens: sens });
   }
   return transactions;
 }
@@ -450,7 +477,17 @@ function suggererRapprochements(transactions) {
   const SEUIL_MINIMAL = 0.15;
 
   return transactions.map(function(t) {
-    const correspondancesFactures = facturesCandidates.map(function(f) {
+    // NOUVEAU (retour utilisateur) : ne cherche du côté factures que si
+    // la transaction est une ENTRÉE d'argent (ou si le sens n'a pas pu
+    // être détecté — mieux vaut chercher un peu trop large que rater un
+    // vrai rapprochement à cause d'une détection de sens imparfaite),
+    // et du côté achats que si c'est une SORTIE. Empêche par exemple un
+    // paiement fournisseur de se faire proposer contre une facture de
+    // vente au même montant, par pur hasard.
+    const chercherFactures = t.sens !== 'sortie';
+    const chercherAchats = t.sens !== 'entree';
+
+    const correspondancesFactures = !chercherFactures ? [] : facturesCandidates.map(function(f) {
       const soldeRestant = (Number(f.ttc) || 0) - (Number(f.montant_recu) || 0);
       const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, f.client, t.description, f.echeance || f.date_emission, t.dateBrute, f.ref, 'facture');
       // NOUVEAU (retour utilisateur) : nombre de transactions déjà liées
@@ -460,7 +497,7 @@ function suggererRapprochements(transactions) {
       return { id: f.id, ref: f.ref, client: f.client, _type: 'facture', _score: s.total, _detail: s.detail, _soldeRestant: soldeRestant, _dejaLiees: dejaLiees };
     }).filter(function(c) { return c._score >= SEUIL_MINIMAL; });
 
-    const correspondancesAchats = achatsCandidats.map(function(a) {
+    const correspondancesAchats = !chercherAchats ? [] : achatsCandidats.map(function(a) {
       const soldeRestant = (Number(a.ttc) || 0) - (Number(a.montant_recu) || 0);
       const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, a.fournisseur, t.description, a.echeance || a.date_achat, t.dateBrute, a.ref_fournisseur, 'achat');
       const dejaLiees = (a.transactions_bancaires_liees || []).length;
