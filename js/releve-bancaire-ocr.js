@@ -144,31 +144,28 @@ function _extraireTransactionsReleveExcel(lignes) {
       dateBrute = String(brutDate).trim();
     }
 
-    // FIX (retour utilisateur) : le sens de l'opération (entrée/sortie)
-    // était perdu ici — Math.abs() effaçait le signe, qu'il vienne d'un
-    // montant unique déjà signé (négatif = sortie) ou d'une colonne
-    // Débit/Crédit séparée. Sans cette info, une sortie d'argent (vers un
-    // fournisseur) pouvait se faire proposer contre une facture de vente,
-    // et inversement — un vrai risque de confusion. Le signe est
-    // maintenant conservé : sens = 'sortie' (débit) ou 'entree' (crédit).
+    // FIX (retour utilisateur) : le montant est maintenant SIGNÉ
+    // directement — négatif pour une sortie d'argent (débit), positif
+    // pour une entrée (crédit) — comme sur un vrai relevé bancaire.
+    // Avant, Math.abs() effaçait cette information, avec un risque réel
+    // de confondre un paiement fournisseur et un encaissement client au
+    // même montant.
     const montantUnique = valeurColonne(ligne, ['montant', 'amount', 'somme']);
     const debit = valeurColonne(ligne, ['débit', 'debit', 'sortie', 'retrait', 'withdrawal']);
     const credit = valeurColonne(ligne, ['crédit', 'credit', 'entrée', 'entree', 'dépôt', 'depot', 'deposit']);
 
-    let montant = null, sens = null;
-    if (String(debit).trim() && parseFloat(String(debit).replace(/\s/g,'').replace(',','.')) !== 0 && !isNaN(parseFloat(String(debit).replace(/\s/g,'').replace(',','.')))) {
-      montant = Math.abs(parseFloat(String(debit).replace(/\s/g,'').replace(',','.')));
-      sens = 'sortie';
-    } else if (String(credit).trim() && parseFloat(String(credit).replace(/\s/g,'').replace(',','.')) !== 0 && !isNaN(parseFloat(String(credit).replace(/\s/g,'').replace(',','.')))) {
+    let montant = null;
+    if (String(debit).trim() && !isNaN(parseFloat(String(debit).replace(/\s/g,'').replace(',','.'))) && parseFloat(String(debit).replace(/\s/g,'').replace(',','.')) !== 0) {
+      montant = -Math.abs(parseFloat(String(debit).replace(/\s/g,'').replace(',','.')));
+    } else if (String(credit).trim() && !isNaN(parseFloat(String(credit).replace(/\s/g,'').replace(',','.'))) && parseFloat(String(credit).replace(/\s/g,'').replace(',','.')) !== 0) {
       montant = Math.abs(parseFloat(String(credit).replace(/\s/g,'').replace(',','.')));
-      sens = 'entree';
     } else if (String(montantUnique).trim()) {
       const val = parseFloat(String(montantUnique).replace(/\s/g,'').replace(',','.'));
-      if (!isNaN(val) && val !== 0) { montant = Math.abs(val); sens = val < 0 ? 'sortie' : 'entree'; }
+      if (!isNaN(val) && val !== 0) montant = val; // déjà signé si la colonne l'était
     }
-    if (montant === null || montant <= 0 || montant > 10000000) return;
+    if (montant === null || Math.abs(montant) > 10000000) return;
 
-    transactions.push({ dateBrute: dateBrute, description: description.slice(0, 80), montant: montant, sens: sens });
+    transactions.push({ dateBrute: dateBrute, description: description.slice(0, 80), montant: montant });
   });
 
   return transactions;
@@ -217,7 +214,7 @@ function _extraireTransactionsReleve(texte) {
     if (!dateBrute || !montantBrutTexte) continue;
 
     const montantBrut = montantBrutTexte.replace(/[\s_]/g, '').replace(',', '.');
-    const montant = parseFloat(montantBrut);
+    let montant = parseFloat(montantBrut);
     if (isNaN(montant) || montant <= 0 || montant > 10000000) continue;
 
     const description = descriptionBrute
@@ -226,27 +223,25 @@ function _extraireTransactionsReleve(texte) {
       .slice(0, 80);
     if (description.length < 3) continue;
 
-    // NOUVEAU (retour utilisateur) : tente de détecter le sens de
-    // l'opération — moins fiable qu'en Excel (pas de vraies colonnes
-    // séparées dans du texte brut), mais deux indices restent
-    // exploitables : un signe moins explicite juste avant le montant, ou
-    // des mots-clés typiques du libellé. Si aucun des deux ne permet de
-    // trancher, sens reste indéfini plutôt que d'inventer une réponse.
-    let sens = null;
+    // NOUVEAU (retour utilisateur) : montant signé — négatif pour une
+    // sortie d'argent, positif pour une entrée — comme sur un vrai
+    // relevé. Moins fiable qu'en Excel (pas de vraies colonnes séparées
+    // dans du texte brut), mais deux indices restent exploitables : un
+    // signe moins explicite juste avant le montant, ou des mots-clés
+    // typiques du libellé. Si aucun des deux ne permet de trancher, le
+    // montant reste positif par défaut plutôt que d'inventer une réponse
+    // — dans ce cas, le rapprochement cherchera des deux côtés (voir
+    // suggererRapprochements).
     const positionMontant = ligne.lastIndexOf(montantBrutTexte);
     if (positionMontant > 0 && ligne[positionMontant - 1] === '-') {
-      sens = 'sortie';
+      montant = -montant;
     } else {
       const descNorm = _sansAccents(description.toLowerCase());
-      const motsCles = {
-        sortie: ['vir emis', 'virement emis', 'prlv', 'prelevement', 'retrait', 'paiement carte', 'cheque emis', 'frais'],
-        entree: ['vir recu', 'virement recu', 'depot', 'remise cheque', 'versement'],
-      };
-      if (motsCles.sortie.some(function(m) { return descNorm.includes(m); })) sens = 'sortie';
-      else if (motsCles.entree.some(function(m) { return descNorm.includes(m); })) sens = 'entree';
+      const motsSortie = ['vir emis', 'virement emis', 'prlv', 'prelevement', 'retrait', 'paiement carte', 'cheque emis', 'frais'];
+      if (motsSortie.some(function(m) { return descNorm.includes(m); })) montant = -montant;
     }
 
-    transactions.push({ dateBrute: dateBrute, description: description, montant: montant, sens: sens });
+    transactions.push({ dateBrute: dateBrute, description: description, montant: montant });
   }
   return transactions;
 }
@@ -484,12 +479,16 @@ function suggererRapprochements(transactions) {
     // et du côté achats que si c'est une SORTIE. Empêche par exemple un
     // paiement fournisseur de se faire proposer contre une facture de
     // vente au même montant, par pur hasard.
-    const chercherFactures = t.sens !== 'sortie';
-    const chercherAchats = t.sens !== 'entree';
+    // NOUVEAU (retour utilisateur) : le sens se lit directement sur le
+    // signe du montant — négatif = sortie, positif = entrée. Plus de
+    // champ séparé à maintenir en double.
+    const chercherFactures = t.montant >= 0;
+    const chercherAchats = t.montant <= 0;
+    const montantAbs = Math.abs(t.montant);
 
     const correspondancesFactures = !chercherFactures ? [] : facturesCandidates.map(function(f) {
       const soldeRestant = (Number(f.ttc) || 0) - (Number(f.montant_recu) || 0);
-      const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, f.client, t.description, f.echeance || f.date_emission, t.dateBrute, f.ref, 'facture');
+      const s = _scoreGlobalCorrespondance(soldeRestant, montantAbs, f.client, t.description, f.echeance || f.date_emission, t.dateBrute, f.ref, 'facture');
       // NOUVEAU (retour utilisateur) : nombre de transactions déjà liées
       // à cette facture (acomptes précédents) — information utile, pas
       // un blocage, puisqu'un paiement en plusieurs fois est normal.
@@ -499,7 +498,7 @@ function suggererRapprochements(transactions) {
 
     const correspondancesAchats = !chercherAchats ? [] : achatsCandidats.map(function(a) {
       const soldeRestant = (Number(a.ttc) || 0) - (Number(a.montant_recu) || 0);
-      const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, a.fournisseur, t.description, a.echeance || a.date_achat, t.dateBrute, a.ref_fournisseur, 'achat');
+      const s = _scoreGlobalCorrespondance(soldeRestant, montantAbs, a.fournisseur, t.description, a.echeance || a.date_achat, t.dateBrute, a.ref_fournisseur, 'achat');
       const dejaLiees = (a.transactions_bancaires_liees || []).length;
       return { id: a.id, ref: a.ref_fournisseur || '', client: a.fournisseur || '', _type: 'achat', _score: s.total, _detail: s.detail, _soldeRestant: soldeRestant, _dejaLiees: dejaLiees };
     }).filter(function(c) { return c._score >= SEUIL_MINIMAL; });
@@ -562,17 +561,21 @@ function renderTransactionsReleve() {
         return '<div style="background:#EEF3E4;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
             '<span style="font-size:12px;color:#55702E">' + escapeHTML(t.dateBrute) + ' · ' + escapeHTML(t.description) + '</span>' +
-            '<span style="font-weight:700;font-size:13px;color:#55702E">' + fmt(t.montant) + ' MAD</span>' +
+            '<span style="font-weight:700;font-size:13px;color:#55702E">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</span>' +
           '</div>' +
           '<div style="font-size:12px;color:#55702E;font-weight:600">✅ Déjà rapprochée' + (doc.ref || doc.ref_fournisseur ? ' — ' + escapeHTML(doc.ref || doc.ref_fournisseur) : '') + '</div>' +
         '</div>';
       }
 
+      // NOUVEAU (retour utilisateur) : montant affiché avec son signe et
+      // sa couleur — vert "+" pour une entrée, rouge "-" pour une sortie,
+      // exactement comme sur un vrai relevé bancaire.
+      const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
       const aDesCorrespondances = t.correspondances && t.correspondances.length > 0;
       return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF">' +
         '<div style="display:flex;justify-content:space-between;margin-bottom:8px">' +
           '<span style="font-size:12px;color:#6B5F54">' + escapeHTML(t.dateBrute) + ' · ' + escapeHTML(t.description) + '</span>' +
-          '<span style="font-weight:700;font-size:13px">' + fmt(t.montant) + ' MAD</span>' +
+          '<span style="font-weight:700;font-size:13px;color:' + couleurMontant + '">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</span>' +
         '</div>' +
         (aDesCorrespondances
           ? t.correspondances.map(function(f) {
@@ -590,7 +593,7 @@ function renderTransactionsReleve() {
               // neutre, pas comme un problème à corriger.
               const infoAcompte = f._dejaLiees > 0
                 ? '<div style="font-size:10px;color:#1F6F72;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
-                : (f._soldeRestant - t.montant > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - t.montant) + ' MAD après ce lien</div>' : '');
+                : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
               return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + infoAcompte + '</button>';
             }).join('')
           : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
@@ -614,7 +617,7 @@ async function confirmerRapprochementReleve(id, type, indexTransaction) {
   if (!doc) { showToast('Document introuvable', 'error'); return; }
 
   const montantRecuActuel = Number(doc.montant_recu) || 0;
-  const nouveauMontantRecu = Math.min(Number(doc.ttc) || 0, montantRecuActuel + t.montant);
+  const nouveauMontantRecu = Math.min(Number(doc.ttc) || 0, montantRecuActuel + Math.abs(t.montant));
   const soldeCouvert = (Number(doc.ttc) || 0) - nouveauMontantRecu <= 0.5;
   const listeTransactions = (doc.transactions_bancaires_liees || []).concat([refTransaction]);
 
@@ -679,8 +682,13 @@ function ouvrirRapprochementDepuisFacture(factureId, type) {
   // délibérément ouvert cette liste pour UNE facture précise — elle
   // doit tout voir.
   const candidats = transactionsDisponibles.map(function(t, idx) {
-    const s = _scoreGlobalCorrespondance(soldeRestant, t.montant, nomDoc, t.description, dateDoc, t.dateBrute, doc.ref || doc.ref_fournisseur, type || 'facture');
-    return { t: t, idx: idx, score: s.total, detail: s.detail };
+    // FIX (retour utilisateur) : le montant est signé (négatif=sortie,
+    // positif=entrée) — on compare toujours la valeur absolue pour le
+    // score, mais on vérifie aussi la cohérence du sens (une facture de
+    // vente attend une entrée, un achat attend une sortie).
+    const sensAttendu = type === 'achat' ? t.montant <= 0 : t.montant >= 0;
+    const s = _scoreGlobalCorrespondance(soldeRestant, Math.abs(t.montant), nomDoc, t.description, dateDoc, t.dateBrute, doc.ref || doc.ref_fournisseur, type || 'facture');
+    return { t: t, idx: idx, score: sensAttendu ? s.total : 0, detail: s.detail, sensIncoherent: !sensAttendu };
   }).sort(function(a, b) { return b.score - a.score; });
 
   const overlay = document.createElement('div');
@@ -692,14 +700,15 @@ function ouvrirRapprochementDepuisFacture(factureId, type) {
       '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🏦 Toutes les opérations bancaires</div>' +
       '<div style="font-size:12px;color:#9C9186;margin-bottom:14px">' + escapeHTML(doc.ref || doc.ref_fournisseur || '') + ' — solde restant : ' + fmt(soldeRestant) + ' MAD</div>' +
       candidats.map(function(c) {
-        const badge = c.detail.regle ? '🔒 Règle' : c.detail.reference >= 1 ? '🎯 Réf. trouvée' : c.score >= 0.75 ? '✓✓ Forte' : c.score >= 0.5 ? '✓ Probable' : c.score >= 0.15 ? '? Faible' : '— Aucun signal';
-        const couleurBadge = c.detail.regle || c.detail.reference >= 1 ? '#1F6F72' : c.score >= 0.75 ? '#1F6F72' : c.score >= 0.5 ? '#C9971F' : '#9C9186';
+        const badge = c.sensIncoherent ? '⚠️ Sens incohérent' : c.detail.regle ? '🔒 Règle' : c.detail.reference >= 1 ? '🎯 Réf. trouvée' : c.score >= 0.75 ? '✓✓ Forte' : c.score >= 0.5 ? '✓ Probable' : c.score >= 0.15 ? '? Faible' : '— Aucun signal';
+        const couleurBadge = c.sensIncoherent ? '#B23A2E' : c.detail.regle || c.detail.reference >= 1 ? '#1F6F72' : c.score >= 0.75 ? '#1F6F72' : c.score >= 0.5 ? '#C9971F' : '#9C9186';
+        const couleurMontant = c.t.montant >= 0 ? '#55702E' : '#B23A2E';
         return '<div style="border:1px solid #E3DCCF;border-radius:10px;padding:10px;margin-bottom:8px">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
             '<span style="font-size:11px;color:#6B5F54">' + escapeHTML(c.t.dateBrute) + '</span>' +
             '<span style="font-size:9px;font-weight:700;color:#fff;background:' + couleurBadge + ';padding:1px 6px;border-radius:6px">' + badge + '</span>' +
           '</div>' +
-          '<div style="font-size:12px;margin-bottom:6px">' + escapeHTML(c.t.description) + ' — <strong>' + fmt(c.t.montant) + ' MAD</strong></div>' +
+          '<div style="font-size:12px;margin-bottom:6px">' + escapeHTML(c.t.description) + ' — <strong style="color:' + couleurMontant + '">' + (c.t.montant >= 0 ? '+' : '') + fmt(c.t.montant) + ' MAD</strong></div>' +
           '<div style="display:flex;gap:6px">' +
             '<button onclick="confirmerRapprochementReleve(\'' + factureId + '\',\'' + (type||'facture') + '\',' + c.idx + ');document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="flex:1;padding:7px;background:#EEF3E4;color:#55702E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Lier</button>' +
             '<button onclick="ouvrirCreationRegle(' + c.idx + ',' + JSON.stringify(nomDoc) + ',' + JSON.stringify(type||'facture') + ')" style="padding:7px 10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">🔒 Créer une règle</button>' +
