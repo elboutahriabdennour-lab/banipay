@@ -574,6 +574,24 @@ function ouvrirDetailAchat(id) {
           '<div style="background:#F1EEE8;padding:12px;border-radius:10px;font-size:12px;color:#6B5F54">📄 ' + (a.pj_nom || 'Fichier') + '</div>') +
       '</div>' : '') +
 
+    // NOUVEAU (retour utilisateur) : historique des transactions
+    // bancaires déjà rapprochées avec cet achat, comme sur les factures.
+    ((a.transactions_bancaires_liees || []).length ?
+      '<div style="margin:0 16px 16px">' +
+        '<div style="font-size:12px;font-weight:700;color:#2A2420;margin-bottom:8px">🏦 Rapprochements bancaires (' + a.transactions_bancaires_liees.length + ')</div>' +
+        a.transactions_bancaires_liees.map(function(ref) {
+          const parts = String(ref).split('|');
+          return '<div style="background:#F5E4E1;border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:12px">' +
+            '<div style="display:flex;justify-content:space-between"><span style="color:#6B5F54">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#8E2E24">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
+            (parts[2] ? '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
+          '</div>';
+        }).join('') +
+      '</div>' : '') +
+
+    '<div style="padding:0 16px 8px">' +
+      '<button onclick="typeof ouvrirRapprochementDepuisFacture===\'function\' && ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" style="width:100%;padding:11px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher avec un relevé bancaire</button>' +
+    '</div>' +
+
     '<div style="padding:0 16px 20px;display:flex;gap:8px">' +
       '<button onclick="marquerAchatPaye(\'' + a.id + '\')" style="flex:1;padding:12px;background:' + (a.statut === 'payee' ? '#EAE4DA' : '#55702E') + ';color:' + (a.statut === 'payee' ? '#6B5F54' : '#fff') + ';border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">' + (a.statut === 'payee' ? '✓ Payée' : '✅ Marquer payée') + '</button>' +
       '<button onclick="supprimerAchat(\'' + a.id + '\')" style="padding:12px 16px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">🗑️</button>' +
