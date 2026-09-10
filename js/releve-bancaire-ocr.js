@@ -439,12 +439,21 @@ function _scoreGlobalCorrespondance(montantDoc, montantTransaction, nomDoc, desc
   // document correspond au nom_cible de la règle trouvée.
   const sRegle = (regle && _sansAccents(String(nomDoc||'').toLowerCase()).includes(_sansAccents(String(regle.nom_cible||'').toLowerCase()))) ? 1 : 0;
 
-  const base = sMontant * 0.45 + sNom * 0.25 + sDate * 0.15 + sReference * 0.15;
+  // FIX (retour utilisateur) : "la première règle à prendre : nom du
+  // fournisseur/client = nom du libellé de paiement" — le NOM est
+  // maintenant le signal prioritaire, pas le montant. Un même nom
+  // clairement retrouvé dans le libellé est en soi un très bon indice,
+  // même si le montant ne correspond pas exactement (accompte, écart de
+  // frais...). Le montant reste important mais vient renforcer le nom,
+  // pas l'inverse.
+  const base = sNom * 0.40 + sMontant * 0.30 + sDate * 0.15 + sReference * 0.15;
   // Référence et règle sont des signaux quasi certains : s'ils sont
   // présents, on relève fortement le plancher du score plutôt que de le
   // simplement additionner — pour qu'une référence exacte l'emporte
   // même face à un montant très différent (règlement partiel imprévu).
-  const total = Math.max(base, sReference >= 1 ? 0.85 : 0, sRegle >= 1 ? 0.8 : 0);
+  // Un nom parfaitement identique fait de même : c'est le critère
+  // prioritaire demandé, il doit pouvoir porter le score seul si besoin.
+  const total = Math.max(base, sReference >= 1 ? 0.85 : 0, sRegle >= 1 ? 0.8 : 0, sNom >= 1 ? 0.7 : 0);
 
   return {
     total: total,
@@ -587,6 +596,11 @@ function _construireRefTransaction(t) {
   return (t.dateBrute || '') + '|' + Math.abs(Number(t.montant) || 0).toFixed(2) + '|' + (t.description || '').slice(0, 60);
 }
 
+// NOUVEAU (retour utilisateur) : affichage décortiqué — date, libellé et
+// montant chacun dans leur propre "case" bien visible, plutôt qu'une
+// seule ligne de texte compacte. Zébrage sur 2 couleurs alternées
+// (papier clair / blanc) entre chaque transaction, pour bien distinguer
+// une ligne de la suivante d'un coup d'œil sur une longue liste.
 function renderTransactionsReleve() {
   const zone = el('rapprochement-releve-content');
   if (!zone) return;
@@ -597,37 +611,39 @@ function renderTransactionsReleve() {
   }
   zone.innerHTML = '<div style="padding:10px 20px;font-size:11px;color:#9C9186">Lecture automatique — à vérifier avant de confirmer. Certaines transactions peuvent manquer ou être mal reconnues selon la mise en page de votre banque.</div>' +
     transactions.map(function(t, i) {
-      // NOUVEAU (retour utilisateur) : signe visuel bidirectionnel — si
-      // cette transaction précise a déjà été liée à une facture/achat
-      // (recherchée dans la liste transactions_bancaires_liees), on
-      // l'affiche comme "déjà rapprochée" plutôt que de reproposer les
-      // mêmes boutons "Lier".
+      // Zébrage : couleur de fond de la "carte" alternée une ligne sur deux.
+      const fondZebre = i % 2 === 0 ? '#fff' : '#FBF9F5';
+
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = (STATE.factures || []).find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
         || (STATE.achats || []).find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
 
+      // Bloc "date + libellé" décortiqué en 2 cases distinctes,
+      // réutilisé aussi bien pour une transaction déjà traitée que pour
+      // une transaction encore à traiter.
+      function _blocDateLibelle() {
+        return '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+          '<div style="background:#F1EEE8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#6B5F54;white-space:nowrap">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
+          '<div style="background:#F1EEE8;border-radius:8px;padding:6px 10px;font-size:11px;color:#6B5F54;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ' + escapeHTML(t.description) + '</div>' +
+        '</div>';
+      }
+      const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
+      const blocMontant = '<div style="text-align:right;font-weight:800;font-size:15px;color:' + couleurMontant + '">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</div>';
+
       if (t._traitee || dejaLieeAvec) {
         const doc = dejaLieeAvec || {};
-        const estAchatDeja = !!doc.fournisseur;
-        return '<div style="background:#EEF3E4;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7">' +
-          '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
-            '<span style="font-size:12px;color:#55702E">' + escapeHTML(t.dateBrute) + ' · ' + escapeHTML(t.description) + '</span>' +
-            '<span style="font-weight:700;font-size:13px;color:#55702E">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</span>' +
-          '</div>' +
-          '<div style="font-size:12px;color:#55702E;font-weight:600">✅ Déjà rapprochée' + (doc.ref || doc.ref_fournisseur ? ' — ' + escapeHTML(doc.ref || doc.ref_fournisseur) : '') + '</div>' +
+        return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7;border-left:4px solid #6E8F4E">' +
+          _blocDateLibelle() +
+          blocMontant +
+          '<div style="font-size:12px;color:#55702E;font-weight:600;margin-top:6px">✅ Déjà rapprochée' + (doc.ref || doc.ref_fournisseur ? ' — ' + escapeHTML(doc.ref || doc.ref_fournisseur) : '') + '</div>' +
         '</div>';
       }
 
-      // NOUVEAU (retour utilisateur) : montant affiché avec son signe et
-      // sa couleur — vert "+" pour une entrée, rouge "-" pour une sortie,
-      // exactement comme sur un vrai relevé bancaire.
-      const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
       const aDesCorrespondances = t.correspondances && t.correspondances.length > 0;
-      return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:8px">' +
-          '<span style="font-size:12px;color:#6B5F54">' + escapeHTML(t.dateBrute) + ' · ' + escapeHTML(t.description) + '</span>' +
-          '<span style="font-weight:700;font-size:13px;color:' + couleurMontant + '">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</span>' +
-        '</div>' +
+      return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
+        _blocDateLibelle() +
+        blocMontant +
+        '<div style="margin-top:8px">' +
         (aDesCorrespondances
           ? t.correspondances.map(function(f) {
               const estAchat = f._type === 'achat';
@@ -637,21 +653,19 @@ function renderTransactionsReleve() {
               const badge = f._score >= 0.75 ? '<span style="background:#1F6F72;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓✓ Forte correspondance</span>'
                 : f._score >= 0.5 ? '<span style="background:#C9971F;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓ Correspondance probable</span>'
                 : '<span style="background:#9C9186;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">? À vérifier</span>';
-              // NOUVEAU (retour utilisateur) : un acompte ou un paiement
-              // en plusieurs fois est normal — au lieu d'un avertissement
-              // de doublon, indique simplement combien de transactions
-              // sont déjà liées et ce qu'il reste à recevoir, en info
-              // neutre, pas comme un problème à corriger.
+              // NOUVEAU (retour utilisateur) : détail du score par
+              // critère, pas juste un badge global — visible directement,
+              // pas une boîte noire.
+              const detailScore = f._detail
+                ? '<div style="font-size:9px;color:#9C9186;margin-top:3px">nom ' + Math.round((f._detail.nom||0)*100) + '% · montant ' + Math.round((f._detail.montant||0)*100) + '% · date ' + Math.round((f._detail.date||0)*100) + '%' + (f._detail.regle ? ' · 🔒 règle' : '') + (f._detail.reference >= 1 ? ' · 🎯 référence' : '') + '</div>'
+                : '';
               const infoAcompte = f._dejaLiees > 0
                 ? '<div style="font-size:10px;color:#1F6F72;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
                 : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
-              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + infoAcompte + '</button>';
+              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>';
             }).join('')
           : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
-        // NOUVEAU (retour utilisateur) : accès au rapprochement multiple
-        // directement depuis chaque transaction — utile quand un seul
-        // virement doit en fait couvrir plusieurs factures/achats à la
-        // fois (un client qui règle 3 factures d'un coup, par exemple).
+        '</div>' +
         '<button onclick="ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:7px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">🔗 Répartir sur plusieurs factures/achats</button>' +
       '</div>';
     }).join('');
@@ -666,27 +680,16 @@ function renderTransactionsReleve() {
 async function confirmerRapprochementReleve(id, type, indexTransaction) {
   const t = STATE._transactionsReleveActuel && STATE._transactionsReleveActuel[indexTransaction];
   if (!t) return;
-  const refTransaction = _construireRefTransaction(t);
-  const table = type === 'achat' ? 'factures_achat' : 'factures';
   const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
   const doc = collection.find(function(x) { return String(x.id) === String(id); });
   if (!doc) { showToast('Document introuvable', 'error'); return; }
 
-  const montantRecuActuel = Number(doc.montant_recu) || 0;
-  const nouveauMontantRecu = Math.min(Number(doc.ttc) || 0, montantRecuActuel + Math.abs(t.montant));
-  const soldeCouvert = (Number(doc.ttc) || 0) - nouveauMontantRecu <= 0.5;
-  const listeTransactions = (doc.transactions_bancaires_liees || []).concat([refTransaction]);
-
-  const maj = {
-    montant_recu: nouveauMontantRecu,
-    transactions_bancaires_liees: listeTransactions,
-  };
-  if (soldeCouvert) maj.statut = 'payee';
-
-  try {
-    await sb.patch(table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
-    Object.assign(doc, maj);
-  } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
+  // FIX (retour utilisateur) : passe maintenant par la même fonction
+  // partagée que le rapprochement multiple — une seule logique
+  // d'allocation dans tout le fichier, avec la même détection d'écart
+  // partout plutôt que deux implémentations qui pouvaient diverger.
+  const ecart = await _appliquerAllocationRapprochement(id, type, Math.abs(t.montant), t);
+  const soldeCouvert = (Number(doc.ttc) || 0) - (Number(doc.montant_recu) || 0) <= 0.5;
 
   if (STATE._transactionsReleveActuel && STATE._transactionsReleveActuel[indexTransaction]) {
     STATE._transactionsReleveActuel[indexTransaction].correspondances = [];
@@ -697,9 +700,14 @@ async function confirmerRapprochementReleve(id, type, indexTransaction) {
   // rechargement — il fallait tout refaire à chaque fois.
   if (STATE._releveActuelId) _sauvegarderTransactionsReleveLocal(STATE._releveActuelId, STATE._transactionsReleveActuel);
   renderTransactionsReleve();
-  showToast(soldeCouvert
-    ? (type === 'achat' ? '✅ Achat soldé' : '✅ Facture soldée')
-    : '✅ Paiement partiel enregistré — reste ' + fmt((Number(doc.ttc)||0) - nouveauMontantRecu) + ' MAD', 'success');
+
+  if (ecart) {
+    showToast('⚠️ Écart détecté : ce paiement dépasse de ' + fmt(ecart) + ' MAD ce qu\'il restait à payer — vérifiez si une autre facture est concernée', 'error');
+  } else {
+    showToast(soldeCouvert
+      ? (type === 'achat' ? '✅ Achat soldé' : '✅ Facture soldée')
+      : '✅ Paiement partiel enregistré — reste ' + fmt((Number(doc.ttc)||0) - (Number(doc.montant_recu)||0)) + ' MAD', 'success');
+  }
 }
 
 // ============================================================
@@ -977,25 +985,68 @@ async function confirmerRapprochementMultipleTransaction() {
 // Fonction partagée par les deux scénarios — applique une allocation
 // (potentiellement partielle) d'un virement vers UN document précis, et
 // journalise cette allocation dans son historique.
+// FIX (retour utilisateur) : le montant reçu était plafonné en silence
+// (Math.min) dès qu'une allocation dépassait ce qu'il restait à payer —
+// exactement le cas signalé : facture de 3, deux paiements de 2 chacun
+// (total 4) — le deuxième paiement était tronqué sans jamais dire que
+// 1 MAD ne correspond à rien de connu. Ça peut vouloir dire : ce
+// paiement couvre en fait DEUX factures (dont une pas encore
+// enregistrée ou pas rapprochée), ou c'est un trop-perçu réel.
+// Détecté maintenant explicitement, avec un écart mémorisé sur le
+// document — visible, mais jamais bloquant : la liaison se fait quand
+// même, l'entreprise vérifie et corrige à son rythme.
 async function _appliquerAllocationRapprochement(id, type, montantAlloue, transaction) {
   const table = type === 'achat' ? 'factures_achat' : 'factures';
   const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
   const doc = collection.find(function(x) { return String(x.id) === String(id); });
-  if (!doc) return;
+  if (!doc) return null;
 
   const refAllocation = (transaction.dateBrute||'') + '|' + montantAlloue.toFixed(2) + '|' + (transaction.description||'').slice(0,60);
   const montantRecuActuel = Number(doc.montant_recu) || 0;
+  const soldeAvantAllocation = (Number(doc.ttc) || 0) - montantRecuActuel;
+  const ecartDetecte = montantAlloue - soldeAvantAllocation; // > 0 = dépasse ce qu'il restait
   const nouveauMontantRecu = Math.min(Number(doc.ttc) || 0, montantRecuActuel + montantAlloue);
   const soldeCouvert = (Number(doc.ttc) || 0) - nouveauMontantRecu <= 0.5;
   const listeTransactions = (doc.transactions_bancaires_liees || []).concat([refAllocation]);
 
-  const maj = { montant_recu: nouveauMontantRecu, transactions_bancaires_liees: listeTransactions };
+  const maj = { montant_recu: nouveauMontantRecu, transactions_bancaires_liees: listeTransactions, statut_paiement_detail: soldeCouvert ? 'payee' : (nouveauMontantRecu > 0 ? 'partielle' : 'impayee') };
   if (soldeCouvert) maj.statut = 'payee';
+  // Écart mémorisé sur le document lui-même — reste visible tant que
+  // personne ne l'a explicitement effacé (voir ignorerEcartRapprochement).
+  if (ecartDetecte >= 1) maj.ecart_rapprochement = ecartDetecte;
 
   try {
     await sb.patch(table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
     Object.assign(doc, maj);
   } catch(e) { console.warn('_appliquerAllocationRapprochement:', e); }
+
+  return ecartDetecte >= 1 ? ecartDetecte : null;
+}
+
+// Statut de paiement lisible pour l'affichage — dérivé directement du
+// montant reçu, jamais stocké séparément pour éviter toute
+// désynchronisation entre les deux.
+function _statutPaiementLisible(doc) {
+  const ttc = Number(doc.ttc) || 0;
+  const recu = Number(doc.montant_recu) || 0;
+  if (recu <= 0.5) return { libelle: 'Impayée', couleur: '#B23A2E', fond: '#F5E4E1' };
+  if (ttc - recu <= 0.5) return { libelle: 'Payée', couleur: '#55702E', fond: '#EEF3E4' };
+  return { libelle: 'Payée partiellement', couleur: '#A67A16', fond: '#FBF0DA' };
+}
+
+// Efface un écart signalé une fois que l'entreprise l'a vérifié et
+// jugé normal (ex: un vrai trop-perçu accepté, ou une erreur déjà
+// corrigée ailleurs).
+async function ignorerEcartRapprochement(id, type) {
+  const table = type === 'achat' ? 'factures_achat' : 'factures';
+  const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+  const doc = collection.find(function(x) { return String(x.id) === String(id); });
+  if (!doc) return;
+  try {
+    await sb.patch(table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { ecart_rapprochement: null });
+    doc.ecart_rapprochement = null;
+    showToast('✅ Écart marqué comme vérifié', 'success');
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); }
 }
 
 // ------------------------------------------------------------
@@ -1077,16 +1128,75 @@ function _toggleSelectionRapprochementMultipleFacture(idxTransaction, montant, c
 async function confirmerRapprochementMultipleFacture() {
   const sel = STATE._selectionRapprochementMultipleFacture;
   if (!sel) return;
+  let dernierEcart = null;
   for (const idxStr in sel.coches) {
     const idx = parseInt(idxStr);
     const t = STATE._transactionsReleveActuel[idx];
     if (!t) continue;
-    await _appliquerAllocationRapprochement(sel.factureId, sel.type, Math.abs(t.montant), t);
+    const ecart = await _appliquerAllocationRapprochement(sel.factureId, sel.type, Math.abs(t.montant), t);
+    if (ecart) dernierEcart = ecart;
     t.correspondances = [];
     t._traitee = true;
   }
   if (STATE._releveActuelId) _sauvegarderTransactionsReleveLocal(STATE._releveActuelId, STATE._transactionsReleveActuel);
   document.getElementById('rapprochement-multiple-facture-overlay')?.remove();
   renderTransactionsReleve();
-  showToast('✅ Rapprochement multiple confirmé', 'success');
+  if (dernierEcart) {
+    showToast('⚠️ Écart détecté : ' + fmt(dernierEcart) + ' MAD en trop par rapport au solde — vérifiez si une autre facture est concernée', 'error');
+  } else {
+    showToast('✅ Rapprochement multiple confirmé', 'success');
+  }
+}
+
+// ============================================================
+// EXPORT COMPTABLE (retour utilisateur) — extraction des factures/achats
+// avec leur historique complet de paiements, prête à ouvrir dans un
+// tableur ou à importer dans un logiciel de comptabilité. Une ligne par
+// paiement lié, pas juste une ligne par facture, pour que l'écart
+// éventuel entre montant facturé et montant réellement encaissé/payé
+// reste visible ligne par ligne.
+// ============================================================
+function exporterRapprochementComptable() {
+  const lignes = [['Type', 'Référence', 'Client/Fournisseur', 'Date facture', 'Montant facture', 'Statut', 'Date paiement', 'Montant payé', 'Libellé banque', 'Écart détecté']];
+
+  function ajouterDocs(docs, type) {
+    (docs || []).forEach(function(doc) {
+      const nom = type === 'achat' ? doc.fournisseur : doc.client;
+      const ref = type === 'achat' ? doc.ref_fournisseur : doc.ref;
+      const statut = _statutPaiementLisible(doc).libelle;
+      const transactionsLiees = doc.transactions_bancaires_liees || [];
+      if (!transactionsLiees.length) {
+        lignes.push([type, ref||'', nom||'', doc.date_emission||doc.date_achat||'', fmt(doc.ttc||0), statut, '', '', '', doc.ecart_rapprochement ? fmt(doc.ecart_rapprochement) : '']);
+      } else {
+        transactionsLiees.forEach(function(refTrans, i) {
+          const parts = String(refTrans).split('|');
+          lignes.push([
+            type, ref||'', nom||'',
+            i === 0 ? (doc.date_emission||doc.date_achat||'') : '',
+            i === 0 ? fmt(doc.ttc||0) : '',
+            i === 0 ? statut : '',
+            parts[0]||'', fmt(Math.abs(parseFloat(parts[1])||0)), parts[2]||'',
+            i === 0 && doc.ecart_rapprochement ? fmt(doc.ecart_rapprochement) : ''
+          ]);
+        });
+      }
+    });
+  }
+
+  ajouterDocs(STATE.factures, 'facture');
+  ajouterDocs(STATE.achats, 'achat');
+
+  const csv = lignes.map(function(ligne) {
+    return ligne.map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'rapprochement_bancaire_' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+  showToast('✅ Export téléchargé — une ligne par paiement, prêt pour la comptabilité', 'success');
 }
