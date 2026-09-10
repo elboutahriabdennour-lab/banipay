@@ -592,6 +592,18 @@ async function reanalyserReleveDepuisZero(releveId) {
 // rapprocher" à chaque nouvel import du même relevé, obligeant à tout
 // refaire. Format maintenant strictement identique partout dans ce
 // fichier — voir aussi _appliquerAllocationRapprochement().
+// NOUVEAU (retour utilisateur) : centralise la question "où chercher ce
+// document" — côté entreprise (STATE.factures/achats) ou côté comptable
+// en train de consulter un client précis (CPT.currentFactures/Achats).
+// Réutilisée partout dans ce fichier pour éviter que chaque fonction
+// refasse ce choix elle-même et l'oublie côté comptable, comme c'était
+// le cas avant ce correctif.
+function _collectionActuelle(type) {
+  const estComptable = typeof CPT !== 'undefined' && CPT.role === 'comptable';
+  if (estComptable) return type === 'achat' ? (CPT.currentAchats || []) : (CPT.currentFactures || []);
+  return type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+}
+
 function _construireRefTransaction(t) {
   return (t.dateBrute || '') + '|' + Math.abs(Number(t.montant) || 0).toFixed(2) + '|' + (t.description || '').slice(0, 60);
 }
@@ -805,7 +817,7 @@ function renderTransactionsReleve() {
 async function confirmerRapprochementReleve(id, type, indexTransaction) {
   const t = STATE._transactionsReleveActuel && STATE._transactionsReleveActuel[indexTransaction];
   if (!t) return;
-  const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+  const collection = _collectionActuelle(type);
   const doc = collection.find(function(x) { return String(x.id) === String(id); });
   if (!doc) { showToast('Document introuvable', 'error'); return; }
 
@@ -1120,19 +1132,47 @@ async function confirmerRapprochementMultipleTransaction() {
 // Détecté maintenant explicitement, avec un écart mémorisé sur le
 // document — visible, mais jamais bloquant : la liaison se fait quand
 // même, l'entreprise vérifie et corrige à son rythme.
+// FIX (retour utilisateur) : côté comptable, une écriture directe sur
+// factures/factures_achat serait bloquée par les règles de sécurité
+// (cohérent avec le reste de l'app — lettrage, TVA passent déjà tous
+// par des fonctions dédiées, jamais par une modification directe).
+// Bascule donc automatiquement sur la fonction sécurisée côté base
+// quand c'est un comptable qui rapproche, sans rien changer côté
+// entreprise (qui garde son chemin direct habituel).
 async function _appliquerAllocationRapprochement(id, type, montantAlloue, transaction) {
-  const table = type === 'achat' ? 'factures_achat' : 'factures';
-  const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+  const estComptable = typeof CPT !== 'undefined' && CPT.role === 'comptable';
+  const collection = estComptable
+    ? (type === 'achat' ? (CPT.currentAchats || []) : (CPT.currentFactures || []))
+    : (type === 'achat' ? (STATE.achats || []) : (STATE.factures || []));
   const doc = collection.find(function(x) { return String(x.id) === String(id); });
   if (!doc) return null;
 
   const refAllocation = (transaction.dateBrute||'') + '|' + montantAlloue.toFixed(2) + '|' + (transaction.description||'').slice(0,60);
+
+  if (estComptable) {
+    try {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/comptable_appliquer_rapprochement', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_entreprise_id: CPT.currentEntrepriseId, p_doc_id: String(id), p_type: type, p_montant_alloue: montantAlloue, p_ref_transaction: refAllocation })
+      });
+      if (!r.ok) { showToast('⚠️ Rapprochement refusé — vérifiez votre accès à cette entreprise', 'error'); return null; }
+      const resultat = (await r.json())[0] || {};
+      doc.montant_recu = resultat.nouveau_montant_recu;
+      doc.statut = resultat.statut_final;
+      doc.transactions_bancaires_liees = (doc.transactions_bancaires_liees || []).concat([refAllocation]);
+      if (resultat.ecart_detecte) doc.ecart_rapprochement = resultat.ecart_detecte;
+      return resultat.ecart_detecte || null;
+    } catch(e) { showToast('Erreur: ' + e.message, 'error'); return null; }
+  }
+
   const montantRecuActuel = Number(doc.montant_recu) || 0;
   const soldeAvantAllocation = (Number(doc.ttc) || 0) - montantRecuActuel;
   const ecartDetecte = montantAlloue - soldeAvantAllocation; // > 0 = dépasse ce qu'il restait
   const nouveauMontantRecu = Math.min(Number(doc.ttc) || 0, montantRecuActuel + montantAlloue);
   const soldeCouvert = (Number(doc.ttc) || 0) - nouveauMontantRecu <= 0.5;
   const listeTransactions = (doc.transactions_bancaires_liees || []).concat([refAllocation]);
+  const table = type === 'achat' ? 'factures_achat' : 'factures';
 
   const maj = { montant_recu: nouveauMontantRecu, transactions_bancaires_liees: listeTransactions, statut_paiement_detail: soldeCouvert ? 'payee' : (nouveauMontantRecu > 0 ? 'partielle' : 'impayee') };
   if (soldeCouvert) maj.statut = 'payee';
@@ -1164,7 +1204,7 @@ function _statutPaiementLisible(doc) {
 // corrigée ailleurs).
 async function ignorerEcartRapprochement(id, type) {
   const table = type === 'achat' ? 'factures_achat' : 'factures';
-  const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+  const collection = _collectionActuelle(type);
   const doc = collection.find(function(x) { return String(x.id) === String(id); });
   if (!doc) return;
   try {
@@ -1333,11 +1373,15 @@ function exporterRapprochementComptable() {
 // (payée / partielle / impayée), et efface un éventuel écart signalé
 // pour le recalculer proprement au prochain rapprochement.
 // ============================================================
+// FIX (retour utilisateur) : même bascule que pour l'allocation — passe
+// par la fonction sécurisée côté base si c'est un comptable qui annule.
 async function annulerRapprochement(docId, type, indexTransaction) {
   if (!confirm('Annuler ce rapprochement ? La facture repassera dans son état précédent.')) return;
 
-  const table = type === 'achat' ? 'factures_achat' : 'factures';
-  const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+  const estComptable = typeof CPT !== 'undefined' && CPT.role === 'comptable';
+  const collection = estComptable
+    ? (type === 'achat' ? (CPT.currentAchats || []) : (CPT.currentFactures || []))
+    : (type === 'achat' ? (STATE.achats || []) : (STATE.factures || []));
   const doc = collection.find(function(x) { return String(x.id) === String(docId); });
   if (!doc) { showToast('Document introuvable', 'error'); return; }
 
@@ -1346,25 +1390,39 @@ async function annulerRapprochement(docId, type, indexTransaction) {
   const refTransaction = _construireRefTransaction(t);
 
   const listeActuelle = doc.transactions_bancaires_liees || [];
-  const nouvelleListe = listeActuelle.filter(function(ref) { return ref !== refTransaction; });
-  if (nouvelleListe.length === listeActuelle.length) {
+  if (!listeActuelle.includes(refTransaction)) {
     showToast('⚠️ Ce lien précis n\'a pas été retrouvé dans l\'historique — annulation impossible', 'error');
     return;
   }
-
   const montantAnnule = Math.abs(t.montant);
-  const nouveauMontantRecu = Math.max(0, (Number(doc.montant_recu) || 0) - montantAnnule);
-  const maj = {
-    montant_recu: nouveauMontantRecu,
-    transactions_bancaires_liees: nouvelleListe,
-    statut: nouveauMontantRecu >= (Number(doc.ttc)||0) - 0.5 ? 'payee' : (type === 'achat' ? 'attente' : 'envoyee'),
-    ecart_rapprochement: null, // remis à zéro — sera recalculé proprement si un nouveau lien dépasse encore
-  };
 
-  try {
-    await sb.patch(table, 'id=eq.' + docId + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
-    Object.assign(doc, maj);
-  } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
+  if (estComptable) {
+    try {
+      const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/comptable_annuler_rapprochement', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_entreprise_id: CPT.currentEntrepriseId, p_doc_id: String(docId), p_type: type, p_montant_a_retirer: montantAnnule, p_ref_transaction: refTransaction })
+      });
+      if (!r.ok) { showToast('⚠️ Annulation refusée — vérifiez votre accès à cette entreprise', 'error'); return; }
+      doc.montant_recu = Math.max(0, (Number(doc.montant_recu)||0) - montantAnnule);
+      doc.transactions_bancaires_liees = listeActuelle.filter(function(ref) { return ref !== refTransaction; });
+      doc.ecart_rapprochement = null;
+    } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
+  } else {
+    const table = type === 'achat' ? 'factures_achat' : 'factures';
+    const nouvelleListe = listeActuelle.filter(function(ref) { return ref !== refTransaction; });
+    const nouveauMontantRecu = Math.max(0, (Number(doc.montant_recu) || 0) - montantAnnule);
+    const maj = {
+      montant_recu: nouveauMontantRecu,
+      transactions_bancaires_liees: nouvelleListe,
+      statut: nouveauMontantRecu >= (Number(doc.ttc)||0) - 0.5 ? 'payee' : (type === 'achat' ? 'attente' : 'envoyee'),
+      ecart_rapprochement: null,
+    };
+    try {
+      await sb.patch(table, 'id=eq.' + docId + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
+      Object.assign(doc, maj);
+    } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
+  }
 
   // La transaction redevient disponible pour un nouveau rapprochement —
   // on recalcule ses correspondances pour qu'elle réapparaisse
