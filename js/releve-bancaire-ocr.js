@@ -596,6 +596,110 @@ function _construireRefTransaction(t) {
   return (t.dateBrute || '') + '|' + Math.abs(Number(t.montant) || 0).toFixed(2) + '|' + (t.description || '').slice(0, 60);
 }
 
+// NOUVEAU (retour utilisateur) : filtres sur l'écran de rapprochement —
+// statut de liaison, montant, nom d'entreprise associée, recherche libre
+// dans le libellé, et niveau de confiance. Les filtres se combinent tous
+// entre eux (ET logique), comme les filtres déjà en place ailleurs dans
+// l'app (écran Stats).
+STATE._filtreReleveStatut = STATE._filtreReleveStatut || 'tous';
+STATE._filtreReleveRecherche = STATE._filtreReleveRecherche || '';
+STATE._filtreReleveMontantMin = STATE._filtreReleveMontantMin || null;
+STATE._filtreReleveMontantMax = STATE._filtreReleveMontantMax || null;
+STATE._filtreReleveConfiance = STATE._filtreReleveConfiance || 'tous';
+
+// Retrouve, pour une transaction donnée, le document déjà lié s'il y en
+// a un — réutilisé à la fois par le filtre "Liées/Non liées" et par le
+// rendu de chaque ligne, pour ne calculer ça qu'une seule fois par appel.
+function _documentLieATransaction(t) {
+  const refTransaction = _construireRefTransaction(t);
+  return (STATE.factures || []).find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
+    || (STATE.achats || []).find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
+}
+
+function _appliquerFiltresReleve(transactionsAvecIndex) {
+  const q = _sansAccents(STATE._filtreReleveRecherche.toLowerCase().trim());
+  return transactionsAvecIndex.filter(function(item) {
+    const t = item.t;
+    const estLiee = !!(t._traitee || _documentLieATransaction(t));
+
+    if (STATE._filtreReleveStatut === 'liees' && !estLiee) return false;
+    if (STATE._filtreReleveStatut === 'non-liees' && estLiee) return false;
+
+    if (q && !_sansAccents((t.description||'').toLowerCase()).includes(q)) return false;
+
+    const montantAbs = Math.abs(t.montant);
+    if (STATE._filtreReleveMontantMin != null && montantAbs < STATE._filtreReleveMontantMin) return false;
+    if (STATE._filtreReleveMontantMax != null && montantAbs > STATE._filtreReleveMontantMax) return false;
+
+    if (STATE._filtreReleveConfiance !== 'tous' && !estLiee) {
+      const meilleurScore = (t.correspondances && t.correspondances.length) ? t.correspondances[0]._score : 0;
+      if (STATE._filtreReleveConfiance === 'forte' && meilleurScore < 0.75) return false;
+      if (STATE._filtreReleveConfiance === 'probable' && (meilleurScore < 0.5 || meilleurScore >= 0.75)) return false;
+      if (STATE._filtreReleveConfiance === 'faible' && meilleurScore >= 0.5) return false;
+      if (STATE._filtreReleveConfiance === 'aucune' && (t.correspondances && t.correspondances.length > 0)) return false;
+    }
+    return true;
+  });
+}
+
+function changerFiltreReleveStatut(valeur) { STATE._filtreReleveStatut = valeur; renderTransactionsReleve(); }
+function changerFiltreReleveConfiance(valeur) { STATE._filtreReleveConfiance = valeur; renderTransactionsReleve(); }
+function rechercherDansReleve(valeur) { STATE._filtreReleveRecherche = valeur; renderTransactionsReleve(); }
+function appliquerFiltreMontantReleve() {
+  const min = el('releve-filtre-montant-min')?.value;
+  const max = el('releve-filtre-montant-max')?.value;
+  STATE._filtreReleveMontantMin = min ? parseFloat(min) : null;
+  STATE._filtreReleveMontantMax = max ? parseFloat(max) : null;
+  renderTransactionsReleve();
+}
+function effacerFiltresReleve() {
+  STATE._filtreReleveStatut = 'tous';
+  STATE._filtreReleveRecherche = '';
+  STATE._filtreReleveMontantMin = null;
+  STATE._filtreReleveMontantMax = null;
+  STATE._filtreReleveConfiance = 'tous';
+  el('releve-filtre-recherche') && (el('releve-filtre-recherche').value = '');
+  el('releve-filtre-montant-min') && (el('releve-filtre-montant-min').value = '');
+  el('releve-filtre-montant-max') && (el('releve-filtre-montant-max').value = '');
+  el('releve-filtre-statut') && (el('releve-filtre-statut').value = 'tous');
+  el('releve-filtre-confiance') && (el('releve-filtre-confiance').value = 'tous');
+  renderTransactionsReleve();
+}
+
+function _barreFiltresReleve() {
+  return '<div style="padding:0 20px 10px">' +
+    // NOUVEAU (retour utilisateur) : accès direct à la gestion des
+    // règles apprises — jusqu'ici, aucun écran ne permettait de les
+    // revoir ou d'en supprimer une une fois créées.
+    '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">' +
+      '<span onclick="ouvrirGestionRegles()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">🔒 Gérer mes règles (' + (STATE.reglesRapprochement||[]).length + ')</span>' +
+    '</div>' +
+    '<input id="releve-filtre-recherche" class="f-inp" placeholder="🔍 Rechercher dans le libellé..." value="' + escapeHTML(STATE._filtreReleveRecherche) + '" oninput="rechercherDansReleve(this.value)" style="margin-bottom:8px">' +
+    '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+      '<select id="releve-filtre-statut" class="f-inp" style="flex:1" onchange="changerFiltreReleveStatut(this.value)">' +
+        '<option value="tous"' + (STATE._filtreReleveStatut==='tous'?' selected':'') + '>Toutes</option>' +
+        '<option value="liees"' + (STATE._filtreReleveStatut==='liees'?' selected':'') + '>Déjà liées</option>' +
+        '<option value="non-liees"' + (STATE._filtreReleveStatut==='non-liees'?' selected':'') + '>Non liées</option>' +
+      '</select>' +
+      '<select id="releve-filtre-confiance" class="f-inp" style="flex:1" onchange="changerFiltreReleveConfiance(this.value)">' +
+        '<option value="tous"' + (STATE._filtreReleveConfiance==='tous'?' selected':'') + '>Toute confiance</option>' +
+        '<option value="forte"' + (STATE._filtreReleveConfiance==='forte'?' selected':'') + '>✓✓ Forte</option>' +
+        '<option value="probable"' + (STATE._filtreReleveConfiance==='probable'?' selected':'') + '>✓ Probable</option>' +
+        '<option value="faible"' + (STATE._filtreReleveConfiance==='faible'?' selected':'') + '>? À vérifier</option>' +
+        '<option value="aucune"' + (STATE._filtreReleveConfiance==='aucune'?' selected':'') + '>Aucune correspondance</option>' +
+      '</select>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
+      '<input type="number" id="releve-filtre-montant-min" class="f-inp" placeholder="Montant min" value="' + (STATE._filtreReleveMontantMin!=null?STATE._filtreReleveMontantMin:'') + '" onchange="appliquerFiltreMontantReleve()" style="flex:1">' +
+      '<span style="font-size:12px;color:#9C9186">à</span>' +
+      '<input type="number" id="releve-filtre-montant-max" class="f-inp" placeholder="Montant max" value="' + (STATE._filtreReleveMontantMax!=null?STATE._filtreReleveMontantMax:'') + '" onchange="appliquerFiltreMontantReleve()" style="flex:1">' +
+    '</div>' +
+    ((STATE._filtreReleveStatut!=='tous'||STATE._filtreReleveRecherche||STATE._filtreReleveMontantMin!=null||STATE._filtreReleveMontantMax!=null||STATE._filtreReleveConfiance!=='tous')
+      ? '<span onclick="effacerFiltresReleve()" style="font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Effacer les filtres</span>'
+      : '') +
+  '</div>';
+}
+
 // NOUVEAU (retour utilisateur) : affichage décortiqué — date, libellé et
 // montant chacun dans leur propre "case" bien visible, plutôt qu'une
 // seule ligne de texte compacte. Zébrage sur 2 couleurs alternées
@@ -609,10 +713,27 @@ function renderTransactionsReleve() {
     zone.innerHTML = '<div class="empty"><div class="empty-ico">🏦</div><div class="empty-title">Aucune transaction</div></div>';
     return;
   }
-  zone.innerHTML = '<div style="padding:10px 20px;font-size:11px;color:#9C9186">Lecture automatique — à vérifier avant de confirmer. Certaines transactions peuvent manquer ou être mal reconnues selon la mise en page de votre banque.</div>' +
-    transactions.map(function(t, i) {
-      // Zébrage : couleur de fond de la "carte" alternée une ligne sur deux.
-      const fondZebre = i % 2 === 0 ? '#fff' : '#FBF9F5';
+
+  // FIX (retour utilisateur) : on garde l'INDICE D'ORIGINE de chaque
+  // transaction avant de filtrer — indispensable puisque les boutons
+  // "Lier"/"Répartir" appellent confirmerRapprochementReleve(id, type,
+  // index) avec cet indice dans le tableau complet STATE._transactionsReleveActuel,
+  // pas dans la liste filtrée affichée à l'écran.
+  const avecIndex = transactions.map(function(t, i) { return { t: t, indexOriginal: i }; });
+  const filtrees = _appliquerFiltresReleve(avecIndex);
+
+  zone.innerHTML = _barreFiltresReleve() +
+    '<div style="padding:0 20px 10px;font-size:11px;color:#9C9186">Lecture automatique — à vérifier avant de confirmer. Certaines transactions peuvent manquer ou être mal reconnues selon la mise en page de votre banque.' +
+      (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
+    '</div>' +
+    (!filtrees.length ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune transaction ne correspond à ces filtres</div></div>' :
+    filtrees.map(function(item, position) {
+      const t = item.t;
+      const i = item.indexOriginal;
+      // Zébrage : couleur de fond de la "carte" alternée une ligne sur deux
+      // (basé sur la position affichée, pas l'indice d'origine, pour que
+      // le zébrage reste cohérent même après filtrage).
+      const fondZebre = position % 2 === 0 ? '#fff' : '#FBF9F5';
 
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = (STATE.factures || []).find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
@@ -632,10 +753,14 @@ function renderTransactionsReleve() {
 
       if (t._traitee || dejaLieeAvec) {
         const doc = dejaLieeAvec || {};
+        const typeDoc = doc.fournisseur ? 'achat' : 'facture';
         return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7;border-left:4px solid #6E8F4E">' +
           _blocDateLibelle() +
           blocMontant +
-          '<div style="font-size:12px;color:#55702E;font-weight:600;margin-top:6px">✅ Déjà rapprochée' + (doc.ref || doc.ref_fournisseur ? ' — ' + escapeHTML(doc.ref || doc.ref_fournisseur) : '') + '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">' +
+            '<div style="font-size:12px;color:#55702E;font-weight:600">✅ Déjà rapprochée' + (doc.ref || doc.ref_fournisseur ? ' — ' + escapeHTML(doc.ref || doc.ref_fournisseur) : '') + '</div>' +
+            (doc.id ? '<button onclick="annulerRapprochement(\'' + doc.id + '\',\'' + typeDoc + '\',' + i + ')" style="font-size:10px;color:#B23A2E;background:none;border:1px solid #E0B6AC;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit">↩️ Annuler ce lien</button>' : '') +
+          '</div>' +
         '</div>';
       }
 
@@ -668,7 +793,7 @@ function renderTransactionsReleve() {
         '</div>' +
         '<button onclick="ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:7px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">🔗 Répartir sur plusieurs factures/achats</button>' +
       '</div>';
-    }).join('');
+    }).join(''));
 }
 
 // FIX (retour utilisateur) : gère maintenant correctement les paiements
@@ -1199,4 +1324,97 @@ function exporterRapprochementComptable() {
   document.body.removeChild(a);
   setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
   showToast('✅ Export téléchargé — une ligne par paiement, prêt pour la comptabilité', 'success');
+}
+
+// ============================================================
+// NOUVEAU (retour utilisateur) : possibilité d'annuler un rapprochement
+// déjà confirmé, si c'était une erreur — retire le montant précédemment
+// ajouté, retire la transaction de l'historique, recalcule le statut
+// (payée / partielle / impayée), et efface un éventuel écart signalé
+// pour le recalculer proprement au prochain rapprochement.
+// ============================================================
+async function annulerRapprochement(docId, type, indexTransaction) {
+  if (!confirm('Annuler ce rapprochement ? La facture repassera dans son état précédent.')) return;
+
+  const table = type === 'achat' ? 'factures_achat' : 'factures';
+  const collection = type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
+  const doc = collection.find(function(x) { return String(x.id) === String(docId); });
+  if (!doc) { showToast('Document introuvable', 'error'); return; }
+
+  const t = STATE._transactionsReleveActuel && STATE._transactionsReleveActuel[indexTransaction];
+  if (!t) { showToast('Transaction introuvable', 'error'); return; }
+  const refTransaction = _construireRefTransaction(t);
+
+  const listeActuelle = doc.transactions_bancaires_liees || [];
+  const nouvelleListe = listeActuelle.filter(function(ref) { return ref !== refTransaction; });
+  if (nouvelleListe.length === listeActuelle.length) {
+    showToast('⚠️ Ce lien précis n\'a pas été retrouvé dans l\'historique — annulation impossible', 'error');
+    return;
+  }
+
+  const montantAnnule = Math.abs(t.montant);
+  const nouveauMontantRecu = Math.max(0, (Number(doc.montant_recu) || 0) - montantAnnule);
+  const maj = {
+    montant_recu: nouveauMontantRecu,
+    transactions_bancaires_liees: nouvelleListe,
+    statut: nouveauMontantRecu >= (Number(doc.ttc)||0) - 0.5 ? 'payee' : (type === 'achat' ? 'attente' : 'envoyee'),
+    ecart_rapprochement: null, // remis à zéro — sera recalculé proprement si un nouveau lien dépasse encore
+  };
+
+  try {
+    await sb.patch(table, 'id=eq.' + docId + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
+    Object.assign(doc, maj);
+  } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
+
+  // La transaction redevient disponible pour un nouveau rapprochement —
+  // on recalcule ses correspondances pour qu'elle réapparaisse
+  // correctement dans la liste (pas juste "vide").
+  t._traitee = false;
+  t.correspondances = suggererRapprochements([t])[0].correspondances;
+  if (STATE._releveActuelId) _sauvegarderTransactionsReleveLocal(STATE._releveActuelId, STATE._transactionsReleveActuel);
+  renderTransactionsReleve();
+  showToast('✅ Rapprochement annulé — ' + fmt(montantAnnule) + ' MAD retiré(s)', 'success');
+}
+
+// ============================================================
+// NOUVEAU (retour utilisateur) : les règles apprises n'étaient
+// accessibles nulle part une fois créées — aucun écran pour les revoir
+// ou en supprimer une. Ce petit écran liste toutes les règles actuelles,
+// avec suppression possible.
+// ============================================================
+function ouvrirGestionRegles() {
+  const regles = STATE.reglesRapprochement || [];
+  const overlay = document.createElement('div');
+  overlay.id = 'gestion-regles-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:75vh;overflow-y:auto">' +
+      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:14px">🔒 Mes règles de rapprochement (' + regles.length + ')</div>' +
+      (regles.length ? regles.map(function(r, i) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;margin-bottom:6px">' +
+          '<div><div style="font-size:12px;font-weight:600">"' + escapeHTML(r.motif) + '"</div>' +
+          '<div style="font-size:11px;color:#9C9186">→ ' + escapeHTML(r.nom_cible) + ' (' + (r.type==='achat'?'achat':'facture') + ')</div></div>' +
+          '<button onclick="supprimerRegleRapprochement(' + r.id + ')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
+        '</div>';
+      }).join('') : '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucune règle créée pour l\'instant — vous pouvez en créer une depuis l\'écran de rapprochement, bouton "🔒 Créer une règle".</div>') +
+      '<button onclick="document.getElementById(\'gestion-regles-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:10px">Fermer</button>' +
+    '</div>';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+async function supprimerRegleRapprochement(regleId) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/regles_rapprochement?id=eq.' + regleId + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
+    });
+    STATE.reglesRapprochement = (STATE.reglesRapprochement || []).filter(function(r) { return r.id !== regleId; });
+    document.getElementById('gestion-regles-overlay')?.remove();
+    ouvrirGestionRegles();
+    showToast('✅ Règle supprimée', 'success');
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
 }
