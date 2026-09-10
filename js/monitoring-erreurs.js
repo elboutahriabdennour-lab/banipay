@@ -56,3 +56,13 @@ window.addEventListener('unhandledrejection', function(event) {
   const message = raison + '\n' + _contexteActuel();
   _envoyerAlerte('🔴 Erreur Zelto (async)', message);
 });
+
+// NOUVEAU (retour utilisateur) : déclencheur de test sans console — utile
+// sur un ordinateur professionnel où les outils développeur peuvent être
+// bloqués par la sécurité de l'entreprise. Il suffit de visiter l'app
+// avec ?test_monitoring=1 à la fin de l'adresse pour déclencher un test.
+if (new URLSearchParams(window.location.search).get('test_monitoring') === '1') {
+  setTimeout(function() {
+    _envoyerAlerte('🔴 Erreur Zelto', 'TEST DIAGNOSTIC MONITORING — déclenché par ?test_monitoring=1, ignorez ceci.\n' + _contexteActuel());
+  }, 800);
+}
