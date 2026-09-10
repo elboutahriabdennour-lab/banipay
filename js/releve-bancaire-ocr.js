@@ -1418,3 +1418,62 @@ async function supprimerRegleRapprochement(regleId) {
     showToast('Erreur: ' + e.message, 'error');
   }
 }
+
+// ============================================================
+// NOUVEAU (retour utilisateur) : export au format écritures comptables
+// en partie double (Journal, Date, Compte, Libellé, Débit, Crédit) —
+// compatible avec la plupart des logiciels de comptabilité, contrairement
+// à l'export simple précédent (exporterRapprochementComptable) qui
+// n'était qu'un tableau récapitulatif, pas de vraies écritures.
+//
+// Numéros de comptes standards utilisés par défaut (plan comptable
+// marocain / CGNC) : 5141 Banque, 3421 Clients, 4411 Fournisseurs.
+// Reste un point de départ générique — chaque cabinet peut avoir sa
+// propre numérotation ; à ajuster si besoin après import.
+// ============================================================
+const COMPTES_CGNC_DEFAUT = { banque: '5141', clients: '3421', fournisseurs: '4411' };
+
+function exporterEcrituresComptables() {
+  const lignes = [['Journal', 'Date', 'N° Compte', 'Libellé compte', 'Libellé écriture', 'Débit', 'Crédit', 'Référence pièce']];
+
+  (STATE.factures || []).forEach(function(f) {
+    (f.transactions_bancaires_liees || []).forEach(function(refTrans) {
+      const parts = String(refTrans).split('|');
+      const dateEcriture = parts[0] || f.date_emission || '';
+      const montant = Math.abs(parseFloat(parts[1]) || 0);
+      const libelleEcriture = 'Règlement facture ' + (f.ref||'') + ' — ' + (f.client||'');
+      lignes.push(['BQ', dateEcriture, COMPTES_CGNC_DEFAUT.banque, 'Banque', libelleEcriture, montant.toFixed(2), '0.00', f.ref||'']);
+      lignes.push(['BQ', dateEcriture, COMPTES_CGNC_DEFAUT.clients, 'Clients — ' + (f.client||''), libelleEcriture, '0.00', montant.toFixed(2), f.ref||'']);
+    });
+  });
+
+  (STATE.achats || []).forEach(function(a) {
+    (a.transactions_bancaires_liees || []).forEach(function(refTrans) {
+      const parts = String(refTrans).split('|');
+      const dateEcriture = parts[0] || a.date_achat || '';
+      const montant = Math.abs(parseFloat(parts[1]) || 0);
+      const libelleEcriture = 'Règlement achat ' + (a.ref_fournisseur||'') + ' — ' + (a.fournisseur||'');
+      lignes.push(['BQ', dateEcriture, COMPTES_CGNC_DEFAUT.fournisseurs, 'Fournisseurs — ' + (a.fournisseur||''), libelleEcriture, montant.toFixed(2), '0.00', a.ref_fournisseur||'']);
+      lignes.push(['BQ', dateEcriture, COMPTES_CGNC_DEFAUT.banque, 'Banque', libelleEcriture, '0.00', montant.toFixed(2), a.ref_fournisseur||'']);
+    });
+  });
+
+  if (lignes.length <= 1) {
+    showToast('⚠️ Aucun rapprochement bancaire à exporter pour l\'instant', 'error');
+    return;
+  }
+
+  const csv = lignes.map(function(ligne) {
+    return ligne.map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ecritures_comptables_' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
+  showToast('✅ Écritures comptables exportées — ' + (lignes.length-1) + ' ligne(s), en partie double', 'success');
+}
