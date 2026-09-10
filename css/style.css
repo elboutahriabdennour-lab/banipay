@@ -1,63 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
-
-/* ============================================================
-   BANIPAY — Design system "chaleureux marocain"
-   Safran (marque) · Zellige (secondaire) · Brique (danger) ·
-   Sauge (succès) · Sable (fond) · Encre (texte)
-   ============================================================ */
-:root{
-  --ink:#2A2420;           /* texte principal, encre chaude */
-  --ink-soft:#6B5F54;      /* texte atténué, taupe chaud */
-  --ink-faint:#9C9186;     /* texte le plus discret */
-  --paper:#F1EEE8;         /* fond d'application, sable neutre */
-  --surface:#FFFFFF;       /* cartes, surfaces */
-  --border:#E3DCCF;        /* bordures, sable */
-  --border-dash:#CDBEA0;   /* bordures pointillées */
-
-  --safran:#C9971F;        /* marque principale (remplace le bleu) */
-  --safran-dark:#A67A16;
-  --safran-light:#FBF0DA;  /* fond teinté safran clair */
-
-  --zellige:#1F6F72;       /* secondaire — "le peu de bleu" (sarcelle) */
-  --zellige-dark:#154F52;
-  --zellige-light:#E9F4F3;
-
-  --brique:#B23A2E;        /* danger / refus */
-  --brique-dark:#8E2E24;
-  --brique-light:#F5E4E1;
-
-  --sauge:#6E8F4E;         /* succès / payé / accepté */
-  --sauge-dark:#55702E;
-  --sauge-light:#EEF3E4;
-
-  --ambre:#B8860B;         /* attention / en attente */
-  --ambre-light:#F7EFDC;
-
-  --plum:#7C5CA6;          /* accent tertiaire (TVA, comptable) */
-  --plum-light:#EDE6F0;
-
-  --charcoal:#241F1B;      /* fonds sombres (topbar, hero, PDF) */
-}
-
+:root{--ink:#2A2420;--ink-soft:#6B5F54;--ink-faint:#9C9186;--paper:#F1EEE8;--surface:#FFFFFF;--border:#E3DCCF;--border-dash:#CDBEA0;--safran:#C9971F;--safran-dark:#A67A16;--safran-light:#FBF0DA;--zellige:#1F6F72;--zellige-dark:#154F52;--zellige-light:#E9F4F3;--brique:#B23A2E;--brique-dark:#8E2E24;--brique-light:#F5E4E1;--sauge:#6E8F4E;--sauge-dark:#55702E;--sauge-light:#EEF3E4;--ambre:#B8860B;--ambre-light:#F7EFDC;--plum:#7C5CA6;--plum-light:#EDE6F0;--charcoal:#241F1B;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 .screen{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;background:var(--paper);-webkit-overflow-scrolling:touch}
 .screen.active{display:block}
-/* Écran de chat ticket : disposition en colonne pour que la zone de
-   saisie reste fixée en bas et que les messages remplissent l'espace
-   restant, au lieu du simple défilement de page utilisé partout ailleurs. */
 #screen-chat-ticket.active{display:flex;flex-direction:column}
-
-
-
-/* Titres et marque : Baloo 2, ronde et chaleureuse — c'est la signature
-   typographique de l'app, utilisée avec retenue sur les éléments clés */
-.topbar-brand,.auth-logo h1,.hero-amount,.p-nom-big,.form-title,.sec-title,
-.d-client,.d-amount,.modal-title,.card-name,.detail-top .d-client{
-  font-family:'Baloo 2',-apple-system,sans-serif;
-}
-
-/* AUTH */
+.topbar-brand,.auth-logo h1,.hero-amount,.p-nom-big,.form-title,.sec-title,.d-client,.d-amount,.modal-title,.card-name,.detail-top .d-client{font-family:'Baloo 2',-apple-system,sans-serif;}
 #screen-auth.active{display:flex;justify-content:center;background:var(--charcoal);padding:24px;min-height:100vh;overflow-y:auto}
 .auth-wrap{width:100%;max-width:400px;margin:auto 0}
 .auth-logo{text-align:center;margin-bottom:28px}
@@ -82,16 +30,12 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .pwd-bar{height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden}
 .pwd-fill{height:100%;border-radius:2px;transition:all 0.3s}
 .pwd-hint{font-size:11px;color:var(--ink-faint);margin-top:4px;min-height:16px}
-
-/* TOPBAR */
 .topbar{background:linear-gradient(135deg,var(--charcoal),var(--zellige-dark));padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
 .topbar-brand{font-size:20px;font-weight:700;color:#fff}
 .topbar-brand span{color:var(--safran)}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .t-avatar{width:34px;height:34px;border-radius:50%;background:var(--safran);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0}
 .t-icon{font-size:16px;cursor:pointer;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-
-/* HERO */
 .hero{background:linear-gradient(160deg,var(--charcoal),var(--zellige-dark) 130%);padding:4px 20px 20px}
 .hero-lbl{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
 .hero-amount{font-size:32px;font-weight:700;color:#fff;margin-bottom:4px}
@@ -101,33 +45,22 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .hero-box-val{font-size:14px;font-weight:700}
 .hero-box-val.g{color:#9CBB7A}.hero-box-val.o{color:#E0AE5C}.hero-box-val.r{color:#D98177}
 .hero-box-lbl{font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px}
-
-/* ALERT */
 .alerte-bar{background:var(--brique-light);border-left:3px solid var(--brique);padding:10px 16px;margin:12px 20px;border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer}
 .alerte-bar.hidden{display:none}
 .alerte-text{font-size:12px;color:var(--brique-dark);font-weight:600}
 .alerte-action{font-size:12px;color:var(--brique-dark);font-weight:700;margin-left:auto}
-
-/* SECTION */
 .sec-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);padding:16px 20px 10px}
 .sec-header{background:linear-gradient(135deg,var(--charcoal),var(--zellige-dark));padding:14px 20px}
 .sec-title{font-size:16px;font-weight:700;color:#fff}
 .sec-action{font-size:12px;font-weight:600;color:var(--safran);cursor:pointer}
-
-/* QUICK ACTIONS */
 .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px}
 .qa-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:8px 4px}
 .qa-ico{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
 .qa-lbl{font-size:10px;font-weight:600;color:var(--ink-soft);text-align:center}
-
-/* NOUVEAU (retour utilisateur) : refonte accueil — recherche, actions
-   principales distinctes, sections regroupées et nommées en minuscules
-   (pas de majuscules génériques). */
 .accueil-recherche{margin:14px 20px 4px;position:relative}
 .accueil-recherche input{width:100%;padding:12px 16px 12px 42px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);font-size:14px;font-family:inherit;color:var(--ink)}
 .accueil-recherche input::placeholder{color:var(--ink-soft)}
 .accueil-recherche .rc-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;opacity:0.6}
-
 .actions-principales{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 20px 4px}
 .action-principale{display:flex;align-items:center;gap:10px;padding:16px 14px;border-radius:16px;cursor:pointer;color:#fff}
 .action-principale.safran{background:linear-gradient(135deg,#C9971F,#B8860B)}
@@ -135,10 +68,7 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .action-principale .ap-ico{font-size:24px}
 .action-principale .ap-txt{font-size:14px;font-weight:700}
 .action-principale .ap-sub{font-size:10px;opacity:0.85;font-weight:500}
-
 .groupe-label{font-size:12px;font-weight:700;color:var(--ink);padding:18px 20px 8px}
-
-/* CARDS */
 .card-list{padding:0 20px;display:flex;flex-direction:column;gap:8px}
 .card{background:var(--surface);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border:1px solid var(--border);box-shadow:0 1px 3px rgba(42,36,32,0.05);transition:opacity 0.15s}
 .card:active{opacity:0.88}
@@ -154,15 +84,11 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .b-retard,.b-refuse{background:var(--brique-light);color:var(--brique-dark)}
 .b-accepte{background:var(--sauge-light);color:var(--sauge-dark)}
 .b-converti{background:var(--zellige-light);color:var(--zellige-dark)}
-
-/* FILTER TABS */
 .filter-tabs{display:flex;gap:6px;padding:0 20px 12px;overflow-x:auto;scrollbar-width:none}
 .filter-tabs::-webkit-scrollbar{display:none}
 .ftab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s}
 .ftab.active{background:var(--safran);color:#fff}
 .ftab:not(.active){background:var(--border);color:var(--ink-soft)}
-
-/* BOTTOM NAV */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:10px 20px 20px;z-index:50}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
 .nav-ico{font-size:20px}
@@ -170,15 +96,9 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .nav-item.active .nav-lbl{color:var(--safran-dark)}
 .nav-fab{flex:1;display:flex;justify-content:center}
 .fab{width:50px;height:50px;background:linear-gradient(135deg,var(--safran),var(--safran-dark));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;margin-top:-16px;box-shadow:0 4px 12px rgba(201,151,31,0.35);cursor:pointer;border:none;font-family:inherit}
-
-/* FORM */
 .form-header{background:linear-gradient(135deg,var(--charcoal),var(--safran-dark));padding:16px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;color:#fff}
 .back-btn{width:36px;height:36px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:none;font-family:inherit;flex-shrink:0;color:var(--ink);transition:transform 0.15s ease,background 0.15s ease}
 .back-btn:active{transform:scale(0.9)}
-/* Sur fond sombre (topbar), le bouton retour bascule automatiquement en
-   version translucide blanche — plus besoin de répéter un style en ligne
-   sur chaque bouton, écran par écran : une seule règle, cohérente
-   partout. */
 .topbar .back-btn{background:rgba(255,255,255,0.16);color:#fff;margin-right:10px}
 .topbar .back-btn:active{background:rgba(255,255,255,0.28)}
 .form-title{font-size:18px;font-weight:700;color:var(--ink)}
@@ -188,15 +108,11 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .f-inp:focus{border-color:var(--safran);background:#fff}
 .f-inp::placeholder{color:var(--ink-faint)}
 .f-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-/* LIGNES */
 .ligne-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .ligne-desc{flex:1;font-size:13px;color:var(--ink);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ligne-amt{font-size:13px;font-weight:700;color:var(--ink);flex-shrink:0}
 .ligne-del{font-size:16px;color:var(--ink-faint);cursor:pointer;background:none;border:none;flex-shrink:0}
 .add-ligne{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px 14px;border:1.5px dashed var(--border-dash);border-radius:10px;cursor:pointer;color:var(--zellige-dark);font-size:13px;font-weight:600;background:none;font-family:inherit}
-
-/* TOTAL */
 .total-recap{background:var(--charcoal);border-radius:12px;padding:16px;margin:0 20px 16px}
 .tr-row{display:flex;justify-content:space-between;padding:4px 0}
 .tr-lbl{font-size:12px;color:rgba(255,255,255,0.5)}
@@ -204,16 +120,12 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .tr-sep{height:1px;background:rgba(255,255,255,0.1);margin:8px 0}
 .tr-row.main .tr-lbl{font-size:13px;color:#fff;font-weight:700}
 .tr-row.main .tr-val{font-size:18px;color:var(--safran);font-weight:800}
-
-/* SEND BTNS */
 .send-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 20px}
 .s-btn{border:none;border-radius:10px;padding:14px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
 .s-btn.blue{background:var(--safran);color:#fff}
 .s-btn.gray{background:var(--border);color:var(--ink)}
 .s-btn.green{background:var(--sauge);color:#fff}
 .s-btn.red{background:var(--brique);color:#fff}
-
-/* DETAIL */
 .detail-top{background:linear-gradient(160deg,var(--charcoal),var(--zellige-dark));padding:20px}
 .d-back{display:flex;align-items:center;gap:8px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px}
 .d-client{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
@@ -232,8 +144,6 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .action-item.danger{color:var(--brique-dark);border-left-color:var(--brique)}
 .action-item.whatsapp{color:#25D366;border-left-color:#25D366}
 .action-ico{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-
-/* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(42,36,32,0.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
 .modal-overlay.active{display:flex}
 .modal{background:var(--surface);border-radius:20px 20px 0 0;padding:20px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto}
@@ -243,13 +153,9 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .m-inp:focus{border-color:var(--safran);background:#fff}
 .m-btn{width:100%;padding:14px;background:var(--safran);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px}
 .m-btn-sec{width:100%;padding:12px;background:none;color:var(--ink-faint);border:none;border-radius:10px;font-size:13px;font-family:inherit;cursor:pointer}
-
-/* EMPTY */
 .empty{text-align:center;padding:40px 20px;color:var(--ink-faint)}
 .empty-ico{font-size:40px;margin-bottom:12px}
 .empty-title{font-size:15px;font-weight:700;color:var(--ink-soft);margin-bottom:6px}
-
-/* PROFIL */
 .profil-hero{background:linear-gradient(160deg,var(--charcoal),var(--zellige-dark));padding:20px;display:flex;align-items:center;gap:16px}
 .profil-av{width:56px;height:56px;border-radius:14px;background:var(--safran);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;flex-shrink:0}
 .p-nom-big{font-size:18px;font-weight:700;color:#fff}
@@ -264,44 +170,18 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .p-btn{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid var(--border);font-size:14px;font-weight:600;font-family:inherit;width:100%;text-align:left;margin-bottom:10px;color:var(--ink)}
 .p-btn.danger{color:var(--brique-dark)}
 .p-btn.blue{color:var(--zellige-dark)}
-
-/* TOAST */
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--charcoal);color:#fff;padding:12px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:200;transition:transform 0.3s;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
-
-/* SPACING */
 .pb{height:100px}
-
-/* NOTIFICATIONS */
 .notif-item{display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);align-items:flex-start}
 .notif-item.notif-unread{background:var(--safran-light)}
 .notif-ico{font-size:20px;flex-shrink:0;margin-top:2px}
 .notif-body{flex:1;min-width:0}
 .notif-title{font-size:13px;font-weight:700;color:var(--ink)}
 .notif-msg{font-size:12px;color:var(--ink-soft);margin-top:2px;line-height:1.4}
-
 #screen-comptable.active{display:flex!important;flex-direction:column}
 .bottom-nav{display:none}
-
 #screen-chat.active{display:flex!important;flex-direction:column}
-
-/* ============================================================
-   MODE SOMBRE — variante chaude assombrie, mêmes accents
-   ============================================================ */
-body.dark{
-  --ink:#F1EEE8;
-  --ink-soft:#C7BBAC;
-  --ink-faint:#8A7E72;
-  --paper:#1C1815;
-  --surface:#28221D;
-  --border:#3A332C;
-  --border-dash:#4A4237;
-  --safran-light:#3A2F1A;
-  --zellige-light:#17302F;
-  --brique-light:#3A211D;
-  --sauge-light:#26301C;
-  --ambre-light:#332B18;
-  --plum-light:#2A2333;
-}
+body.dark{--ink:#F1EEE8;--ink-soft:#C7BBAC;--ink-faint:#8A7E72;--paper:#1C1815;--surface:#28221D;--border:#3A332C;--border-dash:#4A4237;--safran-light:#3A2F1A;--zellige-light:#17302F;--brique-light:#3A211D;--sauge-light:#26301C;--ambre-light:#332B18;--plum-light:#2A2333;}
 body.dark .a-inp,body.dark .f-inp,body.dark .m-inp{background:var(--surface)}
 body.dark .card,body.dark .d-card,body.dark .p-card,body.dark .ligne-item,body.dark .action-item,body.dark .p-btn{background:var(--surface)}
