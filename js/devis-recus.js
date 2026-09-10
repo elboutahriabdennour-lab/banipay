@@ -87,11 +87,16 @@ function renderDevisRecusAcceptes() {
 async function supprimerDevisRecu(notifId) {
   if (!confirm('Retirer ce devis de la liste ?')) return;
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
+    // FIX (audit workflow) : même anti-pattern trouvé partout dans cet
+    // audit — sans vérifier r.ok, le devis disparaissait de l'écran même
+    // si la notification correspondante n'était pas réellement marquée
+    // comme lue en base (elle aurait pu réapparaître plus tard).
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_id: notifId })
     });
+    if (!r.ok) { showToast('Erreur — réessayez', 'error'); return; }
     STATE.devisRecusAcceptes = (STATE.devisRecusAcceptes || []).filter(function(x) { return x.notifId !== notifId; });
     renderDevisRecusAcceptes();
     showToast('Retiré de la liste', 'success');
