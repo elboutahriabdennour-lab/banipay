@@ -186,7 +186,11 @@ function renderDetailDevis() {
   setEl('dv-amount', fmt(d.ttc)+' '+dv+' TTC');
   setEl('dv-ref', `${d.ref} · ${d.date_emission||''} · Validité: ${d.validite||30}j`);
   const lignesEl = el('dv-lignes');
-  if (lignesEl) lignesEl.innerHTML = (d.lignes||[]).map(l=>`
+  // FIX (même bug que factures.js/renderDetail) : garde contre des lignes
+  // stockées comme texte JSON brut plutôt qu'un vrai tableau — sans ça,
+  // .map() plante et arrête tout le reste de l'affichage (totaux, actions).
+  const lignesDevis = typeof d.lignes === 'string' ? JSON.parse(d.lignes || '[]') : (d.lignes || []);
+  if (lignesEl) lignesEl.innerHTML = lignesDevis.map(l=>`
     <div class="d-ligne">
       <div><div style="font-size:13px;font-weight:500">${l.desc}</div><div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div></div>
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
@@ -667,7 +671,7 @@ async function convertirFactureEnAchat(factureId) {
       categorie: 'autre',
       statut: 'attente',
       note: 'Importée automatiquement depuis la facture ' + (facture.ref || '') + ' de ' + (fournisseurProfil.raison || ''),
-      lignes: (facture.lignes || []).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u' }; }),
+      lignes: (typeof facture.lignes === 'string' ? JSON.parse(facture.lignes || '[]') : (facture.lignes || [])).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u' }; }),
       pj_data: null,
     };
 
@@ -712,7 +716,7 @@ function renderBCRecus() {
   container.innerHTML = !bcs.length
     ? '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucun bon de commande reçu</div></div>'
     : bcs.map(function(bc) {
-        const ht = (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
+        const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes||[])).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
         const dejaConverti = bc.facture_generee_id ? true : false;
         return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +
           '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
@@ -736,7 +740,7 @@ async function convertirBCEnFacture(bcId) {
     });
     const profils = await rp.json();
     const client = (profils && profils[0]) || {};
-    const ht = (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
+    const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes||[])).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
 
     const facture = {
       user_id: (STATE.entrepriseId || sb.user.id),
@@ -746,7 +750,7 @@ async function convertirBCEnFacture(bcId) {
       date_emission: today(),
       paiement: 'virement',
       statut: 'envoyee',
-      lignes: (bc.lignes||[]).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u', produit_id: l.produit_id || null }; }),
+      lignes: (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes||[])).map(function(l) { return { desc: l.desc, qte: l.qte, pu: l.pu, unite: l.unite || 'u', produit_id: l.produit_id || null }; }),
       ht: ht, tva: ht*0.2, ttc: ht*1.2,
       bc_id: bc.id,
       devise: 'MAD', montant_recu: 0,
@@ -758,7 +762,7 @@ async function convertirBCEnFacture(bcId) {
     if (r && r.length) {
       STATE.factures.unshift(r[0]);
       bc.facture_generee_id = r[0].id;
-      if (typeof decrementerStockDepuisLignes === 'function') await decrementerStockDepuisLignes(facture.lignes, facture.ref);
+      if (typeof decrementerStockDepuisLignes === 'function') await decrementerStockDepuisLignes(typeof facture.lignes === 'string' ? JSON.parse(facture.lignes || '[]') : (facture.lignes || []), facture.ref);
       try {
         await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_bc_converti', {
           method: 'POST',
@@ -793,7 +797,7 @@ function renderBonsCommandeListe() {
   const statutLabel = { brouillon: 'Brouillon', envoye: 'Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé' };
   const statutColor = { brouillon: '#9C9186', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
   list.innerHTML = bcs.map(function(bc) {
-    const ht = (bc.lignes || []).reduce(function(s, l) { return s + (l.qte||1)*(l.pu||0); }, 0);
+    const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes || [])).reduce(function(s, l) { return s + (l.qte||1)*(l.pu||0); }, 0);
     const enSelection = typeof estEnSelection === 'function' && estEnSelection('bc');
     return '<div class="card" style="align-items:flex-start" onclick="' + (enSelection ? 'toggleSelectionItem(' + bc.id + ')' : 'voirBonCommande(' + bc.id + ')') + '">' +
       (typeof checkboxSelection === 'function' ? checkboxSelection('bc', bc.id) : '') +
@@ -826,7 +830,7 @@ async function supprimerBonCommande(id) {
 function voirBonCommande(id) {
   const bc = (STATE.bonsCommande || []).find(function(x) { return x.id === id; });
   if (!bc) return;
-  STATE.lignesBC = bc.lignes || [];
+  STATE.lignesBC = typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes || []);
   el('bc-fournisseur') && (el('bc-fournisseur').value = bc.fournisseur || '');
   el('bc-fournisseur-id') && (el('bc-fournisseur-id').value = bc.fournisseur_id || '');
   el('bc-ref') && (el('bc-ref').value = bc.ref || '');
