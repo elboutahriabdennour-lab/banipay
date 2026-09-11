@@ -925,7 +925,7 @@ function renderCptDocuments() {
   list.innerHTML =
     '<div style="padding:10px 16px;font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase">📋 Bons de commande (' + bcs.length + ')</div>' +
     (bcs.length ? bcs.map(function(bc) {
-      const ht = (bc.lignes||[]).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
+      const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes||[])).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #F1EEE8">' +
         '<div><div style="font-size:12px;font-weight:700">' + escapeHTML(bc.fournisseur||'') + '</div><div style="font-size:11px;color:#9C9186">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div></div>' +
         '<div style="text-align:right"><div style="font-size:12px;font-weight:700">' + fmt(ht*1.2) + ' MAD</div><div style="font-size:10px;font-weight:600;color:' + (statutColorBC[bc.statut]||'#9C9186') + '">' + (statutLabelBC[bc.statut]||bc.statut) + '</div></div>' +
