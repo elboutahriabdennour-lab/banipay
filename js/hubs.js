@@ -91,7 +91,7 @@ function renderHubVentes() {
     ]) +
     _tuileHub('📥', 'Demandes de devis', demandesNouvelles ? demandesNouvelles + ' nouvelle(s)' : 'Aucune nouvelle', null, 'var(--safran-dark)', 'var(--safran-light)', "loadDemandesDevis();goScreen('demandes-devis',null)", demandesNouvelles || null) +
     _tuileHub('📝', 'Devis', devisListe.length + ' devis', null, 'var(--safran-dark)', 'var(--safran-light)', "goScreen('devis-list',null)") +
-    _tuileHub('🧾', 'Factures', factures.length + ' facture(s)', fmt(totalCA) + ' MAD', 'var(--sauge-dark)', 'var(--sauge-light)', "goScreen('dashboard',null)") +
+    _tuileHub('🧾', 'Factures', factures.length + ' facture(s)', fmt(totalCA) + ' MAD', 'var(--sauge-dark)', 'var(--sauge-light)', "renderFactureList();goScreen('mes-factures',null)") +
     _tuileHub('📋', 'Bons de commande reçus', bcNonConvertis ? bcNonConvertis + ' à convertir' : 'Tous traités', null, 'var(--plum)', 'var(--plum-light)', "loadBCRecus();goScreen('bc-recus',null)", bcNonConvertis || null) +
     _tuileHub('📦', 'Bons de livraison', bl.length + ' BL envoyé(s)', null, 'var(--zellige-dark)', 'var(--zellige-light)', "goScreen('bons-livraison-list',null)");
 }
