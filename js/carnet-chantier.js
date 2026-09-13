@@ -23,7 +23,7 @@ function renderSelecteurChantier() {
   const select = el('carnet-chantier-select');
   if (!select) return;
   const noms = listerNomsChantiers();
-  select.innerHTML = '<option value="">— Choisir un chantier —</option>' +
+  select.innerHTML = '<option value="">— Choisir un chantier / projet —</option>' +
     noms.map(function(n) { return '<option value="' + escapeHTML(n) + '"' + (n === STATE._chantierSelectionne ? ' selected' : '') + '>' + escapeHTML(n) + '</option>'; }).join('');
 }
 
