@@ -9,7 +9,7 @@ async function loadAchats() {
     const uid = STATE.entrepriseId || sb.user?.id;
     if (!uid) return;
     const r = await sb.get('factures_achat', 'user_id=eq.' + uid + '&order=date_achat.desc');
-    STATE.achats = r || [];
+    STATE.achats = (r || []).map(normaliserTableauxDocument);
   } catch(e) { STATE.achats = []; }
   renderAchats();
 }
