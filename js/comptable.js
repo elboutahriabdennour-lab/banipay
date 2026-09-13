@@ -236,10 +236,10 @@ async function ouvrirEntreprise(entrepriseId) {
   const inv = CPT.entreprises.find(function(e) { return e.entreprise_id === entrepriseId; });
   if (!inv) return;
   CPT.currentProfil = inv.profil || {};
-  CPT.currentFactures = inv._factures || [];
+  CPT.currentFactures = (inv._factures || []).map(normaliserTableauxDocument);
   CPT.currentDevis = [];
   CPT.currentControles = inv._controles || {};
-  CPT.currentAchats = inv._achats || [];
+  CPT.currentAchats = (inv._achats || []).map(normaliserTableauxDocument);
   CPT.currentControlesAchats = inv._controlesAchats || [];
   CPT.currentPaiements = [];
   try {
@@ -1491,7 +1491,8 @@ async function renderCptReleves() {
             '<div style="flex:1"><div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(rv.mois)] || rv.mois) + ' ' + rv.annee + '</div><div style="font-size:11px;color:#6B5F54">' + escapeHTML(rv.banque || '') + '</div></div>' +
             '<span data-rid="' + rv.id + '" class="badge-releve" style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;cursor:pointer;background:' + (rv.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (rv.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (rv.vu_par_comptable ? 'Vu' : 'Marquer vu') + '</span>' +
           '</div>' +
-          '<button class="btn-telecharger-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📥 Telecharger</button>' +
+          '<button class="btn-telecharger-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:6px">📥 Telecharger</button>' +
+          '<button class="btn-rapprocher-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Consulter et rapprocher</button>' +
         '</div>';
       }).join('') +
     '</div>';
@@ -1514,6 +1515,21 @@ async function renderCptReleves() {
         const rv = (window._releves_cpt_cache || []).find(function(x) { return String(x.id) === String(btnDl.dataset.rid); });
         if (rv && rv.data) telechargerFichierBase64(rv.data, rv.nom_fichier || ('releve_' + rv.mois + '_' + rv.annee));
         else showToast('Fichier introuvable', 'error');
+        return;
+      }
+      // FIX (audit) : point d'entrée manquant — le moteur de rapprochement
+      // (analyserReleve/renderTransactionsReleve, déjà conscient de
+      // CPT.currentFactures/Achats via _collectionActuelle) n'était
+      // jamais atteignable depuis l'espace comptable.
+      const btnRappr = ev.target.closest('.btn-rapprocher-releve');
+      if (btnRappr) {
+        if (!CPT.currentFactures || !CPT.currentFactures.length) {
+          if (!CPT.currentAchats || !CPT.currentAchats.length) {
+            showToast('⚠️ Aucune facture/achat chargé pour cette entreprise — impossible de proposer un rapprochement', 'error');
+            return;
+          }
+        }
+        analyserReleve(btnRappr.dataset.rid);
       }
     });
   } catch(ex) { list.innerHTML = '<div style="text-align:center;padding:40px;color:#B23A2E">Erreur: ' + ex.message + '</div>'; }
