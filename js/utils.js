@@ -342,3 +342,47 @@ function appliquerLangueInterface() {
   if (select) select.value = langue;
 }
 appliquerLangueInterface();
+
+// FIX (audit) : helper centralisé pour parser en toute sécurité les
+// champs qui devraient être des tableaux (lignes de facture/devis/BC/BL,
+// transactions bancaires liées...) mais qui, selon comment le document a
+// été créé, arrivent parfois en base comme texte JSON brut plutôt que
+// comme un vrai tableau — voire comme du texte invalide. Sans ce garde,
+// un simple .map()/.reduce() plante et arrête net le reste de la
+// fonction appelante (symptôme observé : écran de détail qui s'arrête
+// juste après l'en-tête, totaux/lignes/actions jamais affichés).
+function parseTableauSecurise(valeur) {
+  if (Array.isArray(valeur)) return valeur;
+  if (valeur == null || valeur === '') return [];
+  if (typeof valeur === 'string') {
+    try {
+      const parsed = JSON.parse(valeur);
+      // Cas rare de double encodage (une chaîne JSON contenant elle-même
+      // une chaîne JSON) — on retente une fois.
+      if (typeof parsed === 'string') {
+        try { return JSON.parse(parsed) || []; } catch (e2) { return []; }
+      }
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error('parseTableauSecurise: JSON invalide, valeur ignorée ->', valeur);
+      return [];
+    }
+  }
+  return [];
+}
+
+// FIX (audit) : plutôt que de corriger chaque écran un par un (approche
+// "coup par coup" qui a déjà laissé passer plusieurs bugs identiques
+// dans achats.js, devis.js, releve-bancaire-ocr.js...), on normalise
+// une bonne fois pour toutes `lignes` et `transactions_bancaires_liees`
+// dès que les documents arrivent de Supabase — tous les écrans qui les
+// consomment ensuite reçoivent alors toujours de vrais tableaux.
+// À appeler juste après chaque chargement (STATE.factures, STATE.achats,
+// STATE.devis, STATE.bonsCommande, STATE.bonsLivraison, CPT.currentFactures,
+// CPT.currentAchats...) via .map(normaliserTableauxDocument).
+function normaliserTableauxDocument(doc) {
+  if (!doc || typeof doc !== 'object') return doc;
+  if ('lignes' in doc) doc.lignes = parseTableauSecurise(doc.lignes);
+  if ('transactions_bancaires_liees' in doc) doc.transactions_bancaires_liees = parseTableauSecurise(doc.transactions_bancaires_liees);
+  return doc;
+}
