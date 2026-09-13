@@ -146,7 +146,11 @@ function renderFactureList() {
 
 function setFilter(f, btn) {
   STATE.filterF = f;
-  document.querySelectorAll('#screen-dashboard .ftab').forEach(t => t.classList.remove('active'));
+  // FIX (audit) : les onglets de filtre vivent dans #screen-mes-factures
+  // depuis le déménagement de cet écran hors du dashboard — l'ancien
+  // sélecteur ne trouvait donc plus jamais ces boutons, et .active
+  // n'était jamais retiré de l'onglet précédent (filtres "collés").
+  document.querySelectorAll('#screen-mes-factures .ftab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderFactureList();
 }
@@ -156,7 +160,12 @@ function initNouvelle(prefill) {
   if (_dl && STATE.clients) {
     _dl.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
   }
-  STATE.lignesF = prefill?.lignes ? [...prefill.lignes] : [];
+  // FIX (audit) : `[...prefill.lignes]` plantait silencieusement en un
+  // tableau de caractères si `lignes` arrivait en JSON texte brut (cas
+  // du bug racine déjà documenté) — même garde que partout ailleurs.
+  STATE.lignesF = prefill?.lignes
+    ? (typeof prefill.lignes === 'string' ? JSON.parse(prefill.lignes || '[]') : [...prefill.lignes])
+    : [];
   STATE.deviseF = prefill?.devise || 'MAD';
   el('f-client') && (el('f-client').value = prefill?.client || '');
   el('f-chantier') && (el('f-chantier').value = prefill?.chantier || '');
@@ -343,7 +352,11 @@ async function sauvegarderFacture(isDraft = false) {
 async function dupliquerFacture(id) {
   const f = STATE.factures.find(x => x.id === id);
   if (!f) return;
-  initNouvelle({ ...f, ref: getRef('FAC', STATE.factures), statut: 'envoyee', date_emission: today(), montant_recu: 0 });
+  // FIX (audit) : on ne peut plus appeler initNouvelle(prefill) directement
+  // ici — goScreen('nouvelle') le rappelle ensuite sans argument et
+  // effaçait tout. On dépose le prefill sur STATE, goScreen se charge
+  // de l'appliquer une seule fois (voir nav.js).
+  STATE._prefillNouvelle = { ...f, ref: getRef('FAC', STATE.factures), statut: 'envoyee', date_emission: today(), montant_recu: 0 };
   goScreen('nouvelle');
   showToast('📋 Facture dupliquée');
 }
