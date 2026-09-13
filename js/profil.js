@@ -289,7 +289,10 @@ function deleteDraft(id) {
 function restoreDraft(id) {
   const draft = listDrafts().find(d => d.id === id);
   if (!draft) return;
-  initNouvelle(draft);
+  // FIX (audit) : même correctif que dupliquerFacture() — initNouvelle(draft)
+  // appelé ici était systématiquement écrasé par le re-init sans argument
+  // déclenché par goScreen('nouvelle'). Le brouillon restauré s'ouvrait vide.
+  STATE._prefillNouvelle = draft;
   goScreen('nouvelle');
   showToast('📋 Brouillon restauré', 'success');
 }
