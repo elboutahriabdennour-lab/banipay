@@ -636,9 +636,26 @@ function goScreen(name, options) {
     'chat': function() {},
     'dashboard': _safe(typeof renderDashboard!=='undefined'?renderDashboard:undefined,'renderDashboard'),
     'mes-factures': _safe(typeof renderFactureList!=='undefined'?renderFactureList:undefined,'renderFactureList'),
-    'nouvelle': function() { if (typeof initNouvelle==='function') initNouvelle(); if (typeof remplirPickerBCPourDevis === 'function') { const sel = el('f-bc-lie'); if (sel) { sel.innerHTML = '<option value="">Aucun</option>' + (STATE.bonsCommande || []).map(function(bc) { return '<option value="' + bc.id + '">' + escapeHTML(bc.ref||'') + ' — ' + escapeHTML(bc.fournisseur||'') + '</option>'; }).join(''); } } },
+    // FIX (audit) : goScreen('nouvelle') ré-initialisait TOUJOURS le
+    // formulaire sans argument, même quand dupliquerFacture()/restoreDraft()
+    // venaient d'appeler initNouvelle(prefill) juste avant — ce qui effaçait
+    // systématiquement le contenu dupliqué/restauré. On passe maintenant par
+    // STATE._prefillNouvelle, posé par l'appelant et consommé une seule fois ici.
+    'nouvelle': function() {
+      const _prefill = STATE._prefillNouvelle || null;
+      STATE._prefillNouvelle = null;
+      if (typeof initNouvelle==='function') initNouvelle(_prefill);
+      if (typeof remplirPickerBCPourDevis === 'function') { const sel = el('f-bc-lie'); if (sel) { sel.innerHTML = '<option value="">Aucun</option>' + (STATE.bonsCommande || []).map(function(bc) { return '<option value="' + bc.id + '">' + escapeHTML(bc.ref||'') + ' — ' + escapeHTML(bc.fournisseur||'') + '</option>'; }).join(''); } }
+    },
     'devis-list': _safe(typeof renderDevisList!=='undefined'?renderDevisList:undefined,'renderDevisList'),
-    'nouveau-devis': function() { if (typeof initNouveauDevis==='function') initNouveauDevis(); if (typeof remplirPickerBCPourDevis==='function') remplirPickerBCPourDevis(); },
+    // FIX (audit) : même correctif que 'nouvelle' ci-dessus, pour
+    // dupliquerDevis() / convertirDemandeEnDevis().
+    'nouveau-devis': function() {
+      const _prefill = STATE._prefillNouveauDevis || null;
+      STATE._prefillNouveauDevis = null;
+      if (typeof initNouveauDevis==='function') initNouveauDevis(_prefill);
+      if (typeof remplirPickerBCPourDevis==='function') remplirPickerBCPourDevis();
+    },
     'avoir': _safe(typeof initAvoir!=='undefined'?initAvoir:undefined,'initAvoir'),
     'bon-commande': _safe(typeof initBonCommande!=='undefined'?initBonCommande:undefined,'initBonCommande'),
     'bon-livraison': _safe(typeof initBonLivraison!=='undefined'?initBonLivraison:undefined,'initBonLivraison'),
