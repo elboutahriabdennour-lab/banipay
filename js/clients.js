@@ -468,7 +468,7 @@ function telechargerTemplateClientsCSV() {
   telechargerCSV(
     'modele_clients.csv',
     ['nom', 'tel', 'email', 'adresse', 'ice', 'identifiant_fiscal', 'conditions_paiement', 'limite_credit', 'notes'],
-    [['SARL Exemple BTP', '+212600000000', 'contact@exemple.ma', 'Casablanca', '001234567000012', '', '30 jours', '', '']]
+    [['SARL Exemple', '+212600000000', 'contact@exemple.ma', 'Casablanca', '001234567000012', '', '30 jours', '', '']]
   );
 }
 
