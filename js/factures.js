@@ -463,8 +463,12 @@ function renderDetail() {
 
   const noteEl = el('detail-note');
   if (noteEl) {
-    if (f.note) { noteEl.textContent = f.note; noteEl.parentElement.style.display = 'block'; }
-    else { noteEl.parentElement.style.display = 'none'; }
+    // FIX (même bug racine que detail-chantier ci-dessous) : detail-note
+    // est aussi un enfant direct de .d-body — parentElement visait donc
+    // .d-body entier, pas un wrapper dédié à la note. Sans note (cas le
+    // plus fréquent), tout le corps de la facture disparaissait.
+    if (f.note) { noteEl.textContent = f.note; noteEl.style.display = 'block'; }
+    else { noteEl.style.display = 'none'; }
   }
 
   const docsLiesEl = el('detail-docs-lies');
@@ -527,8 +531,19 @@ function renderDetail() {
 
   const chantEl = el('detail-chantier');
   if (chantEl) {
-    if (f.chantier) { chantEl.textContent = f.chantier; chantEl.parentElement.style.display = 'block'; }
-    else { chantEl.parentElement.style.display = 'none'; }
+    // FIX (bug racine trouvé via diagnostic navigateur) : detail-chantier
+    // est un enfant DIRECT de .d-body (pas dans un wrapper dédié) —
+    // chantEl.parentElement visait donc .d-body lui-même, pas une div
+    // spécifique au chantier. Résultat : dès qu'une facture n'a pas de
+    // chantier renseigné (le cas le plus courant), TOUT le bloc .d-body
+    // (lignes, totaux, actions, documents liés, rapprochements...) était
+    // mis en display:none — l'écran de détail semblait vide juste après
+    // l'en-tête, alors que le HTML était bien généré. C'est le bug
+    // derrière toutes les captures d'écran "facture vide" de cette
+    // conversation. On bascule maintenant le display de l'élément
+    // lui-même, jamais celui de son parent.
+    if (f.chantier) { chantEl.textContent = f.chantier; chantEl.style.display = 'block'; }
+    else { chantEl.style.display = 'none'; }
   }
   const actEl = el('detail-actions');
   if (!actEl) return;
