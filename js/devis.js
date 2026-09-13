@@ -787,7 +787,7 @@ async function convertirBCEnFacture(bcId) {
 
 async function loadBonsCommande() {
   try {
-    STATE.bonsCommande = (await sb.get('bons_commande', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || [];
+    STATE.bonsCommande = ((await sb.get('bons_commande', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || []).map(normaliserTableauxDocument);
   } catch(e) { STATE.bonsCommande = []; }
   renderBonsCommandeListe();
 }
@@ -984,7 +984,7 @@ async function sauvegarderBonLivraison() {
 
 async function loadBonsLivraison() {
   try {
-    STATE.bonsLivraison = (await sb.get('bons_livraison', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || [];
+    STATE.bonsLivraison = ((await sb.get('bons_livraison', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc')) || []).map(normaliserTableauxDocument);
   } catch(e) { STATE.bonsLivraison = []; }
   renderBonsLivraisonListe();
 }
