@@ -428,9 +428,14 @@ function renderDetail() {
   // exception JavaScript — qui arrêtait tout le reste de la fonction
   // net : montant/totaux/actions ne s'affichaient alors jamais, seul
   // ce qui avait déjà été affiché avant ce point (client/montant/réf)
-  // restait visible. Même garde qu'ailleurs dans ce fichier (ligne 221).
-  const lignesFacture = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
-  if (lignesEl) lignesEl.innerHTML = lignesFacture.map(l => `
+  // restait visible. Même bug reproduit avec un JSON invalide/imbriqué
+  // (le JSON.parse lui-même plantait) : on passe maintenant par
+  // parseTableauSecurise() (utils.js) + try/catch, pour que même une
+  // donnée totalement corrompue n'empêche plus le reste de l'écran de
+  // s'afficher.
+  try {
+    const lignesFacture = parseTableauSecurise(f.lignes);
+    if (lignesEl) lignesEl.innerHTML = lignesFacture.map(l => `
     <div class="d-ligne">
       <div>
         <div style="font-size:13px;font-weight:500">${l.desc}</div>
@@ -438,6 +443,10 @@ function renderDetail() {
       </div>
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
     </div>`).join('');
+  } catch (eLignes) {
+    console.error('renderDetail: erreur affichage lignes (facture ' + (f.ref||f.id) + ')', eLignes);
+    if (lignesEl) lignesEl.innerHTML = '';
+  }
 
   const totEl = el('detail-totals');
   const avoirsLies = (STATE.avoirs || []).filter(function(a) { return a.facture_origine_ref === f.ref; });
@@ -485,21 +494,33 @@ function renderDetail() {
   // NOUVEAU (retour utilisateur) : historique des transactions bancaires
   // déjà rapprochées avec cette facture — visible directement ici,
   // chaque ligne rappelant sa date, son libellé et le montant appliqué.
+  // FIX (bug réel trouvé via capture d'écran) : exactement le même bug
+  // racine que les lignes ci-dessus, mais sur ce champ-ci —
+  // transactions_bancaires_liees arrivait en texte JSON brut, et
+  // .length/.map() sur une chaîne plantait ici, juste APRÈS l'affichage
+  // des lignes/totaux, coupant tout ce qui suit (documents liés,
+  // chantier, boutons d'action). C'est ce qui produisait un écran de
+  // détail visuellement "coupé" juste après l'en-tête ou les totaux.
   const rapprochementsEl = el('detail-rapprochements');
   if (rapprochementsEl) {
-    const transactionsLiees = f.transactions_bancaires_liees || [];
-    if (!transactionsLiees.length) {
+    try {
+      const transactionsLiees = parseTableauSecurise(f.transactions_bancaires_liees);
+      if (!transactionsLiees.length) {
+        rapprochementsEl.innerHTML = '';
+      } else {
+        rapprochementsEl.innerHTML =
+          '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🏦 Rapprochements bancaires (' + transactionsLiees.length + ')</div>' +
+          transactionsLiees.map(function(ref) {
+            const parts = String(ref).split('|');
+            return '<div style="background:#EEF3E4;border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:12px">' +
+              '<div style="display:flex;justify-content:space-between"><span style="color:#6B5F54">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#55702E">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
+              (parts[2] ? '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
+            '</div>';
+          }).join('');
+      }
+    } catch (eRappr) {
+      console.error('renderDetail: erreur affichage rapprochements (facture ' + (f.ref||f.id) + ')', eRappr);
       rapprochementsEl.innerHTML = '';
-    } else {
-      rapprochementsEl.innerHTML =
-        '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🏦 Rapprochements bancaires (' + transactionsLiees.length + ')</div>' +
-        transactionsLiees.map(function(ref) {
-          const parts = String(ref).split('|');
-          return '<div style="background:#EEF3E4;border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:12px">' +
-            '<div style="display:flex;justify-content:space-between"><span style="color:#6B5F54">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#55702E">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
-            (parts[2] ? '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
-          '</div>';
-        }).join('');
     }
   }
 
