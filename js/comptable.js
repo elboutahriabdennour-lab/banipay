@@ -480,28 +480,40 @@ function renderCptFactures() {
     creerFiltreRechercheCpt('rechercheClient', CPT.filtres.rechercheClient, 'Rechercher un client...', 'renderCptFactures') +
     creerFiltreStatutCpt('statutFacture', ['envoyee','attente','payee','retard','annulee'], { envoyee:'Envoyee', attente:'En attente', payee:'Payee', retard:'En retard', annulee:'Annulee' }, 'renderCptFactures') +
     creerFiltreCpt() +
-    '<div style="display:grid;grid-template-columns:1fr 36px 36px;padding:8px 16px;background:#F1EEE8;border-bottom:1px solid #EAE4DA">' +
+    '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:8px 16px;background:#F1EEE8;border-bottom:1px solid #EAE4DA">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Facture</div>' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Voir</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#1F6F72;text-align:center">🏦</div>' +
       '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
       '<div style="font-size:11px;font-weight:800;color:#7C5CA6;text-align:center">T</div>' +
     '</div>' +
     (f.length ? f.map(function(fac) {
       const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(fac.id); }) || {};
       const remarques = (CPT.currentRemarques || []).filter(function(r) { return String(r.facture_id) === String(fac.id) && r.statut === 'ouverte'; });
-      return '<div style="display:grid;grid-template-columns:1fr 40px 44px 44px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+      // FIX (demande) : signe visuel "rapprochée" dès qu'une transaction
+      // bancaire est liée à cette facture (transactions_bancaires_liees
+      // non vide), + bouton dédié pour lancer un rapprochement depuis
+      // cette facture précise (réutilise ouvrirRapprochementDepuisFacture,
+      // déjà câblé sur _collectionActuelle donc sur les bonnes données
+      // client côté comptable).
+      const estRapprochee = (fac.transactions_bancaires_liees || []).length > 0;
+      return '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
         '<div class="fac-row-click" data-fid="' + fac.id + '" style="cursor:pointer">' +
           '<div style="font-size:12px;font-weight:700">' + escapeHTML(fac.ref || '') + '</div>' +
           '<div style="font-size:11px;color:#6B5F54">' + escapeHTML(fac.client || '') + ' · ' + fmt(fac.ttc || 0) + ' MAD</div>' +
           '<div style="display:flex;gap:6px;margin-top:3px;align-items:center">' +
             '<span style="background:' + (statutBg[fac.statut] || '#EAE4DA') + ';color:' + (statutColor[fac.statut] || '#6B5F54') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[fac.statut] || '') + '</span>' +
+            (estRapprochee ? '<span style="font-size:9px;color:#1F6F72;background:#E9F4F3;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Rapprochée</span>' : '') +
             (remarques.length ? '<span style="font-size:9px;color:#B23A2E;font-weight:600">📝 ' + remarques.length + ' remarque(s)</span>' : '') +
             '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.lettre ? '#6E8F4E' : '#E3DCCF') + ';color:' + (ctrl.lettre ? '#fff' : '#9C9186') + '">L</span>' +
             '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#9C9186') + '">T</span>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-voir-facture" onclick="voirFactureComptable(\'' + fac.id + '\')" title="Visualiser la facture" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #CFE3E2;background:#E9F4F3;color:#1F6F72;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
+          '<button class="btn-voir-facture" onclick="voirFactureComptable(\'' + fac.id + '\')" title="Visualiser la facture" style="width:30px;height:30px;border-radius:8px;border:1.5px solid #CFE3E2;background:#E9F4F3;color:#1F6F72;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:center">' +
+          '<button class="btn-rapprocher-facture-cpt" onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(\'' + fac.id + '\',\'facture\')" title="Rapprocher avec une transaction bancaire" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (estRapprochee ? '#1F6F72' : '#EAE4DA') + ';font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (estRapprochee ? '#fff' : '#6B5F54') + '">🏦</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
@@ -1567,9 +1579,13 @@ async function ouvrirFactureComptable(factureId) {
         '<div><div style="font-size:12px;font-weight:600">Lettrage</div></div>' +
         '<button id="btn-lettrage-ov" class="btn-lettr-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.lettre ? '#B8860B' : '#E3DCCF') + ';background:' + (ctrlFresh.lettre ? '#F7EFDC' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.lettre ? '☑' : '☐') + '</button>' +
       '</div>' +
-      '<div style="display:flex;justify-content:space-between;padding:10px 0">' +
+      '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA">' +
         '<div><div style="font-size:12px;font-weight:600">TVA verifiee</div></div>' +
         '<button id="btn-tva-ov" class="btn-tva-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';background:' + (ctrlFresh.tva_verifie ? '#EDE6F0' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.tva_verifie ? '☑' : '☐') + '</button>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">' +
+        '<div><div style="font-size:12px;font-weight:600">Rapprochement bancaire</div><div style="font-size:10px;color:#9C9186">' + ((fac.transactions_bancaires_liees||[]).length ? (fac.transactions_bancaires_liees||[]).length + ' transaction(s) liée(s)' : 'Aucune transaction liée') + '</div></div>' +
+        '<button class="btn-rapprocher-ov" onclick="ouvrirRapprochementDepuisFacture(\'' + factureId + '\',\'facture\')" style="padding:7px 12px;border-radius:8px;border:none;background:' + ((fac.transactions_bancaires_liees||[]).length ? '#1F6F72' : '#E9F4F3') + ';color:' + ((fac.transactions_bancaires_liees||[]).length ? '#fff' : '#1F6F72') + ';font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher</button>' +
       '</div>' +
     '</div>' +
     '<div style="margin:0 14px 14px" id="notes-facture-zone"></div>' +
@@ -1970,7 +1986,8 @@ function attacherControlsToViewer(factureId) {
     '<div style="flex:1"><div style="font-size:12px;font-weight:700" id="pdf-ctrl-lettre-txt">' + (ctrl.lettre ? '✓ Lettre' : 'Non lettre') + '</div><div style="font-size:10px;color:#9C9186">' + (ctrl.lettre_at ? new Date(ctrl.lettre_at).toLocaleDateString('fr-FR') : '') + '</div></div>' +
     '<button class="btn-t-ctrl" data-fid="' + factureId + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:44px;height:44px;border-radius:10px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#9C9186') + ';font-size:18px;font-weight:900;cursor:pointer;font-family:inherit">T</button>' +
     '<div style="flex:1"><div style="font-size:12px;font-weight:700" id="pdf-ctrl-tva-txt">' + (ctrl.tva_verifie ? '✓ TVA ok' : 'TVA non verifiee') + '</div><div style="font-size:10px;color:#9C9186">' + (ctrl.tva_verifie_at ? new Date(ctrl.tva_verifie_at).toLocaleDateString('fr-FR') : '') + '</div></div>' +
-    '<button class="btn-open-remarques" style="padding:8px 12px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📝 Remarques</button>';
+    '<button class="btn-rapprocher-ctrl" onclick="ouvrirRapprochementDepuisFacture(\'' + factureId + '\',\'facture\')" title="Rapprocher avec une transaction bancaire" style="width:44px;height:44px;border-radius:10px;border:none;background:#1F6F72;color:#fff;font-size:18px;cursor:pointer;font-family:inherit">🏦</button>' +
+    '<button class="btn-open-remarques" style="padding:8px 12px;background:#241F1B;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📝 Remarques</button>';
   viewer.appendChild(bar);
   bar.querySelector('.btn-l-ctrl').onclick = async function() {
     await toggleLettrageRapide(factureId, this);
