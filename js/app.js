@@ -12,8 +12,8 @@ async function loadAll() {
       sb.get('avoirs', `user_id=eq.${uid}&order=created_at.desc`),
       sb.get('profils_entreprise', `id=eq.${uid}`),
     ]);
-    STATE.factures = f || [];
-    STATE.devis = dv || [];
+    STATE.factures = (f || []).map(normaliserTableauxDocument);
+    STATE.devis = (dv || []).map(normaliserTableauxDocument);
     STATE.clients = cl || [];
     STATE.produits = pr || [];
     STATE.avoirs = av || [];
