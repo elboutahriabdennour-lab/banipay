@@ -467,11 +467,15 @@ function suggererRapprochements(transactions) {
   // reçu aucun paiement. Indispensable pour les acomptes et paiements en
   // plusieurs fois : une facture ayant déjà reçu un premier acompte doit
   // continuer à apparaître pour le paiement suivant.
-  const facturesCandidates = (STATE.factures || []).filter(function(f) {
+  // FIX (audit) : utilisait STATE.factures/achats en dur — toujours les
+  // documents de l'entreprise CONNECTÉE, jamais ceux du client consulté
+  // par un comptable. _collectionActuelle() existait déjà pour ça mais
+  // n'était appelée nulle part dans ce fichier avant ce correctif.
+  const facturesCandidates = _collectionActuelle('facture').filter(function(f) {
     if (f.statut === 'refusee' || f.statut === 'annulee' || f.statut === 'brouillon') return false;
     return (Number(f.ttc) || 0) - (Number(f.montant_recu) || 0) > 0.5;
   });
-  const achatsCandidats = (STATE.achats || []).filter(function(a) {
+  const achatsCandidats = _collectionActuelle('achat').filter(function(a) {
     return (Number(a.ttc) || 0) - (Number(a.montant_recu) || 0) > 0.5;
   });
   // Seuil minimal pour même apparaître comme proposition — évite de
@@ -542,9 +546,34 @@ function _chargerTransactionsReleveLocal(releveId) {
   } catch(e) { return null; }
 }
 
+// FIX (audit) : l'écran de rapprochement est partagé entre entreprise et
+// comptable, mais son bouton retour était codé en dur vers 'releves'
+// (écran entreprise) — un comptable natif (hors "mode entreprise") qui
+// l'utilisait se retrouvait donc éjecté vers un écran qui n'a pas de
+// sens pour lui. Ce correctif est ciblé à cet écran ; le chantier plus
+// large de tous les boutons retour de l'app reste à faire séparément.
+function retourApresRapprochementReleve() {
+  if (typeof CPT !== 'undefined' && CPT.role === 'comptable' && !CPT.modeEntreprise) {
+    goScreen('cpt-entreprise', null);
+  } else {
+    goScreen('releves', null);
+  }
+}
+
 async function analyserReleve(releveId) {
-  const releve = (STATE.releves || []).find(function(r) { return String(r.id) === String(releveId); });
-  if (!releve) return;
+  // FIX (audit) : point d'entrée manquant côté comptable — le moteur de
+  // rapprochement (_collectionActuelle, plus bas) savait déjà distinguer
+  // CPT.currentFactures/Achats du contexte entreprise, mais cette
+  // fonction, elle, ne cherchait le relevé QUE dans STATE.releves (les
+  // relevés de l'entreprise connectée). Un comptable consultant un
+  // relevé partagé par un client (via renderCptReleves(), qui les
+  // stocke dans window._releves_cpt_cache) tombait donc toujours sur
+  // "relevé introuvable".
+  const estComptable = typeof CPT !== 'undefined' && CPT.role === 'comptable' && !CPT.modeEntreprise;
+  const releve = estComptable
+    ? (window._releves_cpt_cache || []).find(function(r) { return String(r.id) === String(releveId); })
+    : (STATE.releves || []).find(function(r) { return String(r.id) === String(releveId); });
+  if (!releve) { showToast('Relevé introuvable', 'error'); return; }
 
   // Restaure directement depuis le stockage local si ce relevé a déjà
   // été analysé auparavant — évite de tout refaire, et conserve l'état
@@ -624,8 +653,8 @@ STATE._filtreReleveConfiance = STATE._filtreReleveConfiance || 'tous';
 // rendu de chaque ligne, pour ne calculer ça qu'une seule fois par appel.
 function _documentLieATransaction(t) {
   const refTransaction = _construireRefTransaction(t);
-  return (STATE.factures || []).find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
-    || (STATE.achats || []).find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
+  return _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
+    || _collectionActuelle('achat').find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
 }
 
 function _appliquerFiltresReleve(transactionsAvecIndex) {
@@ -748,8 +777,8 @@ function renderTransactionsReleve() {
       const fondZebre = position % 2 === 0 ? '#fff' : '#FBF9F5';
 
       const refTransaction = _construireRefTransaction(t);
-      const dejaLieeAvec = (STATE.factures || []).find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
-        || (STATE.achats || []).find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
+      const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
+        || _collectionActuelle('achat').find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
 
       // Bloc "date + libellé" décortiqué en 2 cases distinctes,
       // réutilisé aussi bien pour une transaction déjà traitée que pour
@@ -862,8 +891,8 @@ async function confirmerRapprochementReleve(id, type, indexTransaction) {
 // noire.
 function ouvrirRapprochementDepuisFacture(factureId, type) {
   const doc = type === 'achat'
-    ? (STATE.achats || []).find(function(x) { return String(x.id) === String(factureId); })
-    : (STATE.factures || []).find(function(x) { return String(x.id) === String(factureId); });
+    ? _collectionActuelle('achat').find(function(x) { return String(x.id) === String(factureId); })
+    : _collectionActuelle('facture').find(function(x) { return String(x.id) === String(factureId); });
   if (!doc) return;
 
   // Rassemble les transactions déjà détectées dans un relevé consulté
@@ -1016,9 +1045,9 @@ function ouvrirRapprochementMultipleTransaction(indexTransaction) {
   // Ne propose que le bon côté selon le sens du virement — une entrée ne
   // peut régler que des factures de vente, une sortie que des achats.
   const candidats = estEntree
-    ? (STATE.factures || []).filter(function(f) { return (Number(f.ttc)||0) - (Number(f.montant_recu)||0) > 0.5; })
+    ? _collectionActuelle('facture').filter(function(f) { return (Number(f.ttc)||0) - (Number(f.montant_recu)||0) > 0.5; })
         .map(function(f) { return { id: f.id, type: 'facture', nom: f.client, ref: f.ref, solde: (Number(f.ttc)||0) - (Number(f.montant_recu)||0) }; })
-    : (STATE.achats || []).filter(function(a) { return (Number(a.ttc)||0) - (Number(a.montant_recu)||0) > 0.5; })
+    : _collectionActuelle('achat').filter(function(a) { return (Number(a.ttc)||0) - (Number(a.montant_recu)||0) > 0.5; })
         .map(function(a) { return { id: a.id, type: 'achat', nom: a.fournisseur, ref: a.ref_fournisseur, solde: (Number(a.ttc)||0) - (Number(a.montant_recu)||0) }; });
 
   STATE._selectionRapprochementMultiple = { indexTransaction: indexTransaction, montantTransaction: montantTransaction, coches: {} };
@@ -1141,9 +1170,7 @@ async function confirmerRapprochementMultipleTransaction() {
 // entreprise (qui garde son chemin direct habituel).
 async function _appliquerAllocationRapprochement(id, type, montantAlloue, transaction) {
   const estComptable = typeof CPT !== 'undefined' && CPT.role === 'comptable';
-  const collection = estComptable
-    ? (type === 'achat' ? (CPT.currentAchats || []) : (CPT.currentFactures || []))
-    : (type === 'achat' ? (STATE.achats || []) : (STATE.factures || []));
+  const collection = _collectionActuelle(type);
   const doc = collection.find(function(x) { return String(x.id) === String(id); });
   if (!doc) return null;
 
@@ -1221,8 +1248,8 @@ async function ignorerEcartRapprochement(id, type) {
 // ------------------------------------------------------------
 function ouvrirRapprochementMultipleFacture(factureId, type) {
   const doc = type === 'achat'
-    ? (STATE.achats || []).find(function(x) { return String(x.id) === String(factureId); })
-    : (STATE.factures || []).find(function(x) { return String(x.id) === String(factureId); });
+    ? _collectionActuelle('achat').find(function(x) { return String(x.id) === String(factureId); })
+    : _collectionActuelle('facture').find(function(x) { return String(x.id) === String(factureId); });
   if (!doc) return;
   const transactionsDisponibles = STATE._transactionsReleveActuel || [];
   if (!transactionsDisponibles.length) {
@@ -1348,8 +1375,8 @@ function exporterRapprochementComptable() {
     });
   }
 
-  ajouterDocs(STATE.factures, 'facture');
-  ajouterDocs(STATE.achats, 'achat');
+  ajouterDocs(_collectionActuelle('facture'), 'facture');
+  ajouterDocs(_collectionActuelle('achat'), 'achat');
 
   const csv = lignes.map(function(ligne) {
     return ligne.map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
@@ -1379,9 +1406,7 @@ async function annulerRapprochement(docId, type, indexTransaction) {
   if (!confirm('Annuler ce rapprochement ? La facture repassera dans son état précédent.')) return;
 
   const estComptable = typeof CPT !== 'undefined' && CPT.role === 'comptable';
-  const collection = estComptable
-    ? (type === 'achat' ? (CPT.currentAchats || []) : (CPT.currentFactures || []))
-    : (type === 'achat' ? (STATE.achats || []) : (STATE.factures || []));
+  const collection = _collectionActuelle(type);
   const doc = collection.find(function(x) { return String(x.id) === String(docId); });
   if (!doc) { showToast('Document introuvable', 'error'); return; }
 
@@ -1494,7 +1519,7 @@ const COMPTES_CGNC_DEFAUT = { banque: '5141', clients: '3421', fournisseurs: '44
 function exporterEcrituresComptables() {
   const lignes = [['Journal', 'Date', 'N° Compte', 'Libellé compte', 'Libellé écriture', 'Débit', 'Crédit', 'Référence pièce']];
 
-  (STATE.factures || []).forEach(function(f) {
+  _collectionActuelle('facture').forEach(function(f) {
     (f.transactions_bancaires_liees || []).forEach(function(refTrans) {
       const parts = String(refTrans).split('|');
       const dateEcriture = parts[0] || f.date_emission || '';
@@ -1505,7 +1530,7 @@ function exporterEcrituresComptables() {
     });
   });
 
-  (STATE.achats || []).forEach(function(a) {
+  _collectionActuelle('achat').forEach(function(a) {
     (a.transactions_bancaires_liees || []).forEach(function(refTrans) {
       const parts = String(refTrans).split('|');
       const dateEcriture = parts[0] || a.date_achat || '';
