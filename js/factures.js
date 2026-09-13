@@ -138,6 +138,7 @@ function renderFactureList() {
       <div class="card-end">
         <div class="card-amt">${fmt(f.ttc)} ${f.devise||'MAD'}</div>
         <div class="badge b-${f.statut}">${badgeF(f.statut)}</div>
+        ${(f.transactions_bancaires_liees||[]).length ? `<div style="font-size:9px;color:#1F6F72;background:#E9F4F3;display:inline-block;padding:2px 6px;border-radius:4px;font-weight:600;margin-top:3px">🏦 Rapprochée</div>` : ''}
         ${!enSelection ? `<button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>` : ''}
       </div>
     </div>`;
