@@ -41,7 +41,11 @@ function initNouveauDevis(prefill) {
   if (_dl2 && STATE.clients) {
     _dl2.innerHTML = STATE.clients.map(function(c){return '<option value="'+escapeHTML(c.nom||'')+'">'+escapeHTML(c.nom||'')+'</option>';}).join('');
   }
-  STATE.lignesD = prefill?.lignes ? [...prefill.lignes] : [];
+  // FIX (audit) : même garde que factures.js/initNouvelle — évite de
+  // spreader une chaîne JSON brute en tableau de caractères.
+  STATE.lignesD = prefill?.lignes
+    ? (typeof prefill.lignes === 'string' ? JSON.parse(prefill.lignes || '[]') : [...prefill.lignes])
+    : [];
   STATE.deviseD = prefill?.devise || 'MAD';
   el('d-client') && (el('d-client').value = prefill?.client || '');
   el('d-chantier') && (el('d-chantier').value = prefill?.chantier || '');
@@ -271,7 +275,9 @@ async function supprimerDevis(id) {
 
 function dupliquerDevis(id) {
   const d = STATE.devis.find(x=>x.id===id); if(!d) return;
-  initNouveauDevis({...d, ref:getRef('DEV',STATE.devis), statut:'envoye', date_emission:today()});
+  // FIX (audit) : idem dupliquerFacture() — voir STATE._prefillNouveauDevis
+  // consommé une seule fois dans l'action 'nouveau-devis' de nav.js.
+  STATE._prefillNouveauDevis = {...d, ref:getRef('DEV',STATE.devis), statut:'envoye', date_emission:today()};
   goScreen('nouveau-devis');
   showToast('📋 Devis dupliqué');
 }
@@ -1003,7 +1009,10 @@ function renderBonsLivraisonListe() {
 function voirBonLivraison(id) {
   const bl = (STATE.bonsLivraison || []).find(function(x) { return x.id === id; });
   if (!bl) return;
-  STATE.lignesBL = bl.lignes || [];
+  // FIX (audit) : bug racine documenté (lignes stockées en JSON texte)
+  // trouvé non protégé ici — plantait renderLignesBL() avec
+  // "STATE.lignesBL.map is not a function" à l'ouverture du BL.
+  STATE.lignesBL = typeof bl.lignes === 'string' ? JSON.parse(bl.lignes || '[]') : (bl.lignes || []);
   el('bl-client') && (el('bl-client').value = bl.client || '');
   el('bl-ref') && (el('bl-ref').value = bl.ref || '');
   el('bl-date') && (el('bl-date').value = bl.date_livraison || '');
