@@ -65,11 +65,20 @@ function renderDemandesDevis() {
 function convertirDemandeEnDevis(demandeId) {
   const d = (STATE.demandesDevis || []).find(function(x) { return x.id === demandeId; });
   if (!d) return;
-  if (typeof initNouveauDevis === 'function') initNouveauDevis();
-  el('devis-client') && (el('devis-client').value = d.client_nom || '');
-  el('devis-tel') && (el('devis-tel').value = d.client_tel || '');
-  el('devis-email') && (el('devis-email').value = d.client_email || '');
-  el('devis-note') && (el('devis-note').value = d.description ? 'Demande initiale : ' + d.description : '');
+  // FIX (audit) : deux bugs ici.
+  // 1) 'devis-client'/'devis-tel'/'devis-email'/'devis-note' ne
+  //    correspondent à AUCUN id réel du formulaire (le vrai champ
+  //    client est 'd-client', le vrai champ note est 'd-note' ; il
+  //    n'existe pas de champ téléphone/email sur ce formulaire) — ces
+  //    lignes ne faisaient donc jamais rien, silencieusement.
+  // 2) Même en corrigeant les ids, les remplir AVANT goScreen('nouveau-devis')
+  //    ne servait à rien : l'action 'nouveau-devis' de nav.js rappelle
+  //    initNouveauDevis() sans argument et efface tout. On passe donc par
+  //    STATE._prefillNouveauDevis, comme pour dupliquerDevis().
+  STATE._prefillNouveauDevis = {
+    client: d.client_nom || '',
+    note: d.description ? 'Demande initiale : ' + d.description : ''
+  };
   STATE._demandeDevisEnCours = demandeId;
   goScreen('nouveau-devis', null);
 }
