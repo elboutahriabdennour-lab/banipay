@@ -117,6 +117,7 @@
     <span style="font-size:12px;font-weight:600;color:#8E2E24">🛒 Achats en attente</span>
     <span id="dashboard-achats-montant" style="font-size:15px;font-weight:800;color:#8E2E24">0 MAD</span>
   </div>
+  <div style="padding:0 20px 10px"><input class="f-inp" id="facture-recherche" placeholder="🔍 Rechercher par référence ou client..." oninput="renderFactureList()"></div>
   <div class="filter-tabs">
     <button class="ftab active" onclick="setFilter('toutes',this)">Toutes</button>
     <button class="ftab" onclick="setFilter('attente',this)">En attente</button>
@@ -671,7 +672,8 @@
 <div class="screen" id="screen-achats">
   <div class="topbar"><button class="back-btn" onclick="goScreen('hub-achats',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
-  <div style="display:flex;gap:8px;padding:12px 20px;overflow-x:auto">
+  <div style="padding:0 20px 10px"><input class="f-inp" id="achats-recherche" placeholder="🔍 Rechercher par fournisseur ou référence..." oninput="renderAchats()"></div>
+  <div style="display:flex;gap:8px;padding:0 20px 12px;overflow-x:auto">
     <button class="ftab active" onclick="filtrerAchats('tous',this)">Tous</button>
     <button class="ftab" onclick="filtrerAchats('attente',this)">En attente</button>
     <button class="ftab" onclick="filtrerAchats('payee',this)">Payées</button>
@@ -850,7 +852,8 @@
   </div>
   <div style="display:none" id="devis-total"></div>
   <div style="display:none" id="devis-sub"></div>
-  <div class="filter-tabs" style="padding-top:12px">
+  <div style="padding:0 20px 10px"><input class="f-inp" id="devis-recherche" placeholder="🔍 Rechercher par référence ou client..." oninput="renderDevisList()"></div>
+  <div class="filter-tabs" style="padding-top:0">
     <button class="ftab active" onclick="filterDevis('tous',this)">Tous</button>
     <button class="ftab" onclick="filterDevis('envoye',this)">Envoyés</button>
     <button class="ftab" onclick="filterDevis('accepte',this)">Acceptés</button>
@@ -987,6 +990,18 @@
     </div>
   </div>
   <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#9C9186;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
+  <div style="padding:10px 20px 0"><input class="f-inp" id="search-produit-inp" placeholder="🔍 Rechercher un article..." oninput="renderProduits()"></div>
+  <div style="padding:8px 20px 0">
+    <select class="f-inp" id="filtre-categorie" onchange="renderProduits()">
+      <option value="tous">Toutes les catégories</option>
+      <option value="produit">📦 Produit</option>
+      <option value="service">⚙️ Service</option>
+      <option value="main-oeuvre">👷 Main d'oeuvre</option>
+      <option value="transport">🚛 Transport</option>
+      <option value="materiaux">🧱 Matériaux</option>
+      <option value="autre">📋 Autre</option>
+    </select>
+  </div>
   <div class="card-list" id="produits-list"></div>
   <div class="pb"></div>
 </div>
@@ -1972,8 +1987,6 @@
   </div>
 </div>
 
-<input type="hidden" id="search-produit-inp">
-<input type="hidden" id="filtre-categorie">
 <div class="toast" id="toast"></div>
 <!-- CLIENTS -->
   <div class="screen" id="screen-clients">
