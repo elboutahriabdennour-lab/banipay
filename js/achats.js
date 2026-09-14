@@ -32,11 +32,15 @@ function renderAchats() {
   else if (filtre === 'payee') achats = achats.filter(function(a) { return a.statut === 'payee'; });
   else if (filtre === 'banipay') achats = achats.filter(function(a) { return a.fournisseur_banipay; });
 
+  // AJOUT (demande utilisateur) : recherche locale par fournisseur ou référence.
+  const q = (el('achats-recherche')?.value || '').trim().toLowerCase();
+  if (q) achats = achats.filter(function(a) { return (a.fournisseur||'').toLowerCase().includes(q) || (a.ref_fournisseur||'').toLowerCase().includes(q); });
+
   const total = achats.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
   setEl('achats-total', fmt(total) + ' MAD');
 
   if (!achats.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-title">Aucune facture d\'achat</div><div>Ajoutez vos factures fournisseurs</div></div>';
+    list.innerHTML = '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-title">Aucune facture d\'achat</div><div>' + (q ? 'Aucun résultat pour cette recherche' : 'Ajoutez vos factures fournisseurs') + '</div></div>';
     return;
   }
 
