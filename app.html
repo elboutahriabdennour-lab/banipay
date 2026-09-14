@@ -67,7 +67,6 @@
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
     <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
     <div class="qa-item" onclick="renderHubVentes();goScreen('hub-ventes',null)"><div class="qa-ico" style="background:#EEF3E4">💰</div><div class="qa-lbl">Ventes</div></div>
-    <div class="qa-item" onclick="window._retourBcRecus='dashboard';loadBCRecus();goScreen('bc-recus',null)"><div class="qa-ico" style="background:#EDE6F0">📋</div><div class="qa-lbl">BC reçus</div></div>
   </div>
 
   <div class="groupe-label">Gestion</div>
@@ -239,9 +238,15 @@
     <input class="f-inp" id="annuaire-search" placeholder="🔍 Rechercher..." oninput="filtrerAnnuaire()" style="margin-bottom:12px">
     <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px">
       <button class="ftab active" onclick="filtrerAnnuaireSecteur('',this)">Tous</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Artisanat',this)">Artisanat</button>
       <button class="ftab" onclick="filtrerAnnuaireSecteur('BTP & Construction',this)">BTP</button>
       <button class="ftab" onclick="filtrerAnnuaireSecteur('Commerce & Négoce',this)">Commerce</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Conseil & Expertise',this)">Conseil</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Immobilier',this)">Immobilier</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Informatique & Tech',this)">Informatique</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Santé & Médical',this)">Santé</button>
       <button class="ftab" onclick="filtrerAnnuaireSecteur('Transport & Logistique',this)">Transport</button>
+      <button class="ftab" onclick="filtrerAnnuaireSecteur('Autre',this)">Autre</button>
     </div>
   </div>
   <div id="annuaire-list"></div><div class="pb"></div>
@@ -1672,7 +1677,7 @@
       <div style="padding:14px 16px">
         <div id="dgi-readiness-status" style="font-size:12px;color:#6B5F54;margin-bottom:10px">Vérification...</div>
         <div style="font-size:11px;color:#9C9186;margin-bottom:10px">Une réforme est annoncée par la DGI (direction générale des impôts), sans date ni seuils officiellement publiés à ce jour. Export de préparation disponible dès maintenant (format UBL 2.1) — à ajuster dès la publication des spécifications définitives.</div>
-        <button onclick="goScreen('profil-edit',null)" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
+        <button onclick="document.getElementById('pe-raison')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('pe-raison')?.focus()" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
       </div>
     </div>
     <!-- Équipe (fondation multi-utilisateurs) -->
@@ -2344,19 +2349,11 @@
   <div class="pb"></div>
 </div>
 
-<!-- ===== NOTIFICATIONS ===== -->
-<div class="screen" id="screen-notifications">
-  <div class="topbar">
-    <div class="topbar-brand" onclick="goScreen('dashboard',null)" style="cursor:pointer">Zel<span>to</span></div>
-    <div class="topbar-right"><button class="back-btn" onclick="goScreen('dashboard')">&#8592;</button></div>
-  </div>
-  <div class="sec-label" style="display:flex;justify-content:space-between;align-items:center">
-    <span>⚠️ Alertes</span>
-  </div>
-  <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Disparaissent automatiquement une fois le problème réglé — pas besoin de les marquer comme lues.</div>
-  <div style="padding:0 20px" id="notif-list"></div>
-  <div class="pb"></div>
-</div>
+<!-- FUSION (demande utilisateur) : l'écran "Alertes" dédié a été retiré —
+     son contenu (retards, stock bas, devis/BC sans réponse...) est
+     maintenant affiché directement dans le panneau de la cloche 🔔,
+     avec les notifications, pour n'avoir plus qu'un seul endroit à
+     consulter. Voir toggleNotifDropdown() dans nav.js. -->
 
 <!-- ===== JOURNAL D'AUDIT ===== -->
 <div class="screen" id="screen-audit">
