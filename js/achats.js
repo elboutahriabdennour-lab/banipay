@@ -57,6 +57,7 @@ function renderAchats() {
       '<div class="card-end">' +
         '<div class="card-amount" style="color:#B23A2E">' + fmt(a.ttc || 0) + '</div>' +
         '<div style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-weight:600;margin-top:4px">' + (statutLabel[a.statut] || a.statut || '') + '</div>' +
+        ((a.transactions_bancaires_liees||[]).length ? '<div style="font-size:9px;color:#1F6F72;background:#E9F4F3;display:inline-block;padding:2px 6px;border-radius:4px;font-weight:600;margin-top:3px">🏦 Rapprochée</div>' : '') +
       '</div>' +
     '</div>';
   }).join('');
