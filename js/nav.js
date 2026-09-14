@@ -760,5 +760,37 @@ function rechercheGlobale() {
       }).join(''));
   }
 
+  // AJOUT (demande utilisateur) : couverture élargie — produits, bons de
+  // commande et bons de livraison n'étaient pas cherchés du tout.
+  const produitsTrouves = (STATE.produits || []).filter(function(p) {
+    return (p.nom||'').toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (produitsTrouves.length) {
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📦 Produits & services</div>' +
+      produitsTrouves.map(function(p) {
+        return '<div class="card" onclick="goScreen(\'produits\',null)"><div class="card-ico" style="background:#E9F4F3">📦</div><div class="card-body"><div class="card-name">' + escapeHTML(p.nom||'') + '</div><div class="card-ref">' + (p.prix != null ? fmt(p.prix) + ' MAD' : '') + '</div></div></div>';
+      }).join(''));
+  }
+
+  const bcTrouves = (STATE.bonsCommande || []).filter(function(bc) {
+    return (bc.ref||'').toLowerCase().includes(q) || (bc.fournisseur||'').toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (bcTrouves.length) {
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📋 Bons de commande</div>' +
+      bcTrouves.map(function(bc) {
+        return '<div class="card" onclick="goScreen(\'bons-commande-list\',null)"><div class="card-ico" style="background:#EDE6F0">📋</div><div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + '</div></div></div>';
+      }).join(''));
+  }
+
+  const blTrouves = (STATE.bonsLivraison || []).filter(function(bl) {
+    return (bl.ref||'').toLowerCase().includes(q) || (bl.client||'').toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (blTrouves.length) {
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📦 Bons de livraison</div>' +
+      blTrouves.map(function(bl) {
+        return '<div class="card" onclick="goScreen(\'bons-livraison-list\',null)"><div class="card-ico" style="background:#E9F4F3">📦</div><div class="card-body"><div class="card-name">' + escapeHTML(bl.client||'') + '</div><div class="card-ref">' + (bl.ref||'') + '</div></div></div>';
+      }).join(''));
+  }
+
   results.innerHTML = blocs.length ? blocs.join('') : '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Aucun résultat pour "' + escapeHTML(q) + '"</div>';
 }
