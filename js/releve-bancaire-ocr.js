@@ -837,9 +837,14 @@ function renderTransactionsReleve() {
       // réutilisé aussi bien pour une transaction déjà traitée que pour
       // une transaction encore à traiter.
       function _blocDateLibelle() {
-        return '<div style="display:flex;gap:8px;margin-bottom:8px">' +
-          '<div style="background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#6B5F54;white-space:nowrap">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
-          '<div style="background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:6px 10px;font-size:11px;color:#6B5F54;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ' + escapeHTML(t.description) + '</div>' +
+        // FIX (retour utilisateur — libellé trop petit et coupé) : passé
+        // en pleine largeur sous la date, police agrandie, et le texte
+        // n'est plus tronqué avec "..." — un libellé bancaire est
+        // souvent long (nom + référence), il doit rester lisible en
+        // entier plutôt que côte à côte avec la date sur une seule ligne.
+        return '<div style="margin-bottom:8px">' +
+          '<div style="display:inline-block;background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#6B5F54;white-space:nowrap;margin-bottom:6px">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
+          '<div style="background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;color:#2A2420;line-height:1.35;word-break:break-word">📝 ' + escapeHTML(t.description) + '</div>' +
         '</div>';
       }
       const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
