@@ -907,7 +907,12 @@ function renderTransactionsReleve() {
                 '<button onclick="event.stopPropagation();ouvrirCreationRegle(' + i + ',' + _valeurPourOnclick(f.client || '') + ',' + _valeurPourOnclick(f._type) + ')" style="width:100%;padding:5px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-top:none;border-radius:0 0 8px 8px;font-size:10px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ' + escapeHTML(f.client || 'ce nom') + ' automatiquement</button>' +
               '</div>';
             }).join('')
-          : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
+          : '<div style="font-size:11px;color:#9C9186;margin-bottom:6px">Aucune correspondance trouvée</div>' +
+            // FIX (retour utilisateur) : c'est précisément quand rien
+            // n'est détecté automatiquement qu'une règle est utile —
+            // le bouton n'apparaissait avant que sur les correspondances
+            // déjà trouvées, jamais ici.
+            '<button onclick="ouvrirCreationRegle(' + i + ',\'\',' + _valeurPourOnclick(t.montant >= 0 ? 'facture' : 'achat') + ')" style="width:100%;padding:7px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ce virement</button>') +
         '</div>' +
         '<button onclick="ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:7px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">🔗 Répartir sur plusieurs factures/achats</button>' +
       '</div>';
@@ -1048,18 +1053,36 @@ function ouvrirCreationRegle(indexTransaction, nomCible, type) {
   if (!t) return;
   const motifSuggere = (t.description || '').trim();
 
+  // FIX (retour utilisateur) : nomCible n'était éditable que lorsqu'une
+  // correspondance avait déjà été trouvée automatiquement — impossible
+  // de créer une règle quand justement rien n'était détecté (le cas où
+  // une règle sert le plus). nomCible et le type sont maintenant
+  // toujours modifiables : champ texte + liste des clients/fournisseurs
+  // existants en suggestion, et un choix Facture/Achat.
+  const suggestions = (type === 'achat' ? _collectionActuelle('achat') : _collectionActuelle('facture'))
+    .map(function(d) { return d.client || d.fournisseur || ''; })
+    .filter(function(v, idx, arr) { return v && arr.indexOf(v) === idx; });
+
   const overlay = document.createElement('div');
   overlay.id = 'creation-regle-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:20px';
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%">' +
       '<div style="font-size:14px;font-weight:700;margin-bottom:6px">🔒 Créer une règle de rapprochement</div>' +
-      '<div style="font-size:11px;color:#9C9186;margin-bottom:12px">Quand un virement contient ce mot, il sera automatiquement proposé pour <strong>' + escapeHTML(nomCible) + '</strong>.</div>' +
+      '<div style="font-size:11px;color:#9C9186;margin-bottom:12px">Quand un virement contient ce mot, il sera automatiquement proposé pour le client/fournisseur choisi ci-dessous.</div>' +
       '<label style="font-size:11px;font-weight:600;color:#6B5F54;display:block;margin-bottom:4px">Mot-clé à reconnaître</label>' +
       '<input id="regle-motif-input" class="f-inp" value="' + escapeHTML(motifSuggere) + '" style="margin-bottom:12px">' +
+      '<label style="font-size:11px;font-weight:600;color:#6B5F54;display:block;margin-bottom:4px">Pour quel client/fournisseur ?</label>' +
+      '<input id="regle-cible-input" class="f-inp" value="' + escapeHTML(nomCible || '') + '" list="regle-cible-datalist" placeholder="Nom du client ou fournisseur" style="margin-bottom:12px">' +
+      '<datalist id="regle-cible-datalist">' + suggestions.map(function(s) { return '<option value="' + escapeHTML(s) + '">'; }).join('') + '</datalist>' +
+      '<label style="font-size:11px;font-weight:600;color:#6B5F54;display:block;margin-bottom:4px">Type de document</label>' +
+      '<select id="regle-type-input" class="f-inp" style="margin-bottom:12px">' +
+        '<option value="facture"' + (type !== 'achat' ? ' selected' : '') + '>🧾 Facture (client)</option>' +
+        '<option value="achat"' + (type === 'achat' ? ' selected' : '') + '>🛒 Achat (fournisseur)</option>' +
+      '</select>' +
       '<div style="display:flex;gap:8px">' +
         '<button onclick="document.getElementById(\'creation-regle-overlay\').remove()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
-        '<button onclick="confirmerCreationRegle(' + _valeurPourOnclick(nomCible) + ',' + _valeurPourOnclick(type) + ')" style="flex:1;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enregistrer</button>' +
+        '<button onclick="confirmerCreationRegle()" style="flex:1;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enregistrer</button>' +
       '</div>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -1067,9 +1090,12 @@ function ouvrirCreationRegle(indexTransaction, nomCible, type) {
   setTimeout(function() { el('regle-motif-input')?.focus(); }, 100);
 }
 
-async function confirmerCreationRegle(nomCible, type) {
+async function confirmerCreationRegle() {
   const motif = (el('regle-motif-input')?.value || '').trim();
-  if (!motif || motif.length < 3) { showToast('Entrez au moins 3 caractères', 'error'); return; }
+  const nomCible = (el('regle-cible-input')?.value || '').trim();
+  const type = el('regle-type-input')?.value || 'facture';
+  if (!motif || motif.length < 3) { showToast('Entrez au moins 3 caractères pour le mot-clé', 'error'); return; }
+  if (!nomCible) { showToast('Indiquez le client ou fournisseur concerné', 'error'); return; }
   try {
     // FIX (bug réel signalé) : le succès s'affichait quoi qu'il arrive —
     // .then(...) était lancé mais jamais attendu (pas de "await" devant),
