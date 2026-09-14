@@ -111,8 +111,12 @@ function renderFactureList() {
     if (STATE.filterF === 'attente') return ['attente','envoyee'].includes(f.statut);
     return f.statut === STATE.filterF;
   });
+  // AJOUT (demande utilisateur) : recherche locale par référence ou
+  // client, en plus des onglets de statut déjà présents.
+  const q = (el('facture-recherche')?.value || '').trim().toLowerCase();
+  if (q) data = data.filter(f => (f.ref||'').toLowerCase().includes(q) || (f.client||'').toLowerCase().includes(q));
   if (!data.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune facture</div><div>Créez votre première facture</div></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune facture</div><div>${q ? 'Aucun résultat pour cette recherche' : 'Créez votre première facture'}</div></div>`;
     return;
   }
   const icons = { attente:'🧱', retard:'⚠️', payee:'✅', envoyee:'📤' };
