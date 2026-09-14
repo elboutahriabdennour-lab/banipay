@@ -30,8 +30,8 @@ async function genNotifications() {
     } catch(e2) {}
   }
 
-  mettreAJourBadgeNotif();
   if (typeof genAlertes === 'function') genAlertes();
+  mettreAJourBadgeNotif();
 }
 
 // ============================================================
@@ -96,9 +96,12 @@ function genAlertes() {
 function mettreAJourBadgeNotif() {
   const badge = document.getElementById('notif-badge');
   if (badge) {
+    // FIX (fusion alertes/notifications) : le badge compte maintenant
+    // aussi les alertes actives (retards, stock bas...), puisqu'elles
+    // apparaissent désormais dans le même panneau.
     const count = (STATE.notifications || []).filter(function(n) {
       return n.raw ? !n.raw.lue : true;
-    }).length;
+    }).length + (STATE.alertes || []).length;
     badge.textContent = count > 99 ? '99+' : count;
     badge.style.display = count > 0 ? 'flex' : 'none';
   }
@@ -275,7 +278,6 @@ async function gererClicNotification(e) {
 
     showToast('✅ Comptable accepté !', 'success');
     await genNotifications();
-    renderNotifScreen();
     fermerNotifDropdown();
     renderMonComptable();
     return true;
@@ -290,7 +292,6 @@ async function gererClicNotification(e) {
     if (!rRef.ok) { showToast('Erreur lors du refus', 'error'); return true; }
     showToast('Invitation refusée', 'success');
     await genNotifications();
-    renderNotifScreen();
     fermerNotifDropdown();
     return true;
   }
@@ -330,7 +331,6 @@ async function gererClicNotification(e) {
       }
       showToast(btnDA ? '✅ Accepté' : btnDAtt ? '⏳ Mis en attente' : '❌ Refusé', 'success');
       await genNotifications();
-      renderNotifScreen();
     } catch(e4) {
       showToast('Erreur: ' + e4.message, 'error');
     }
@@ -387,27 +387,9 @@ async function gererClicNotification(e) {
 }
 
 // ============================================================
-// ÉCRAN NOTIFICATIONS PLEIN PAGE (conservé, accessible depuis Profil)
+// (ancien écran "Alertes" plein page retiré — fusionné dans le
+// panneau de la cloche, voir toggleNotifDropdown())
 // ============================================================
-
-async function renderNotifScreen() {
-  const list = el('notif-list');
-  if (!list) return;
-
-  if (typeof genAlertes === 'function') genAlertes();
-  const alertes = STATE.alertes || [];
-
-  if (!alertes.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">✅</div><div class="empty-title">Aucune alerte</div><div>Tout est à jour — rien qui demande votre attention pour le moment</div></div>';
-    return;
-  }
-
-  list.innerHTML = htmlListeNotifications(alertes);
-
-  if (list.dataset.clickBound === '1') return;
-  list.dataset.clickBound = '1';
-  list.addEventListener('click', function(e) { gererClicNotification(e); });
-}
 
 // ============================================================
 // PANNEAU DÉROULANT FAÇON FACEBOOK (depuis la cloche du dashboard)
@@ -426,7 +408,6 @@ async function marquerToutesNotificationsLues() {
     showToast('✅ Tout marqué comme lu', 'success');
     fermerNotifDropdown();
     await genNotifications();
-    if (document.getElementById('notif-list')) renderNotifScreen();
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
   }
@@ -452,7 +433,13 @@ async function toggleNotifDropdown(event) {
 
   await genNotifications();
   const invitationsCpt = await chargerInvitationsComptableEnAttente();
-  const allNotifs = STATE.notifications || [];
+  // FUSION (demande utilisateur) : les "alertes" (retards, stock bas,
+  // devis/BC sans réponse...) vivaient dans un écran séparé, accessible
+  // uniquement par un lien discret en bas de ce panneau. Regroupées ici
+  // avec les notifications pour n'avoir plus qu'un seul endroit à
+  // consulter. Elles n'ont pas d'id/statut lu (ce sont des états, pas des
+  // événements), donc elles s'affichent simplement, sans action au clic.
+  const allNotifs = (STATE.notifications || []).concat(STATE.alertes || []);
 
   const panel = document.createElement('div');
   panel.id = 'notif-dropdown';
@@ -467,8 +454,7 @@ async function toggleNotifDropdown(event) {
         '<button onclick="fermerNotifDropdown()" style="background:#EAE4DA;color:#6B5F54;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;font-family:inherit">✕</button>' +
       '</div>' +
     '</div>' +
-    (allNotifs.length || invitationsCpt.length ? contenu : '<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>') +
-    '<div style="padding:10px 16px;border-top:1px solid #E3DCCF"><button onclick="fermerNotifDropdown();goScreen(\'notifications\',null)" style="width:100%;padding:8px;background:none;color:#9C9186;border:none;font-size:11px;cursor:pointer;font-family:inherit;text-decoration:underline">⚠️ Voir les alertes (retards, stock bas...)</button></div>';
+    (allNotifs.length || invitationsCpt.length ? contenu : '<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>');
 
   document.body.appendChild(panel);
   panel.addEventListener('click', function(e) { gererClicNotification(e); });
@@ -677,7 +663,7 @@ function goScreen(name, options) {
     // d'afficher un écran qui n'existe plus.
     'dashboard-avance': function() { goScreen('stats', null); setTimeout(function() { if (typeof switchStatsOnglet === 'function') switchStatsOnglet('prevision'); }, 50); },
     'recherche': _safe(typeof initRecherche!=='undefined'?initRecherche:undefined,'initRecherche'),
-    'notifications': _safe(typeof renderNotifScreen!=='undefined'?renderNotifScreen:undefined,'renderNotifScreen'),
+    // FUSION : 'notifications' retiré (écran supprimé, voir plus haut)
     'audit': _safe(typeof renderJournalAudit!=='undefined'?renderJournalAudit:undefined,'renderJournalAudit'),
     'profil': function() { if (typeof renderProfil==='function') renderProfil(); setTimeout(function(){ if (typeof renderMonComptable==='function') renderMonComptable(); }, 300); if (typeof chargerMesParrainages === 'function') chargerMesParrainages(); },
     'comptable': _safe(typeof renderComptableDashboard!=='undefined'?renderComptableDashboard:undefined,'renderComptableDashboard'),
