@@ -666,6 +666,25 @@ function _appliquerFiltresReleve(transactionsAvecIndex) {
     if (STATE._filtreReleveStatut === 'liees' && !estLiee) return false;
     if (STATE._filtreReleveStatut === 'non-liees' && estLiee) return false;
 
+    // AJOUT (demande utilisateur) : filtrer par sens — utile vu que
+    // chaque ligne affiche déjà ce signal (montant en vert/rouge), mais
+    // impossible jusqu'ici d'isoler uniquement les entrées ou sorties.
+    if (STATE._filtreReleveSens === 'entrees' && t.montant < 0) return false;
+    if (STATE._filtreReleveSens === 'sorties' && t.montant >= 0) return false;
+
+    // AJOUT (demande utilisateur) : filtrer par période — chaque ligne
+    // affiche déjà sa date, mais aucun moyen de restreindre à une plage.
+    // Les transactions n'ont qu'une date texte brute (dateBrute,
+    // format banque variable) — on la parse avec _parserDateReleve(),
+    // déjà utilisée ailleurs pour le score de correspondance.
+    if (STATE._filtreReleveDateDebut || STATE._filtreReleveDateFin) {
+      const dParsed = _parserDateReleve(t.dateBrute);
+      if (!dParsed) return false;
+      const dISO = dParsed.getFullYear() + '-' + String(dParsed.getMonth()+1).padStart(2,'0') + '-' + String(dParsed.getDate()).padStart(2,'0');
+      if (STATE._filtreReleveDateDebut && dISO < STATE._filtreReleveDateDebut) return false;
+      if (STATE._filtreReleveDateFin && dISO > STATE._filtreReleveDateFin) return false;
+    }
+
     if (q && !_sansAccents((t.description||'').toLowerCase()).includes(q)) return false;
 
     const montantAbs = Math.abs(t.montant);
@@ -685,6 +704,7 @@ function _appliquerFiltresReleve(transactionsAvecIndex) {
 
 function changerFiltreReleveStatut(valeur) { STATE._filtreReleveStatut = valeur; renderTransactionsReleve(); }
 function changerFiltreReleveConfiance(valeur) { STATE._filtreReleveConfiance = valeur; renderTransactionsReleve(); }
+function changerFiltreReleveSens(valeur) { STATE._filtreReleveSens = valeur; renderTransactionsReleve(); }
 function rechercherDansReleve(valeur) { STATE._filtreReleveRecherche = valeur; renderTransactionsReleve(); }
 function appliquerFiltreMontantReleve() {
   const min = el('releve-filtre-montant-min')?.value;
@@ -693,11 +713,19 @@ function appliquerFiltreMontantReleve() {
   STATE._filtreReleveMontantMax = max ? parseFloat(max) : null;
   renderTransactionsReleve();
 }
+function appliquerFiltreDateReleve() {
+  STATE._filtreReleveDateDebut = el('releve-filtre-date-debut')?.value || null;
+  STATE._filtreReleveDateFin = el('releve-filtre-date-fin')?.value || null;
+  renderTransactionsReleve();
+}
 function effacerFiltresReleve() {
   STATE._filtreReleveStatut = 'tous';
   STATE._filtreReleveRecherche = '';
   STATE._filtreReleveMontantMin = null;
   STATE._filtreReleveMontantMax = null;
+  STATE._filtreReleveSens = 'tous';
+  STATE._filtreReleveDateDebut = null;
+  STATE._filtreReleveDateFin = null;
   STATE._filtreReleveConfiance = 'tous';
   el('releve-filtre-recherche') && (el('releve-filtre-recherche').value = '');
   el('releve-filtre-montant-min') && (el('releve-filtre-montant-min').value = '');
@@ -730,22 +758,40 @@ function _barreFiltresReleve() {
         '<option value="aucune"' + (STATE._filtreReleveConfiance==='aucune'?' selected':'') + '>Aucune correspondance</option>' +
       '</select>' +
     '</div>' +
+    // AJOUT (demande utilisateur) : filtre par sens — la couleur du
+    // montant indique déjà entrée/sortie, mais rien ne permettait de
+    // n'afficher que l'un ou l'autre.
     '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
       '<input type="number" id="releve-filtre-montant-min" class="f-inp" placeholder="Montant min" value="' + (STATE._filtreReleveMontantMin!=null?STATE._filtreReleveMontantMin:'') + '" onchange="appliquerFiltreMontantReleve()" style="flex:1">' +
       '<span style="font-size:12px;color:#9C9186">à</span>' +
       '<input type="number" id="releve-filtre-montant-max" class="f-inp" placeholder="Montant max" value="' + (STATE._filtreReleveMontantMax!=null?STATE._filtreReleveMontantMax:'') + '" onchange="appliquerFiltreMontantReleve()" style="flex:1">' +
+      '<select id="releve-filtre-sens" class="f-inp" style="flex:1" onchange="changerFiltreReleveSens(this.value)">' +
+        '<option value="tous"' + ((STATE._filtreReleveSens||'tous')==='tous'?' selected':'') + '>Entrées et sorties</option>' +
+        '<option value="entrees"' + (STATE._filtreReleveSens==='entrees'?' selected':'') + '>Entrées seulement</option>' +
+        '<option value="sorties"' + (STATE._filtreReleveSens==='sorties'?' selected':'') + '>Sorties seulement</option>' +
+      '</select>' +
     '</div>' +
-    ((STATE._filtreReleveStatut!=='tous'||STATE._filtreReleveRecherche||STATE._filtreReleveMontantMin!=null||STATE._filtreReleveMontantMax!=null||STATE._filtreReleveConfiance!=='tous')
+    // AJOUT (demande utilisateur) : filtre par période.
+    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
+      '<input type="date" id="releve-filtre-date-debut" class="f-inp" value="' + (STATE._filtreReleveDateDebut||'') + '" onchange="appliquerFiltreDateReleve()" style="flex:1">' +
+      '<span style="font-size:12px;color:#9C9186">à</span>' +
+      '<input type="date" id="releve-filtre-date-fin" class="f-inp" value="' + (STATE._filtreReleveDateFin||'') + '" onchange="appliquerFiltreDateReleve()" style="flex:1">' +
+    '</div>' +
+    ((STATE._filtreReleveStatut!=='tous'||STATE._filtreReleveRecherche||STATE._filtreReleveMontantMin!=null||STATE._filtreReleveMontantMax!=null||STATE._filtreReleveConfiance!=='tous'||(STATE._filtreReleveSens&&STATE._filtreReleveSens!=='tous')||STATE._filtreReleveDateDebut||STATE._filtreReleveDateFin)
       ? '<span onclick="effacerFiltresReleve()" style="font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Effacer les filtres</span>'
       : '') +
   '</div>';
 }
 
-// NOUVEAU (retour utilisateur) : affichage décortiqué — date, libellé et
-// montant chacun dans leur propre "case" bien visible, plutôt qu'une
-// seule ligne de texte compacte. Zébrage sur 2 couleurs alternées
-// (papier clair / blanc) entre chaque transaction, pour bien distinguer
-// une ligne de la suivante d'un coup d'œil sur une longue liste.
+// FIX (demande utilisateur — écran jugé trop chargé) : simplifié.
+// Le zébrage entre lignes a été retiré (fond blanc partout — la bordure
+// suffit à séparer les lignes). Les boutons de correspondance
+// facture/achat n'ont plus chacun leur propre couleur de fond (vert vs
+// rouge, qui créait un effet "feu tricolore" à côté du montant déjà
+// coloré) — un seul fond neutre, le type se lit via l'icône + le texte.
+// Les badges de confiance sont passés de pastilles pleines en couleur à
+// un simple point + texte, moins envahissant visuellement tout en
+// gardant l'information.
 function renderTransactionsReleve() {
   const zone = el('rapprochement-releve-content');
   if (!zone) return;
@@ -768,13 +814,9 @@ function renderTransactionsReleve() {
       (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
     '</div>' +
     (!filtrees.length ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune transaction ne correspond à ces filtres</div></div>' :
-    filtrees.map(function(item, position) {
+    filtrees.map(function(item) {
       const t = item.t;
       const i = item.indexOriginal;
-      // Zébrage : couleur de fond de la "carte" alternée une ligne sur deux
-      // (basé sur la position affichée, pas l'indice d'origine, pour que
-      // le zébrage reste cohérent même après filtrage).
-      const fondZebre = position % 2 === 0 ? '#fff' : '#FBF9F5';
 
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
@@ -795,7 +837,7 @@ function renderTransactionsReleve() {
       if (t._traitee || dejaLieeAvec) {
         const doc = dejaLieeAvec || {};
         const typeDoc = doc.fournisseur ? 'achat' : 'facture';
-        return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7;border-left:4px solid #6E8F4E">' +
+        return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7;border-left:4px solid #6E8F4E">' +
           _blocDateLibelle() +
           blocMontant +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">' +
@@ -806,7 +848,7 @@ function renderTransactionsReleve() {
       }
 
       const aDesCorrespondances = t.correspondances && t.correspondances.length > 0;
-      return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
+      return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
         _blocDateLibelle() +
         blocMontant +
         '<div style="margin-top:8px">' +
@@ -814,11 +856,10 @@ function renderTransactionsReleve() {
           ? t.correspondances.map(function(f) {
               const estAchat = f._type === 'achat';
               const libelle = estAchat ? 'l\'achat' : 'la facture';
-              const couleurFond = estAchat ? '#F5E4E1' : '#EEF3E4';
-              const couleurTexte = estAchat ? '#8E2E24' : '#55702E';
-              const badge = f._score >= 0.75 ? '<span style="background:#1F6F72;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓✓ Forte correspondance</span>'
-                : f._score >= 0.5 ? '<span style="background:#C9971F;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">✓ Correspondance probable</span>'
-                : '<span style="background:#9C9186;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;margin-left:6px">? À vérifier</span>';
+              const icone = estAchat ? '🛒' : '🧾';
+              const pointCouleur = f._score >= 0.75 ? '#1F6F72' : f._score >= 0.5 ? '#C9971F' : '#9C9186';
+              const texteConfiance = f._score >= 0.75 ? 'Forte correspondance' : f._score >= 0.5 ? 'Correspondance probable' : 'À vérifier';
+              const badge = '<span style="color:' + pointCouleur + ';font-size:9px;font-weight:700;margin-left:6px">● ' + texteConfiance + '</span>';
               // NOUVEAU (retour utilisateur) : détail du score par
               // critère, pas juste un badge global — visible directement,
               // pas une boîte noire.
@@ -828,7 +869,7 @@ function renderTransactionsReleve() {
               const infoAcompte = f._dejaLiees > 0
                 ? '<div style="font-size:10px;color:#1F6F72;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
                 : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
-              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:' + couleurFond + ';color:' + couleurTexte + ';border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">✅ Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>';
+              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:#F8F6F2;color:#2A2420;border:1px solid #EAE4DA;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">' + icone + ' Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>';
             }).join('')
           : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
         '</div>' +
@@ -994,16 +1035,26 @@ async function confirmerCreationRegle(nomCible, type) {
   const motif = (el('regle-motif-input')?.value || '').trim();
   if (!motif || motif.length < 3) { showToast('Entrez au moins 3 caractères', 'error'); return; }
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/regles_rapprochement', {
+    // FIX (bug réel signalé) : le succès s'affichait quoi qu'il arrive —
+    // .then(...) était lancé mais jamais attendu (pas de "await" devant),
+    // et son résultat (r.ok) n'était vérifié qu'à L'INTÉRIEUR du .then,
+    // trop tard pour empêcher le toast de succès et la fermeture de la
+    // fenêtre juste en dessous. Concrètement : si l'enregistrement
+    // échouait (droits, table, réseau...), l'utilisateur voyait quand
+    // même "✅ Règle enregistrée" — la règle n'existait pourtant jamais.
+    const r = await fetch(SUPABASE_URL + '/rest/v1/regles_rapprochement', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify({ user_id: (STATE.entrepriseId || sb.user.id), motif: motif, nom_cible: nomCible, type: type })
-    }).then(async function(r) {
-      if (r.ok) {
-        const data = await r.json();
-        STATE.reglesRapprochement = (STATE.reglesRapprochement || []).concat(data);
-      }
     });
+    if (!r.ok) {
+      const errTxt = await r.text().catch(function() { return ''; });
+      console.error('confirmerCreationRegle: échec', r.status, errTxt);
+      showToast('❌ Échec de l\'enregistrement (' + r.status + ') — règle non créée', 'error');
+      return;
+    }
+    const data = await r.json();
+    STATE.reglesRapprochement = (STATE.reglesRapprochement || []).concat(data);
     document.getElementById('creation-regle-overlay')?.remove();
     showToast('✅ Règle enregistrée — "' + motif + '" sera reconnu automatiquement', 'success');
   } catch(e) {
