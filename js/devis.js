@@ -4,8 +4,11 @@ function renderDevisList() {
   const list = el('devis-list');
   if (!list) return;
   let data = STATE.filterD === 'tous' ? STATE.devis : STATE.devis.filter(d => d.statut === STATE.filterD);
+  // AJOUT (demande utilisateur) : recherche locale par référence ou client.
+  const q = (el('devis-recherche')?.value || '').trim().toLowerCase();
+  if (q) data = data.filter(d => (d.ref||'').toLowerCase().includes(q) || (d.client||'').toLowerCase().includes(q));
   if (!data.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">Aucun devis</div></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">${q ? 'Aucun résultat pour cette recherche' : 'Aucun devis'}</div></div>`;
     return;
   }
   const icons = { envoye:'📤', accepte:'✅', refuse:'❌', converti:'🧾', expire:'⏰' };
