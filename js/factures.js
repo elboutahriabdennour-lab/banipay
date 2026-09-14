@@ -142,7 +142,13 @@ function renderFactureList() {
       <div class="card-end">
         <div class="card-amt">${fmt(f.ttc)} ${f.devise||'MAD'}</div>
         <div class="badge b-${f.statut}">${badgeF(f.statut)}</div>
-        ${(f.transactions_bancaires_liees||[]).length ? `<div style="font-size:9px;color:#1F6F72;background:#E9F4F3;display:inline-block;padding:2px 6px;border-radius:4px;font-weight:600;margin-top:3px">🏦 Rapprochée</div>` : ''}
+        ${(function() {
+          // AJOUT (demande utilisateur) : même bouton de rapprochement
+          // que côté comptable, mais ici pour que l'entreprise elle-même
+          // puisse rapprocher ses factures sans attendre son comptable.
+          const estRapprochee = (f.transactions_bancaires_liees||[]).length > 0;
+          return `<button onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(${f.id},'facture')" title="Rapprocher avec une transaction bancaire" style="font-size:9px;color:${estRapprochee?'#fff':'#1F6F72'};background:${estRapprochee?'#1F6F72':'#E9F4F3'};border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit;font-weight:600">🏦 ${estRapprochee?'Rapprochée':'Rapprocher'}</button>`;
+        })()}
         ${!enSelection ? `<button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>` : ''}
       </div>
     </div>`;
