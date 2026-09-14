@@ -620,22 +620,32 @@ function renderCptAchats() {
     creerFiltreMoisCpt('moisAchats', CPT.currentAchats, 'date_achat') +
     creerFiltreRechercheCpt('rechercheFournisseur', CPT.filtres.rechercheFournisseur, 'Rechercher un fournisseur...', 'renderCptAchats') +
     filtreStatutHtml +
-    '<div style="display:grid;grid-template-columns:1fr 44px 44px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1EEE8">' +
+    '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1EEE8">' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Achat</div>' +
       '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Voir</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#1F6F72;text-align:center">🏦</div>' +
       '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
       '<div style="font-size:11px;font-weight:800;color:#7C5CA6;text-align:center">T</div>' +
     '</div>' +
     achats.map(function(a) {
       const ctrl = (CPT.currentControlesAchats || []).find(function(c) { return String(c.facture_id) === String(a.id); }) || {};
-      return '<div style="display:grid;grid-template-columns:1fr 40px 44px 44px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+      // FIX (audit) : parité avec renderCptFactures() — même signe visuel
+      // "rapproché" et même bouton dédié, absents jusqu'ici côté achats.
+      const estRapprochee = (a.transactions_bancaires_liees || []).length > 0;
+      return '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
         '<div>' +
           '<div style="font-size:12px;font-weight:700">' + escapeHTML(a.fournisseur || '') + '</div>' +
           '<div style="font-size:11px;color:#6B5F54">' + (a.ref_fournisseur || '') + ' · ' + fmt(a.ttc || 0) + ' MAD · ' + (a.date_achat || '') + '</div>' +
-          '<span style="background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[a.statut] || '') + '</span>' +
+          '<div style="display:flex;gap:6px;margin-top:3px;align-items:center">' +
+            '<span style="background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[a.statut] || '') + '</span>' +
+            (estRapprochee ? '<span style="font-size:9px;color:#1F6F72;background:#E9F4F3;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Rapprochée</span>' : '') +
+          '</div>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-voir-achat" data-achatid="' + a.id + '" title="Visualiser l achat" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #E0B6AC;background:#F5E4E1;color:#8E2E24;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
+          '<button class="btn-voir-achat" data-achatid="' + a.id + '" title="Visualiser l achat" style="width:30px;height:30px;border-radius:8px;border:1.5px solid #E0B6AC;background:#F5E4E1;color:#8E2E24;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:center">' +
+          '<button class="btn-rapprocher-achat-cpt" onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" title="Rapprocher avec une transaction bancaire" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (estRapprochee ? '#1F6F72' : '#EAE4DA') + ';font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (estRapprochee ? '#fff' : '#6B5F54') + '">🏦</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-lettr-achat" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
@@ -722,9 +732,13 @@ async function ouvrirAchatComptable(achatId) {
         '<div><div style="font-size:12px;font-weight:600">Lettrage</div></div>' +
         '<button class="btn-lettr-achat-ov" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.lettre ? '#B8860B' : '#E3DCCF') + ';background:' + (ctrl.lettre ? '#F7EFDC' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.lettre ? '☑' : '☐') + '</button>' +
       '</div>' +
-      '<div style="display:flex;justify-content:space-between;padding:10px 0">' +
+      '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA">' +
         '<div><div style="font-size:12px;font-weight:600">TVA verifiee</div></div>' +
         '<button class="btn-tva-achat-ov" data-achatid="' + a.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';background:' + (ctrl.tva_verifie ? '#EDE6F0' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.tva_verifie ? '☑' : '☐') + '</button>' +
+      '</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">' +
+        '<div><div style="font-size:12px;font-weight:600">Rapprochement bancaire</div><div style="font-size:10px;color:#9C9186">' + ((a.transactions_bancaires_liees||[]).length ? (a.transactions_bancaires_liees||[]).length + ' transaction(s) liée(s)' : 'Aucune transaction liée') + '</div></div>' +
+        '<button class="btn-rapprocher-achat-ov" onclick="ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" style="padding:7px 12px;border-radius:8px;border:none;background:' + ((a.transactions_bancaires_liees||[]).length ? '#1F6F72' : '#E9F4F3') + ';color:' + ((a.transactions_bancaires_liees||[]).length ? '#fff' : '#1F6F72') + ';font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher</button>' +
       '</div>' +
     '</div>' +
     '<div style="height:40px"></div>';
