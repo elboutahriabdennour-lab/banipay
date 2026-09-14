@@ -822,7 +822,12 @@ function renderTransactionsReleve() {
       // (pas l'indice d'origine), pour rester cohérent après filtrage.
       // Couleurs reprises du thème de l'app (surface blanche / paper),
       // pas une couleur inventée pour l'occasion.
-      const fondZebre = position % 2 === 0 ? '#fff' : '#F1EEE8';
+      // FIX (retour utilisateur — pas assez visible) : contraste blanc/paper
+      // trop faible. Remplacé par blanc / orange safran clair (#FBF0DA),
+      // la couleur de marque Zelto (le "to" du logo utilise ce même
+      // safran) déjà utilisée ailleurs dans l'app pour le badge "en
+      // attente" — cohérent, pas une couleur inventée pour l'occasion.
+      const fondZebre = position % 2 === 0 ? '#fff' : '#FBF0DA';
 
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
