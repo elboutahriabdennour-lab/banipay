@@ -814,9 +814,15 @@ function renderTransactionsReleve() {
       (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
     '</div>' +
     (!filtrees.length ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune transaction ne correspond à ces filtres</div></div>' :
-    filtrees.map(function(item) {
+    filtrees.map(function(item, position) {
       const t = item.t;
       const i = item.indexOriginal;
+      // AJOUT (retour utilisateur) : zébrage remis — utile pour suivre
+      // une ligne dans une longue liste. Basé sur la position affichée
+      // (pas l'indice d'origine), pour rester cohérent après filtrage.
+      // Couleurs reprises du thème de l'app (surface blanche / paper),
+      // pas une couleur inventée pour l'occasion.
+      const fondZebre = position % 2 === 0 ? '#fff' : '#F1EEE8';
 
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
@@ -827,8 +833,8 @@ function renderTransactionsReleve() {
       // une transaction encore à traiter.
       function _blocDateLibelle() {
         return '<div style="display:flex;gap:8px;margin-bottom:8px">' +
-          '<div style="background:#F1EEE8;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#6B5F54;white-space:nowrap">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
-          '<div style="background:#F1EEE8;border-radius:8px;padding:6px 10px;font-size:11px;color:#6B5F54;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ' + escapeHTML(t.description) + '</div>' +
+          '<div style="background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#6B5F54;white-space:nowrap">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
+          '<div style="background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:6px 10px;font-size:11px;color:#6B5F54;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📝 ' + escapeHTML(t.description) + '</div>' +
         '</div>';
       }
       const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
@@ -837,7 +843,7 @@ function renderTransactionsReleve() {
       if (t._traitee || dejaLieeAvec) {
         const doc = dejaLieeAvec || {};
         const typeDoc = doc.fournisseur ? 'achat' : 'facture';
-        return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7;border-left:4px solid #6E8F4E">' +
+        return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7;border-left:4px solid #6E8F4E">' +
           _blocDateLibelle() +
           blocMontant +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">' +
@@ -848,7 +854,7 @@ function renderTransactionsReleve() {
       }
 
       const aDesCorrespondances = t.correspondances && t.correspondances.length > 0;
-      return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
+      return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
         _blocDateLibelle() +
         blocMontant +
         '<div style="margin-top:8px">' +
