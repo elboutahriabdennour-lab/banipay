@@ -633,6 +633,19 @@ function _collectionActuelle(type) {
   return type === 'achat' ? (STATE.achats || []) : (STATE.factures || []);
 }
 
+// FIX (bug racine trouvé — bouton "Créer une règle" injoignable) :
+// JSON.stringify() produit des guillemets DOUBLES ("..."), incompatibles
+// avec un attribut onclick="..." lui-même délimité par des guillemets
+// doubles — le HTML se coupait au premier guillemet rencontré, rendant
+// le bouton inutilisable (silencieusement, ou avec une erreur JS
+// "Unexpected end of input" selon le navigateur). Ce helper produit à la
+// place une chaîne JS entre guillemets SIMPLES, avec échappement des
+// guillemets simples et des antislashs éventuels dans la valeur elle-même
+// (ex : un nom de client avec une apostrophe).
+function _valeurPourOnclick(valeur) {
+  return "'" + String(valeur == null ? '' : valeur).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+}
+
 function _construireRefTransaction(t) {
   return (t.dateBrute || '') + '|' + Math.abs(Number(t.montant) || 0).toFixed(2) + '|' + (t.description || '').slice(0, 60);
 }
@@ -885,7 +898,14 @@ function renderTransactionsReleve() {
               const infoAcompte = f._dejaLiees > 0
                 ? '<div style="font-size:10px;color:#1F6F72;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
                 : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
-              return '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:#F8F6F2;color:#2A2420;border:1px solid #EAE4DA;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px">' + icone + ' Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>';
+              return '<div style="margin-bottom:4px">' +
+                '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:#F8F6F2;color:#2A2420;border:1px solid #EAE4DA;border-radius:8px 8px 0 0;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">' + icone + ' Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>' +
+                // FIX (retour utilisateur — bouton introuvable) : "Créer une
+                // règle" n'existait que dans une fenêtre secondaire ouverte
+                // depuis une facture précise, jamais ici où l'utilisateur
+                // confirme réellement ses rapprochements au quotidien.
+                '<button onclick="event.stopPropagation();ouvrirCreationRegle(' + i + ',' + _valeurPourOnclick(f.client || '') + ',' + _valeurPourOnclick(f._type) + ')" style="width:100%;padding:5px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-top:none;border-radius:0 0 8px 8px;font-size:10px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ' + escapeHTML(f.client || 'ce nom') + ' automatiquement</button>' +
+              '</div>';
             }).join('')
           : '<div style="font-size:11px;color:#9C9186">Aucune correspondance trouvée</div>') +
         '</div>' +
@@ -1002,7 +1022,7 @@ function ouvrirRapprochementDepuisFacture(factureId, type) {
           '<div style="font-size:12px;margin-bottom:6px">' + escapeHTML(c.t.description) + ' — <strong style="color:' + couleurMontant + '">' + (c.t.montant >= 0 ? '+' : '') + fmt(c.t.montant) + ' MAD</strong></div>' +
           '<div style="display:flex;gap:6px">' +
             '<button onclick="confirmerRapprochementReleve(\'' + factureId + '\',\'' + (type||'facture') + '\',' + c.idx + ');document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="flex:1;padding:7px;background:#EEF3E4;color:#55702E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Lier</button>' +
-            '<button onclick="ouvrirCreationRegle(' + c.idx + ',' + JSON.stringify(nomDoc) + ',' + JSON.stringify(type||'facture') + ')" style="padding:7px 10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">🔒 Créer une règle</button>' +
+            '<button onclick="ouvrirCreationRegle(' + c.idx + ',' + _valeurPourOnclick(nomDoc) + ',' + _valeurPourOnclick(type||'facture') + ')" style="padding:7px 10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">🔒 Créer une règle</button>' +
           '</div>' +
         '</div>';
       }).join('') +
@@ -1039,7 +1059,7 @@ function ouvrirCreationRegle(indexTransaction, nomCible, type) {
       '<input id="regle-motif-input" class="f-inp" value="' + escapeHTML(motifSuggere) + '" style="margin-bottom:12px">' +
       '<div style="display:flex;gap:8px">' +
         '<button onclick="document.getElementById(\'creation-regle-overlay\').remove()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
-        '<button onclick="confirmerCreationRegle(' + JSON.stringify(nomCible) + ',' + JSON.stringify(type) + ')" style="flex:1;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enregistrer</button>' +
+        '<button onclick="confirmerCreationRegle(' + _valeurPourOnclick(nomCible) + ',' + _valeurPourOnclick(type) + ')" style="flex:1;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enregistrer</button>' +
       '</div>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
