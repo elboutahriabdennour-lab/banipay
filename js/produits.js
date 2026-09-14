@@ -21,7 +21,7 @@ function renderProduits() {
     (cat==='tous' || p.categorie===cat)
   );
   if (!data.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">Aucun article</div></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">${(q || cat !== 'tous') ? 'Aucun résultat pour ces critères' : 'Aucun article'}</div></div>`;
     return;
   }
   const catIcons = {service:'⚙️',produit:'📦','main-oeuvre':'👷',transport:'🚛',materiaux:'🧱',autre:'📋'};
