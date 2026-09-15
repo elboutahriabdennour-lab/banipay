@@ -636,9 +636,12 @@ async function loadFacturesRecues() {
 function renderFacturesRecues() {
   const container = el('factures-recues-liste');
   if (!container) return;
-  const factures = STATE.facturesRecues || [];
+  let factures = STATE.facturesRecues || [];
+  // AJOUT (audit — généralisation recherche) : recherche par référence.
+  const q = (el('factures-recues-recherche')?.value || '').trim().toLowerCase();
+  if (q) factures = factures.filter(function(f) { return (f.ref||'').toLowerCase().includes(q); });
   if (!factures.length) {
-    container.innerHTML = '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">Aucune facture reçue</div><div>Les factures que vous envoient vos fournisseurs Zelto apparaîtront ici</div></div>';
+    container.innerHTML = '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucune facture reçue') + '</div>' + (q ? '' : '<div>Les factures que vous envoient vos fournisseurs Zelto apparaîtront ici</div>') + '</div>';
     return;
   }
   container.innerHTML = factures.map(function(f) {
@@ -719,11 +722,14 @@ async function loadBCRecus() {
 function renderBCRecus() {
   const container = el('bc-recus-liste');
   if (!container) return;
-  const bcs = STATE.bcRecus || [];
+  let bcs = STATE.bcRecus || [];
+  // AJOUT (audit — généralisation recherche) : recherche par référence.
+  const q = (el('bc-recus-recherche')?.value || '').trim().toLowerCase();
+  if (q) bcs = bcs.filter(function(bc) { return (bc.ref||'').toLowerCase().includes(q); });
   const statutLabel = { envoye: '📤 Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé', brouillon: 'Brouillon' };
 
   container.innerHTML = !bcs.length
-    ? '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucun bon de commande reçu</div></div>'
+    ? '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun bon de commande reçu') + '</div></div>'
     : bcs.map(function(bc) {
         const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes||[])).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
         const dejaConverti = bc.facture_generee_id ? true : false;
@@ -798,9 +804,13 @@ async function loadBonsCommande() {
 function renderBonsCommandeListe() {
   const list = el('bons-commande-liste');
   if (!list) return;
-  const bcs = STATE.bonsCommande || [];
+  let bcs = STATE.bonsCommande || [];
+  // AJOUT (audit — généralisation recherche) : recherche locale par
+  // fournisseur ou référence, comme sur factures/devis/achats.
+  const q = (el('bc-recherche')?.value || '').trim().toLowerCase();
+  if (q) bcs = bcs.filter(function(bc) { return (bc.fournisseur||'').toLowerCase().includes(q) || (bc.ref||'').toLowerCase().includes(q); });
   if (!bcs.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucun bon de commande</div></div>';
+    list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun bon de commande') + '</div></div>';
     return;
   }
   const statutLabel = { brouillon: 'Brouillon', envoye: 'Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé' };
@@ -995,9 +1005,13 @@ async function loadBonsLivraison() {
 function renderBonsLivraisonListe() {
   const list = el('bons-livraison-liste');
   if (!list) return;
-  const bls = STATE.bonsLivraison || [];
+  let bls = STATE.bonsLivraison || [];
+  // AJOUT (audit — généralisation recherche) : recherche locale par
+  // client ou référence.
+  const q = (el('bl-recherche')?.value || '').trim().toLowerCase();
+  if (q) bls = bls.filter(function(bl) { return (bl.client||'').toLowerCase().includes(q) || (bl.ref||'').toLowerCase().includes(q); });
   if (!bls.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">Aucun bon de livraison</div></div>';
+    list.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun bon de livraison') + '</div></div>';
     return;
   }
   list.innerHTML = bls.map(function(bl) {
@@ -1112,9 +1126,13 @@ function previewAvoirPDF() {
 function renderAvoirList() {
   const list = el('avoir-list-items');
   if (!list) return;
-  const avoirs = STATE.avoirs || [];
+  let avoirs = STATE.avoirs || [];
+  // AJOUT (audit — généralisation recherche) : recherche locale par
+  // client ou référence.
+  const q = (el('avoir-recherche')?.value || '').trim().toLowerCase();
+  if (q) avoirs = avoirs.filter(function(a) { return (a.client||'').toLowerCase().includes(q) || (a.ref||'').toLowerCase().includes(q); });
   if (!avoirs.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">↩️</div><div class="empty-title">Aucun avoir</div><div>Créez un avoir depuis le formulaire</div></div>';
+    list.innerHTML = '<div class="empty"><div class="empty-ico">↩️</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun avoir') + '</div>' + (q ? '' : '<div>Créez un avoir depuis le formulaire</div>') + '</div>';
     return;
   }
   list.innerHTML = avoirs.map(a => `
