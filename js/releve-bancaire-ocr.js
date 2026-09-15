@@ -822,100 +822,125 @@ function renderTransactionsReleve() {
   const avecIndex = transactions.map(function(t, i) { return { t: t, indexOriginal: i }; });
   const filtrees = _appliquerFiltresReleve(avecIndex);
 
+  // REFONTE (demande utilisateur) : passage d'une liste de cartes à un
+  // vrai tableau compact (Date / Libellé / Montant / Statut) — plus
+  // rapide à parcourir des yeux sur une longue liste. Le détail complet
+  // (correspondances, actions) n'est plus affiché en permanence sous
+  // chaque ligne : il passe dans une bulle qui s'ouvre au clic sur la
+  // ligne (voir ouvrirBulleTransaction), pour garder le tableau lisible.
   zone.innerHTML = _barreFiltresReleve() +
-    '<div style="padding:0 20px 10px;font-size:11px;color:#9C9186">Lecture automatique — à vérifier avant de confirmer. Certaines transactions peuvent manquer ou être mal reconnues selon la mise en page de votre banque.' +
+    '<div style="padding:0 20px 10px;font-size:11px;color:#9C9186">Lecture automatique — à vérifier avant de confirmer. Touchez une ligne pour la traiter.' +
       (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
     '</div>' +
     (!filtrees.length ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune transaction ne correspond à ces filtres</div></div>' :
+    '<div style="display:grid;grid-template-columns:52px 1fr 78px 34px;padding:6px 20px;background:#F1EEE8;position:sticky;top:0;z-index:1">' +
+      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186">Date</div>' +
+      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186">Libellé</div>' +
+      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:right">Montant</div>' +
+      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Statut</div>' +
+    '</div>' +
     filtrees.map(function(item, position) {
       const t = item.t;
       const i = item.indexOriginal;
-      // AJOUT (retour utilisateur) : zébrage remis — utile pour suivre
-      // une ligne dans une longue liste. Basé sur la position affichée
-      // (pas l'indice d'origine), pour rester cohérent après filtrage.
-      // Couleurs reprises du thème de l'app (surface blanche / paper),
-      // pas une couleur inventée pour l'occasion.
-      // FIX (retour utilisateur — pas assez visible) : contraste blanc/paper
-      // trop faible. Remplacé par blanc / orange safran clair (#FBF0DA),
-      // la couleur de marque Zelto (le "to" du logo utilise ce même
-      // safran) déjà utilisée ailleurs dans l'app pour le badge "en
-      // attente" — cohérent, pas une couleur inventée pour l'occasion.
+      // Zébrage : couleurs de marque Zelto (blanc / safran clair, le
+      // "to" du logo utilise ce même orange) — assez de contraste pour
+      // suivre une ligne dans une longue liste.
       const fondZebre = position % 2 === 0 ? '#fff' : '#FBF0DA';
 
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
         || _collectionActuelle('achat').find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
-
-      // FIX (retour utilisateur — pas assez visible) : les encadrés
-      // individuels autour de la date et du libellé (fond blanc + bordure
-      // chacun) ont été retirés — texte simple directement sur le fond
-      // zébré. La seule séparation qui reste est celle ENTRE deux lignes
-      // (border-bottom), plus le bloc "carte" arrondi avec marge de
-      // chaque côté — d'où la demande de "ne garder que celui entre
-      // ligne et ligne".
-      function _blocDateLibelle() {
-        return '<div style="margin-bottom:8px">' +
-          '<div style="font-size:11px;font-weight:700;color:#9C9186;margin-bottom:2px">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
-          '<div style="font-size:14px;font-weight:600;color:#2A2420;line-height:1.35;word-break:break-word">' + escapeHTML(t.description) + '</div>' +
-        '</div>';
-      }
       const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
-      const blocMontant = '<div style="text-align:right;font-weight:800;font-size:15px;color:' + couleurMontant + '">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</div>';
 
+      // Colonne "Statut" : un coup d'œil suffit pour savoir où en est
+      // chaque ligne, sans avoir à l'ouvrir.
+      let statutIcone, statutTitre;
       if (t._traitee || dejaLieeAvec) {
-        const doc = dejaLieeAvec || {};
-        const typeDoc = doc.fournisseur ? 'achat' : 'facture';
-        return '<div style="background:' + fondZebre + ';padding:14px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid #6E8F4E">' +
-          _blocDateLibelle() +
-          blocMontant +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">' +
-            '<div style="font-size:12px;color:#55702E;font-weight:600">✅ Déjà rapprochée' + (doc.ref || doc.ref_fournisseur ? ' — ' + escapeHTML(doc.ref || doc.ref_fournisseur) : '') + '</div>' +
-            (doc.id ? '<button onclick="annulerRapprochement(\'' + doc.id + '\',\'' + typeDoc + '\',' + i + ')" style="font-size:10px;color:#B23A2E;background:none;border:1px solid #E0B6AC;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit">↩️ Annuler ce lien</button>' : '') +
-          '</div>' +
-        '</div>';
+        statutIcone = '✅'; statutTitre = 'Déjà rapprochée' + (dejaLieeAvec ? ' — ' + escapeHTML(dejaLieeAvec.ref || dejaLieeAvec.ref_fournisseur || '') : '');
+      } else if (t.correspondances && t.correspondances.length) {
+        const meilleur = t.correspondances[0]._score;
+        if (meilleur >= 0.75) { statutIcone = '🎯'; statutTitre = 'Forte correspondance trouvée'; }
+        else if (meilleur >= 0.5) { statutIcone = '🔍'; statutTitre = 'Correspondance probable'; }
+        else { statutIcone = '❔'; statutTitre = 'Correspondance à vérifier'; }
+      } else {
+        statutIcone = '—'; statutTitre = 'Aucune correspondance';
       }
 
-      const aDesCorrespondances = t.correspondances && t.correspondances.length > 0;
-      return '<div style="background:' + fondZebre + ';padding:14px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
-        _blocDateLibelle() +
-        blocMontant +
-        '<div style="margin-top:8px">' +
-        (aDesCorrespondances
-          ? t.correspondances.map(function(f) {
-              const estAchat = f._type === 'achat';
-              const libelle = estAchat ? 'l\'achat' : 'la facture';
-              const icone = estAchat ? '🛒' : '🧾';
-              const pointCouleur = f._score >= 0.75 ? '#1F6F72' : f._score >= 0.5 ? '#C9971F' : '#9C9186';
-              const texteConfiance = f._score >= 0.75 ? 'Forte correspondance' : f._score >= 0.5 ? 'Correspondance probable' : 'À vérifier';
-              const badge = '<span style="color:' + pointCouleur + ';font-size:9px;font-weight:700;margin-left:6px">● ' + texteConfiance + '</span>';
-              // NOUVEAU (retour utilisateur) : détail du score par
-              // critère, pas juste un badge global — visible directement,
-              // pas une boîte noire.
-              const detailScore = f._detail
-                ? '<div style="font-size:9px;color:#9C9186;margin-top:3px">nom ' + Math.round((f._detail.nom||0)*100) + '% · montant ' + Math.round((f._detail.montant||0)*100) + '% · date ' + Math.round((f._detail.date||0)*100) + '%' + (f._detail.regle ? ' · 🔒 règle' : '') + (f._detail.reference >= 1 ? ' · 🎯 référence' : '') + '</div>'
-                : '';
-              const infoAcompte = f._dejaLiees > 0
-                ? '<div style="font-size:10px;color:#1F6F72;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
-                : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
-              return '<div style="margin-bottom:4px">' +
-                '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ')" style="width:100%;padding:9px;background:#F8F6F2;color:#2A2420;border:1px solid #EAE4DA;border-radius:8px 8px 0 0;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">' + icone + ' Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>' +
-                // FIX (retour utilisateur — bouton introuvable) : "Créer une
-                // règle" n'existait que dans une fenêtre secondaire ouverte
-                // depuis une facture précise, jamais ici où l'utilisateur
-                // confirme réellement ses rapprochements au quotidien.
-                '<button onclick="event.stopPropagation();ouvrirCreationRegle(' + i + ',' + _valeurPourOnclick(f.client || '') + ',' + _valeurPourOnclick(f._type) + ')" style="width:100%;padding:5px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-top:none;border-radius:0 0 8px 8px;font-size:10px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ' + escapeHTML(f.client || 'ce nom') + ' automatiquement</button>' +
-              '</div>';
-            }).join('')
-          : '<div style="font-size:11px;color:#9C9186;margin-bottom:6px">Aucune correspondance trouvée</div>' +
-            // FIX (retour utilisateur) : c'est précisément quand rien
-            // n'est détecté automatiquement qu'une règle est utile —
-            // le bouton n'apparaissait avant que sur les correspondances
-            // déjà trouvées, jamais ici.
-            '<button onclick="ouvrirCreationRegle(' + i + ',\'\',' + _valeurPourOnclick(t.montant >= 0 ? 'facture' : 'achat') + ')" style="width:100%;padding:7px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ce virement</button>') +
-        '</div>' +
-        '<button onclick="ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:7px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px">🔗 Répartir sur plusieurs factures/achats</button>' +
+      return '<div onclick="ouvrirBulleTransaction(' + i + ')" style="display:grid;grid-template-columns:52px 1fr 78px 34px;align-items:center;gap:4px;background:' + fondZebre + ';padding:10px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid ' + (t._traitee||dejaLieeAvec ? '#6E8F4E' : (t.montant>=0?'#1F6F72':'#B23A2E')) + ';cursor:pointer">' +
+        '<div style="font-size:10px;font-weight:700;color:#9C9186;line-height:1.3">' + escapeHTML((t.dateBrute||'').slice(0,5)) + '</div>' +
+        '<div style="font-size:12px;font-weight:600;color:#2A2420;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">' + escapeHTML(t.description) + '</div>' +
+        '<div style="text-align:right;font-weight:800;font-size:12px;color:' + couleurMontant + '">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + '</div>' +
+        '<div style="text-align:center;font-size:14px" title="' + escapeHTML(statutTitre) + '">' + statutIcone + '</div>' +
       '</div>';
     }).join(''));
+}
+
+// AJOUT (demande utilisateur) : bulle d'actions ouverte au clic sur une
+// ligne du tableau — regroupe tout ce qui était avant affiché en
+// permanence sous chaque transaction (correspondances, "Créer une
+// règle", "Répartir sur plusieurs", "Annuler ce lien"), pour garder le
+// tableau lisible tout en gardant les mêmes actions disponibles.
+function ouvrirBulleTransaction(indexTransaction) {
+  const t = STATE._transactionsReleveActuel && STATE._transactionsReleveActuel[indexTransaction];
+  if (!t) return;
+  const i = indexTransaction;
+
+  const refTransaction = _construireRefTransaction(t);
+  const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
+    || _collectionActuelle('achat').find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
+  const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
+
+  const overlay = document.createElement('div');
+  overlay.id = 'bulle-transaction-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+
+  let corps;
+  if (t._traitee || dejaLieeAvec) {
+    const doc = dejaLieeAvec || {};
+    const typeDoc = doc.fournisseur ? 'achat' : 'facture';
+    corps = '<div style="font-size:13px;color:#55702E;font-weight:600;margin-bottom:12px">✅ Déjà rapprochée' + (doc.ref || doc.ref_fournisseur ? ' — ' + escapeHTML(doc.ref || doc.ref_fournisseur) : '') + (doc.client||doc.fournisseur ? ' (' + escapeHTML(doc.client||doc.fournisseur) + ')' : '') + '</div>' +
+      (doc.id ? '<button onclick="annulerRapprochement(\'' + doc.id + '\',\'' + typeDoc + '\',' + i + ');document.getElementById(\'bulle-transaction-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#B23A2E;border:1px solid #E0B6AC;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">↩️ Annuler ce lien</button>' : '');
+  } else {
+    const aDesCorrespondances = t.correspondances && t.correspondances.length > 0;
+    corps = (aDesCorrespondances
+      ? t.correspondances.map(function(f) {
+          const estAchat = f._type === 'achat';
+          const libelle = estAchat ? 'l\'achat' : 'la facture';
+          const icone = estAchat ? '🛒' : '🧾';
+          const pointCouleur = f._score >= 0.75 ? '#1F6F72' : f._score >= 0.5 ? '#C9971F' : '#9C9186';
+          const texteConfiance = f._score >= 0.75 ? 'Forte correspondance' : f._score >= 0.5 ? 'Correspondance probable' : 'À vérifier';
+          const badge = '<span style="color:' + pointCouleur + ';font-size:10px;font-weight:700;margin-left:6px">● ' + texteConfiance + '</span>';
+          const detailScore = f._detail
+            ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">nom ' + Math.round((f._detail.nom||0)*100) + '% · montant ' + Math.round((f._detail.montant||0)*100) + '% · date ' + Math.round((f._detail.date||0)*100) + '%' + (f._detail.regle ? ' · 🔒 règle' : '') + (f._detail.reference >= 1 ? ' · 🎯 référence' : '') + '</div>'
+            : '';
+          const infoAcompte = f._dejaLiees > 0
+            ? '<div style="font-size:10px;color:#1F6F72;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
+            : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
+          return '<div style="margin-bottom:8px">' +
+            '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ');document.getElementById(\'bulle-transaction-overlay\').remove()" style="width:100%;padding:11px;background:#F8F6F2;color:#2A2420;border:1px solid #EAE4DA;border-radius:10px 10px 0 0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">' + icone + ' Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>' +
+            '<button onclick="ouvrirCreationRegle(' + i + ',' + _valeurPourOnclick(f.client || '') + ',' + _valeurPourOnclick(f._type) + ')" style="width:100%;padding:6px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-top:none;border-radius:0 0 10px 10px;font-size:10px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ' + escapeHTML(f.client || 'ce nom') + ' automatiquement</button>' +
+          '</div>';
+        }).join('')
+      : '<div style="font-size:12px;color:#9C9186;margin-bottom:10px">Aucune correspondance trouvée</div>' +
+        '<button onclick="ouvrirCreationRegle(' + i + ',\'\',' + _valeurPourOnclick(t.montant >= 0 ? 'facture' : 'achat') + ')" style="width:100%;padding:9px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px">🔒 Créer une règle pour reconnaître ce virement</button>') +
+      '<button onclick="document.getElementById(\'bulle-transaction-overlay\').remove();ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:10px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:2px">🔗 Répartir sur plusieurs factures/achats</button>';
+  }
+
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto">' +
+      '<div style="width:36px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 16px"></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">' +
+        '<div>' +
+          '<div style="font-size:11px;color:#9C9186;font-weight:700;margin-bottom:2px">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
+          '<div style="font-size:15px;font-weight:700;color:#2A2420;line-height:1.35">' + escapeHTML(t.description) + '</div>' +
+        '</div>' +
+        '<div style="font-weight:800;font-size:17px;color:' + couleurMontant + ';white-space:nowrap;margin-left:12px">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</div>' +
+      '</div>' +
+      corps +
+      '<button onclick="document.getElementById(\'bulle-transaction-overlay\').remove()" style="width:100%;padding:10px;background:none;color:#9C9186;border:none;font-size:12px;cursor:pointer;font-family:inherit;margin-top:10px">Fermer</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
 }
 
 // FIX (retour utilisateur) : gère maintenant correctement les paiements
