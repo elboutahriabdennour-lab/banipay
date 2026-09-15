@@ -337,7 +337,7 @@ function afficherPickerClientsZelto() {
     return;
   }
   picker.innerHTML = clientsBP.map(c =>
-    '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteZelto(\'' + c.reference_id + '\',\'' + escapeHTML(c.nom||'').replace(/'/g,"\\'") + '\',\'' + (c.email||'').replace(/'/g,"\\'") + '\')">' +
+    '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteZelto(' + valeurPourOnclick(c.reference_id) + ',' + valeurPourOnclick(c.nom||'') + ',' + valeurPourOnclick(c.email||'') + ')">' +
       '<div class="card-ico" style="background:#FBF0DA">🅿️</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.email||'') + '</div></div>' +
     '</div>'
