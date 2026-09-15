@@ -36,7 +36,7 @@ function renderMarche() {
   }
   list.innerHTML = data.map(function(a) {
     const estOffre = a.type === 'offre';
-    return '<div class="card" style="margin:0 20px 10px" onclick="ouvrirAnnonceMarche(' + JSON.stringify(a.id) + ')">' +
+    return '<div class="card" style="margin:0 20px 10px" onclick="ouvrirAnnonceMarche(' + valeurPourOnclick(a.id) + ')">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
         '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:12px;background:' + (estOffre ? '#EEF3E4' : '#F7EFDC') + ';color:' + (estOffre ? '#55702E' : '#96751B') + '">' + (estOffre ? '🛠️ OFFRE' : '🔍 DEMANDE') + '</span>' +
         (a.prix ? '<span style="font-size:13px;font-weight:700;color:#0F172A">' + fmt(a.prix) + ' MAD</span>' : '') +
