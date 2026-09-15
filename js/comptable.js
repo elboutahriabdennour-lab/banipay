@@ -989,7 +989,7 @@ function renderCptInfos() {
         '</div>';
       }).join('') +
     '</div>' +
-    '<button onclick="retirerEntrepriseComptable(\'' + (CPT.entreprises.find(function(e){return e.entreprise_id===CPT.currentEntrepriseId;})||{}).id + '\',\'' + escapeHTML(p.raison||'cette entreprise').replace(/'/g,"\\'") + '\')" style="width:100%;padding:12px;background:none;color:#B23A2E;border:1px solid #F5E4E1;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer cette entreprise</button>' +
+    '<button onclick="retirerEntrepriseComptable(' + valeurPourOnclick((CPT.entreprises.find(function(e){return e.entreprise_id===CPT.currentEntrepriseId;})||{}).id) + ',' + valeurPourOnclick(p.raison||'cette entreprise') + ')" style="width:100%;padding:12px;background:none;color:#B23A2E;border:1px solid #F5E4E1;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer cette entreprise</button>' +
   '</div>';
 }
 
