@@ -560,7 +560,7 @@ function retourApresRapprochementReleve() {
   }
 }
 
-async function analyserReleve(releveId) {
+async function analyserReleve(releveId, skipNavigation) {
   // FIX (audit) : point d'entrée manquant côté comptable — le moteur de
   // rapprochement (_collectionActuelle, plus bas) savait déjà distinguer
   // CPT.currentFactures/Achats du contexte entreprise, mais cette
@@ -583,8 +583,8 @@ async function analyserReleve(releveId) {
     STATE._transactionsReleveActuel = dejaAnalyse;
     STATE._releveActuelId = releveId;
     renderTransactionsReleve();
-    goScreen('rapprochement-releve', null);
-    return;
+    if (!skipNavigation) goScreen('rapprochement-releve', null);
+    return true;
   }
 
   showToast('🔍 Lecture du relevé en cours...');
@@ -595,14 +595,42 @@ async function analyserReleve(releveId) {
   const transactions = await lireReleveBancaire(releve.data);
   if (!transactions || !transactions.length) {
     showToast('⚠️ Aucune transaction reconnue dans ce relevé — la mise en page de cette banque n\'est peut-être pas encore prise en charge', 'error');
-    return;
+    return false;
   }
   const avecSuggestions = suggererRapprochements(transactions);
   STATE._transactionsReleveActuel = avecSuggestions;
   STATE._releveActuelId = releveId;
   _sauvegarderTransactionsReleveLocal(releveId, avecSuggestions);
   renderTransactionsReleve();
-  goScreen('rapprochement-releve', null);
+  if (!skipNavigation) goScreen('rapprochement-releve', null);
+  return true;
+}
+
+// AJOUT (retour utilisateur — comptable bloqué) : jusqu'ici, rapprocher
+// une facture depuis sa fiche exigeait d'être d'abord passé par l'écran
+// "Relevés" pour ouvrir et analyser manuellement un relevé — sans ça,
+// le bouton "🏦 Rapprocher" se contentait d'un message d'erreur. Cette
+// fonction va chercher elle-même, en arrière-plan, la liste des relevés
+// disponibles (celle du client consulté pour un comptable, la sienne
+// pour une entreprise), sans que l'utilisateur ait besoin de s'y rendre.
+async function _assurerListeReleves() {
+  const estComptable = typeof CPT !== 'undefined' && CPT.role === 'comptable' && !CPT.modeEntreprise;
+  if (estComptable) {
+    if (window._releves_cpt_cache && window._releves_cpt_cache.length) return window._releves_cpt_cache;
+    try {
+      const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_releves_entreprise', {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_entreprise_id: CPT.currentEntrepriseId })
+      });
+      const releves = resp.ok ? ((await resp.json()) || []) : [];
+      window._releves_cpt_cache = releves;
+      return releves;
+    } catch (e) { return []; }
+  }
+  if (STATE.releves && STATE.releves.length) return STATE.releves;
+  if (typeof loadReleves === 'function') await loadReleves();
+  return STATE.releves || [];
 }
 
 // NOUVEAU (retour utilisateur) : force une vraie relecture du fichier,
@@ -1099,20 +1127,32 @@ async function confirmerRapprochementReleve(id, type, indexTransaction) {
 // que de ne jamais la voir du tout. Le détail du score (montant/nom/
 // date/référence/règle) est affiché pour chaque ligne, pas une boîte
 // noire.
-function ouvrirRapprochementDepuisFacture(factureId, type) {
+async function ouvrirRapprochementDepuisFacture(factureId, type) {
   const doc = type === 'achat'
     ? _collectionActuelle('achat').find(function(x) { return String(x.id) === String(factureId); })
     : _collectionActuelle('facture').find(function(x) { return String(x.id) === String(factureId); });
   if (!doc) return;
 
-  // Rassemble les transactions déjà détectées dans un relevé consulté
-  // cette session (STATE._transactionsReleveActuel) — c'est la seule
-  // source disponible sans redemander à l'entreprise de re-analyser un
-  // relevé pour chaque facture une par une.
-  const transactionsDisponibles = STATE._transactionsReleveActuel || [];
+  // FIX (retour utilisateur — comptable bloqué) : au lieu d'exiger que
+  // l'utilisateur soit d'abord allé ouvrir et analyser un relevé
+  // manuellement, on va chercher nous-mêmes le relevé le plus récent
+  // disponible et on l'analyse en arrière-plan si besoin.
+  let transactionsDisponibles = STATE._transactionsReleveActuel || [];
   if (!transactionsDisponibles.length) {
-    showToast('⚠️ Ouvrez d\'abord un relevé et cliquez "Analyser" pour pouvoir rapprocher depuis une facture', 'error');
-    return;
+    const releves = await _assurerListeReleves();
+    if (!releves.length) {
+      showToast('⚠️ Aucun relevé bancaire disponible — importez-en un d\'abord depuis l\'écran Relevés', 'error');
+      return;
+    }
+    // Le plus récent en premier (année puis mois décroissants) — on
+    // trie nous-mêmes, l'ordre renvoyé par l'API n'est pas garanti.
+    const parAncienneteDesc = releves.slice().sort(function(a, b) {
+      return (Number(b.annee)||0) - (Number(a.annee)||0) || (Number(b.mois)||0) - (Number(a.mois)||0);
+    });
+    const succes = await analyserReleve(parAncienneteDesc[0].id, true);
+    if (!succes) return;
+    transactionsDisponibles = STATE._transactionsReleveActuel || [];
+    if (!transactionsDisponibles.length) return;
   }
 
   const nomDoc = type === 'achat' ? doc.fournisseur : doc.client;
