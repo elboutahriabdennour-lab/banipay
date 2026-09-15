@@ -768,9 +768,25 @@ function _appliquerTriReleve(items) {
     }
     if (tri === 'montant-desc') return Math.abs(b.t.montant) - Math.abs(a.t.montant);
     if (tri === 'montant-asc') return Math.abs(a.t.montant) - Math.abs(b.t.montant);
+    // AJOUT (demande utilisateur) : tri alphabétique sur le libellé,
+    // déclenché en cliquant sur l'en-tête de colonne "Libellé".
+    if (tri === 'libelle-asc') return (a.t.description||'').localeCompare(b.t.description||'', 'fr');
+    if (tri === 'libelle-desc') return (b.t.description||'').localeCompare(a.t.description||'', 'fr');
     return 0;
   });
   return copie;
+}
+
+// AJOUT (demande utilisateur) : tri directement en cliquant sur l'en-tête
+// de colonne (Date / Libellé / Débit / Crédit), en plus du menu
+// déroulant — bascule croissant/décroissant à chaque clic sur la même
+// colonne.
+function trierParColonneReleve(colonne) {
+  const tri = STATE._triReleve;
+  if (colonne === 'date') STATE._triReleve = (tri === 'date-desc') ? 'date-asc' : 'date-desc';
+  else if (colonne === 'montant') STATE._triReleve = (tri === 'montant-desc') ? 'montant-asc' : 'montant-desc';
+  else if (colonne === 'libelle') STATE._triReleve = (tri === 'libelle-asc') ? 'libelle-desc' : 'libelle-asc';
+  renderTransactionsReleve();
 }
 
 function _barreFiltresReleve() {
@@ -823,6 +839,8 @@ function _barreFiltresReleve() {
         '<option value="date-asc"' + (STATE._triReleve==='date-asc'?' selected':'') + '>📅 Date — plus ancien d\'abord</option>' +
         '<option value="montant-desc"' + (STATE._triReleve==='montant-desc'?' selected':'') + '>💰 Montant — du plus grand au plus petit</option>' +
         '<option value="montant-asc"' + (STATE._triReleve==='montant-asc'?' selected':'') + '>💰 Montant — du plus petit au plus grand</option>' +
+        '<option value="libelle-asc"' + (STATE._triReleve==='libelle-asc'?' selected':'') + '>🔤 Libellé — A à Z</option>' +
+        '<option value="libelle-desc"' + (STATE._triReleve==='libelle-desc'?' selected':'') + '>🔤 Libellé — Z à A</option>' +
       '</select>' +
     '</div>' +
     ((STATE._filtreReleveStatut!=='tous'||STATE._filtreReleveRecherche||STATE._filtreReleveMontantMin!=null||STATE._filtreReleveMontantMax!=null||STATE._filtreReleveConfiance!=='tous'||(STATE._filtreReleveSens&&STATE._filtreReleveSens!=='tous')||STATE._filtreReleveDateDebut||STATE._filtreReleveDateFin||(STATE._triReleve&&STATE._triReleve!=='defaut'))
@@ -868,13 +886,22 @@ function renderTransactionsReleve() {
       (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
     '</div>' +
     (!filtrees.length ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune transaction ne correspond à ces filtres</div></div>' :
-    '<div style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;padding:6px 20px;background:#F1EEE8;position:sticky;top:0;z-index:1">' +
-      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186">Date</div>' +
-      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186">Libellé</div>' +
-      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#B23A2E;text-align:right">Débit</div>' +
-      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#55702E;text-align:right">Crédit</div>' +
-      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Statut</div>' +
-    '</div>' +
+    (function() {
+      const tri = STATE._triReleve || 'defaut';
+      const flecheDate = tri === 'date-desc' ? ' ↓' : tri === 'date-asc' ? ' ↑' : '';
+      const flecheLibelle = tri === 'libelle-asc' ? ' ↓' : tri === 'libelle-desc' ? ' ↑' : '';
+      const flecheMontant = tri === 'montant-desc' ? ' ↓' : tri === 'montant-asc' ? ' ↑' : '';
+      // AJOUT (demande utilisateur) : en-têtes cliquables pour trier —
+      // Date, Libellé (alphabétique) et Débit/Crédit (montant), avec
+      // une flèche indiquant le sens du tri actif.
+      return '<div style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;padding:6px 20px;background:#F1EEE8;position:sticky;top:0;z-index:1">' +
+        '<div onclick="trierParColonneReleve(\'date\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;cursor:pointer">Date' + flecheDate + '</div>' +
+        '<div onclick="trierParColonneReleve(\'libelle\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;cursor:pointer">Libellé' + flecheLibelle + '</div>' +
+        '<div onclick="trierParColonneReleve(\'montant\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#B23A2E;text-align:right;cursor:pointer">Débit' + flecheMontant + '</div>' +
+        '<div onclick="trierParColonneReleve(\'montant\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#55702E;text-align:right;cursor:pointer">Crédit' + flecheMontant + '</div>' +
+        '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Statut</div>' +
+      '</div>';
+    })() +
     filtrees.map(function(item, position) {
       const t = item.t;
       const i = item.indexOriginal;
@@ -890,7 +917,10 @@ function renderTransactionsReleve() {
       // AJOUT (demande utilisateur) : montant en deux colonnes distinctes
       // Débit/Crédit, présentation comptable classique, plutôt qu'une
       // seule colonne avec signe +/-.
-      const colDebit = t.montant < 0 ? '<div style="text-align:right;font-weight:800;font-size:12px;color:#B23A2E">' + fmt(Math.abs(t.montant)) + '</div>' : '<div></div>';
+      // FIX (retour utilisateur) : garder le signe "-" dans la colonne
+      // Débit — fmt() gère déjà le signe nativement (toLocaleString),
+      // pas besoin de passer par Math.abs().
+      const colDebit = t.montant < 0 ? '<div style="text-align:right;font-weight:800;font-size:12px;color:#B23A2E">' + fmt(t.montant) + '</div>' : '<div></div>';
       const colCredit = t.montant >= 0 ? '<div style="text-align:right;font-weight:800;font-size:12px;color:#55702E">' + fmt(t.montant) + '</div>' : '<div></div>';
 
       // Colonne "Statut" : un coup d'œil suffit pour savoir où en est
