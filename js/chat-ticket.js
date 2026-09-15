@@ -106,7 +106,7 @@ function renderMesTicketsSupport() {
   zone.innerHTML = !tickets.length
     ? '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket envoyé</div></div>'
     : tickets.map(function(t) {
-        return '<div onclick="ouvrirChatTicket(' + t.id + ',\'' + escapeHTML(t.sujet||'').replace(/'/g,"\\'") + '\')" style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF;cursor:pointer">' +
+        return '<div onclick="ouvrirChatTicket(' + t.id + ',' + valeurPourOnclick(t.sujet||'') + ')" style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF;cursor:pointer">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
             '<div style="font-size:13px;font-weight:700">' + escapeHTML(t.sujet||'') + '</div>' +
             '<span style="font-size:10px;font-weight:600;color:#1F6F72">' + (statutLabel[t.statut]||t.statut) + '</span>' +
