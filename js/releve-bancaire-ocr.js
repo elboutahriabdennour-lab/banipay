@@ -846,18 +846,17 @@ function renderTransactionsReleve() {
       const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
         || _collectionActuelle('achat').find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
 
-      // Bloc "date + libellé" décortiqué en 2 cases distinctes,
-      // réutilisé aussi bien pour une transaction déjà traitée que pour
-      // une transaction encore à traiter.
+      // FIX (retour utilisateur — pas assez visible) : les encadrés
+      // individuels autour de la date et du libellé (fond blanc + bordure
+      // chacun) ont été retirés — texte simple directement sur le fond
+      // zébré. La seule séparation qui reste est celle ENTRE deux lignes
+      // (border-bottom), plus le bloc "carte" arrondi avec marge de
+      // chaque côté — d'où la demande de "ne garder que celui entre
+      // ligne et ligne".
       function _blocDateLibelle() {
-        // FIX (retour utilisateur — libellé trop petit et coupé) : passé
-        // en pleine largeur sous la date, police agrandie, et le texte
-        // n'est plus tronqué avec "..." — un libellé bancaire est
-        // souvent long (nom + référence), il doit rester lisible en
-        // entier plutôt que côte à côte avec la date sur une seule ligne.
         return '<div style="margin-bottom:8px">' +
-          '<div style="display:inline-block;background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#6B5F54;white-space:nowrap;margin-bottom:6px">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
-          '<div style="background:#fff;border:1px solid #E3DCCF;border-radius:8px;padding:8px 10px;font-size:14px;font-weight:600;color:#2A2420;line-height:1.35;word-break:break-word">📝 ' + escapeHTML(t.description) + '</div>' +
+          '<div style="font-size:11px;font-weight:700;color:#9C9186;margin-bottom:2px">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
+          '<div style="font-size:14px;font-weight:600;color:#2A2420;line-height:1.35;word-break:break-word">' + escapeHTML(t.description) + '</div>' +
         '</div>';
       }
       const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
@@ -866,7 +865,7 @@ function renderTransactionsReleve() {
       if (t._traitee || dejaLieeAvec) {
         const doc = dejaLieeAvec || {};
         const typeDoc = doc.fournisseur ? 'achat' : 'facture';
-        return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DCE8C7;border-left:4px solid #6E8F4E">' +
+        return '<div style="background:' + fondZebre + ';padding:14px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid #6E8F4E">' +
           _blocDateLibelle() +
           blocMontant +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">' +
@@ -877,7 +876,7 @@ function renderTransactionsReleve() {
       }
 
       const aDesCorrespondances = t.correspondances && t.correspondances.length > 0;
-      return '<div style="background:' + fondZebre + ';border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
+      return '<div style="background:' + fondZebre + ';padding:14px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid ' + (t.montant>=0?'#1F6F72':'#B23A2E') + '">' +
         _blocDateLibelle() +
         blocMontant +
         '<div style="margin-top:8px">' +
