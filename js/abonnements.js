@@ -72,9 +72,12 @@ function calculerProchaineDateAbonnement(dateBase, frequence, jourGeneration) {
 function renderAbonnements() {
   const list = el('abonnements-list');
   if (!list) return;
-  const abs = STATE.abonnements || [];
+  let abs = STATE.abonnements || [];
+  // AJOUT (audit — généralisation recherche) : recherche locale par client.
+  const q = (el('abonnements-recherche')?.value || '').trim().toLowerCase();
+  if (q) abs = abs.filter(function(a) { return (a.client||'').toLowerCase().includes(q); });
   if (!abs.length) {
-    list.innerHTML = '<div class="empty"><div class="empty-ico">🔁</div><div class="empty-title">Aucun abonnement</div><div>Créez une facturation récurrente pour un client</div></div>';
+    list.innerHTML = '<div class="empty"><div class="empty-ico">🔁</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun abonnement') + '</div>' + (q ? '' : '<div>Créez une facturation récurrente pour un client</div>') + '</div>';
     return;
   }
   const freqLabels = { mensuel: 'Mensuel', trimestriel: 'Trimestriel', annuel: 'Annuel' };
