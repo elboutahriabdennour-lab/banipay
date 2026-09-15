@@ -515,7 +515,7 @@ function filtrerPickerClients() {
       zone.id = 'clients-picker-annuaire';
       zone.innerHTML = '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
         resultats.map(function(p) {
-          return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + "'" + escapeHTML(p.raison||'').replace(/'/g,"\\'") + "'" + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
+          return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + valeurPourOnclick(p.raison||'') + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
         }).join('');
       container.appendChild(zone);
     } catch(e) {}
@@ -530,7 +530,7 @@ function renderPickerClients(liste) {
     return;
   }
   container.innerHTML = liste.map(function(c) {
-    return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + "'" + escapeHTML(c.nom||'').replace(/'/g,"\\'") + "'" + ')">' +
+    return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + valeurPourOnclick(c.nom||'') + ')">' +
       '<div class="card-ico" style="background:#E9F4F3;font-weight:700;color:#C9971F;font-size:16px">' + (c.nom||'?').charAt(0).toUpperCase() + '</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.tel||c.email||'') + '</div></div>' +
     '</div>';
