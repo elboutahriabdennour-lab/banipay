@@ -833,10 +833,11 @@ function renderTransactionsReleve() {
       (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
     '</div>' +
     (!filtrees.length ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune transaction ne correspond à ces filtres</div></div>' :
-    '<div style="display:grid;grid-template-columns:52px 1fr 78px 34px;padding:6px 20px;background:#F1EEE8;position:sticky;top:0;z-index:1">' +
+    '<div style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;padding:6px 20px;background:#F1EEE8;position:sticky;top:0;z-index:1">' +
       '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186">Date</div>' +
       '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186">Libellé</div>' +
-      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:right">Montant</div>' +
+      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#B23A2E;text-align:right">Débit</div>' +
+      '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#55702E;text-align:right">Crédit</div>' +
       '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Statut</div>' +
     '</div>' +
     filtrees.map(function(item, position) {
@@ -850,7 +851,12 @@ function renderTransactionsReleve() {
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
         || _collectionActuelle('achat').find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
-      const couleurMontant = t.montant >= 0 ? '#55702E' : '#B23A2E';
+
+      // AJOUT (demande utilisateur) : montant en deux colonnes distinctes
+      // Débit/Crédit, présentation comptable classique, plutôt qu'une
+      // seule colonne avec signe +/-.
+      const colDebit = t.montant < 0 ? '<div style="text-align:right;font-weight:800;font-size:12px;color:#B23A2E">' + fmt(Math.abs(t.montant)) + '</div>' : '<div></div>';
+      const colCredit = t.montant >= 0 ? '<div style="text-align:right;font-weight:800;font-size:12px;color:#55702E">' + fmt(t.montant) + '</div>' : '<div></div>';
 
       // Colonne "Statut" : un coup d'œil suffit pour savoir où en est
       // chaque ligne, sans avoir à l'ouvrir.
@@ -866,10 +872,11 @@ function renderTransactionsReleve() {
         statutIcone = '—'; statutTitre = 'Aucune correspondance';
       }
 
-      return '<div onclick="ouvrirBulleTransaction(' + i + ')" style="display:grid;grid-template-columns:52px 1fr 78px 34px;align-items:center;gap:4px;background:' + fondZebre + ';padding:10px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid ' + (t._traitee||dejaLieeAvec ? '#6E8F4E' : (t.montant>=0?'#1F6F72':'#B23A2E')) + ';cursor:pointer">' +
+      return '<div onclick="ouvrirBulleTransaction(' + i + ')" style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;align-items:center;gap:4px;background:' + fondZebre + ';padding:10px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid ' + (t._traitee||dejaLieeAvec ? '#6E8F4E' : (t.montant>=0?'#1F6F72':'#B23A2E')) + ';cursor:pointer">' +
         '<div style="font-size:10px;font-weight:700;color:#9C9186;line-height:1.3">' + escapeHTML((t.dateBrute||'').slice(0,5)) + '</div>' +
         '<div style="font-size:12px;font-weight:600;color:#2A2420;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">' + escapeHTML(t.description) + '</div>' +
-        '<div style="text-align:right;font-weight:800;font-size:12px;color:' + couleurMontant + '">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + '</div>' +
+        colDebit +
+        colCredit +
         '<div style="text-align:center;font-size:14px" title="' + escapeHTML(statutTitre) + '">' + statutIcone + '</div>' +
       '</div>';
     }).join(''));
