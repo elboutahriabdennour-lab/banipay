@@ -27,7 +27,10 @@ async function loadDemandesDevis() {
 function renderDemandesDevis() {
   const zone = el('demandes-devis-liste');
   if (!zone) return;
-  const liste = STATE.demandesDevis || [];
+  let liste = STATE.demandesDevis || [];
+  // AJOUT (audit — généralisation recherche) : recherche par client.
+  const q = (el('demandes-devis-recherche')?.value || '').trim().toLowerCase();
+  if (q) liste = liste.filter(function(d) { return (d.client_nom||'').toLowerCase().includes(q); });
   const nouvelles = liste.filter(function(d) { return d.statut === 'nouvelle'; }).length;
 
   const resume = el('demandes-devis-resume');
@@ -36,7 +39,7 @@ function renderDemandesDevis() {
     : '';
 
   zone.innerHTML = !liste.length
-    ? '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">Aucune demande de devis</div><div>Les demandes envoyées par vos clients apparaîtront ici</div></div>'
+    ? '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucune demande de devis') + '</div>' + (q ? '' : '<div>Les demandes envoyées par vos clients apparaîtront ici</div>') + '</div>'
     : liste.map(function(d) {
         const statutLabel = { nouvelle: '🆕 Nouvelle', traitee: '✅ Traitée', ignoree: '✕ Ignorée' };
         const statutColor = { nouvelle: '#B8860B', traitee: '#6E8F4E', ignoree: '#9C9186' };
