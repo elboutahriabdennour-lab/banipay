@@ -16,6 +16,10 @@ function renderEmployes() {
   const container = el('employes-liste');
   if (!container) return;
   const employes = STATE.employes || [];
+  // AJOUT (audit — généralisation recherche) : recherche locale par nom
+  // ou poste.
+  const q = (el('employes-recherche')?.value || '').trim().toLowerCase();
+  const employesAffiches = q ? employes.filter(function(e) { return (e.nom||'').toLowerCase().includes(q) || (e.poste||'').toLowerCase().includes(q); }) : employes;
   const actifs = employes.filter(function(e) { return e.statut === 'actif'; });
   const masseSalariale = actifs.reduce(function(s, e) { return s + (Number(e.salaire_mensuel) || 0); }, 0);
   const resume = el('employes-resume');
@@ -26,9 +30,9 @@ function renderEmployes() {
         '<div style="background:#FBF0DA;border-radius:12px;padding:12px"><div style="font-size:11px;color:#A67A16;font-weight:600">💰 Masse salariale/mois</div><div style="font-size:18px;font-weight:800;color:#A67A16">' + fmt(masseSalariale) + ' MAD</div></div>' +
       '</div>';
   }
-  container.innerHTML = !employes.length
-    ? '<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun employé enregistré</div></div>'
-    : employes.map(function(e) {
+  container.innerHTML = !employesAffiches.length
+    ? '<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun employé enregistré') + '</div></div>'
+    : employesAffiches.map(function(e) {
         const statutColor = e.statut === 'actif' ? '#6E8F4E' : '#9C9186';
         const statutLabel = e.statut === 'actif' ? 'Actif' : 'Inactif';
         return '<div class="card" onclick="ouvrirFicheEmploye(' + e.id + ')">' +
