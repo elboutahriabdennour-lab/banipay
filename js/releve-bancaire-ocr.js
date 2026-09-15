@@ -740,12 +740,37 @@ function effacerFiltresReleve() {
   STATE._filtreReleveDateDebut = null;
   STATE._filtreReleveDateFin = null;
   STATE._filtreReleveConfiance = 'tous';
+  STATE._triReleve = 'defaut';
   el('releve-filtre-recherche') && (el('releve-filtre-recherche').value = '');
   el('releve-filtre-montant-min') && (el('releve-filtre-montant-min').value = '');
   el('releve-filtre-montant-max') && (el('releve-filtre-montant-max').value = '');
   el('releve-filtre-statut') && (el('releve-filtre-statut').value = 'tous');
   el('releve-filtre-confiance') && (el('releve-filtre-confiance').value = 'tous');
+  el('releve-tri') && (el('releve-tri').value = 'defaut');
   renderTransactionsReleve();
+}
+
+// AJOUT (demande utilisateur) : tri par date ou par montant, dans les
+// deux sens. S'applique APRÈS les filtres, sur ce qui reste affiché.
+function changerTriReleve(valeur) { STATE._triReleve = valeur; renderTransactionsReleve(); }
+
+function _appliquerTriReleve(items) {
+  const tri = STATE._triReleve || 'defaut';
+  if (tri === 'defaut') return items;
+  const copie = items.slice();
+  copie.sort(function(a, b) {
+    if (tri === 'date-desc' || tri === 'date-asc') {
+      const da = _parserDateReleve(a.t.dateBrute);
+      const db = _parserDateReleve(b.t.dateBrute);
+      const va = da ? da.getTime() : 0;
+      const vb = db ? db.getTime() : 0;
+      return tri === 'date-desc' ? vb - va : va - vb;
+    }
+    if (tri === 'montant-desc') return Math.abs(b.t.montant) - Math.abs(a.t.montant);
+    if (tri === 'montant-asc') return Math.abs(a.t.montant) - Math.abs(b.t.montant);
+    return 0;
+  });
+  return copie;
 }
 
 function _barreFiltresReleve() {
@@ -790,7 +815,17 @@ function _barreFiltresReleve() {
       '<span style="font-size:12px;color:#9C9186">à</span>' +
       '<input type="date" id="releve-filtre-date-fin" class="f-inp" value="' + (STATE._filtreReleveDateFin||'') + '" onchange="appliquerFiltreDateReleve()" style="flex:1">' +
     '</div>' +
-    ((STATE._filtreReleveStatut!=='tous'||STATE._filtreReleveRecherche||STATE._filtreReleveMontantMin!=null||STATE._filtreReleveMontantMax!=null||STATE._filtreReleveConfiance!=='tous'||(STATE._filtreReleveSens&&STATE._filtreReleveSens!=='tous')||STATE._filtreReleveDateDebut||STATE._filtreReleveDateFin)
+    // AJOUT (demande utilisateur) : tri par date ou par montant.
+    '<div style="margin-bottom:8px">' +
+      '<select id="releve-tri" class="f-inp" onchange="changerTriReleve(this.value)">' +
+        '<option value="defaut"' + ((STATE._triReleve||'defaut')==='defaut'?' selected':'') + '>Trier par... (ordre du relevé)</option>' +
+        '<option value="date-desc"' + (STATE._triReleve==='date-desc'?' selected':'') + '>📅 Date — plus récent d\'abord</option>' +
+        '<option value="date-asc"' + (STATE._triReleve==='date-asc'?' selected':'') + '>📅 Date — plus ancien d\'abord</option>' +
+        '<option value="montant-desc"' + (STATE._triReleve==='montant-desc'?' selected':'') + '>💰 Montant — du plus grand au plus petit</option>' +
+        '<option value="montant-asc"' + (STATE._triReleve==='montant-asc'?' selected':'') + '>💰 Montant — du plus petit au plus grand</option>' +
+      '</select>' +
+    '</div>' +
+    ((STATE._filtreReleveStatut!=='tous'||STATE._filtreReleveRecherche||STATE._filtreReleveMontantMin!=null||STATE._filtreReleveMontantMax!=null||STATE._filtreReleveConfiance!=='tous'||(STATE._filtreReleveSens&&STATE._filtreReleveSens!=='tous')||STATE._filtreReleveDateDebut||STATE._filtreReleveDateFin||(STATE._triReleve&&STATE._triReleve!=='defaut'))
       ? '<span onclick="effacerFiltresReleve()" style="font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Effacer les filtres</span>'
       : '') +
   '</div>';
@@ -820,7 +855,7 @@ function renderTransactionsReleve() {
   // index) avec cet indice dans le tableau complet STATE._transactionsReleveActuel,
   // pas dans la liste filtrée affichée à l'écran.
   const avecIndex = transactions.map(function(t, i) { return { t: t, indexOriginal: i }; });
-  const filtrees = _appliquerFiltresReleve(avecIndex);
+  const filtrees = _appliquerTriReleve(_appliquerFiltresReleve(avecIndex));
 
   // REFONTE (demande utilisateur) : passage d'une liste de cartes à un
   // vrai tableau compact (Date / Libellé / Montant / Statut) — plus
