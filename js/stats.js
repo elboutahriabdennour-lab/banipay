@@ -340,7 +340,7 @@ function _renderOngletDetail() {
       <div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">
         <div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:14px">🏆 Top clients</div>
         ${topClients.length ? topClients.map((c,i)=>`
-          <div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParClientStats(${JSON.stringify(c.nom)})">
+          <div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParClientStats(${valeurPourOnclick(c.nom)})">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
               <div style="display:flex;align-items:center;gap:8px">
                 <div style="width:22px;height:22px;border-radius:50%;background:${couleursAccent[i]};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${i+1}</div>
@@ -375,7 +375,7 @@ function _renderOngletDetail() {
     produitEl.innerHTML = topProduits.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-top:10px">' +
       '<div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:14px">📦 Top produits / prestations</div>' +
       topProduits.map(function(p, i) {
-        return '<div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParProduitStats(' + JSON.stringify(p.nom) + ')">' +
+        return '<div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParProduitStats(' + valeurPourOnclick(p.nom) + ')">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
             '<span style="font-size:12px;font-weight:600;' + (STATE.statsFiltreProduit===p.nom?'text-decoration:underline':'') + '">' + escapeHTML(p.nom) + '</span>' +
             '<span style="font-size:12px;font-weight:700;color:#241F1B">' + fmt(p.montant) + ' MAD</span>' +
