@@ -386,3 +386,22 @@ function normaliserTableauxDocument(doc) {
   if ('transactions_bancaires_liees' in doc) doc.transactions_bancaires_liees = parseTableauSecurise(doc.transactions_bancaires_liees);
   return doc;
 }
+
+// FIX (bug racine trouvé — plusieurs boutons "onclick" injoignables) :
+// JSON.stringify() produit des guillemets DOUBLES ("..."), incompatibles
+// avec un attribut onclick="..." lui-même délimité par des guillemets
+// doubles — le HTML se coupe au premier guillemet rencontré, rendant le
+// bouton inutilisable dès que la valeur est une chaîne de caractères
+// (nom de client, de produit, référence texte...). Repéré d'abord dans
+// releve-bancaire-ocr.js (bouton "Créer une règle"), puis retrouvé à
+// l'identique dans marche.js et stats.js. Ce helper centralisé produit
+// à la place une chaîne JS entre guillemets SIMPLES, avec échappement
+// des guillemets simples et antislashs éventuels dans la valeur.
+// Les nombres restent des nombres (pas de guillemets du tout) — un id
+// stocké en base comme entier doit rester comparable avec === à un
+// autre entier ailleurs dans le code ; le re-quoter en chaîne casserait
+// silencieusement ces comparaisons strictes.
+function valeurPourOnclick(valeur) {
+  if (typeof valeur === 'number' || typeof valeur === 'boolean') return String(valeur);
+  return "'" + String(valeur == null ? '' : valeur).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+}
