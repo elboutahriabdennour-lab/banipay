@@ -715,21 +715,25 @@ function _appliquerFiltresReleve(transactionsAvecIndex) {
   });
 }
 
-function changerFiltreReleveStatut(valeur) { STATE._filtreReleveStatut = valeur; renderTransactionsReleve(); }
-function changerFiltreReleveConfiance(valeur) { STATE._filtreReleveConfiance = valeur; renderTransactionsReleve(); }
-function changerFiltreReleveSens(valeur) { STATE._filtreReleveSens = valeur; renderTransactionsReleve(); }
-function rechercherDansReleve(valeur) { STATE._filtreReleveRecherche = valeur; renderTransactionsReleve(); }
+// FIX (retour utilisateur — perte de focus) : ces changements ne
+// doivent rafraîchir QUE le tableau des lignes, jamais reconstruire la
+// barre de filtres elle-même (qui contient le champ de recherche en
+// cours de frappe) — voir _rafraichirLignesReleve() plus haut.
+function changerFiltreReleveStatut(valeur) { STATE._filtreReleveStatut = valeur; _rafraichirLignesReleve(); }
+function changerFiltreReleveConfiance(valeur) { STATE._filtreReleveConfiance = valeur; _rafraichirLignesReleve(); }
+function changerFiltreReleveSens(valeur) { STATE._filtreReleveSens = valeur; _rafraichirLignesReleve(); }
+function rechercherDansReleve(valeur) { STATE._filtreReleveRecherche = valeur; _rafraichirLignesReleve(); }
 function appliquerFiltreMontantReleve() {
   const min = el('releve-filtre-montant-min')?.value;
   const max = el('releve-filtre-montant-max')?.value;
   STATE._filtreReleveMontantMin = min ? parseFloat(min) : null;
   STATE._filtreReleveMontantMax = max ? parseFloat(max) : null;
-  renderTransactionsReleve();
+  _rafraichirLignesReleve();
 }
 function appliquerFiltreDateReleve() {
   STATE._filtreReleveDateDebut = el('releve-filtre-date-debut')?.value || null;
   STATE._filtreReleveDateFin = el('releve-filtre-date-fin')?.value || null;
-  renderTransactionsReleve();
+  _rafraichirLignesReleve();
 }
 function effacerFiltresReleve() {
   STATE._filtreReleveStatut = 'tous';
@@ -747,12 +751,12 @@ function effacerFiltresReleve() {
   el('releve-filtre-statut') && (el('releve-filtre-statut').value = 'tous');
   el('releve-filtre-confiance') && (el('releve-filtre-confiance').value = 'tous');
   el('releve-tri') && (el('releve-tri').value = 'defaut');
-  renderTransactionsReleve();
+  _rafraichirLignesReleve();
 }
 
 // AJOUT (demande utilisateur) : tri par date ou par montant, dans les
 // deux sens. S'applique APRÈS les filtres, sur ce qui reste affiché.
-function changerTriReleve(valeur) { STATE._triReleve = valeur; renderTransactionsReleve(); }
+function changerTriReleve(valeur) { STATE._triReleve = valeur; _rafraichirLignesReleve(); }
 
 function _appliquerTriReleve(items) {
   const tri = STATE._triReleve || 'defaut';
@@ -786,7 +790,7 @@ function trierParColonneReleve(colonne) {
   if (colonne === 'date') STATE._triReleve = (tri === 'date-desc') ? 'date-asc' : 'date-desc';
   else if (colonne === 'montant') STATE._triReleve = (tri === 'montant-desc') ? 'montant-asc' : 'montant-desc';
   else if (colonne === 'libelle') STATE._triReleve = (tri === 'libelle-asc') ? 'libelle-desc' : 'libelle-asc';
-  renderTransactionsReleve();
+  _rafraichirLignesReleve();
 }
 
 function _barreFiltresReleve() {
@@ -861,9 +865,31 @@ function _barreFiltresReleve() {
 function renderTransactionsReleve() {
   const zone = el('rapprochement-releve-content');
   if (!zone) return;
+  // FIX (retour utilisateur — perte de focus sur la recherche) : tout
+  // était reconstruit d'un bloc à chaque frappe dans le champ de
+  // recherche (barre de filtres ET tableau), ce qui détruisait et
+  // recréait le <input> lui-même — le focus sautait après chaque
+  // lettre, obligeant à recliquer dans le champ à chaque caractère.
+  // La barre de filtres est maintenant construite UNE SEULE fois (elle
+  // ne dépend plus du contenu qui change), dans son propre conteneur ;
+  // seul le tableau des lignes est reconstruit à chaque changement de
+  // filtre/tri/recherche, dans un second conteneur séparé.
+  if (!el('releve-filtres-bar-conteneur')) {
+    zone.innerHTML = '<div id="releve-filtres-bar-conteneur"></div><div id="releve-lignes-conteneur"></div>';
+    el('releve-filtres-bar-conteneur').innerHTML = _barreFiltresReleve();
+  }
+  _rafraichirLignesReleve();
+}
+
+// AJOUT (fix focus) : partie qui bouge réellement à chaque frappe/clic
+// de filtre — séparée du rendu ci-dessus pour ne jamais toucher au
+// <input> de recherche pendant que l'utilisateur y tape.
+function _rafraichirLignesReleve() {
+  const conteneur = el('releve-lignes-conteneur');
+  if (!conteneur) return;
   const transactions = STATE._transactionsReleveActuel || [];
   if (!transactions.length) {
-    zone.innerHTML = '<div class="empty"><div class="empty-ico">🏦</div><div class="empty-title">Aucune transaction</div></div>';
+    conteneur.innerHTML = '<div class="empty"><div class="empty-ico">🏦</div><div class="empty-title">Aucune transaction</div></div>';
     return;
   }
 
@@ -881,7 +907,7 @@ function renderTransactionsReleve() {
   // (correspondances, actions) n'est plus affiché en permanence sous
   // chaque ligne : il passe dans une bulle qui s'ouvre au clic sur la
   // ligne (voir ouvrirBulleTransaction), pour garder le tableau lisible.
-  zone.innerHTML = _barreFiltresReleve() +
+  conteneur.innerHTML =
     '<div style="padding:0 20px 10px;font-size:11px;color:#9C9186">Lecture automatique — à vérifier avant de confirmer. Touchez une ligne pour la traiter.' +
       (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
     '</div>' +
@@ -905,14 +931,20 @@ function renderTransactionsReleve() {
     filtrees.map(function(item, position) {
       const t = item.t;
       const i = item.indexOriginal;
-      // Zébrage : couleurs de marque Zelto (blanc / safran clair, le
-      // "to" du logo utilise ce même orange) — assez de contraste pour
-      // suivre une ligne dans une longue liste.
-      const fondZebre = position % 2 === 0 ? '#fff' : '#FBF0DA';
 
       const refTransaction = _construireRefTransaction(t);
       const dejaLieeAvec = _collectionActuelle('facture').find(function(f) { return (f.transactions_bancaires_liees || []).includes(refTransaction); })
         || _collectionActuelle('achat').find(function(a) { return (a.transactions_bancaires_liees || []).includes(refTransaction); });
+
+      // FIX (retour utilisateur) : le zébrage alternait juste blanc/orange
+      // pour séparer les lignes visuellement, sans dire rien sur
+      // l'opération elle-même. Remplacé par un fond qui reflète le sens
+      // réel de la transaction — vert clair pour une entrée (crédit),
+      // rose clair pour une sortie (débit) — mêmes teintes déjà utilisées
+      // ailleurs dans l'app pour "positif"/"négatif" (achats, avoirs...),
+      // donc cohérent plutôt qu'une couleur inventée. Une ligne déjà
+      // rapprochée garde un vert plus soutenu pour rester distincte.
+      const fondZebre = (t._traitee || dejaLieeAvec) ? '#DCE8C7' : (t.montant >= 0 ? '#EEF3E4' : '#F5E4E1');
 
       // AJOUT (demande utilisateur) : montant en deux colonnes distinctes
       // Débit/Crédit, présentation comptable classique, plutôt qu'une
