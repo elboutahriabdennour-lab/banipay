@@ -203,7 +203,7 @@ function renderListeEntreprises(filtre) {
           '<div style="font-size:13px;font-weight:700;color:#2A2420">' + escapeHTML(nomAffiche) + '</div>' +
           '<div style="font-size:11px;color:#6B5F54">' + (p.secteur || '') + (p.ville ? ' · ' + p.ville : '') + '</div>' +
         '</div>' +
-        '<button onclick="event.stopPropagation();messagerAvecEntreprise(\'' + inv.entreprise_id + '\',\'' + (inv.entreprise_email||'').replace(/'/g,"\\'") + '\')" title="Ecrire a cette entreprise" style="background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0">💬</button>' +
+        '<button onclick="event.stopPropagation();messagerAvecEntreprise(' + valeurPourOnclick(inv.entreprise_id) + ',' + valeurPourOnclick(inv.entreprise_email||'') + ')" title="Ecrire a cette entreprise" style="background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0">💬</button>' +
         '<div style="font-size:12px;font-weight:700;color:' + etatColor(etat) + '">' + etatLabel(etat) + '</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
