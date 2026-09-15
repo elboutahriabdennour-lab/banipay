@@ -582,7 +582,7 @@ function filtrerAnnuaire() {
     return requis.every(function(k) { return !!e[k]; });
   }
   list.innerHTML = data.map(e => `
-    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic('${escapeHTML(e.email||'').replace(/'/g,"\\'")}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${escapeHTML(e.tel||'').replace(/'/g,"\\'")}')` : `ouvrirActionsEntreprise('${e.id_unique||''}','${e.id||''}','${escapeHTML(e.raison||'').replace(/'/g,"\\'")}','${escapeHTML(e.tel||'').replace(/'/g,"\\'")}','${escapeHTML(e.email||'').replace(/'/g,"\\'")}')`}">
+    <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic(${valeurPourOnclick(e.email||'')},${valeurPourOnclick(e.raison||'')},${valeurPourOnclick(e.tel||'')})` : `ouvrirActionsEntreprise(${valeurPourOnclick(e.id_unique||'')},${valeurPourOnclick(e.id||'')},${valeurPourOnclick(e.raison||'')},${valeurPourOnclick(e.tel||'')},${valeurPourOnclick(e.email||'')})`}">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:44px;height:44px;border-radius:12px;background:#E9F4F3;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
         <div style="flex:1">
