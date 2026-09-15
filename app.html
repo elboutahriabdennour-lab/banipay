@@ -67,6 +67,12 @@
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
     <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
     <div class="qa-item" onclick="renderHubVentes();goScreen('hub-ventes',null)"><div class="qa-ico" style="background:#EEF3E4">💰</div><div class="qa-lbl">Ventes</div></div>
+    <!-- FIX (audit) : "Récurrent" (facturation récurrente) est un outil
+         de vente, pas de suivi d'équipe — déplacé depuis "Suivi & équipe". -->
+    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
+    <!-- AJOUT (audit) : "Contrats" n'était accessible que depuis Profil,
+         un clic de plus qu'un outil comparable comme TVA ou Récurrent. -->
+    <div class="qa-item" onclick="window._retourContrats='dashboard';renderModelesContrats();goScreen('contrats',null)"><div class="qa-ico" style="background:#F7EFDC">📄</div><div class="qa-lbl">Contrats</div></div>
   </div>
 
   <div class="groupe-label">Gestion</div>
@@ -75,12 +81,15 @@
     <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
     <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#EDE6F0">👥</div><div class="qa-lbl">Clients</div></div>
     <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#EEF3E4">🧮</div><div class="qa-lbl">TVA</div></div>
+    <!-- FIX (audit) : "Archive" (coffre-fort de documents : statuts, RIB,
+         CNSS...) n'a rien à voir avec le réseau Zelto — déplacé depuis
+         "Réseau Zelto". -->
+    <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
   </div>
 
   <div class="groupe-label">Suivi &amp; équipe</div>
   <div class="quick-actions">
     <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E9F4F3">📊</div><div class="qa-lbl">Stats</div></div>
-    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
     <div class="qa-item" onclick="window._retourEmployes='dashboard';if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}"><div class="qa-ico" style="background:#E9F4F3">👥</div><div class="qa-lbl">Personnel<span id="verrou-rh-dashboard"></span></div></div>
     <div class="qa-item" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><div class="qa-ico" style="background:#EEF3E4">🏦</div><div class="qa-lbl">Relevés</div></div>
   </div>
@@ -89,7 +98,6 @@
   <div class="quick-actions">
     <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
     <div class="qa-item" onclick="window._retourMarche='dashboard';loadMarche();goScreen('marche',null)"><div class="qa-ico" style="background:#EDE6F0">🤝</div><div class="qa-lbl">Le Marché</div></div>
-    <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
   </div>
   <div style="height:16px"></div>
 
@@ -341,6 +349,7 @@
 <div class="screen" id="screen-avoir-list">
   <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div></div>
   <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#8E2E24;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
+  <div style="padding:0 20px 10px"><input class="f-inp" id="avoir-recherche" placeholder="🔍 Rechercher par client ou référence..." oninput="renderAvoirList()"></div>
   <div id="avoir-list-items"></div><div class="pb"></div>
 </div>
 
@@ -349,6 +358,7 @@
   <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div></div>
   <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#1F6F72;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
   <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
+  <div style="padding:0 20px 10px"><input class="f-inp" id="abonnements-recherche" placeholder="🔍 Rechercher par client..." oninput="renderAbonnements()"></div>
   <div class="card-list" id="abonnements-list"></div>
   <div class="pb"></div>
 </div>
@@ -608,6 +618,7 @@
       <div class="sec-label" style="padding:0 0 12px">📝 Devis reçus acceptés</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Devis d'autres entreprises Zelto que vous avez acceptés — convertissez-les en bon de commande si ce n'est pas déjà fait.</div>
       <div id="devis-recus-resume"></div>
+      <input class="f-inp" id="devis-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderDevisRecusAcceptes()" style="margin-bottom:12px">
       <div id="devis-recus-liste"></div>
     </div>
     <div class="pb"></div>
@@ -655,6 +666,7 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📝 Demandes de devis reçues</div>
       <div id="demandes-devis-resume"></div>
+      <input class="f-inp" id="demandes-devis-recherche" placeholder="🔍 Rechercher par client..." oninput="renderDemandesDevis()" style="margin-bottom:12px">
       <div id="demandes-devis-liste"></div>
     </div>
     <div style="height:30px"></div>
@@ -2118,6 +2130,7 @@
       <div class="sec-label" style="padding:0 0 12px">👥 Registre du personnel</div>
       <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:12px">⚠️ Registre simple pour votre suivi — ce n'est pas un système de paie (pas de bulletin conforme, pas de calcul CNSS/AMO/IR).</div>
       <div id="employes-resume"></div>
+      <input class="f-inp" id="employes-recherche" placeholder="🔍 Rechercher par nom ou poste..." oninput="renderEmployes()" style="margin-bottom:12px">
       <div id="employes-liste"></div>
     </div>
     <div style="height:30px"></div>
@@ -2172,6 +2185,7 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📋 Bons de commande reçus</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Bons de commande envoyés par vos clients suite à l'acceptation d'un devis — convertissez-les en facture d'un clic.</div>
+      <input class="f-inp" id="bc-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderBCRecus()" style="margin-bottom:12px">
       <div id="bc-recus-liste"></div>
     </div>
     <div style="height:30px"></div>
@@ -2183,6 +2197,7 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📥 Factures reçues</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Factures envoyées par vos fournisseurs qui utilisent aussi Zelto — importez-les dans vos achats d'un clic, sans ressaisie.</div>
+      <input class="f-inp" id="factures-recues-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderFacturesRecues()" style="margin-bottom:12px">
       <div id="factures-recues-liste"></div>
     </div>
     <div style="height:30px"></div>
@@ -2315,6 +2330,7 @@
     <div class="sec-label" style="padding:0">📋 Bons de commande</div>
     <button class="ftab" onclick="toggleSelectionMode('bc')">☑️ Sélectionner</button>
   </div>
+  <div style="padding:0 20px 10px"><input class="f-inp" id="bc-recherche" placeholder="🔍 Rechercher par fournisseur ou référence..." oninput="renderBonsCommandeListe()"></div>
   <div class="card-list" id="bons-commande-liste"></div>
   <div class="pb"></div>
 </div>
@@ -2358,6 +2374,7 @@
     <button class="back-btn" onclick="goScreen('hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
   </div>
   <div class="sec-label">📦 Bons de livraison</div>
+  <div style="padding:0 20px 10px"><input class="f-inp" id="bl-recherche" placeholder="🔍 Rechercher par client ou référence..." oninput="renderBonsLivraisonListe()"></div>
   <div class="card-list" id="bons-livraison-liste"></div>
   <div class="pb"></div>
 </div>
