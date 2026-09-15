@@ -157,7 +157,7 @@ function renderTicketsSupport() {
             (!t.assigne_a || t.assigne_a === monId ? '<button onclick="prendreEnChargeTicket(' + t.id + ')" style="flex:1;padding:7px;background:' + (t.assigne_a === monId ? '#F1EEE8' : '#FBF0DA') + ';color:' + (t.assigne_a === monId ? '#6B5F54' : '#A67A16') + ';border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">' + (t.assigne_a === monId ? '↩️ Libérer' : '🙋 Prendre en charge') + '</button>' : '') +
             (t.statut !== 'en_cours' ? '<button onclick="changerStatutTicket(' + t.id + ',\'en_cours\')" style="flex:1;padding:7px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⏳ En cours</button>' : '') +
             (t.statut !== 'resolu' ? '<button onclick="changerStatutTicket(' + t.id + ',\'resolu\')" style="flex:1;padding:7px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Résolu</button>' : '') +
-            '<button onclick="ouvrirChatTicket(' + t.id + ',\'' + escapeHTML(t.sujet||'').replace(/'/g,"\\'") + '\')" style="flex:1;padding:7px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">💬 Discuter</button>' +
+            '<button onclick="ouvrirChatTicket(' + t.id + ',' + valeurPourOnclick(t.sujet||'') + ')" style="flex:1;padding:7px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">💬 Discuter</button>' +
           '</div>' +
         '</div>';
       }).join('');
