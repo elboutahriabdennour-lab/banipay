@@ -2324,7 +2324,7 @@
 <!-- ===== LISTE BONS DE COMMANDE ===== -->
 <div class="screen" id="screen-bons-commande-list">
   <div class="topbar">
-    <button class="back-btn" onclick="goScreen('hub-achats',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
+    <button class="back-btn" onclick="goBack('hub-achats')">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-commande',null)">+ Nouveau</span></div>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px">
     <div class="sec-label" style="padding:0">📋 Bons de commande</div>
@@ -2371,7 +2371,7 @@
 <!-- ===== LISTE BONS DE LIVRAISON ===== -->
 <div class="screen" id="screen-bons-livraison-list">
   <div class="topbar">
-    <button class="back-btn" onclick="goScreen('hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
+    <button class="back-btn" onclick="goBack('hub-ventes')">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="goScreen('bon-livraison',null)">+ Nouveau</span></div>
   </div>
   <div class="sec-label">📦 Bons de livraison</div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="bl-recherche" placeholder="🔍 Rechercher par client ou référence..." oninput="renderBonsLivraisonListe()"></div>
