@@ -192,7 +192,14 @@ function htmlListeNotifications(allNotifs) {
     const typeReel = n.raw && n.raw.type;
     const isDoc = typeReel === 'facture_recue' || typeReel === 'devis_recu';
     const isReponse = typeReel === 'devis_reponse' || typeReel === 'facture_reponse';
-    const isDemande = typeReel === 'demande_devis';
+    // FIX (retour utilisateur — notification inouvrable) : le code ne
+    // reconnaissait QUE le type exact 'demande_devis'. La fonction qui
+    // crée réellement cette notification (RPC creer_demande_devis, côté
+    // serveur) est hors de portée du code client — impossible de
+    // vérifier ici le texte exact qu'elle enregistre. Élargi aux
+    // variantes les plus plausibles pour ne pas rater la bonne par un
+    // simple écart de nommage.
+    const isDemande = typeReel === 'demande_devis' || typeReel === 'nouvelle_demande_devis' || typeReel === 'demande_devis_recue';
     const isInvitationCpt = typeReel === 'invitation_comptable';
     const estCliquable = isDoc || isReponse || isDemande || isInvitationCpt;
     let meta = {};
