@@ -143,11 +143,17 @@ function renderFactureList() {
         <div class="card-amt">${fmt(f.ttc)} ${f.devise||'MAD'}</div>
         <div class="badge b-${f.statut}">${badgeF(f.statut)}</div>
         ${(function() {
-          // AJOUT (demande utilisateur) : même bouton de rapprochement
-          // que côté comptable, mais ici pour que l'entreprise elle-même
-          // puisse rapprocher ses factures sans attendre son comptable.
-          const estRapprochee = (f.transactions_bancaires_liees||[]).length > 0;
-          return `<button onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(${f.id},'facture')" title="Rapprocher avec une transaction bancaire" style="font-size:9px;color:${estRapprochee?'#fff':'#1F6F72'};background:${estRapprochee?'#1F6F72':'#E9F4F3'};border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit;font-weight:600">🏦 ${estRapprochee?'Rapprochée':'Rapprocher'}</button>`;
+          // FIX (règle métier confirmée) : une facture rapprochée
+          // TOTALEMENT est une facture payée — le badge distingue
+          // maintenant rapprochement partiel (reste à recevoir) de
+          // rapprochement total (payée), au lieu de traiter les deux
+          // pareil dès qu'un seul lien bancaire existe.
+          const aDesLiens = (f.transactions_bancaires_liees||[]).length > 0;
+          const estTotal = f.statut === 'payee';
+          const libelle = estTotal ? 'Rapprochée' : (aDesLiens ? 'Partiel' : 'Rapprocher');
+          const couleurFond = estTotal ? '#1F6F72' : (aDesLiens ? '#FBF0DA' : '#E9F4F3');
+          const couleurTexte = estTotal ? '#fff' : (aDesLiens ? '#96751B' : '#1F6F72');
+          return `<button onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(${f.id},'facture')" title="Rapprocher avec une transaction bancaire" style="font-size:9px;color:${couleurTexte};background:${couleurFond};border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit;font-weight:600">🏦 ${libelle}</button>`;
         })()}
         ${!enSelection ? `<button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>` : ''}
       </div>
