@@ -826,8 +826,16 @@ function _barreFiltresReleve() {
     // NOUVEAU (retour utilisateur) : accès direct à la gestion des
     // règles apprises — jusqu'ici, aucun écran ne permettait de les
     // revoir ou d'en supprimer une une fois créées.
-    '<div style="display:flex;justify-content:flex-end;margin-bottom:8px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">' +
       '<span onclick="ouvrirGestionRegles()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">🔒 Gérer mes règles (' + (STATE.reglesRapprochement||[]).length + ')</span>' +
+      // AJOUT (demande utilisateur) : les deux exports comptables
+      // existaient déjà en code mais n'étaient déclenchables depuis
+      // AUCUN bouton nulle part dans l'app — rendus accessibles ici,
+      // là où on vient justement de faire les rapprochements.
+      '<span style="display:flex;gap:10px">' +
+        '<span onclick="exporterRapprochementComptable()" style="font-size:11px;color:#6B5F54;text-decoration:underline;cursor:pointer">📄 Export résumé</span>' +
+        '<span onclick="exporterEcrituresComptables()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer;font-weight:600">📊 Export écritures (partie double)</span>' +
+      '</span>' +
     '</div>' +
     '<input id="releve-filtre-recherche" class="f-inp" placeholder="🔍 Rechercher dans le libellé..." value="' + escapeHTML(STATE._filtreReleveRecherche) + '" oninput="rechercherDansReleve(this.value)" style="margin-bottom:8px">' +
     '<div style="display:flex;gap:8px;margin-bottom:8px">' +
@@ -1470,6 +1478,11 @@ async function _appliquerAllocationRapprochement(id, type, montantAlloue, transa
       doc.statut = resultat.statut_final;
       doc.transactions_bancaires_liees = (doc.transactions_bancaires_liees || []).concat([refAllocation]);
       if (resultat.ecart_detecte) doc.ecart_rapprochement = resultat.ecart_detecte;
+      // AJOUT (demande utilisateur) : chaque rapprochement, qu'il soit
+      // créé côté comptable ou entreprise, doit rester tracé dans
+      // l'historique — même si annulé plus tard, l'action d'origine ne
+      // doit jamais disparaître sans laisser de trace.
+      logAudit('rapprochement', id, 'creation', 'Virement "' + (transaction.description||'') + '" (' + fmt(montantAlloue) + ' MAD) lié à ' + (type==='achat'?'l\'achat':'la facture') + ' ' + (doc.ref||doc.ref_fournisseur||''));
       return resultat.ecart_detecte || null;
     } catch(e) { showToast('Erreur: ' + e.message, 'error'); return null; }
   }
@@ -1491,6 +1504,7 @@ async function _appliquerAllocationRapprochement(id, type, montantAlloue, transa
   try {
     await sb.patch(table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
     Object.assign(doc, maj);
+    logAudit('rapprochement', id, 'creation', 'Virement "' + (transaction.description||'') + '" (' + fmt(montantAlloue) + ' MAD) lié à ' + (type==='achat'?'l\'achat':'la facture') + ' ' + (doc.ref||doc.ref_fournisseur||''));
   } catch(e) { console.warn('_appliquerAllocationRapprochement:', e); }
 
   return ecartDetecte >= 1 ? ecartDetecte : null;
@@ -1713,6 +1727,10 @@ async function annulerRapprochement(docId, type, indexTransaction) {
       doc.montant_recu = Math.max(0, (Number(doc.montant_recu)||0) - montantAnnule);
       doc.transactions_bancaires_liees = listeActuelle.filter(function(ref) { return ref !== refTransaction; });
       doc.ecart_rapprochement = null;
+      // AJOUT (demande utilisateur) : un rapprochement peut être
+      // supprimé, mais l'annulation elle-même doit être enregistrée
+      // dans l'historique — jamais un simple retrait silencieux.
+      logAudit('rapprochement', docId, 'suppression', 'Annulation du lien avec le virement "' + (t.description||'') + '" (' + fmt(montantAnnule) + ' MAD) — ' + (type==='achat'?'achat':'facture') + ' ' + (doc.ref||doc.ref_fournisseur||''));
     } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
   } else {
     const table = type === 'achat' ? 'factures_achat' : 'factures';
@@ -1727,6 +1745,7 @@ async function annulerRapprochement(docId, type, indexTransaction) {
     try {
       await sb.patch(table, 'id=eq.' + docId + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), maj);
       Object.assign(doc, maj);
+      logAudit('rapprochement', docId, 'suppression', 'Annulation du lien avec le virement "' + (t.description||'') + '" (' + fmt(montantAnnule) + ' MAD) — ' + (type==='achat'?'achat':'facture') + ' ' + (doc.ref||doc.ref_fournisseur||''));
     } catch(e) { showToast('Erreur: ' + e.message, 'error'); return; }
   }
 
