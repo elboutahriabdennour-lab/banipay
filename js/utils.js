@@ -224,7 +224,7 @@ function appliquerFiltresHistorique() {
   }
   const actionIcons = { creation:'✨', modification:'✏️', suppression:'🗑️', acceptation:'✅', refus:'❌', paiement:'💰', renouvellement:'🔄' };
   const actionLabels = { creation:'Création', modification:'Modification', suppression:'Suppression', acceptation:'Acceptation', refus:'Refus', paiement:'Paiement', renouvellement:'Renouvellement' };
-  const typeLabels = { facture:'Facture', devis:'Devis', client:'Client', produit:'Article', achat:'Achat', abonnement:'Abonnement', equipe:'Équipe', annonce:'Annonce marché' };
+  const typeLabels = { facture:'Facture', devis:'Devis', client:'Client', produit:'Article', achat:'Achat', abonnement:'Abonnement', equipe:'Équipe', annonce:'Annonce marché', rapprochement:'Rapprochement bancaire' };
   list.innerHTML = logs.map(function(l) {
     return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #EAE4DA;align-items:flex-start">' +
       '<div style="width:32px;height:32px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
