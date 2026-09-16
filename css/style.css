@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 :root{--ink:#2A2420;--ink-soft:#6B5F54;--ink-faint:#9C9186;--paper:#F1EEE8;--surface:#FFFFFF;--border:#E3DCCF;--border-dash:#CDBEA0;--safran:#C9971F;--safran-dark:#A67A16;--safran-light:#FBF0DA;--zellige:#1F6F72;--zellige-dark:#154F52;--zellige-light:#E9F4F3;--brique:#B23A2E;--brique-dark:#8E2E24;--brique-light:#F5E4E1;--sauge:#6E8F4E;--sauge-dark:#55702E;--sauge-light:#EEF3E4;--ambre:#B8860B;--ambre-light:#F7EFDC;--plum:#7C5CA6;--plum-light:#EDE6F0;--charcoal:#241F1B;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* FIX (retour utilisateur — curseur de texte au clic un peu partout) :
+   la plupart des éléments cliquables de l'app sont des <div>/<span>
+   avec un onclick, pas de vrais boutons — sans ceci, ils restent
+   sélectionnables comme du texte, donc un clic ou un tap répété
+   sélectionnait du texte et faisait apparaître le curseur/trait
+   vertical. Ne s'applique volontairement pas aux champs de saisie
+   (input/textarea) ni au texte réellement destiné à être lu/copié
+   (description de facture, notes...), qui gardent leur comportement
+   normal. */
+button,[onclick]{user-select:none;-webkit-user-select:none;-moz-user-select:none}
+input,textarea,select{user-select:text;-webkit-user-select:text}
 html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 .screen{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;background:var(--paper);-webkit-overflow-scrolling:touch}
 .screen.active{display:block}
