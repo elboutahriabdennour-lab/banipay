@@ -578,7 +578,16 @@ function goScreen(name, options) {
   // déconnexion. Remise ici, à chaque appel, pour que goScreen() se
   // répare toute seule quelle que soit la raison de la disparition.
   STATE._historiqueEcrans = STATE._historiqueEcrans || [];
-  const skipHistory = options === null || (options && options.skipHistory);
+  // FIX (bug racine trouvé — TOUT le chantier "boutons retour") :
+  // "options === null" désactivait l'historique. Or goScreen('x', null)
+  // est le moyen d'appel utilisé quasiment PARTOUT dans l'app comme
+  // simple convention "pas d'options particulières" — sans que qui que
+  // ce soit n'ait voulu dire "n'enregistre jamais cette navigation dans
+  // l'historique". Conséquence concrète : goBack() ne pouvait jamais
+  // fonctionner correctement puisque l'historique restait quasiment
+  // toujours vide ou périmé. Seul un skipHistory EXPLICITE et VOULU
+  // (options.skipHistory === true) doit désormais désactiver le suivi.
+  const skipHistory = !!(options && options.skipHistory);
   const ecranActuel = document.querySelector('.screen.active')?.id?.replace('screen-', '');
   if (!skipHistory && ecranActuel && ecranActuel !== name) {
     STATE._historiqueEcrans.push(ecranActuel);
