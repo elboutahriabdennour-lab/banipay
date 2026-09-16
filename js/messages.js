@@ -231,6 +231,15 @@ async function chargerMessages(convId) {
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     STATE.messagesConv = await r.json() || [];
+    // FIX (bug réel signalé — "STATE.messagesConv.push is not a
+    // function") : sans vérifier r.ok, une réponse d'erreur PostgREST
+    // (un objet {code, message, ...}, pas un tableau) était acceptée
+    // telle quelle — STATE.messagesConv devenait cet objet, et le
+    // .push() suivant lors de l'envoi d'un message plantait.
+    if (!r.ok || !Array.isArray(STATE.messagesConv)) {
+      console.error('chargerMessages: réponse invalide', r.status, STATE.messagesConv);
+      STATE.messagesConv = [];
+    }
     renderMessages();
 
     const uid = sb.user?.id;
@@ -350,6 +359,11 @@ async function envoyerMessage() {
     const created = await r.json();
     const newMsg = (created && created[0]) ? created[0] : msg;
 
+    // FIX (défense supplémentaire) : garde-fou au cas où
+    // STATE.messagesConv aurait pu être écrasé par autre chose qu'un
+    // tableau entre-temps — évite de faire replanter tout l'envoi pour
+    // une raison indépendante de ce message précis.
+    if (!Array.isArray(STATE.messagesConv)) STATE.messagesConv = [];
     STATE.messagesConv.push(newMsg);
     renderMessages();
 
@@ -459,20 +473,42 @@ function desaronnerRealtime() {
 
 async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmail) {
   const uid = sb.user?.id;
-  const role = sb.user?.user_metadata?.role || 'entreprise';
+  const monEmail = sb.user?.email;
 
-  // FIX (audit) : sans STATE.entrepriseId en repli, un membre d'équipe
-  // qui démarre une conversation sans préciser explicitement
-  // d'entreprise créait la conversation sous son propre id.
-  let entId = entrepriseId || STATE.entrepriseId || uid;
-  let entEmail = entrepriseEmail || sb.user?.email;
-  let cptEmail = comptableEmail;
+  // FIX (bug réel signalé — conversation invisible pour le destinataire) :
+  // le code se basait sur "je suis une entreprise donc l'autre partie
+  // est forcément mon comptable", et écrasait alors entId/entEmail avec
+  // MA PROPRE identité — y compris quand on discute avec une AUTRE
+  // entreprise (bouton "Discuter" de l'annuaire, ou avec un client
+  // Zelto). Résultat : la conversation se créait avec mon propre id des
+  // deux côtés, l'autre entreprise n'y étant jamais réellement
+  // rattachée — elle ne la voyait donc jamais dans ses messages.
+  // On se base maintenant sur un signal fiable, peu importe le rôle :
+  // est-ce que l'id fourni me désigne moi-même (cas "je contacte MON
+  // comptable", entrepriseId = mon propre id), ou désigne quelqu'un
+  // d'autre (cas "je contacte cette entreprise précise", comme
+  // l'annuaire ou la fiche client) ?
+  const autrePartieEstMoiMeme = !entrepriseId || entrepriseId === uid;
 
-  if (role === 'entreprise') {
-    entId = uid;
-    entEmail = sb.user?.email;
+  let entId, entEmail, cptEmail;
+  if (autrePartieEstMoiMeme) {
+    // Je (entreprise) contacte mon comptable — comptableEmail est sa
+    // vraie adresse. FIX (audit) : garde le repli STATE.entrepriseId
+    // pour un membre d'équipe (dont l'id personnel diffère de celui de
+    // l'entreprise) — sans lui, la conversation se créait sous son id
+    // personnel plutôt que celui de l'entreprise.
+    entId = STATE.entrepriseId || uid;
+    entEmail = monEmail;
+    cptEmail = comptableEmail;
   } else {
-    cptEmail = sb.user?.email;
+    // Je contacte une entreprise précise, déjà identifiée par son id et
+    // son email (annuaire, fiche client...) — ces valeurs ne doivent
+    // plus être écrasées. Je prends la place restante ("comptable_email"
+    // dans ce schéma à 2 parties, même si personne n'est réellement
+    // comptable ici) avec ma propre adresse.
+    entId = entrepriseId;
+    entEmail = entrepriseEmail;
+    cptEmail = comptableEmail || monEmail;
   }
 
   if (!cptEmail || !entId) {
