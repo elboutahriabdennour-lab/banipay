@@ -1320,6 +1320,15 @@ function switchCptNav(tab) {
     const nonLettres = Math.max(0, totalDocs - lettresTotal);
     const tvaKo = Math.max(0, totalDocs - tvaOkTotal);
     const docsAControler = Math.max(0, totalDocs - consultesTotal);
+    // AJOUT (chantier "dashboard cabinet multi-clients") : 2 indicateurs
+    // demandés dans la proposition mais absents jusqu'ici — factures en
+    // retard et rapprochements non traités, agrégés tous clients
+    // confondus, avec la même logique déjà utilisée par
+    // _appliquerAllocationRapprochement()/le badge de liste (rapproché
+    // "totalement" = payée).
+    const facturesEnRetard = (CPT.allFactures || []).filter(function(f) { return f.statut === 'retard'; }).length;
+    const nonRapprochees = (CPT.allFactures || []).filter(function(f) { return f.statut !== 'payee' && f.statut !== 'annulee' && f.statut !== 'brouillon'; }).length
+      + (CPT.allAchats || []).filter(function(a) { return a.statut !== 'payee'; }).length;
     const nbEnts = (CPT.entreprises||[]).length;
     content.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 16px 8px">' +
@@ -1327,8 +1336,11 @@ function switchCptNav(tab) {
         kpiBox(docsAControler, 'A controler', '#C9971F', '#E9F4F3') +
         kpiBox(nonLettres, 'Non lettrees', '#B8860B', '#F7EFDC') +
         kpiBox(tvaKo, 'TVA a verifier', '#7C5CA6', '#EDE6F0') +
+        kpiBox(facturesEnRetard, 'Factures en retard', '#B23A2E', '#F5E4E1') +
+        kpiBox(nonRapprochees, 'A rapprocher', '#1F6F72', '#E9F4F3') +
       '</div>' +
       (nbEnts === 0 ? _cptEmptyState() : '') +
+      (nbEnts > 0 ? '<div style="padding:0 16px 8px;text-align:right"><span onclick="exporterRapportMultiClients()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">📊 Exporter le portefeuille (CSV)</span></div>' : '') +
       '<div style="padding:0 16px 8px">' +
         '<input id="cpt-recherche-entreprise" class="f-inp" placeholder="🔍 Rechercher une entreprise..." oninput="CPT.rechercheEntreprise=this.value;renderListeEntreprises()" value="' + escapeHTML(CPT.rechercheEntreprise || '') + '">' +
       '</div>' +
@@ -1380,6 +1392,41 @@ function kpiBox(val, label, color, bg) {
     '<div style="font-size:26px;font-weight:900;color:' + color + '">' + val + '</div>' +
     '<div style="font-size:10px;color:' + color + ';font-weight:600;margin-top:2px">' + label + '</div>' +
   '</div>';
+}
+
+// AJOUT (chantier "dashboard cabinet multi-clients") : export CSV d'un
+// coup d'œil sur tout le portefeuille — un comptable qui gère 30
+// entreprises n'a plus besoin d'ouvrir chaque dossier pour savoir
+// lesquels ont besoin d'intervention.
+function exporterRapportMultiClients() {
+  const lignes = [['Entreprise', 'Etat', 'Factures', 'Achats', 'Non lettrees', 'TVA a verifier', 'En retard', 'A rapprocher']];
+  (CPT.entreprises || []).forEach(function(inv) {
+    const factures = inv._factures || [];
+    const achats = inv._achats || [];
+    const controlesF = inv._controles || [];
+    const controlesA = inv._controlesAchats || [];
+    const total = factures.length + achats.length;
+    const lettres = controlesF.filter(function(c) { return c.lettre; }).length + controlesA.filter(function(c) { return c.lettre; }).length;
+    const tvaOk = controlesF.filter(function(c) { return c.tva_verifie; }).length + controlesA.filter(function(c) { return c.tva_verifie; }).length;
+    const enRetard = factures.filter(function(f) { return f.statut === 'retard'; }).length;
+    const aRapprocher = factures.filter(function(f) { return f.statut !== 'payee' && f.statut !== 'annulee' && f.statut !== 'brouillon'; }).length
+      + achats.filter(function(a) { return a.statut !== 'payee'; }).length;
+    lignes.push([
+      inv.profil?.raison || inv.entreprise_email || 'Entreprise',
+      etatLabel(inv._etat || 'vert').replace(/[🟢🟠🔴]/g, '').trim(),
+      String(factures.length), String(achats.length),
+      String(Math.max(0, total - lettres)), String(Math.max(0, total - tvaOk)),
+      String(enRetard), String(aRapprocher)
+    ]);
+  });
+  const csv = lignes.map(function(l) { return l.map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'portefeuille_clients_' + today() + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ Export téléchargé', 'success');
 }
 
 function renderComptableDashboard() {
