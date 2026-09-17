@@ -45,6 +45,7 @@ function renderProduits() {
           <button onclick="modifierProduit(${p.id})" style="font-size:11px;background:#E9F4F3;color:#C9971F;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">✏️</button>
           ${suiviStock ? `<button onclick="ouvrirAjustementStock(${p.id})" style="font-size:11px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">⚖️${typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('stock') : ''}</button>
           <button onclick="ouvrirHistoriqueStock(${p.id})" style="font-size:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">📦</button>` : ''}
+          <button onclick="archiverProduit(${p.id})" title="Archiver (garde l'historique, retire du catalogue actif)" style="font-size:11px;background:#F7EFDC;color:#B8860B;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">🗄️</button>
           <button onclick="supprimerProduit(${p.id})" style="font-size:11px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">🗑️</button>
         </div>
       </div>
