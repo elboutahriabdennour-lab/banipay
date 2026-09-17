@@ -1332,12 +1332,12 @@ function switchCptNav(tab) {
     const nbEnts = (CPT.entreprises||[]).length;
     content.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 16px 8px">' +
-        kpiBox(nbEnts, 'Entreprises', '#1F6F72', '#FBF0DA') +
-        kpiBox(docsAControler, 'A controler', '#C9971F', '#E9F4F3') +
-        kpiBox(nonLettres, 'Non lettrees', '#B8860B', '#F7EFDC') +
-        kpiBox(tvaKo, 'TVA a verifier', '#7C5CA6', '#EDE6F0') +
-        kpiBox(facturesEnRetard, 'Factures en retard', '#B23A2E', '#F5E4E1') +
-        kpiBox(nonRapprochees, 'A rapprocher', '#1F6F72', '#E9F4F3') +
+        kpiBox(nbEnts, 'Entreprises', '#1F6F72', '#FBF0DA', 'entreprises') +
+        kpiBox(docsAControler, 'A controler', '#C9971F', '#E9F4F3', 'action') +
+        kpiBox(nonLettres, 'Non lettrees', '#B8860B', '#F7EFDC', 'action') +
+        kpiBox(tvaKo, 'TVA a verifier', '#7C5CA6', '#EDE6F0', 'action') +
+        kpiBox(facturesEnRetard, 'Factures en retard', '#B23A2E', '#F5E4E1', 'action') +
+        kpiBox(nonRapprochees, 'A rapprocher', '#1F6F72', '#E9F4F3', 'action') +
       '</div>' +
       (nbEnts === 0 ? _cptEmptyState() : '') +
       (nbEnts > 0 ? '<div style="padding:0 16px 8px;text-align:right"><span onclick="exporterRapportMultiClients()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">📊 Exporter le portefeuille (CSV)</span></div>' : '') +
@@ -1387,8 +1387,12 @@ function switchCptNav(tab) {
   }
 }
 
-function kpiBox(val, label, color, bg) {
-  return '<div style="background:' + bg + ';border-radius:14px;padding:14px;text-align:center;border:1px solid ' + color + '20">' +
+function kpiBox(val, label, color, bg, filtre) {
+  // FIX (fonction déjà codée, jamais utilisée) : filtrerParKPI() existe
+  // depuis le début pour permettre de cliquer une case et zoomer sur les
+  // entreprises concernées — mais rien ici ne l'appelait, ces cases
+  // étaient visuellement des indicateurs sans aucune action au clic.
+  return '<div onclick="filtrerParKPI(' + valeurPourOnclick(filtre || 'entreprises') + ')" style="background:' + bg + ';border-radius:14px;padding:14px;text-align:center;border:1px solid ' + color + '20;cursor:pointer">' +
     '<div style="font-size:26px;font-weight:900;color:' + color + '">' + val + '</div>' +
     '<div style="font-size:10px;color:' + color + ';font-weight:600;margin-top:2px">' + label + '</div>' +
   '</div>';
