@@ -1946,6 +1946,39 @@
   </div>
 </div>
 
+<!-- AJOUT (bug réel trouvé) : le bouton "+ Ajouter un article" existait
+     déjà et fonctionnait sur les écrans Bon de commande et Bon de
+     livraison, mais les fenêtres qu'il ouvre n'existaient nulle part —
+     impossible d'ajouter une ligne manuelle (hors catalogue) sur ces
+     deux documents. -->
+<div class="modal-overlay" id="modal-ligne-bc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ Ajouter un article</div>
+    <label class="a-lbl">Description</label>
+    <input class="m-inp" id="mlbc-desc" placeholder="Ex: Ciment, transport...">
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="mlbc-qte" type="number" value="1" step="0.01">
+    <label class="a-lbl">Prix unitaire HT (MAD)</label>
+    <input class="m-inp" id="mlbc-pu" type="number" placeholder="0.00" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneBC()">✓ Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ligne-bl">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ Ajouter un article</div>
+    <label class="a-lbl">Description</label>
+    <input class="m-inp" id="mlbl-desc" placeholder="Ex: Sacs de ciment, palette...">
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="mlbl-qte" type="number" value="1" step="0.01">
+    <button class="m-btn" onclick="confirmerLigneBL()">✓ Ajouter</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
 <!-- MODAL AJOUTER LIGNE (ABONNEMENT) -->
 <div class="modal-overlay" id="modal-ligne-ab">
   <div class="modal">
