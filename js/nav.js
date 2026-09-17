@@ -559,6 +559,18 @@ async function voirDocumentDepuisNotification(type, docId) {
         btnBar.appendChild(bAtt);
         btnBar.appendChild(bRef);
         screen.appendChild(btnBar);
+        // FIX (fonctionnalité déjà codée, jamais accessible) : même ajout
+        // que dans app.js — signature.js existe en entier mais n'était
+        // déclenchable depuis aucun bouton.
+        setTimeout(function() {
+          const screen2 = document.getElementById('pdf-fullscreen');
+          if (!screen2 || typeof ouvrirModalSignature !== 'function') return;
+          const lienSignature = document.createElement('div');
+          lienSignature.style.cssText = 'background:#fff;padding:0 16px 12px;text-align:center;flex-shrink:0';
+          lienSignature.innerHTML = '<span style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">✍️ Accepter avec signature électronique</span>';
+          lienSignature.querySelector('span').onclick = function() { ouvrirModalSignature(docId, type, doc.token_public); };
+          screen2.appendChild(lienSignature);
+        }, 400);
       }, 400);
     }
   } catch(e) {
