@@ -578,6 +578,9 @@ function renderDetail() {
   }
 
   actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
+  // FIX (fonction déjà codée, jamais reliée) : ouvrirHistoriquePaiements()
+  // et son écran dédié existaient déjà, sans aucun bouton pour y accéder.
+  actions.push(`<button class="action-item" style="color:#6B5F54;border-left-color:#6B5F54" onclick="ouvrirHistoriquePaiements(${f.id})"><div class="action-ico" style="background:#F1EEE8">🧾</div>Historique des paiements</button>`);
   if (f.statut !== 'payee') {
     actions.push(`<button class="action-item success" onclick="marquerPayee(${f.id})"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer payée</button>`);
     actions.push(`<button class="action-item" onclick="ouvrirPaiementPartiel(${f.id})"><div class="action-ico" style="background:#E9F4F3">💰</div>Enregistrer un paiement</button>`);
