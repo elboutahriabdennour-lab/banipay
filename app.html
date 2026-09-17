@@ -193,6 +193,7 @@
 <script src="js/achats.js?v=1789327380"></script>
 <script src="js/stock.js?v=1789327380"></script>
 <script src="js/finance.js?v=1789327380"></script>
+<script src="js/tresorerie.js?v=1789327380"></script>
 <script src="js/ubl.js?v=1789327380"></script>
 <script src="js/relances.js?v=1789327380"></script>
 <!-- FIX (grand audit) : ces deux fichiers existaient déjà dans le
@@ -1245,28 +1246,38 @@
     <span style="font-size:12px;color:#9C9186">au</span>
     <input type="date" id="stats-date-fin" class="f-inp" style="flex:1" onchange="appliquerDatesPersonnalisees()">
   </div>
-  <!-- NOUVEAU (retour utilisateur) : filtres avancés — statut, catégorie, montant -->
-  <div style="padding:0 20px 10px;display:flex;gap:8px;flex-wrap:wrap">
-    <select id="stats-filtre-statut" class="f-inp" style="flex:1;min-width:120px" onchange="changerFiltreStatutStats(this.value)">
-      <option value="">Tous les statuts</option>
-      <option value="payee">Payée</option>
-      <option value="attente">En attente</option>
-      <option value="retard">En retard</option>
-      <option value="envoyee">Envoyée</option>
-    </select>
-    <select id="stats-filtre-categorie" class="f-inp" style="flex:1;min-width:120px" onchange="changerFiltreCategorieStats(this.value)">
-      <option value="">Toutes catégories</option>
-      <option value="service">Prestation de service</option>
-      <option value="produit">Produit / Marchandise</option>
-      <option value="main-oeuvre">Main d'oeuvre</option>
-      <option value="transport">Transport</option>
-      <option value="autre">Autre</option>
-    </select>
+  <!-- FIX (retour utilisateur — style à améliorer, trop chargé) : les
+       filtres avancés (statut, catégorie, montant) restaient affichés en
+       permanence, ajoutant 3 rangées avant même de voir le moindre
+       chiffre. Repliés derrière un bouton, comme pour le rapprochement
+       bancaire — les onglets de période (les plus utilisés au quotidien)
+       restent seuls visibles par défaut. -->
+  <div style="padding:0 20px 10px">
+    <span onclick="document.getElementById('stats-filtres-avances').style.display = document.getElementById('stats-filtres-avances').style.display === 'none' ? 'block' : 'none'" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer;font-weight:600">🔧 Filtres avancés (statut, catégorie, montant)</span>
   </div>
-  <div style="padding:0 20px 10px;display:flex;gap:8px;align-items:center">
-    <input type="number" id="stats-montant-min" class="f-inp" placeholder="Montant min" style="flex:1" onchange="appliquerFiltreMontantStats()">
-    <span style="font-size:12px;color:#9C9186">à</span>
-    <input type="number" id="stats-montant-max" class="f-inp" placeholder="Montant max" style="flex:1" onchange="appliquerFiltreMontantStats()">
+  <div id="stats-filtres-avances" style="display:none">
+    <div style="padding:0 20px 10px;display:flex;gap:8px;flex-wrap:wrap">
+      <select id="stats-filtre-statut" class="f-inp" style="flex:1;min-width:120px" onchange="changerFiltreStatutStats(this.value)">
+        <option value="">Tous les statuts</option>
+        <option value="payee">Payée</option>
+        <option value="attente">En attente</option>
+        <option value="retard">En retard</option>
+        <option value="envoyee">Envoyée</option>
+      </select>
+      <select id="stats-filtre-categorie" class="f-inp" style="flex:1;min-width:120px" onchange="changerFiltreCategorieStats(this.value)">
+        <option value="">Toutes catégories</option>
+        <option value="service">Prestation de service</option>
+        <option value="produit">Produit / Marchandise</option>
+        <option value="main-oeuvre">Main d'oeuvre</option>
+        <option value="transport">Transport</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+    <div style="padding:0 20px 10px;display:flex;gap:8px;align-items:center">
+      <input type="number" id="stats-montant-min" class="f-inp" placeholder="Montant min" style="flex:1" onchange="appliquerFiltreMontantStats()">
+      <span style="font-size:12px;color:#9C9186">à</span>
+      <input type="number" id="stats-montant-max" class="f-inp" placeholder="Montant max" style="flex:1" onchange="appliquerFiltreMontantStats()">
+    </div>
   </div>
   <!-- NOUVEAU : filtres croisés actifs (clic sur un client/produit) -->
   <div id="stats-filtres-actifs" style="padding:0 20px 10px"></div>
@@ -2100,6 +2111,8 @@
         </table>
       </div>
       <button onclick="goScreen('position-financiere',null)" style="width:100%;margin-top:14px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💼 Voir ma position financière</button>
+      <!-- AJOUT (nouveau chantier) : trésorerie prévisionnelle -->
+      <button onclick="goScreen('tresorerie',null)" style="width:100%;margin-top:8px;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📈 Trésorerie prévisionnelle</button>
     </div>
     <div style="height:30px"></div>
   </div>
@@ -2110,6 +2123,16 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">💼 Position financière</div>
       <div id="position-financiere-content"></div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+
+  <!-- AJOUT (nouveau chantier) : Trésorerie prévisionnelle -->
+  <div class="screen" id="screen-tresorerie">
+    <div class="topbar"><button class="back-btn" onclick="goBack('tva')">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div></div>
+    <div style="padding:12px 20px 0">
+      <div class="sec-label" style="padding:0 0 12px">📈 Trésorerie prévisionnelle</div>
+      <div id="tresorerie-content"></div>
     </div>
     <div style="height:30px"></div>
   </div>
