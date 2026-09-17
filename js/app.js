@@ -8,7 +8,7 @@ async function loadAll() {
       sb.get('factures', `user_id=eq.${uid}&order=created_at.desc`),
       sb.get('devis', `user_id=eq.${uid}&order=created_at.desc`),
       sb.get('clients', `user_id=eq.${uid}&order=nom.asc`),
-      sb.get('produits', `user_id=eq.${uid}&order=nom.asc`),
+      sb.get('produits', `user_id=eq.${uid}&archive=neq.true&order=nom.asc`),
       sb.get('avoirs', `user_id=eq.${uid}&order=created_at.desc`),
       sb.get('profils_entreprise', `id=eq.${uid}`),
     ]);
