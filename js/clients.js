@@ -285,6 +285,15 @@ async function sauvegarderClient() {
   if (!nom) { showToast('Entrez le nom du client', 'error'); return; }
   if (typeof verifierLimiteClients === 'function' && !verifierLimiteClients()) return;
   if (!validerIdentifiantsLegaux(el('cl-ice')?.value.trim(), null, el('cl-if')?.value.trim())) return;
+  // AJOUT (fonctions déjà codées, jamais utilisées) : isValidEmail()/
+  // isValidPhone() existaient dans utils.js sans qu'aucun formulaire ne
+  // les appelle — un email ou téléphone mal formaté partait sans
+  // vérification. Les deux champs restent optionnels : la validation ne
+  // se déclenche que s'ils sont remplis.
+  const emailClient = el('cl-email')?.value.trim();
+  const telClient = el('cl-tel')?.value.trim();
+  if (emailClient && !isValidEmail(emailClient)) { showToast('Email invalide', 'error'); return; }
+  if (telClient && !isValidPhone(telClient)) { showToast('Numéro de téléphone invalide', 'error'); return; }
   showToast('⏳ Sauvegarde...');
   try {
     const body = {
