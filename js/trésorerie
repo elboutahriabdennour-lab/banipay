@@ -1,0 +1,192 @@
+// ============================================================
+// TRÉSORERIE PRÉVISIONNELLE
+// ============================================================
+// Chantier lancé à la demande de l'utilisateur (voir échanges sur les
+// propositions de fonctionnalités). Construit délibérément à partir des
+// données déjà présentes dans l'app (factures, achats, salaires du
+// registre RH, facturation récurrente) plutôt que d'un nouveau système
+// séparé — pas de nouvelle table Supabase nécessaire pour cette
+// première version.
+//
+// Hypothèse assumée et affichée clairement à l'écran : comme l'app ne
+// gère pas encore de date d'échéance dédiée sur les factures/achats,
+// l'échéance est estimée à date d'émission + 30 jours (délai courant).
+// Ce n'est pas exact au jour près — c'est une PROJECTION, présentée
+// comme telle.
+
+function _estimerEcheanceTresorerie(dateBrute, joursDelai) {
+  if (!dateBrute) return null;
+  const d = new Date(dateBrute);
+  if (isNaN(d.getTime())) return null;
+  d.setDate(d.getDate() + (joursDelai == null ? 30 : joursDelai));
+  return d;
+}
+
+// Charges ponctuelles saisies manuellement (loyer, impôts, achat
+// exceptionnel...) — stockées localement par entreprise. Pas encore de
+// table dédiée côté serveur pour cette première version : si vous
+// voulez qu'elles soient partagées entre appareils/collaborateurs, il
+// faudra créer une vraie table plus tard.
+function _cleChargesPrevisionnelles() {
+  return 'bp_charges_previsionnelles_' + (STATE.entrepriseId || sb.user?.id || 'defaut');
+}
+function _chargerChargesPrevisionnelles() {
+  try { return JSON.parse(localStorage.getItem(_cleChargesPrevisionnelles())) || []; }
+  catch (e) { return []; }
+}
+function _sauvegarderChargesPrevisionnelles(liste) {
+  try { localStorage.setItem(_cleChargesPrevisionnelles(), JSON.stringify(liste)); } catch (e) {}
+}
+
+function ajouterChargePrevisionnelle() {
+  const libelle = (el('tresorerie-charge-libelle')?.value || '').trim();
+  const montant = parseFloat(el('tresorerie-charge-montant')?.value);
+  const date = el('tresorerie-charge-date')?.value;
+  if (!libelle || !montant || montant <= 0 || !date) {
+    showToast('Renseignez un libellé, un montant et une date', 'error');
+    return;
+  }
+  const liste = _chargerChargesPrevisionnelles();
+  liste.push({ id: Date.now(), libelle: libelle, montant: montant, date: date });
+  _sauvegarderChargesPrevisionnelles(liste);
+  el('tresorerie-charge-libelle').value = '';
+  el('tresorerie-charge-montant').value = '';
+  el('tresorerie-charge-date').value = '';
+  renderTresorerie();
+}
+function supprimerChargePrevisionnelle(id) {
+  _sauvegarderChargesPrevisionnelles(_chargerChargesPrevisionnelles().filter(function(c) { return c.id !== id; }));
+  renderTresorerie();
+}
+
+function changerSoldeActuelTresorerie() {
+  const v = parseFloat(el('tresorerie-solde-actuel')?.value);
+  localStorage.setItem('bp_solde_bancaire_actuel_' + (STATE.entrepriseId || sb.user?.id || 'defaut'), isNaN(v) ? '0' : String(v));
+  renderTresorerie();
+}
+
+function renderTresorerie() {
+  const container = el('tresorerie-content');
+  if (!container) return;
+
+  const aujourdhui = new Date();
+  const bornes = {
+    30: new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate() + 30),
+    60: new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate() + 60),
+    90: new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), aujourdhui.getDate() + 90)
+  };
+  function horizon(date) {
+    if (!date) return 90;
+    if (date <= bornes[30]) return 30;
+    if (date <= bornes[60]) return 60;
+    return 90;
+  }
+
+  const encaissements = { 30: 0, 60: 0, 90: 0 };
+  const decaissements = { 30: 0, 60: 0, 90: 0 };
+  const detail = { 30: [], 60: [], 90: [] };
+
+  // Encaissements : factures clients non payées
+  (STATE.factures || []).filter(function(f) { return f.statut !== 'payee' && f.statut !== 'annulee' && f.statut !== 'brouillon'; })
+    .forEach(function(f) {
+      const solde = Math.max(0, Number(f.ttc || 0) - Number(f.montant_recu || 0));
+      if (solde <= 0) return;
+      const h = horizon(_estimerEcheanceTresorerie(f.date_emission, 30));
+      encaissements[h] += solde;
+      detail[h].push({ sens: '+', label: 'Facture ' + (f.ref || '') + ' — ' + (f.client || ''), montant: solde });
+    });
+
+  // Encaissements : facturation récurrente à venir
+  (STATE.abonnements || []).forEach(function(ab) {
+    const h = horizon(_estimerEcheanceTresorerie(ab.prochaine_date, 0));
+    const montantHT = (ab.lignes || []).reduce(function(s, l) { return s + (Number(l.qte) || 1) * (Number(l.pu) || 0); }, 0);
+    const montantEstime = montantHT * 1.2; // approximation TTC (TVA 20%) — pas exact si taux différent
+    if (montantEstime <= 0) return;
+    encaissements[h] += montantEstime;
+    detail[h].push({ sens: '+', label: 'Facturation récurrente — ' + (ab.client || ''), montant: montantEstime });
+  });
+
+  // Décaissements : achats fournisseurs non payés
+  (STATE.achats || []).filter(function(a) { return a.statut !== 'payee'; })
+    .forEach(function(a) {
+      const solde = Math.max(0, Number(a.ttc || 0) - Number(a.montant_recu || 0));
+      if (solde <= 0) return;
+      const h = horizon(_estimerEcheanceTresorerie(a.date_achat, 30));
+      decaissements[h] += solde;
+      detail[h].push({ sens: '-', label: 'Achat ' + (a.ref_fournisseur || '') + ' — ' + (a.fournisseur || ''), montant: solde });
+    });
+
+  // Décaissements : masse salariale (registre RH), reconduite chaque mois entamé
+  const masseSalariale = (STATE.employes || []).filter(function(e) { return e.statut === 'actif'; })
+    .reduce(function(s, e) { return s + (Number(e.salaire_mensuel) || 0); }, 0);
+  if (masseSalariale > 0) {
+    decaissements[30] += masseSalariale;
+    decaissements[60] += masseSalariale;
+    decaissements[90] += masseSalariale;
+    detail[30].push({ sens: '-', label: 'Masse salariale (' + (STATE.employes || []).filter(function(e){return e.statut==='actif';}).length + ' employé(s))', montant: masseSalariale });
+  }
+
+  // Décaissements : charges ponctuelles saisies manuellement
+  _chargerChargesPrevisionnelles().forEach(function(c) {
+    const h = horizon(_estimerEcheanceTresorerie(c.date, 0));
+    decaissements[h] += Number(c.montant) || 0;
+    detail[h].push({ sens: '-', label: c.libelle, montant: Number(c.montant) || 0, id: c.id });
+  });
+
+  const soldeActuel = parseFloat(localStorage.getItem('bp_solde_bancaire_actuel_' + (STATE.entrepriseId || sb.user?.id || 'defaut'))) || 0;
+
+  // Cumul : le solde à 60 jours inclut les flux des 30 premiers jours, etc.
+  const soldeA30 = soldeActuel + encaissements[30] - decaissements[30];
+  const soldeA60 = soldeA30 + encaissements[60] - decaissements[60];
+  const soldeA90 = soldeA60 + encaissements[90] - decaissements[90];
+
+  function carteHorizon(jours, solde, enc, dec) {
+    const couleur = solde >= 0 ? '#55702E' : '#B23A2E';
+    const fond = solde >= 0 ? '#EEF3E4' : '#F5E4E1';
+    return '<div style="background:' + fond + ';border-radius:14px;padding:14px;flex:1">' +
+      '<div style="font-size:10px;font-weight:700;color:' + couleur + ';text-transform:uppercase">Dans ' + jours + ' jours</div>' +
+      '<div style="font-size:20px;font-weight:800;color:' + couleur + ';margin:4px 0">' + fmt(solde) + '</div>' +
+      '<div style="font-size:9px;color:' + couleur + '">MAD</div>' +
+      '<div style="margin-top:8px;font-size:10px;color:#6B5F54">+' + fmt(enc) + ' encaissé · -' + fmt(dec) + ' décaissé</div>' +
+    '</div>';
+  }
+
+  container.innerHTML =
+    '<div style="background:#F1EEE8;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:#6B5F54">' +
+      '⚠️ Projection estimée — les échéances de paiement ne sont pas encore enregistrées précisément dans l\'app, donc chaque facture/achat est supposé réglé 30 jours après son émission. À ajuster avec votre propre jugement, surtout pour les gros montants.' +
+    '</div>' +
+
+    '<div style="margin-bottom:14px">' +
+      '<label class="f-lbl">Solde bancaire actuel</label>' +
+      '<input type="number" id="tresorerie-solde-actuel" class="f-inp" value="' + (soldeActuel || '') + '" placeholder="0" onchange="changerSoldeActuelTresorerie()">' +
+    '</div>' +
+
+    '<div style="display:flex;gap:8px;margin-bottom:18px">' +
+      carteHorizon(30, soldeA30, encaissements[30], decaissements[30]) +
+      carteHorizon(60, soldeA60, encaissements[60], decaissements[60]) +
+      carteHorizon(90, soldeA90, encaissements[90], decaissements[90]) +
+    '</div>' +
+
+    '<div class="sec-label" style="padding:0 0 10px">➕ Ajouter une charge ponctuelle</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">' +
+      '<input id="tresorerie-charge-libelle" class="f-inp" placeholder="Ex: Loyer, impôt, achat de matériel...">' +
+      '<div style="display:flex;gap:8px">' +
+        '<input type="number" id="tresorerie-charge-montant" class="f-inp" placeholder="Montant MAD" style="flex:1">' +
+        '<input type="date" id="tresorerie-charge-date" class="f-inp" style="flex:1">' +
+      '</div>' +
+      '<button onclick="ajouterChargePrevisionnelle()" style="padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Ajouter</button>' +
+    '</div>' +
+
+    '<div class="sec-label" style="padding:12px 0 10px">📋 Détail des mouvements prévus (30 jours)</div>' +
+    (detail[30].length
+      ? detail[30].map(function(m) {
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #F1EEE8">' +
+            '<div style="font-size:12px;color:#2A2420">' + escapeHTML(m.label) + '</div>' +
+            '<div style="display:flex;align-items:center;gap:8px">' +
+              '<span style="font-size:13px;font-weight:700;color:' + (m.sens === '+' ? '#55702E' : '#B23A2E') + '">' + m.sens + fmt(m.montant) + '</span>' +
+              (m.id ? '<span onclick="supprimerChargePrevisionnelle(' + m.id + ')" style="cursor:pointer;color:#9C9186;font-size:12px">✕</span>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="empty"><div class="empty-ico">✅</div><div class="empty-title">Rien de prévu sous 30 jours</div></div>');
+}
