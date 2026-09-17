@@ -2012,6 +2012,37 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- AJOUT (fonctions déjà codées dans factures.js — ouvrirPaiementPartiel,
+     confirmerPaiement — jamais reliées : ce modal n'existait pas du
+     tout, alors que le bouton "Historique des paiements" y mène). -->
+<div class="modal-overlay" id="modal-paiement">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">💰 Enregistrer un paiement</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:14px;background:#F1EEE8;border-radius:10px;padding:10px 12px">
+      <div>Total : <strong id="pp-total"></strong></div>
+      <div>Reçu : <strong id="pp-recu"></strong></div>
+      <div>Restant : <strong id="pp-restant"></strong></div>
+    </div>
+    <label class="f-lbl">Montant reçu</label>
+    <input type="number" id="pp-montant" class="f-inp" placeholder="0" style="margin-bottom:10px">
+    <label class="f-lbl">Date</label>
+    <input type="date" id="pp-date" class="f-inp" style="margin-bottom:10px">
+    <label class="f-lbl">Mode de paiement</label>
+    <select id="pp-mode" class="f-inp" style="margin-bottom:14px">
+      <option value="virement">Virement</option>
+      <option value="cheque">Chèque</option>
+      <option value="especes">Espèces</option>
+      <option value="carte">Carte</option>
+      <option value="autre">Autre</option>
+    </select>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeAllModals()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>
+      <button onclick="confirmerPaiement()" style="flex:1.4;padding:11px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <!-- AJOUT (fonctionnalité déjà codée dans signature.js, jamais reliée à
      aucune interface) : modal de signature tactile pour accepter un
      devis/une facture. -->
