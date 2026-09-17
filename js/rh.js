@@ -88,6 +88,9 @@ async function sauvegarderEmploye() {
   // CNSS de l'entreprise elle-même — chiffres uniquement.
   const cnss = el('emp-cnss')?.value.trim() || '';
   if (cnss && !/^\d+$/.test(cnss)) { showToast('❌ Le numéro CNSS ne doit contenir que des chiffres', 'error'); return; }
+  // AJOUT (fonction déjà codée, jamais utilisée) : isValidPhone().
+  const telEmploye = el('emp-tel')?.value.trim() || '';
+  if (telEmploye && !isValidPhone(telEmploye)) { showToast('❌ Numéro de téléphone invalide', 'error'); return; }
   const joursCoches = Array.from(document.querySelectorAll('.emp-jour:checked')).map(function(cb) { return cb.value; });
   const data = {
     user_id: (STATE.entrepriseId || sb.user.id),
