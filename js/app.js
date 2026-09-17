@@ -549,6 +549,20 @@ async function afficherDocumentPublic(docId, token) {
         btnBar.appendChild(bAtt);
         btnBar.appendChild(bRef);
         screen.appendChild(btnBar);
+        // FIX (fonctionnalité déjà codée, jamais accessible) : signature.js
+        // existe en entier (canvas tactile, validation) mais
+        // ouvrirModalSignature() n'était appelé nulle part — impossible d'y
+        // accéder depuis aucun bouton. Ajouté ici en option secondaire,
+        // à côté de l'acceptation simple déjà en place.
+        setTimeout(function() {
+          const screen2 = document.getElementById('pdf-fullscreen');
+          if (!screen2 || typeof ouvrirModalSignature !== 'function') return;
+          const lienSignature = document.createElement('div');
+          lienSignature.style.cssText = 'background:#fff;padding:0 16px 12px;text-align:center;flex-shrink:0';
+          lienSignature.innerHTML = '<span style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">✍️ Accepter avec signature électronique</span>';
+          lienSignature.querySelector('span').onclick = function() { ouvrirModalSignature(docId, typeDoc, token); };
+          screen2.appendChild(lienSignature);
+        }, 500);
       }, 500);
     }
 
