@@ -9,9 +9,20 @@ async function loadComptableApp() {
   if (!uid || !email) return;
   const diag = [];
   diag.push('Compte comptable : ' + email);
+  // AJOUT (accès limité collaborateur) : si je suis un collaborateur
+  // d'un autre cabinet (pas titulaire), je dois voir LE PORTEFEUILLE DU
+  // TITULAIRE, pas un portefeuille vide sous mon propre email — d'où le
+  // choix de l'email utilisé pour la requête juste en dessous.
+  // ⚠️ Ça suppose que la politique RLS de la table invitations_comptable
+  // autorise déjà un collaborateur actif à lire les lignes du titulaire
+  // (voir migration_role_cabinet.sql) — sans ça, cette requête renverra
+  // toujours une liste vide pour un collaborateur, même une fois son
+  // rôle correctement détecté ici.
+  await chargerMonRoleCabinet();
+  const emailPourPortefeuille = (!CPT.estTitulaireCabinet && CPT.titulaireCabinet?.email) ? CPT.titulaireCabinet.email : email;
   try {
     const invResp = await fetch(
-      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(email.toLowerCase()) + '&statut=eq.acceptee&select=*',
+      SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(emailPourPortefeuille.toLowerCase()) + '&statut=eq.acceptee&select=*',
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     const invitations = invResp.ok ? await invResp.json() : [];
@@ -553,6 +564,7 @@ function renderCptFactures() {
 }
 
 async function toggleLettrageRapide(factureId, btn) {
+  if (!verifierPermissionEcritureCabinet()) return;
   const isLettree = btn.dataset.lettre === '1';
   const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
   if (isLettree) {
@@ -571,6 +583,7 @@ async function toggleLettrageRapide(factureId, btn) {
   if (inv) { inv._etat = calculerEtat(inv); }
 }
 async function toggleTVARapide(factureId, btn) {
+  if (!verifierPermissionEcritureCabinet()) return;
   const isTVA = btn.dataset.tva === '1';
   const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
   if (isTVA) {
@@ -1168,6 +1181,7 @@ function txTVA(inv) {
 }
 
 async function ouvrirGestionEntreprises() {
+  if (!verifierPermissionEcritureCabinet()) return;
   const email = sb.user?.email;
   if (!email) return;
   let invites = [];
@@ -1707,6 +1721,7 @@ async function sauvegarderControle(factureId, data) {
 }
 
 async function toggleLettrage(factureId) {
+  if (!verifierPermissionEcritureCabinet()) return;
   const ctrl = (CPT.currentControles || []).find(function(c2) { return String(c2.facture_id) === String(factureId); }) || {};
   const nom = sb.user?.user_metadata?.nom || sb.user?.email?.split('@')[0] || 'Comptable';
   if (ctrl.lettre) {
@@ -1778,6 +1793,15 @@ async function sauvegarderEditionComptable() {
 function renderComptableProfil() {
   const user = sb.user;
   if (!user) return;
+  // AJOUT (accès limité collaborateur — défense en profondeur) : le
+  // bouton "Mon Cabinet" est déjà masqué pour un non-titulaire, mais on
+  // bloque aussi l'écran lui-même au cas où il y accéderait autrement
+  // (historique du navigateur, lien direct...).
+  if (CPT.monRole && !CPT.estTitulaireCabinet) {
+    showToast('🔒 Cette section est réservée au titulaire du cabinet', 'error');
+    goScreen('comptable', null);
+    return;
+  }
   const meta = user.user_metadata || {};
   const nom = meta.nom || user.email?.split('@')[0] || 'Comptable';
   const cabinet = meta.cabinet || '';
