@@ -2565,6 +2565,11 @@
           🧾
         </div>
         <!-- Avatar → profil -->
+        <!-- AJOUT (structure Mon Cabinet / Mes Clients) : remplace
+             l'icône avatar seule par un vrai sélecteur à deux entrées.
+             "Mon Cabinet" est masqué pour un collaborateur non-titulaire
+             — voir chargerMonRoleCabinet() dans equipe-cabinet.js. -->
+        <div id="cpt-switch-cabinet" onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="display:none;cursor:pointer;padding:6px 10px;border-radius:16px;background:rgba(255,255,255,0.15);font-size:11px;font-weight:600;color:#fff;white-space:nowrap">🏢 Mon Cabinet</div>
         <div id="comptable-avatar" onclick="renderComptableProfil();goScreen('comptable-profil',null)" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;cursor:pointer">C</div>
       </div>
     </div>
