@@ -12,6 +12,55 @@ STATE.membresCabinet = STATE.membresCabinet || [];
 
 STATE.mesInvitationsCabinet = STATE.mesInvitationsCabinet || [];
 
+// AJOUT (structure Mon Cabinet / Mes Clients + accès limité collaborateur) :
+// récupère mon propre rôle si je suis membre du cabinet de quelqu'un
+// d'autre (pas titulaire). Par défaut (RPC absente, erreur réseau, ou
+// je suis moi-même titulaire) on considère "titulaire" — un défaut sûr
+// qui n'enferme jamais le propriétaire du cabinet hors de son propre
+// compte par accident.
+async function chargerMonRoleCabinet() {
+  CPT.monRole = 'titulaire';
+  CPT.estTitulaireCabinet = true;
+  CPT.titulaireCabinet = null;
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mon_role_cabinet', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    // FIX : le retour anticipé ici sautait la mise à jour de la
+    // visibilité du bouton plus bas — corrigé en la sortant du bloc
+    // conditionnel plutôt que de "return" avant de l'atteindre.
+    if (resp.ok) {
+      const rows = (await resp.json()) || [];
+      if (rows.length && rows[0].role) {
+        CPT.monRole = rows[0].role;
+        CPT.estTitulaireCabinet = rows[0].role === 'titulaire';
+        CPT.titulaireCabinet = { id: rows[0].titulaire_id, email: rows[0].titulaire_email, raison: rows[0].titulaire_raison };
+      }
+    }
+    // sinon (RPC pas encore créée côté serveur) -> reste "titulaire" par défaut
+  } catch (e) {
+    console.warn('chargerMonRoleCabinet:', e);
+  }
+  // AJOUT : le bouton "🏢 Mon Cabinet" n'existe visuellement que pour le
+  // titulaire — un collaborateur ne voit même pas qu'il pourrait y
+  // accéder, plutôt qu'un bouton désactivé qui inviterait à essayer.
+  const btnCabinet = el('cpt-switch-cabinet');
+  if (btnCabinet) btnCabinet.style.display = CPT.estTitulaireCabinet ? 'block' : 'none';
+}
+
+// AJOUT : garde-fou à appeler en tête de toute action qui MODIFIE une
+// donnée cliente (lettrage, TVA, remarque, invitation, rapprochement...).
+// Un rôle "lecture" peut tout consulter mais ne peut rien changer.
+function verifierPermissionEcritureCabinet() {
+  if (CPT.monRole === 'lecture') {
+    showToast('🔒 Accès en lecture seule — contactez le titulaire du cabinet pour modifier', 'error');
+    return false;
+  }
+  return true;
+}
+
 async function chargerMesInvitationsCabinet() {
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_invitations_cabinet', {
