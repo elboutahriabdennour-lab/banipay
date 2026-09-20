@@ -617,7 +617,10 @@ function voirProfilComptablePublic(email, raison, tel) {
 }
 function ouvrirActionsEntreprise(idUnique, id, raison, tel, email) {
   const url = window.location.origin + window.location.pathname + '?profil=' + idUnique;
-  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=1F6F72&bgcolor=ffffff&data=' + encodeURIComponent(url);
+  const qrDataUrl = genererQrDataUrl(url, 180);
+  const qrHtml = qrDataUrl
+    ? '<img src="' + qrDataUrl + '" style="width:140px;height:140px;margin-bottom:16px" alt="QR code">'
+    : '<div style="width:140px;height:140px;margin:0 auto 16px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9C9186;text-align:center;padding:8px">QR indisponible</div>';
 
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
@@ -625,7 +628,7 @@ function ouvrirActionsEntreprise(idUnique, id, raison, tel, email) {
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px;max-width:420px;width:100%;text-align:center">' +
       '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 16px"></div>' +
       '<div style="font-size:16px;font-weight:700;margin-bottom:16px">' + escapeHTML(raison) + '</div>' +
-      '<img src="' + qrUrl + '" style="width:140px;height:140px;margin-bottom:16px" alt="QR code">' +
+      qrHtml +
       '<div style="display:flex;flex-direction:column;gap:8px">' +
         (id ? '<button class="btn-annuaire-discuter" style="padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💬 Discuter</button>' : '') +
         '<button class="btn-annuaire-devis" style="padding:12px;background:#FBF0DA;color:#A67A16;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>' +
