@@ -64,8 +64,10 @@ function renderProfil() {
   setEl('pv-lien', publicUrl);
   const qrContainer = el('qr-canvas-container');
   if (qrContainer) {
-    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(publicUrl);
-    qrContainer.innerHTML = '<img src="' + qrUrl + '" width="120" height="120" style="border-radius:8px;background:#F1EEE8">';
+    const qrDataUrl = genererQrDataUrl(publicUrl, 120);
+    qrContainer.innerHTML = qrDataUrl
+      ? '<img src="' + qrDataUrl + '" width="120" height="120" style="border-radius:8px;background:#F1EEE8">'
+      : '<div style="width:120px;height:120px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9C9186;text-align:center;padding:8px">QR indisponible — utilisez le lien ci-dessous</div>';
   }
   if(el('pv-objectif')) el('pv-objectif').textContent = p.objectif_mensuel ? fmtInt(p.objectif_mensuel)+' MAD/mois' : 'Non défini';
 }
