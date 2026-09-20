@@ -7,6 +7,20 @@ function renderDevisList() {
   // AJOUT (demande utilisateur) : recherche locale par référence ou client.
   const q = (el('devis-recherche')?.value || '').trim().toLowerCase();
   if (q) data = data.filter(d => (d.ref||'').toLowerCase().includes(q) || (d.client||'').toLowerCase().includes(q));
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri de la
+  // liste, même principe que pour les factures.
+  const tri = el('devis-tri')?.value || 'defaut';
+  if (tri !== 'defaut') {
+    data = data.slice().sort(function(a, b) {
+      if (tri === 'date-asc') return new Date(a.date_emission||0) - new Date(b.date_emission||0);
+      if (tri === 'montant-desc') return (Number(b.ttc)||0) - (Number(a.ttc)||0);
+      if (tri === 'montant-asc') return (Number(a.ttc)||0) - (Number(b.ttc)||0);
+      if (tri === 'client-asc') return (a.client||'').localeCompare(b.client||'', 'fr');
+      return 0;
+    });
+  } else {
+    data = data.slice().sort(function(a, b) { return new Date(b.date_emission||0) - new Date(a.date_emission||0); });
+  }
   if (!data.length) {
     list.innerHTML = `<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">${q ? 'Aucun résultat pour cette recherche' : 'Aucun devis'}</div></div>`;
     return;
