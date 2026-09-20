@@ -2053,6 +2053,26 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- AJOUT (bug réel trouvé) : le bouton "✏️ Modifier" du profil comptable
+     était déjà câblé et cliquable, mais cette fenêtre n'existait pas du
+     tout — modifier ses informations ne faisait rien. -->
+<div class="modal-overlay" id="modal-edition-comptable">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Modifier mes informations</div>
+    <label class="a-lbl">Nom</label>
+    <input class="m-inp" id="ec-nom" placeholder="Votre nom">
+    <label class="a-lbl">Cabinet</label>
+    <input class="m-inp" id="ec-cabinet" placeholder="Nom du cabinet">
+    <label class="a-lbl">Téléphone</label>
+    <input class="m-inp" id="ec-tel" placeholder="06 00 00 00 00">
+    <label class="a-lbl">Spécialité</label>
+    <input class="m-inp" id="ec-specialite" placeholder="Ex: PME, BTP, import-export...">
+    <button class="m-btn" onclick="sauvegarderEditionComptable()">✓ Enregistrer</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
 <!-- AJOUT (fonctions déjà codées dans factures.js — ouvrirPaiementPartiel,
      confirmerPaiement — jamais reliées : ce modal n'existait pas du
      tout, alors que le bouton "Historique des paiements" y mène). -->
@@ -2116,7 +2136,7 @@
     </div>
   </div>
     <div style="padding:0 20px 12px;position:relative">
-      <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client..." oninput="renderClients();document.getElementById('search-client-clear').style.display=this.value?'block':'none'" style="margin-top:12px">
+      <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client (ou coller un lien/code)..." oninput="rechercherClientOuLien();document.getElementById('search-client-clear').style.display=this.value?'block':'none'" style="margin-top:12px">
       <span id="search-client-clear" onclick="document.getElementById('search-client-inp').value='';renderClients();this.style.display='none'" style="display:none;position:absolute;right:32px;top:22px;color:#9C9186;cursor:pointer;font-size:16px;padding:4px">✕</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
