@@ -144,6 +144,15 @@
     <span id="dashboard-achats-montant" style="font-size:15px;font-weight:800;color:#8E2E24">0 MAD</span>
   </div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="facture-recherche" placeholder="🔍 Rechercher par référence ou client..." oninput="renderFactureList()"></div>
+  <div style="padding:0 20px 8px">
+    <select id="facture-tri" class="f-inp" onchange="renderFactureList()" style="font-size:12px">
+      <option value="defaut">Trier par... (plus récentes d'abord)</option>
+      <option value="date-asc">📅 Date — plus ancienne d'abord</option>
+      <option value="montant-desc">💰 Montant — du plus grand au plus petit</option>
+      <option value="montant-asc">💰 Montant — du plus petit au plus grand</option>
+      <option value="client-asc">🔤 Client — A à Z</option>
+    </select>
+  </div>
   <div class="filter-tabs">
     <button class="ftab active" onclick="setFilter('toutes',this)">Toutes</button>
     <button class="ftab" onclick="setFilter('attente',this)">En attente</button>
@@ -790,12 +799,25 @@
       <div><label class="f-lbl">Date</label><input id="f-date" class="f-inp" type="date"></div>
     </div>
   </div>
-  <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="f-chantier" class="f-inp" placeholder="Ex: Rénovation bureau"></div>
-  <div class="form-section">
-    <div class="f-row">
-      <div><label class="f-lbl">Ech&#233;ance</label><input id="f-echeance" class="f-inp" type="date"></div>
-      <div><label class="f-lbl">Note</label><input id="f-note" class="f-inp" placeholder="Note..."></div>
-      <div><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="f-bc-lie" class="f-inp"></select></div>
+  <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : ces
+       champs (chantier, échéance, note, BC lié) sont utiles mais pas
+       essentiels pour créer une facture rapide — repliés par défaut,
+       même principe que "Autres outils" sur le dashboard. -->
+  <div style="padding:4px 20px 10px">
+    <span onclick="
+      const masque = document.getElementById('f-options-avancees').style.display === 'none';
+      document.getElementById('f-options-avancees').style.display = masque ? 'block' : 'none';
+      document.getElementById('f-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (chantier, échéance, note...)';
+    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer"><span id="f-lbl-options">▼ Options avancées (chantier, échéance, note...)</span></span>
+  </div>
+  <div id="f-options-avancees" style="display:none">
+    <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="f-chantier" class="f-inp" placeholder="Ex: Rénovation bureau"></div>
+    <div class="form-section">
+      <div class="f-row">
+        <div><label class="f-lbl">Ech&#233;ance</label><input id="f-echeance" class="f-inp" type="date"></div>
+        <div><label class="f-lbl">Note</label><input id="f-note" class="f-inp" placeholder="Note..."></div>
+        <div><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="f-bc-lie" class="f-inp"></select></div>
+      </div>
     </div>
   </div>
   <div class="form-section">
