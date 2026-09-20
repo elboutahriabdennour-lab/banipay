@@ -87,15 +87,33 @@
     <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
   </div>
 
-  <div class="groupe-label">Suivi &amp; équipe</div>
-  <div class="quick-actions">
+  <!-- AJOUT (grand nettoyage — simplifier le dashboard) : 15 icônes de
+       raccourci d'un coup, avant même de voir le reste de l'écran,
+       c'était trop chargé. Les 2 groupes les plus utilisés au quotidien
+       (Achats & ventes, Gestion) restent visibles ; les 2 autres
+       (Suivi & équipe, Réseau Zelto — moins fréquents) se replient
+       derrière ce bouton, un seul tap pour y accéder plutôt que zéro,
+       mais rien n'est supprimé. -->
+  <div style="padding:4px 20px 14px;text-align:center">
+    <span onclick="
+      const masque = document.getElementById('qa-suivi-equipe').style.display === 'none';
+      document.getElementById('qa-suivi-equipe').style.display = masque ? 'grid' : 'none';
+      document.getElementById('groupe-label-suivi').style.display = masque ? 'block' : 'none';
+      document.getElementById('qa-reseau-zelto').style.display = masque ? 'grid' : 'none';
+      document.getElementById('groupe-label-reseau').style.display = masque ? 'block' : 'none';
+      document.getElementById('lbl-plus-outils').textContent = masque ? '▲ Masquer' : '▼ Autres outils';
+    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer;padding:8px 16px;border-radius:20px;background:#E9F4F3;display:inline-block"><span id="lbl-plus-outils">▼ Autres outils</span></span>
+  </div>
+
+  <div class="groupe-label" id="groupe-label-suivi" style="display:none">Suivi &amp; équipe</div>
+  <div class="quick-actions" id="qa-suivi-equipe" style="display:none">
     <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E9F4F3">📊</div><div class="qa-lbl">Stats</div></div>
     <div class="qa-item" onclick="window._retourEmployes='dashboard';if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}"><div class="qa-ico" style="background:#E9F4F3">👥</div><div class="qa-lbl">Personnel<span id="verrou-rh-dashboard"></span></div></div>
     <div class="qa-item" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><div class="qa-ico" style="background:#EEF3E4">🏦</div><div class="qa-lbl">Relevés</div></div>
   </div>
 
-  <div class="groupe-label">Réseau Zelto</div>
-  <div class="quick-actions">
+  <div class="groupe-label" id="groupe-label-reseau" style="display:none">Réseau Zelto</div>
+  <div class="quick-actions" id="qa-reseau-zelto" style="display:none">
     <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
     <div class="qa-item" onclick="window._retourMarche='dashboard';loadMarche();goScreen('marche',null)"><div class="qa-ico" style="background:#EDE6F0">🤝</div><div class="qa-lbl">Le Marché</div></div>
   </div>
