@@ -405,3 +405,21 @@ function valeurPourOnclick(valeur) {
   if (typeof valeur === 'number' || typeof valeur === 'boolean') return String(valeur);
   return "'" + String(valeur == null ? '' : valeur).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 }
+
+// FIX (bug réel signalé — QR code invisible pour l'utilisateur et son
+// comptable) : génère le QR entièrement en local via qrcode-generator
+// (chargée dans app.html), au lieu de dépendre d'un service tiers
+// externe (api.qrserver.com) qui peut être bloqué, lent ou en panne
+// sans qu'aucun message d'erreur ne le signale.
+function genererQrDataUrl(texte, taillePx) {
+  if (typeof qrcode === 'undefined') return null;
+  try {
+    const qr = qrcode(0, 'M'); // type 0 = taille auto-ajustée au contenu
+    qr.addData(texte);
+    qr.make();
+    return qr.createDataURL(Math.max(2, Math.round((taillePx || 120) / qr.getModuleCount())), 0);
+  } catch (e) {
+    console.warn('genererQrDataUrl:', e);
+    return null;
+  }
+}
