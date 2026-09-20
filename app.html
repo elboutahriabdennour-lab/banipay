@@ -2792,5 +2792,13 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<!-- AJOUT (bug réel signalé — QR invisible) : la génération du QR
+     passait par un service tiers externe (api.qrserver.com). Si ce
+     service est bloqué, lent ou indisponible pour l'utilisateur, le QR
+     ne s'affiche jamais — sans message d'erreur, juste une image
+     cassée invisible. Remplacé par une génération 100% locale dans le
+     navigateur, qui ne dépend plus d'aucun service externe une fois
+     cette librairie chargée. -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 </body>
 </html>
