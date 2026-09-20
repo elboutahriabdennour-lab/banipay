@@ -828,6 +828,11 @@ function _barreFiltresReleve() {
     // revoir ou d'en supprimer une une fois créées.
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">' +
       '<span onclick="ouvrirGestionRegles()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">🔒 Gérer mes règles (' + (STATE.reglesRapprochement||[]).length + ')</span>' +
+      // AJOUT (fonction déjà codée, jamais affichée) : reanalyserReleveDepuisZero()
+      // existait pour relancer le rapprochement automatique depuis zéro
+      // (utile après avoir créé une nouvelle règle ou ajouté des
+      // factures) — sans bouton nulle part pour le déclencher.
+      (STATE._releveActuelId ? '<span onclick="if(confirm(' + valeurPourOnclick('Relancer analyse depuis zéro ? Les correspondances déjà proposées seront recalculées.') + '))reanalyserReleveDepuisZero(' + valeurPourOnclick(STATE._releveActuelId) + ')" style="font-size:11px;color:#6B5F54;text-decoration:underline;cursor:pointer">🔄 Réanalyser</span>' : '') +
       // AJOUT (demande utilisateur) : les deux exports comptables
       // existaient déjà en code mais n'étaient déclenchables depuis
       // AUCUN bouton nulle part dans l'app — rendus accessibles ici,
