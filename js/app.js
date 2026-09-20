@@ -727,6 +727,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof loadBonsCommande === 'function') await loadBonsCommande();
       if (typeof loadBonsLivraison === 'function') await loadBonsLivraison();
       if (typeof loadRelancesEnvoyees === 'function') await loadRelancesEnvoyees();
+      // FIX (fonction déjà codée, jamais appelée) : sans ce chargement,
+      // STATE.relancesAchatsVues restait toujours vide — un rappel de
+      // paiement fournisseur déjà "vu" réapparaissait donc chaque jour
+      // au lieu de rester masqué, puisque _relanceAchatDejaVue() ne
+      // trouvait jamais aucune trace de ce qui avait déjà été vu.
+      if (typeof loadRelancesAchatsVues === 'function') await loadRelancesAchatsVues();
       if (typeof loadEmployes === 'function') await loadEmployes();
       if (typeof loadDemandesDevis === 'function') await loadDemandesDevis();
     await loadConversations();
