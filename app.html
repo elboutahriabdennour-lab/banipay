@@ -2053,6 +2053,58 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- AJOUT (bug réel trouvé) : "Ajuster le stock" depuis la fiche produit
+     n'ouvrait rien — ce modal n'existait pas du tout. -->
+<div class="modal-overlay" id="modal-ajustement-stock">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="as-titre">Ajuster le stock</div>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:14px">Stock actuel : <strong id="as-stock-actuel"></strong></div>
+    <label class="a-lbl">Type de mouvement</label>
+    <select class="m-inp" id="as-type" onchange="afficherChampCoutSiEntree()">
+      <option value="entree">➕ Entrée de stock</option>
+      <option value="sortie">➖ Sortie de stock</option>
+      <option value="correction">✏️ Correction (fixer la quantité exacte)</option>
+    </select>
+    <label class="a-lbl">Quantité</label>
+    <input class="m-inp" id="as-quantite" type="number" step="0.01" placeholder="0">
+    <div id="as-cout-bloc">
+      <label class="a-lbl">Coût unitaire (MAD)</label>
+      <input class="m-inp" id="as-cout" type="number" step="0.01" placeholder="0.00">
+    </div>
+    <label class="a-lbl">Motif (optionnel)</label>
+    <input class="m-inp" id="as-motif" placeholder="Ex: Réception fournisseur, inventaire...">
+    <button class="m-btn" onclick="confirmerAjustementStock()">✓ Confirmer</button>
+    <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
+  </div>
+</div>
+
+<!-- AJOUT (bug réel trouvé) : le sélecteur "fournisseur déjà utilisé"
+     pour un bon de commande n'ouvrait rien — ce modal n'existait pas. -->
+<div class="modal-overlay" id="modal-fournisseur-bc">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🏢 Choisir un fournisseur</div>
+    <input class="m-inp" id="search-fournisseur-bc" placeholder="🔍 Rechercher..." oninput="rechercherFournisseurBC()" style="margin-bottom:14px">
+    <div id="fournisseur-bc-picker-list"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Fermer</button>
+  </div>
+</div>
+
+<!-- AJOUT (bug réel trouvé — motif répété) : le bouton "👥" sélecteur de
+     client est utilisé sur 5 écrans (facture, devis, avoir, bon de
+     livraison, abonnement récurrent) et ouvre tous ce même modal — qui
+     n'existait pas du tout. Les 5 boutons étaient inertes. -->
+<div class="modal-overlay" id="modal-clients-picker">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👥 Choisir un client</div>
+    <input class="m-inp" id="search-client-picker" placeholder="🔍 Rechercher par nom, téléphone, email..." oninput="filtrerPickerClients()" style="margin-bottom:14px">
+    <div id="clients-picker-list"></div>
+    <button class="m-btn-sec" onclick="closeAllModals()">Fermer</button>
+  </div>
+</div>
+
 <!-- AJOUT (bug réel trouvé) : le bouton "✏️ Modifier" du profil comptable
      était déjà câblé et cliquable, mais cette fenêtre n'existait pas du
      tout — modifier ses informations ne faisait rien. -->
