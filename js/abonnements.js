@@ -76,6 +76,10 @@ function renderAbonnements() {
   // AJOUT (audit — généralisation recherche) : recherche locale par client.
   const q = (el('abonnements-recherche')?.value || '').trim().toLowerCase();
   if (q) abs = abs.filter(function(a) { return (a.client||'').toLowerCase().includes(q); });
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri.
+  const tri = el('abonnements-tri')?.value || 'defaut';
+  if (tri === 'client-asc') abs = abs.slice().sort(function(a, b) { return (a.client||'').localeCompare(b.client||'', 'fr'); });
+  else abs = abs.slice().sort(function(a, b) { return new Date(a.prochaine_date||0) - new Date(b.prochaine_date||0); });
   if (!abs.length) {
     list.innerHTML = '<div class="empty"><div class="empty-ico">🔁</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun abonnement') + '</div>' + (q ? '' : '<div>Créez une facturation récurrente pour un client</div>') + '</div>';
     return;
