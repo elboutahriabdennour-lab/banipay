@@ -36,6 +36,21 @@ function renderAchats() {
   const q = (el('achats-recherche')?.value || '').trim().toLowerCase();
   if (q) achats = achats.filter(function(a) { return (a.fournisseur||'').toLowerCase().includes(q) || (a.ref_fournisseur||'').toLowerCase().includes(q); });
 
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri de la
+  // liste, même principe que factures/devis.
+  const tri = el('achats-tri')?.value || 'defaut';
+  if (tri !== 'defaut') {
+    achats = achats.slice().sort(function(a, b) {
+      if (tri === 'date-asc') return new Date(a.date_achat||0) - new Date(b.date_achat||0);
+      if (tri === 'montant-desc') return (Number(b.ttc)||0) - (Number(a.ttc)||0);
+      if (tri === 'montant-asc') return (Number(a.ttc)||0) - (Number(b.ttc)||0);
+      if (tri === 'fournisseur-asc') return (a.fournisseur||'').localeCompare(b.fournisseur||'', 'fr');
+      return 0;
+    });
+  } else {
+    achats = achats.slice().sort(function(a, b) { return new Date(b.date_achat||0) - new Date(a.date_achat||0); });
+  }
+
   const total = achats.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
   setEl('achats-total', fmt(total) + ' MAD');
 
