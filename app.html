@@ -914,6 +914,15 @@
   <div style="display:none" id="devis-total"></div>
   <div style="display:none" id="devis-sub"></div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="devis-recherche" placeholder="🔍 Rechercher par référence ou client..." oninput="renderDevisList()"></div>
+  <div style="padding:0 20px 8px">
+    <select id="devis-tri" class="f-inp" onchange="renderDevisList()" style="font-size:12px">
+      <option value="defaut">Trier par... (plus récents d'abord)</option>
+      <option value="date-asc">📅 Date — plus ancien d'abord</option>
+      <option value="montant-desc">💰 Montant — du plus grand au plus petit</option>
+      <option value="montant-asc">💰 Montant — du plus petit au plus grand</option>
+      <option value="client-asc">🔤 Client — A à Z</option>
+    </select>
+  </div>
   <div class="filter-tabs" style="padding-top:0">
     <button class="ftab active" onclick="filterDevis('tous',this)">Tous</button>
     <button class="ftab" onclick="filterDevis('envoye',this)">Envoyés</button>
@@ -945,13 +954,27 @@
       <div><label class="f-lbl">Date</label><input id="d-date" class="f-inp" type="date"></div>
     </div>
   </div>
-  <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="d-chantier" class="f-inp" placeholder="Ex: Villa Casablanca"></div>
-  <div class="form-section">
-    <label class="f-lbl">Validité</label>
-    <select id="d-validite" class="f-inp">
-      <option value="15">15 jours</option><option value="30" selected>30 jours</option>
-      <option value="60">60 jours</option><option value="90">90 jours</option>
-    </select>
+  <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : Chantier,
+       Validité, BC lié et Notes réunis dans un seul bloc replié — Client,
+       Date et Prestations restent seuls visibles par défaut. -->
+  <div style="padding:4px 20px 10px">
+    <span onclick="
+      const masque = document.getElementById('d-options-avancees').style.display === 'none';
+      document.getElementById('d-options-avancees').style.display = masque ? 'block' : 'none';
+      document.getElementById('d-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (chantier, validité, notes...)';
+    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer"><span id="d-lbl-options">▼ Options avancées (chantier, validité, notes...)</span></span>
+  </div>
+  <div id="d-options-avancees" style="display:none">
+    <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="d-chantier" class="f-inp" placeholder="Ex: Villa Casablanca"></div>
+    <div class="form-section">
+      <label class="f-lbl">Validité</label>
+      <select id="d-validite" class="f-inp">
+        <option value="15">15 jours</option><option value="30" selected>30 jours</option>
+        <option value="60">60 jours</option><option value="90">90 jours</option>
+      </select>
+    </div>
+    <div class="form-section"><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="d-bc-lie" class="f-inp"></select></div>
+    <div class="form-section"><label class="f-lbl">Notes</label><input id="d-note" class="f-inp" placeholder="Conditions particulières..."></div>
   </div>
   <div class="form-section">
     <label class="f-lbl">Prestations</label>
@@ -964,8 +987,6 @@
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="d-total-ttc">0 MAD</span></div>
   </div>
-  <div class="form-section"><label class="f-lbl">Bon de commande lié (optionnel)</label><select id="d-bc-lie" class="f-inp"></select></div>
-  <div class="form-section"><label class="f-lbl">Notes</label><input id="d-note" class="f-inp" placeholder="Conditions particulières..."></div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderDevis()">💾 Sauvegarder</button>
     <button class="s-btn gray" onclick="previewDevisPDF()">📄 PDF</button>
