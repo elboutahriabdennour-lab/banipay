@@ -378,6 +378,14 @@
   <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div></div>
   <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">Avoirs émis</div><button onclick="goScreen('avoir',null)" style="background:#8E2E24;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouvel avoir</button></div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="avoir-recherche" placeholder="🔍 Rechercher par client ou référence..." oninput="renderAvoirList()"></div>
+  <div style="padding:0 20px 8px">
+    <select id="avoir-tri" class="f-inp" onchange="renderAvoirList()" style="font-size:12px">
+      <option value="defaut">Trier par... (plus récents d'abord)</option>
+      <option value="montant-desc">💰 Montant — du plus grand au plus petit</option>
+      <option value="montant-asc">💰 Montant — du plus petit au plus grand</option>
+      <option value="client-asc">🔤 Client — A à Z</option>
+    </select>
+  </div>
   <div id="avoir-list-items"></div><div class="pb"></div>
 </div>
 
@@ -387,6 +395,12 @@
   <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#1F6F72;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
   <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="abonnements-recherche" placeholder="🔍 Rechercher par client..." oninput="renderAbonnements()"></div>
+  <div style="padding:0 20px 8px">
+    <select id="abonnements-tri" class="f-inp" onchange="renderAbonnements()" style="font-size:12px">
+      <option value="defaut">Trier par... (prochaine échéance d'abord)</option>
+      <option value="client-asc">🔤 Client — A à Z</option>
+    </select>
+  </div>
   <div class="card-list" id="abonnements-list"></div>
   <div class="pb"></div>
 </div>
@@ -404,7 +418,21 @@
       <button type="button" onclick="ouvrirPickerClients('ab-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
     <datalist id="client-datalist-ab"></datalist></div>
-  <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="ab-chantier" class="f-inp" placeholder="Optionnel"></div>
+  <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : Chantier
+       et Date de fin (optionnelle) repliés — Fréquence, Jour et Date de
+       début restent visibles car essentiels pour configurer la
+       récurrence elle-même. -->
+  <div style="padding:4px 20px 10px">
+    <span onclick="
+      const masque = document.getElementById('ab-options-avancees').style.display === 'none';
+      document.getElementById('ab-options-avancees').style.display = masque ? 'block' : 'none';
+      document.getElementById('ab-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (chantier, date de fin...)';
+    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer"><span id="ab-lbl-options">▼ Options avancées (chantier, date de fin...)</span></span>
+  </div>
+  <div id="ab-options-avancees" style="display:none">
+    <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="ab-chantier" class="f-inp" placeholder="Optionnel"></div>
+    <div class="form-section"><label class="f-lbl">Date de fin du contrat (optionnelle)</label><input id="ab-date-fin" class="f-inp" type="date"><div style="font-size:11px;color:#9C9186;margin-top:4px">Laissez vide pour une récurrence sans limite de durée. Une alerte vous préviendra 30 jours avant l'échéance.</div></div>
+  </div>
   <div class="form-section">
     <div class="f-row">
       <div><label class="f-lbl">Fréquence</label>
@@ -418,9 +446,6 @@
     </div>
   </div>
   <div class="form-section"><label class="f-lbl">Date de début</label><input id="ab-date-debut" class="f-inp" type="date"></div>
-  <!-- NOUVEAU (suivi de contrats) : optionnel — sans date de fin, le
-       comportement reste identique à avant (récurrence indéfinie). -->
-  <div class="form-section"><label class="f-lbl">Date de fin du contrat (optionnelle)</label><input id="ab-date-fin" class="f-inp" type="date"><div style="font-size:11px;color:#9C9186;margin-top:4px">Laissez vide pour une récurrence sans limite de durée. Une alerte vous préviendra 30 jours avant l'échéance.</div></div>
   <div class="form-section">
     <label class="f-lbl">Prestations</label>
     <div id="ab-lignes-container"></div>
@@ -2564,9 +2589,22 @@
       <div><label class="f-lbl">Date BC</label><input id="bc-date" class="f-inp" type="date"></div>
     </div>
   </div>
-  <div class="form-section">
-    <div class="f-row">
-      <div><label class="f-lbl">Livraison pr&#233;vue</label><input id="bc-livraison" class="f-inp" type="date"></div>
+  <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : Livraison
+       prévue et Description repliées — Fournisseur, N°/Date et Articles
+       restent visibles. -->
+  <div style="padding:4px 20px 10px">
+    <span onclick="
+      const masque = document.getElementById('bc-options-avancees').style.display === 'none';
+      document.getElementById('bc-options-avancees').style.display = masque ? 'block' : 'none';
+      document.getElementById('bc-options-avancees-2').style.display = masque ? 'block' : 'none';
+      document.getElementById('bc-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (livraison prévue, description...)';
+    " style="font-size:12px;color:#7C5CA6;font-weight:600;cursor:pointer"><span id="bc-lbl-options">▼ Options avancées (livraison prévue, description...)</span></span>
+  </div>
+  <div id="bc-options-avancees" style="display:none">
+    <div class="form-section">
+      <div class="f-row">
+        <div><label class="f-lbl">Livraison pr&#233;vue</label><input id="bc-livraison" class="f-inp" type="date"></div>
+      </div>
     </div>
   </div>
   <div class="form-section">
@@ -2580,7 +2618,9 @@
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="bc-ttc">0 MAD</span></div>
   </div>
-  <div class="form-section"><label class="f-lbl">Description de la demande (optionnel)</label><textarea id="bc-note" class="f-inp" rows="3" placeholder="Décrivez ce que vous voulez commander, des instructions de livraison, ou toute précision utile pour le fournisseur..."></textarea></div>
+  <div id="bc-options-avancees-2" style="display:none">
+    <div class="form-section"><label class="f-lbl">Description de la demande (optionnel)</label><textarea id="bc-note" class="f-inp" rows="3" placeholder="Décrivez ce que vous voulez commander, des instructions de livraison, ou toute précision utile pour le fournisseur..."></textarea></div>
+  </div>
   <div style="padding:0 20px 8px"><button onclick="goScreen('bons-commande-list',null)" style="width:100%;padding:8px;background:none;color:#7C5CA6;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📋 Voir mes bons de commande</button></div>
   <div style="padding:0 20px 8px"><button onclick="ouvrirDemandeDevisFournisseur()" style="width:100%;padding:8px;background:none;color:#A67A16;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📝 Demander d'abord un devis à ce fournisseur</button></div>
   <div class="send-row">
@@ -2600,6 +2640,12 @@
     <button class="ftab" onclick="toggleSelectionMode('bc')">☑️ Sélectionner</button>
   </div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="bc-recherche" placeholder="🔍 Rechercher par fournisseur ou référence..." oninput="renderBonsCommandeListe()"></div>
+  <div style="padding:0 20px 8px">
+    <select id="bc-tri" class="f-inp" onchange="renderBonsCommandeListe()" style="font-size:12px">
+      <option value="defaut">Trier par... (plus récents d'abord)</option>
+      <option value="fournisseur-asc">🔤 Fournisseur — A à Z</option>
+    </select>
+  </div>
   <div class="card-list" id="bons-commande-liste"></div>
   <div class="pb"></div>
 </div>
@@ -2644,6 +2690,12 @@
   </div>
   <div class="sec-label">📦 Bons de livraison</div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="bl-recherche" placeholder="🔍 Rechercher par client ou référence..." oninput="renderBonsLivraisonListe()"></div>
+  <div style="padding:0 20px 8px">
+    <select id="bl-tri" class="f-inp" onchange="renderBonsLivraisonListe()" style="font-size:12px">
+      <option value="defaut">Trier par... (ordre d'ajout)</option>
+      <option value="client-asc">🔤 Client — A à Z</option>
+    </select>
+  </div>
   <div class="card-list" id="bons-livraison-liste"></div>
   <div class="pb"></div>
 </div>
