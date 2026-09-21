@@ -823,6 +823,10 @@ function renderBonsCommandeListe() {
   // fournisseur ou référence, comme sur factures/devis/achats.
   const q = (el('bc-recherche')?.value || '').trim().toLowerCase();
   if (q) bcs = bcs.filter(function(bc) { return (bc.fournisseur||'').toLowerCase().includes(q) || (bc.ref||'').toLowerCase().includes(q); });
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri.
+  const tri = el('bc-tri')?.value || 'defaut';
+  if (tri === 'fournisseur-asc') bcs = bcs.slice().sort(function(a, b) { return (a.fournisseur||'').localeCompare(b.fournisseur||'', 'fr'); });
+  else bcs = bcs.slice().sort(function(a, b) { return new Date(b.date_commande||0) - new Date(a.date_commande||0); });
   if (!bcs.length) {
     list.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun bon de commande') + '</div></div>';
     return;
@@ -1024,6 +1028,9 @@ function renderBonsLivraisonListe() {
   // client ou référence.
   const q = (el('bl-recherche')?.value || '').trim().toLowerCase();
   if (q) bls = bls.filter(function(bl) { return (bl.client||'').toLowerCase().includes(q) || (bl.ref||'').toLowerCase().includes(q); });
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri.
+  const tri = el('bl-tri')?.value || 'defaut';
+  if (tri === 'client-asc') bls = bls.slice().sort(function(a, b) { return (a.client||'').localeCompare(b.client||'', 'fr'); });
   if (!bls.length) {
     list.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun bon de livraison') + '</div></div>';
     return;
@@ -1145,6 +1152,18 @@ function renderAvoirList() {
   // client ou référence.
   const q = (el('avoir-recherche')?.value || '').trim().toLowerCase();
   if (q) avoirs = avoirs.filter(function(a) { return (a.client||'').toLowerCase().includes(q) || (a.ref||'').toLowerCase().includes(q); });
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri.
+  const tri = el('avoir-tri')?.value || 'defaut';
+  if (tri !== 'defaut') {
+    avoirs = avoirs.slice().sort(function(a, b) {
+      if (tri === 'montant-desc') return (Number(b.ttc)||0) - (Number(a.ttc)||0);
+      if (tri === 'montant-asc') return (Number(a.ttc)||0) - (Number(b.ttc)||0);
+      if (tri === 'client-asc') return (a.client||'').localeCompare(b.client||'', 'fr');
+      return 0;
+    });
+  } else {
+    avoirs = avoirs.slice().sort(function(a, b) { return new Date(b.date_emission||0) - new Date(a.date_emission||0); });
+  }
   if (!avoirs.length) {
     list.innerHTML = '<div class="empty"><div class="empty-ico">↩️</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun avoir') + '</div>' + (q ? '' : '<div>Créez un avoir depuis le formulaire</div>') + '</div>';
     return;
