@@ -84,6 +84,12 @@ function appliquerFiltresCroisesStats(factures) {
   if (STATE.statsFiltreMontantMax != null) {
     res = res.filter(function(f) { return Number(f.ttc || 0) <= STATE.statsFiltreMontantMax; });
   }
+  // AJOUT (chantier repris — filtre équipe) : la colonne cree_par existe
+  // déjà en base et est remplie automatiquement à la création de chaque
+  // document, mais aucun filtre ne s'en servait jusqu'ici.
+  if (STATE.statsFiltreMembre) {
+    res = res.filter(function(f) { return f.cree_par === STATE.statsFiltreMembre; });
+  }
   return res;
 }
 function filtrerParClientStats(nomClient) {
@@ -98,6 +104,7 @@ function retirerFiltreClientStats() { STATE.statsFiltreClient = null; renderStat
 function retirerFiltreProduitStats() { STATE.statsFiltreProduit = null; renderStatsUnifie(); }
 function changerFiltreStatutStats(statut) { STATE.statsFiltreStatut = statut; renderStatsUnifie(); }
 function changerFiltreCategorieStats(cat) { STATE.statsFiltreCategorie = cat; renderStatsUnifie(); }
+function changerFiltreMembreStats(membreId) { STATE.statsFiltreMembre = membreId || null; renderStatsUnifie(); }
 function appliquerFiltreMontantStats() {
   const min = el('stats-montant-min')?.value;
   const max = el('stats-montant-max')?.value;
@@ -117,10 +124,12 @@ function effacerFiltresStats() {
   STATE.statsFiltreProduit = null;
   STATE.statsFiltreStatut = '';
   STATE.statsFiltreCategorie = '';
+  STATE.statsFiltreMembre = null;
   STATE.statsFiltreMontantMin = null;
   STATE.statsFiltreMontantMax = null;
   el('stats-filtre-statut') && (el('stats-filtre-statut').value = '');
   el('stats-filtre-categorie') && (el('stats-filtre-categorie').value = '');
+  el('stats-filtre-membre') && (el('stats-filtre-membre').value = '');
   el('stats-montant-min') && (el('stats-montant-min').value = '');
   el('stats-montant-max') && (el('stats-montant-max').value = '');
   renderStatsUnifie();
@@ -134,6 +143,11 @@ function renderFiltresActifsStats() {
   if (STATE.statsFiltreProduit) chips.push({ label: '📦 ' + STATE.statsFiltreProduit, fn: 'retirerFiltreProduitStats' });
   if (STATE.statsFiltreStatut) chips.push({ label: '🏷️ ' + (statutLabels[STATE.statsFiltreStatut] || STATE.statsFiltreStatut), fn: "changerFiltreStatutStats('')" });
   if (STATE.statsFiltreCategorie) chips.push({ label: '📂 ' + STATE.statsFiltreCategorie, fn: "changerFiltreCategorieStats('')" });
+  if (STATE.statsFiltreMembre) {
+    const membre = (STATE.membresEquipe || []).find(function(m) { return m.user_id === STATE.statsFiltreMembre; });
+    const nomMembre = membre ? membre.email : (STATE.statsFiltreMembre === sb.user?.id ? 'Moi' : 'Membre');
+    chips.push({ label: '👤 ' + nomMembre, fn: "changerFiltreMembreStats('')" });
+  }
   if (STATE.statsFiltreMontantMin != null || STATE.statsFiltreMontantMax != null) {
     const txt = (STATE.statsFiltreMontantMin != null ? fmt(STATE.statsFiltreMontantMin) : '0') + ' → ' + (STATE.statsFiltreMontantMax != null ? fmt(STATE.statsFiltreMontantMax) : '∞') + ' MAD';
     chips.push({ label: '💰 ' + txt, fn: 'retirerFiltreMontantStats' });
@@ -178,10 +192,30 @@ function switchStatsOnglet(onglet) {
 // encore par leur nom d'origine.
 function renderStatsUnifie() {
   renderFiltresActifsStats();
+  remplirSelecteurMembresStats();
   const onglet = STATE.statsOnglet || 'ensemble';
   if (onglet === 'ensemble') _renderOngletEnsemble();
   else if (onglet === 'detail') _renderOngletDetail();
   else if (onglet === 'prevision') _renderOngletPrevision();
+}
+// AJOUT (chantier repris — filtre équipe) : rempli une seule fois
+// (dataset.rempli évite de réinitialiser la sélection en cours à
+// chaque changement d'un AUTRE filtre, puisque renderStatsUnifie()
+// est rappelée à chaque fois).
+function remplirSelecteurMembresStats() {
+  const sel = el('stats-filtre-membre');
+  if (!sel || sel.dataset.rempli === '1') return;
+  if (!STATE.membresEquipe || !STATE.membresEquipe.length) {
+    if (typeof chargerEquipe === 'function') chargerEquipe().then(remplirSelecteurMembresStats);
+    return;
+  }
+  sel.dataset.rempli = '1';
+  const options = ['<option value="">Toute l\'équipe</option>'];
+  if (sb.user?.id) options.push('<option value="' + sb.user.id + '">Moi (' + escapeHTML(sb.user.email||'') + ')</option>');
+  STATE.membresEquipe.filter(function(m) { return m.statut === 'actif' && m.user_id; }).forEach(function(m) {
+    options.push('<option value="' + m.user_id + '">' + escapeHTML(m.email) + '</option>');
+  });
+  sel.innerHTML = options.join('');
 }
 function renderStats() { renderStatsUnifie(); }
 function renderDashboardAvance() { switchStatsOnglet('prevision'); }
