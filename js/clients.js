@@ -212,8 +212,17 @@ function renderClients() {
       : `<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun client</div></div>`;
     return;
   }
-  list.innerHTML = filtered.map(c => {
-    const caTotal = STATE.factures.filter(f=>f.client===c.nom&&f.statut==='payee').reduce((s,f)=>s+Number(f.ttc),0);
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri, avec
+  // le chiffre d'affaires (déjà calculé pour l'affichage) en option —
+  // utile pour repérer ses plus gros clients d'un coup d'œil.
+  const avecCA = filtered.map(function(c) {
+    return { c: c, ca: STATE.factures.filter(f=>f.client===c.nom&&f.statut==='payee').reduce((s,f)=>s+Number(f.ttc),0) };
+  });
+  const tri = el('clients-tri')?.value || 'defaut';
+  if (tri === 'ca-desc') avecCA.sort(function(a, b) { return b.ca - a.ca; });
+  else avecCA.sort(function(a, b) { return (a.c.nom||'').localeCompare(b.c.nom||'', 'fr'); });
+
+  list.innerHTML = avecCA.map(({c, ca: caTotal}) => {
     return `
     <div class="card" onclick="openDetailClient(${c.id})">
       <div class="card-ico" style="background:#E9F4F3;font-weight:700;color:#C9971F;font-size:18px">${escapeHTML(c.nom).charAt(0).toUpperCase()}</div>
