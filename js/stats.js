@@ -202,7 +202,7 @@ function changerPeriodeStats(periode, btn) {
 // ============================================================
 function switchStatsOnglet(onglet) {
   STATE.statsOnglet = onglet;
-  ['ensemble', 'detail', 'prevision'].forEach(function(o) {
+  ['ensemble', 'detail', 'prevision', 'analyse'].forEach(function(o) {
     const bouton = el('stats-onglet-' + o);
     const zone = el('stats-panneau-' + o);
     if (bouton) {
@@ -225,6 +225,107 @@ function renderStatsUnifie() {
   if (onglet === 'ensemble') _renderOngletEnsemble();
   else if (onglet === 'detail') _renderOngletDetail();
   else if (onglet === 'prevision') _renderOngletPrevision();
+  else if (onglet === 'analyse') renderAnalyseAvancee();
+}
+
+// ============================================================
+// ONGLET 4 — ANALYSE (chantier repris : sélecteur de type de données,
+// première étape concrète vers l'écran façon Power BI. Construit par
+// étapes comme convenu : ceci couvre factures/devis/achats/stock ;
+// le filtre équipe existe déjà séparément sur les autres onglets.)
+// ============================================================
+async function renderAnalyseAvancee() {
+  const type = el('analyse-type-donnees')?.value || 'factures';
+  const zone = el('stats-panneau-analyse-contenu');
+  if (!zone) return;
+
+  if (type === 'stock') {
+    zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Chargement...</div>';
+    try {
+      const mouvements = (await sb.get('mouvements_stock', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc&limit=200')) || [];
+      _renderAnalyseStock(mouvements, zone);
+    } catch (e) { zone.innerHTML = '<div class="empty"><div class="empty-ico">⚠️</div><div class="empty-title">Erreur de chargement</div></div>'; }
+    return;
+  }
+
+  const source = type === 'factures' ? (STATE.factures || []) : type === 'devis' ? (STATE.devis || []) : (STATE.achats || []);
+  const champDate = type === 'achats' ? 'date_achat' : 'date_emission';
+  const champNom = type === 'achats' ? 'fournisseur' : 'client';
+  const libelleNom = type === 'achats' ? 'fournisseur' : 'client';
+  const filtres = filtrerParPeriode(source, STATE.statsPeriode, champDate);
+
+  const parMois = {};
+  filtres.forEach(function(item) {
+    const d = new Date(item[champDate]);
+    if (isNaN(d.getTime())) return;
+    const cle = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    parMois[cle] = (parMois[cle] || 0) + (Number(item.ttc) || 0);
+  });
+  const moisTries = Object.keys(parMois).sort();
+  const maxMois = Math.max.apply(null, Object.values(parMois).concat([1]));
+
+  const parNom = {};
+  filtres.forEach(function(item) {
+    const nom = item[champNom];
+    if (!nom) return;
+    parNom[nom] = (parNom[nom] || 0) + (Number(item.ttc) || 0);
+  });
+  const topNoms = Object.entries(parNom).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 8);
+  const maxNom = topNoms[0]?.[1] || 1;
+  const total = filtres.reduce(function(s, i) { return s + (Number(i.ttc) || 0); }, 0);
+
+  zone.innerHTML =
+    '<div style="background:#fff;border-radius:14px;padding:16px;border:1px solid #E3DCCF;margin-bottom:14px;text-align:center">' +
+      '<div style="font-size:11px;color:#9C9186">Total — ' + filtres.length + ' élément(s)</div>' +
+      '<div style="font-size:24px;font-weight:800;color:#1F6F72">' + fmt(total) + ' MAD</div>' +
+    '</div>' +
+    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-bottom:14px">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:14px">📈 Évolution mensuelle</div>' +
+      (moisTries.length
+        ? '<div style="display:flex;align-items:flex-end;gap:6px;height:100px">' +
+          moisTries.map(function(m) {
+            const h = Math.max(4, Math.round(parMois[m] / maxMois * 100));
+            return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">' +
+              '<div style="width:100%;background:#1F6F72;border-radius:4px 4px 0 0;height:' + h + 'px" title="' + fmt(parMois[m]) + ' MAD"></div>' +
+              '<div style="font-size:8px;color:#9C9186">' + m.slice(5) + '</div>' +
+            '</div>';
+          }).join('') + '</div>'
+        : '<div style="text-align:center;color:#9C9186;font-size:12px;padding:20px">Aucune donnée sur cette période</div>') +
+    '</div>' +
+    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:14px">🏆 Répartition par ' + libelleNom + '</div>' +
+      (topNoms.length
+        ? topNoms.map(function(paire) {
+            const nom = paire[0], montant = paire[1];
+            return '<div style="margin-bottom:10px">' +
+              '<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px">' + escapeHTML(nom) + '</span><span style="font-size:12px;font-weight:700">' + fmt(montant) + ' MAD</span></div>' +
+              '<div style="height:5px;background:#F1EEE8;border-radius:3px"><div style="height:100%;background:#6E8F4E;border-radius:3px;width:' + Math.round(montant / maxNom * 100) + '%"></div></div>' +
+            '</div>';
+          }).join('')
+        : '<div style="text-align:center;color:#9C9186;font-size:12px">Aucune donnée</div>') +
+    '</div>';
+}
+
+function _renderAnalyseStock(mouvements, zone) {
+  if (!mouvements.length) { zone.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">Aucun mouvement de stock enregistré</div></div>'; return; }
+  const entrees = mouvements.filter(function(m) { return m.type === 'entree'; }).length;
+  const sorties = mouvements.filter(function(m) { return m.type === 'sortie'; }).length;
+  const corrections = mouvements.filter(function(m) { return m.type === 'correction'; }).length;
+  zone.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">' +
+      '<div style="background:#EEF3E4;border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:#6E8F4E">' + entrees + '</div><div style="font-size:10px;color:#6E8F4E">Entrées</div></div>' +
+      '<div style="background:#F5E4E1;border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:#B23A2E">' + sorties + '</div><div style="font-size:10px;color:#B23A2E">Sorties</div></div>' +
+      '<div style="background:#F7EFDC;border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:#B8860B">' + corrections + '</div><div style="font-size:10px;color:#B8860B">Corrections</div></div>' +
+    '</div>' +
+    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:10px">Derniers mouvements</div>' +
+      mouvements.slice(0, 20).map(function(m) {
+        const icone = m.type === 'entree' ? '➕' : m.type === 'sortie' ? '➖' : '✏️';
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1EEE8;font-size:12px">' +
+          '<span>' + icone + ' ' + escapeHTML(m.motif || m.type || '') + '</span><span style="font-weight:600">' + (m.quantite || 0) + '</span>' +
+        '</div>';
+      }).join('') +
+    '</div>';
 }
 // AJOUT (chantier repris — filtre équipe) : rempli une seule fois
 // (dataset.rempli évite de réinitialiser la sélection en cours à
