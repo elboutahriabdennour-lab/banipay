@@ -654,6 +654,9 @@ function renderFacturesRecues() {
   // AJOUT (audit — généralisation recherche) : recherche par référence.
   const q = (el('factures-recues-recherche')?.value || '').trim().toLowerCase();
   if (q) factures = factures.filter(function(f) { return (f.ref||'').toLowerCase().includes(q); });
+  // AJOUT (chantier organisation — compléter le tri partout) : tri.
+  const tri = el('factures-recues-tri')?.value || 'defaut';
+  if (tri === 'montant-desc') factures = factures.slice().sort(function(a, b) { return (Number(b.ttc)||0) - (Number(a.ttc)||0); });
   if (!factures.length) {
     container.innerHTML = '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucune facture reçue') + '</div>' + (q ? '' : '<div>Les factures que vous envoient vos fournisseurs Zelto apparaîtront ici</div>') + '</div>';
     return;
@@ -740,6 +743,9 @@ function renderBCRecus() {
   // AJOUT (audit — généralisation recherche) : recherche par référence.
   const q = (el('bc-recus-recherche')?.value || '').trim().toLowerCase();
   if (q) bcs = bcs.filter(function(bc) { return (bc.ref||'').toLowerCase().includes(q); });
+  // AJOUT (chantier organisation — compléter le tri partout) : tri.
+  const tri = el('bc-recus-tri')?.value || 'defaut';
+  if (tri === 'statut-asc') bcs = bcs.slice().sort(function(a, b) { return (a.statut||'').localeCompare(b.statut||'', 'fr'); });
   const statutLabel = { envoye: '📤 Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé', brouillon: 'Brouillon' };
 
   container.innerHTML = !bcs.length
