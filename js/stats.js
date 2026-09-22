@@ -15,6 +15,7 @@ STATE.statsFiltreClient = STATE.statsFiltreClient || null;
 STATE.statsFiltreProduit = STATE.statsFiltreProduit || null;
 STATE.statsFiltreStatut = STATE.statsFiltreStatut || '';
 STATE.statsFiltreCategorie = STATE.statsFiltreCategorie || '';
+STATE.statsFiltreFournisseur = STATE.statsFiltreFournisseur || null;
 STATE.statsFiltreMontantMin = STATE.statsFiltreMontantMin || null;
 STATE.statsFiltreMontantMax = STATE.statsFiltreMontantMax || null;
 STATE.statsOnglet = STATE.statsOnglet || 'ensemble';
@@ -92,6 +93,24 @@ function appliquerFiltresCroisesStats(factures) {
   }
   return res;
 }
+// AJOUT (chantier repris — filtre fournisseur) : équivalent de
+// appliquerFiltresCroisesStats() mais pour les achats — champs
+// différents (fournisseur au lieu de client), donc fonction séparée
+// plutôt que de complexifier l'originale.
+function appliquerFiltresAchatsStats(achats) {
+  let res = achats;
+  if (STATE.statsFiltreFournisseur) {
+    res = res.filter(function(a) { return a.fournisseur === STATE.statsFiltreFournisseur; });
+  }
+  if (STATE.statsFiltreMontantMin != null) {
+    res = res.filter(function(a) { return Number(a.ttc || 0) >= STATE.statsFiltreMontantMin; });
+  }
+  if (STATE.statsFiltreMontantMax != null) {
+    res = res.filter(function(a) { return Number(a.ttc || 0) <= STATE.statsFiltreMontantMax; });
+  }
+  return res;
+}
+
 function filtrerParClientStats(nomClient) {
   STATE.statsFiltreClient = (STATE.statsFiltreClient === nomClient) ? null : nomClient;
   renderStatsUnifie();
@@ -100,8 +119,15 @@ function filtrerParProduitStats(desc) {
   STATE.statsFiltreProduit = (STATE.statsFiltreProduit === desc) ? null : desc;
   renderStatsUnifie();
 }
+// AJOUT (chantier repris — filtre fournisseur) : même principe que
+// client/produit, mais pour les achats.
+function filtrerParFournisseurStats(nom) {
+  STATE.statsFiltreFournisseur = (STATE.statsFiltreFournisseur === nom) ? null : nom;
+  renderStatsUnifie();
+}
 function retirerFiltreClientStats() { STATE.statsFiltreClient = null; renderStatsUnifie(); }
 function retirerFiltreProduitStats() { STATE.statsFiltreProduit = null; renderStatsUnifie(); }
+function retirerFiltreFournisseurStats() { STATE.statsFiltreFournisseur = null; renderStatsUnifie(); }
 function changerFiltreStatutStats(statut) { STATE.statsFiltreStatut = statut; renderStatsUnifie(); }
 function changerFiltreCategorieStats(cat) { STATE.statsFiltreCategorie = cat; renderStatsUnifie(); }
 function changerFiltreMembreStats(membreId) { STATE.statsFiltreMembre = membreId || null; renderStatsUnifie(); }
@@ -122,6 +148,7 @@ function retirerFiltreMontantStats() {
 function effacerFiltresStats() {
   STATE.statsFiltreClient = null;
   STATE.statsFiltreProduit = null;
+  STATE.statsFiltreFournisseur = null;
   STATE.statsFiltreStatut = '';
   STATE.statsFiltreCategorie = '';
   STATE.statsFiltreMembre = null;
@@ -141,6 +168,7 @@ function renderFiltresActifsStats() {
   const chips = [];
   if (STATE.statsFiltreClient) chips.push({ label: '👤 ' + STATE.statsFiltreClient, fn: 'retirerFiltreClientStats' });
   if (STATE.statsFiltreProduit) chips.push({ label: '📦 ' + STATE.statsFiltreProduit, fn: 'retirerFiltreProduitStats' });
+  if (STATE.statsFiltreFournisseur) chips.push({ label: '🏢 ' + STATE.statsFiltreFournisseur, fn: 'retirerFiltreFournisseurStats' });
   if (STATE.statsFiltreStatut) chips.push({ label: '🏷️ ' + (statutLabels[STATE.statsFiltreStatut] || STATE.statsFiltreStatut), fn: "changerFiltreStatutStats('')" });
   if (STATE.statsFiltreCategorie) chips.push({ label: '📂 ' + STATE.statsFiltreCategorie, fn: "changerFiltreCategorieStats('')" });
   if (STATE.statsFiltreMembre) {
@@ -416,6 +444,36 @@ function _renderOngletDetail() {
           '</div>' +
           '<div style="height:5px;background:#F1EEE8;border-radius:3px"><div style="height:100%;background:' + couleursAccent[i] + ';border-radius:3px;width:' + Math.round(p.montant/maxProduit*100) + '%"></div></div>' +
           '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + p.qte + ' unité(s) vendue(s)</div>' +
+        '</div>';
+      }).join('') + '</div>' : '';
+  }
+
+  // AJOUT (chantier repris — filtre fournisseur) : achats intégrés
+  // comme un vrai bloc structuré de l'onglet Détail, avec le même
+  // filtre au clic que client/produit — pas juste une ligne dans la
+  // Prévision.
+  const achatsFiltres = appliquerFiltresAchatsStats(filtrerParPeriode(STATE.achats || [], STATE.statsPeriode, 'date_achat'));
+  const fournisseurMap = {};
+  achatsFiltres.forEach(function(a) {
+    if (!a.fournisseur) return;
+    if (!fournisseurMap[a.fournisseur]) fournisseurMap[a.fournisseur] = { nom: a.fournisseur, montant: 0, count: 0 };
+    fournisseurMap[a.fournisseur].montant += Number(a.ttc) || 0;
+    fournisseurMap[a.fournisseur].count++;
+  });
+  const topFournisseurs = Object.values(fournisseurMap).sort(function(a, b) { return b.montant - a.montant; }).slice(0, 5);
+  const maxFournisseur = topFournisseurs[0]?.montant || 1;
+  const fournisseurEl = el('sa-top-fournisseurs');
+  if (fournisseurEl) {
+    fournisseurEl.innerHTML = topFournisseurs.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+      '<div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:14px">🏢 Top fournisseurs (achats)</div>' +
+      topFournisseurs.map(function(fo, i) {
+        return '<div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParFournisseurStats(' + valeurPourOnclick(fo.nom) + ')">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
+            '<span style="font-size:12px;font-weight:600;' + (STATE.statsFiltreFournisseur===fo.nom?'text-decoration:underline':'') + '">' + escapeHTML(fo.nom) + '</span>' +
+            '<span style="font-size:12px;font-weight:700;color:#B23A2E">' + fmt(fo.montant) + ' MAD</span>' +
+          '</div>' +
+          '<div style="height:5px;background:#F1EEE8;border-radius:3px"><div style="height:100%;background:#B23A2E;border-radius:3px;width:' + Math.round(fo.montant/maxFournisseur*100) + '%"></div></div>' +
+          '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + fo.count + ' achat(s) · toucher pour filtrer</div>' +
         '</div>';
       }).join('') + '</div>' : '';
   }
