@@ -59,6 +59,10 @@ function renderDevisRecusAcceptes() {
   // AJOUT (audit — généralisation recherche) : recherche par référence.
   const q = (el('devis-recus-recherche')?.value || '').trim().toLowerCase();
   if (q) liste = liste.filter(function(x) { return (x.devis && x.devis.ref || '').toLowerCase().includes(q); });
+  // AJOUT (chantier organisation — compléter le tri partout) : tri.
+  const tri = el('devis-recus-tri')?.value || 'defaut';
+  if (tri === 'ref-asc') liste = liste.slice().sort(function(a, b) { return ((a.devis&&a.devis.ref)||'').localeCompare((b.devis&&b.devis.ref)||'', 'fr'); });
+  else liste = liste.slice().sort(function(a, b) { return (a.dejaConverti ? 1 : 0) - (b.dejaConverti ? 1 : 0); });
   const aConvertir = liste.filter(function(x) { return !x.dejaConverti; }).length;
 
   const resume = el('devis-recus-resume');
