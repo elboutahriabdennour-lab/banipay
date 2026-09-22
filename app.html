@@ -1118,6 +1118,13 @@
   <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#9C9186;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
   <div style="padding:10px 20px 0"><input class="f-inp" id="search-produit-inp" placeholder="🔍 Rechercher un article..." oninput="renderProduits()"></div>
   <div style="padding:8px 20px 0">
+    <select class="f-inp" id="produits-tri" onchange="renderProduits()">
+      <option value="defaut">🔤 Trier par nom (A à Z)</option>
+      <option value="prix-desc">💰 Prix — du plus cher au moins cher</option>
+      <option value="stock-asc">📦 Stock — du plus bas au plus haut</option>
+    </select>
+  </div>
+  <div style="padding:8px 20px 0">
     <select class="f-inp" id="filtre-categorie" onchange="renderProduits()">
       <option value="tous">Toutes les catégories</option>
       <option value="produit">📦 Produit</option>
@@ -1164,13 +1171,6 @@
   </div>
   <div class="form-section">
     <div class="f-row">
-      <div><label class="f-lbl">R&#233;f&#233;rence</label><input id="p-ref" class="f-inp" placeholder="REF-001"></div>
-      <div><label class="f-lbl">Stock</label><input id="p-stock" class="f-inp" type="number" placeholder="0"></div>
-    </div>
-  </div>
-  <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="p-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
-  <div class="form-section">
-    <div class="f-row">
       <div><label class="f-lbl">TVA (%)</label>
         <select id="p-tva" class="f-inp" onchange="calcPrixTTC()">
           <option value="0">0%</option><option value="7">7%</option>
@@ -1178,11 +1178,34 @@
           <option value="20" selected>20%</option>
         </select>
       </div>
-      <div><label class="f-lbl">Co&#251;t achat</label><input id="p-cout" class="f-inp" type="number" oninput="calcPrixTTC()" placeholder="0.00"></div>
     </div>
-    <div style="font-size:12px;color:#6E8F4E;margin-top:4px;font-weight:600" id="p-marge"></div>
   </div>
   <div class="form-section"><label class="f-lbl">Prix TTC</label><input id="p-prix-ttc" class="f-inp" readonly style="background:#EAE4DA"></div>
+  <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : Référence,
+       Stock, Seuil d'alerte et Coût d'achat repliés — ce qui suffit pour
+       fixer un prix reste visible. -->
+  <div style="padding:4px 20px 10px">
+    <span onclick="
+      const masque = document.getElementById('p-options-avancees').style.display === 'none';
+      document.getElementById('p-options-avancees').style.display = masque ? 'block' : 'none';
+      document.getElementById('p-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (référence, stock, coût d\\u2019achat...)';
+    " style="font-size:12px;color:#7C5CA6;font-weight:600;cursor:pointer"><span id="p-lbl-options">▼ Options avancées (référence, stock, coût d'achat...)</span></span>
+  </div>
+  <div id="p-options-avancees" style="display:none">
+    <div class="form-section">
+      <div class="f-row">
+        <div><label class="f-lbl">R&#233;f&#233;rence</label><input id="p-ref" class="f-inp" placeholder="REF-001"></div>
+        <div><label class="f-lbl">Stock</label><input id="p-stock" class="f-inp" type="number" placeholder="0"></div>
+      </div>
+    </div>
+    <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="p-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
+    <div class="form-section">
+      <div class="f-row">
+        <div><label class="f-lbl">Co&#251;t achat</label><input id="p-cout" class="f-inp" type="number" oninput="calcPrixTTC()" placeholder="0.00"></div>
+      </div>
+      <div style="font-size:12px;color:#6E8F4E;margin-top:4px;font-weight:600" id="p-marge"></div>
+    </div>
+  </div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderProduit()">💾 Sauvegarder</button>
     <button class="s-btn gray" onclick="goScreen('produits',null)">✕ Annuler</button>
@@ -2296,6 +2319,12 @@
       <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client (ou coller un lien/code)..." oninput="rechercherClientOuLien();document.getElementById('search-client-clear').style.display=this.value?'block':'none'" style="margin-top:12px">
       <span id="search-client-clear" onclick="document.getElementById('search-client-inp').value='';renderClients();this.style.display='none'" style="display:none;position:absolute;right:32px;top:22px;color:#9C9186;cursor:pointer;font-size:16px;padding:4px">✕</span>
     </div>
+    <div style="padding:0 20px 10px">
+      <select id="clients-tri" class="form-input" onchange="renderClients()" style="font-size:12px">
+        <option value="defaut">🔤 Trier par nom (A à Z)</option>
+        <option value="ca-desc">💰 Trier par chiffre d'affaires (plus gros d'abord)</option>
+      </select>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted)">Clients (<span id="clients-count">0</span>)</div>
       <div style="display:flex;gap:10px;align-items:center">
@@ -2318,16 +2347,28 @@
     <div class="form-section"><div class="form-label">Nom / Raison sociale *</div><input class="form-input" id="cl-nom" placeholder="Ex: SARL Exemple"></div>
     <div class="form-section"><div class="form-label">Téléphone</div><input class="form-input" id="cl-tel" type="tel" placeholder="+212 6XX XX XX XX"></div>
     <div class="form-section"><div class="form-label">Email</div><input class="form-input" id="cl-email" type="email" placeholder="contact@client.ma"></div>
-    <div class="form-section"><div class="form-label">Adresse</div><input class="form-input" id="cl-adresse" placeholder="Ex: 12 Rue Hassan II, Casablanca"></div>
-    <div class="form-section"><div class="form-label">ICE</div><input class="form-input" id="cl-ice" placeholder="Ex: 001234567000012"></div>
-    <div class="form-section"><div class="form-label">Notes</div><input class="form-input" id="cl-notes" placeholder="Informations complémentaires..."></div>
-      <div class="form-section">
-    <div class="f-row">
-      <div><label class="f-lbl">IF</label><input id="cl-if" class="f-inp"></div>
-      <div><label class="f-lbl">Limite cr&#233;dit</label><input id="cl-limite" class="f-inp" type="number"></div>
+    <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : Adresse,
+         ICE, IF, Limite crédit, Conditions et Notes repliés — Nom,
+         Téléphone et Email suffisent pour ajouter un contact rapidement. -->
+    <div style="padding:4px 20px 10px">
+      <span onclick="
+        const masque = document.getElementById('cl-options-avancees').style.display === 'none';
+        document.getElementById('cl-options-avancees').style.display = masque ? 'block' : 'none';
+        document.getElementById('cl-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (adresse, ICE, conditions...)';
+      " style="font-size:12px;color:#C9971F;font-weight:600;cursor:pointer"><span id="cl-lbl-options">▼ Options avancées (adresse, ICE, conditions...)</span></span>
     </div>
-  </div>
-  <div class="form-section"><label class="f-lbl">Conditions paiement</label><input id="cl-conditions" class="f-inp" placeholder="Ex: 30 jours"></div>
+    <div id="cl-options-avancees" style="display:none">
+      <div class="form-section"><div class="form-label">Adresse</div><input class="form-input" id="cl-adresse" placeholder="Ex: 12 Rue Hassan II, Casablanca"></div>
+      <div class="form-section"><div class="form-label">ICE</div><input class="form-input" id="cl-ice" placeholder="Ex: 001234567000012"></div>
+      <div class="form-section"><div class="form-label">Notes</div><input class="form-input" id="cl-notes" placeholder="Informations complémentaires..."></div>
+        <div class="form-section">
+      <div class="f-row">
+        <div><label class="f-lbl">IF</label><input id="cl-if" class="f-inp"></div>
+        <div><label class="f-lbl">Limite cr&#233;dit</label><input id="cl-limite" class="f-inp" type="number"></div>
+      </div>
+    </div>
+    <div class="form-section"><label class="f-lbl">Conditions paiement</label><input id="cl-conditions" class="f-inp" placeholder="Ex: 30 jours"></div>
+    </div>
 <div class="send-options">
       <button class="send-btn primary" onclick="sauvegarderClient()"><div class="send-icon">💾</div>Sauvegarder</button>
       <button class="send-btn secondary" onclick="goScreen('clients',null)"><div class="send-icon">✕</div>Annuler</button>
