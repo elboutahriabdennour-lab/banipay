@@ -40,6 +40,15 @@ async function loadConversations() {
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
     );
     STATE.conversations = await r.json() || [];
+    // FIX (même bug que STATE.messagesConv corrigé plus tôt) : sans
+    // vérifier r.ok, une réponse d'erreur du serveur (un objet, pas un
+    // tableau) était acceptée telle quelle — STATE.conversations
+    // devenait cet objet, cassant tout l'écran Messages au premier
+    // .map()/.filter() appelé dessus.
+    if (!r.ok || !Array.isArray(STATE.conversations)) {
+      console.error('chargerConversations: réponse invalide', r.status, STATE.conversations);
+      STATE.conversations = [];
+    }
 
     // FIX: résoudre les noms d'entreprise (raison sociale) pour l'affichage
     // côté comptable, et les noms/cabinets de comptable pour l'affichage
