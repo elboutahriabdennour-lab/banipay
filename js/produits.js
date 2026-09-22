@@ -20,6 +20,11 @@ function renderProduits() {
     (!q || p.nom.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q)) &&
     (cat==='tous' || p.categorie===cat)
   );
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri.
+  const tri = el('produits-tri')?.value || 'defaut';
+  if (tri === 'prix-desc') data = data.slice().sort((a,b) => (Number(b.prix_ht)||0) - (Number(a.prix_ht)||0));
+  else if (tri === 'stock-asc') data = data.slice().sort((a,b) => (Number(a.stock)||0) - (Number(b.stock)||0));
+  else data = data.slice().sort((a,b) => (a.nom||'').localeCompare(b.nom||'', 'fr'));
   if (!data.length) {
     list.innerHTML = `<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">${(q || cat !== 'tous') ? 'Aucun résultat pour ces critères' : 'Aucun article'}</div></div>`;
     return;
