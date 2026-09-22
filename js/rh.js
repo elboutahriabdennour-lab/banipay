@@ -19,7 +19,15 @@ function renderEmployes() {
   // AJOUT (audit — généralisation recherche) : recherche locale par nom
   // ou poste.
   const q = (el('employes-recherche')?.value || '').trim().toLowerCase();
-  const employesAffiches = q ? employes.filter(function(e) { return (e.nom||'').toLowerCase().includes(q) || (e.poste||'').toLowerCase().includes(q); }) : employes;
+  const employesAffiches = (q ? employes.filter(function(e) { return (e.nom||'').toLowerCase().includes(q) || (e.poste||'').toLowerCase().includes(q); }) : employes).slice();
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri. Le
+  // .slice() ci-dessus est important : sans lui, employesAffiches
+  // pointe directement vers STATE.employes quand la recherche est vide,
+  // et .sort() modifierait les données en mémoire au lieu de juste
+  // l'affichage.
+  const tri = el('employes-tri')?.value || 'defaut';
+  if (tri === 'salaire-desc') employesAffiches.sort(function(a, b) { return (Number(b.salaire_mensuel)||0) - (Number(a.salaire_mensuel)||0); });
+  else employesAffiches.sort(function(a, b) { return (a.nom||'').localeCompare(b.nom||'', 'fr'); });
   const actifs = employes.filter(function(e) { return e.statut === 'actif'; });
   const masseSalariale = actifs.reduce(function(s, e) { return s + (Number(e.salaire_mensuel) || 0); }, 0);
   const resume = el('employes-resume');
