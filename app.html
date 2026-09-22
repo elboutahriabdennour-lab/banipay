@@ -2465,7 +2465,11 @@
       <div class="sec-label" style="padding:0 0 12px">👥 Registre du personnel</div>
       <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:12px">⚠️ Registre simple pour votre suivi — ce n'est pas un système de paie (pas de bulletin conforme, pas de calcul CNSS/AMO/IR).</div>
       <div id="employes-resume"></div>
-      <input class="f-inp" id="employes-recherche" placeholder="🔍 Rechercher par nom ou poste..." oninput="renderEmployes()" style="margin-bottom:12px">
+      <input class="f-inp" id="employes-recherche" placeholder="🔍 Rechercher par nom ou poste..." oninput="renderEmployes()" style="margin-bottom:8px">
+      <select class="f-inp" id="employes-tri" onchange="renderEmployes()" style="margin-bottom:12px">
+        <option value="defaut">🔤 Trier par nom (A à Z)</option>
+        <option value="salaire-desc">💰 Salaire — du plus élevé au plus bas</option>
+      </select>
       <div id="employes-liste"></div>
     </div>
     <div style="height:30px"></div>
@@ -2477,31 +2481,44 @@
       <div class="form-title" id="emp-form-titre">Nouvel employé</div>
     </div>
     <div class="form-section"><label class="f-lbl">Nom *</label><input id="emp-nom" class="f-inp" placeholder="Nom complet"></div>
-    <!-- NOUVEAU (retour utilisateur) : identité et informations
-         personnelles — jamais présentes jusqu'ici, alors qu'un registre
-         du personnel sérieux en a besoin. -->
-    <div class="form-section">
-      <div class="f-row">
-        <div><label class="f-lbl">CIN</label><input id="emp-cin" class="f-inp" placeholder="Ex: AB123456"></div>
-        <div><label class="f-lbl">N° CNSS</label><input id="emp-cnss" class="f-inp" inputmode="numeric" placeholder="Chiffres uniquement"></div>
-      </div>
-    </div>
-    <div class="form-section"><label class="f-lbl">Date de naissance</label><input id="emp-date-naissance" class="f-inp" type="date"></div>
-    <div class="form-section"><label class="f-lbl">Adresse</label><input id="emp-adresse" class="f-inp" placeholder="Adresse personnelle"></div>
     <div class="form-section"><label class="f-lbl">Poste</label><input id="emp-poste" class="f-inp" placeholder="Ex: Vendeur, Comptable, Développeur..."></div>
-    <div class="form-section"><label class="f-lbl">Téléphone</label><input id="emp-tel" class="f-inp" placeholder="Téléphone"></div>
     <div class="form-section"><label class="f-lbl">Date d'entrée</label><input id="emp-date-entree" class="f-inp" type="date"></div>
     <div class="form-section"><label class="f-lbl">Salaire mensuel (MAD)</label><input id="emp-salaire" class="f-inp" type="number" step="0.01" placeholder="0.00"></div>
-    <div class="form-section">
-      <label class="f-lbl">Jours de travail</label>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Lun">Lun</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Mar">Mar</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Mer">Mer</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Jeu">Jeu</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Ven">Ven</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Sam">Sam</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Dim">Dim</label>
+    <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : CIN,
+         CNSS, date de naissance, adresse, téléphone et jours de travail
+         repliés — Nom, Poste, Date d'entrée et Salaire suffisent pour
+         enregistrer un employé rapidement. -->
+    <div style="padding:4px 20px 10px">
+      <span onclick="
+        const masque = document.getElementById('emp-options-avancees').style.display === 'none';
+        document.getElementById('emp-options-avancees').style.display = masque ? 'block' : 'none';
+        document.getElementById('emp-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (identité, contact, jours de travail...)';
+      " style="font-size:12px;color:#E9F4F3;background:#1F6F72;padding:6px 10px;border-radius:16px;font-weight:600;cursor:pointer;display:inline-block"><span id="emp-lbl-options">▼ Options avancées (identité, contact, jours de travail...)</span></span>
+    </div>
+    <div id="emp-options-avancees" style="display:none">
+      <!-- NOUVEAU (retour utilisateur) : identité et informations
+           personnelles — jamais présentes jusqu'ici, alors qu'un registre
+           du personnel sérieux en a besoin. -->
+      <div class="form-section">
+        <div class="f-row">
+          <div><label class="f-lbl">CIN</label><input id="emp-cin" class="f-inp" placeholder="Ex: AB123456"></div>
+          <div><label class="f-lbl">N° CNSS</label><input id="emp-cnss" class="f-inp" inputmode="numeric" placeholder="Chiffres uniquement"></div>
+        </div>
+      </div>
+      <div class="form-section"><label class="f-lbl">Date de naissance</label><input id="emp-date-naissance" class="f-inp" type="date"></div>
+      <div class="form-section"><label class="f-lbl">Adresse</label><input id="emp-adresse" class="f-inp" placeholder="Adresse personnelle"></div>
+      <div class="form-section"><label class="f-lbl">Téléphone</label><input id="emp-tel" class="f-inp" placeholder="Téléphone"></div>
+      <div class="form-section">
+        <label class="f-lbl">Jours de travail</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Lun">Lun</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Mar">Mar</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Mer">Mer</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Jeu">Jeu</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Ven">Ven</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Sam">Sam</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="checkbox" class="emp-jour" value="Dim">Dim</label>
+        </div>
       </div>
     </div>
     <div class="form-section"><label class="f-lbl">Statut</label><select id="emp-statut" class="f-inp"><option value="actif">Actif</option><option value="inactif">Inactif</option></select></div>
