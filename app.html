@@ -1367,6 +1367,10 @@
     <button id="stats-onglet-ensemble" onclick="switchStatsOnglet('ensemble')" style="flex:1;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Vue d'ensemble</button>
     <button id="stats-onglet-detail" onclick="switchStatsOnglet('detail')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Détail</button>
     <button id="stats-onglet-prevision" onclick="switchStatsOnglet('prevision')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Prévision</button>
+    <!-- AJOUT (chantier repris — écran Analyse) : 4e onglet, sélecteur de
+         type de données (Factures/Devis/Achats/Stock) plutôt que
+         d'éparpiller ça entre plusieurs écrans. -->
+    <button id="stats-onglet-analyse" onclick="switchStatsOnglet('analyse')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔬 Analyse</button>
   </div>
   <!-- NOUVEAU (retour utilisateur) : filtre de période -->
   <div id="stats-periode-tabs" style="display:flex;gap:6px;padding:0 20px 14px;overflow-x:auto">
@@ -1437,6 +1441,10 @@
   <div id="stats-panneau-detail" style="display:none">
     <div style="padding:0 20px;margin-top:16px" id="sa-top-clients"></div>
     <div style="padding:0 20px;margin-top:16px" id="sa-top-produits"></div>
+    <!-- AJOUT (chantier repris — filtre fournisseur) : achats intégrés
+         dans l'onglet Détail comme un vrai bloc structuré, pas juste
+         dans la Prévision. -->
+    <div style="padding:0 20px;margin-top:16px" id="sa-top-fournisseurs"></div>
     <div style="padding:0 20px;margin-top:16px" id="sa-modes-paiement"></div>
     <!-- Rapport de marge par chantier (chantier ajouté) -->
     <div class="sec-label" style="margin-top:8px">📊 Rentabilité par chantier / projet</div>
@@ -1449,6 +1457,20 @@
   <!-- ONGLET 3 — PRÉVISION (ex "Statistiques avancées") -->
   <div id="stats-panneau-prevision" style="display:none">
     <div style="padding:0 20px 20px" id="stats-panneau-prevision-contenu"></div>
+  </div>
+
+  <!-- AJOUT (chantier repris — écran Analyse) -->
+  <div id="stats-panneau-analyse" style="display:none">
+    <div style="padding:0 20px 10px">
+      <label class="f-lbl">Type de données à analyser</label>
+      <select id="analyse-type-donnees" class="f-inp" onchange="renderAnalyseAvancee()">
+        <option value="factures">🧾 Factures</option>
+        <option value="devis">📝 Devis</option>
+        <option value="achats">🛒 Achats</option>
+        <option value="stock">📦 Mouvements de stock</option>
+      </select>
+    </div>
+    <div style="padding:0 20px 20px" id="stats-panneau-analyse-contenu"></div>
   </div>
 
   <div class="pb"></div>
