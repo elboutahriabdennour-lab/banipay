@@ -31,6 +31,10 @@ function renderDemandesDevis() {
   // AJOUT (audit — généralisation recherche) : recherche par client.
   const q = (el('demandes-devis-recherche')?.value || '').trim().toLowerCase();
   if (q) liste = liste.filter(function(d) { return (d.client_nom||'').toLowerCase().includes(q); });
+  // AJOUT (chantier organisation — compléter le tri partout) : tri.
+  const tri = el('demandes-devis-tri')?.value || 'defaut';
+  if (tri === 'client-asc') liste = liste.slice().sort(function(a, b) { return (a.client_nom||'').localeCompare(b.client_nom||'', 'fr'); });
+  else liste = liste.slice().sort(function(a, b) { return (a.statut === 'nouvelle' ? -1 : 0) - (b.statut === 'nouvelle' ? -1 : 0); });
   const nouvelles = liste.filter(function(d) { return d.statut === 'nouvelle'; }).length;
 
   const resume = el('demandes-devis-resume');
