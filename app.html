@@ -671,7 +671,8 @@
       <div class="sec-label" style="padding:0 0 12px">📝 Devis reçus acceptés</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Devis d'autres entreprises Zelto que vous avez acceptés — convertissez-les en bon de commande si ce n'est pas déjà fait.</div>
       <div id="devis-recus-resume"></div>
-      <input class="f-inp" id="devis-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderDevisRecusAcceptes()" style="margin-bottom:12px">
+      <input class="f-inp" id="devis-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderDevisRecusAcceptes()" style="margin-bottom:8px">
+      <select id="devis-recus-tri" class="f-inp" onchange="renderDevisRecusAcceptes()" style="margin-bottom:12px;font-size:12px"><option value="defaut">À convertir d'abord</option><option value="ref-asc">🔤 Référence — A à Z</option></select>
       <div id="devis-recus-liste"></div>
     </div>
     <div class="pb"></div>
@@ -719,7 +720,8 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📝 Demandes de devis reçues</div>
       <div id="demandes-devis-resume"></div>
-      <input class="f-inp" id="demandes-devis-recherche" placeholder="🔍 Rechercher par client..." oninput="renderDemandesDevis()" style="margin-bottom:12px">
+      <input class="f-inp" id="demandes-devis-recherche" placeholder="🔍 Rechercher par client..." oninput="renderDemandesDevis()" style="margin-bottom:8px">
+      <select id="demandes-devis-tri" class="f-inp" onchange="renderDemandesDevis()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Nouvelles d'abord</option><option value="client-asc">🔤 Client — A à Z</option></select>
       <div id="demandes-devis-liste"></div>
     </div>
     <div style="height:30px"></div>
@@ -2566,7 +2568,8 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📋 Bons de commande reçus</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Bons de commande envoyés par vos clients suite à l'acceptation d'un devis — convertissez-les en facture d'un clic.</div>
-      <input class="f-inp" id="bc-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderBCRecus()" style="margin-bottom:12px">
+      <input class="f-inp" id="bc-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderBCRecus()" style="margin-bottom:8px">
+      <select id="bc-recus-tri" class="f-inp" onchange="renderBCRecus()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Ordre d'arrivée</option><option value="statut-asc">🏷️ Par statut</option></select>
       <div id="bc-recus-liste"></div>
     </div>
     <div style="height:30px"></div>
@@ -2578,7 +2581,8 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📥 Factures reçues</div>
       <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Factures envoyées par vos fournisseurs qui utilisent aussi Zelto — importez-les dans vos achats d'un clic, sans ressaisie.</div>
-      <input class="f-inp" id="factures-recues-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderFacturesRecues()" style="margin-bottom:12px">
+      <input class="f-inp" id="factures-recues-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderFacturesRecues()" style="margin-bottom:8px">
+      <select id="factures-recues-tri" class="f-inp" onchange="renderFacturesRecues()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Ordre d'arrivée</option><option value="montant-desc">💰 Montant décroissant</option></select>
       <div id="factures-recues-liste"></div>
     </div>
     <div style="height:30px"></div>
