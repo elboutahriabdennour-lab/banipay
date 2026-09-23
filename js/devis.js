@@ -327,6 +327,28 @@ async function sauvegarderAvoir() {
   const client = el('av-client')?.value.trim();
   const ht = parseFloat(el('av-montant')?.value)||0;
   if(!client||ht<=0){showToast('Remplissez tous les champs','error');return;}
+  const factureOrigineId = el('av-facture-origine')?.value;
+  const ttcNouvelAvoir = ht * 1.2;
+  // AJOUT (chantier — lettrage facture ↔ avoir, détection d'écart) :
+  // avant d'émettre, vérifie que le total des avoirs déjà émis sur cette
+  // facture + ce nouveau ne dépasse pas son montant TTC — sinon
+  // confirmation explicite requise plutôt qu'un écart silencieux.
+  if (factureOrigineId) {
+    const factureOrigine = STATE.factures.find(function(f) { return String(f.id) === factureOrigineId; });
+    if (factureOrigine) {
+      const avoirsExistants = (STATE.avoirs || []).filter(function(a) { return String(a.facture_origine_id) === factureOrigineId; });
+      const totalAvoirsExistants = avoirsExistants.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
+      const totalApres = totalAvoirsExistants + ttcNouvelAvoir;
+      const ecart = totalApres - Number(factureOrigine.ttc || 0);
+      if (ecart > 0.01) {
+        const confirme = confirm(
+          '⚠️ Écart détecté : le total des avoirs sur ' + (factureOrigine.ref || 'cette facture') + ' atteindrait ' + fmt(totalApres) +
+          ' MAD, soit ' + fmt(ecart) + ' MAD de PLUS que la facture d\'origine (' + fmt(factureOrigine.ttc) + ' MAD).\n\nÉmettre quand même ?'
+        );
+        if (!confirme) return;
+      }
+    }
+  }
   showToast('⏳ Émission...');
   try {
     const r = await sb.post('avoirs',{
@@ -334,6 +356,7 @@ async function sauvegarderAvoir() {
       client, ht, tva:ht*0.2, ttc:ht*1.2,
       date_emission:el('av-date')?.value,
       motif:el('av-motif')?.value,
+      facture_origine_id: factureOrigineId || null,
       facture_origine_ref:STATE.factures.find(f=>String(f.id)===el('av-facture-origine')?.value)?.ref||''
     });
     STATE.avoirs.unshift(r[0]);
