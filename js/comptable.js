@@ -27,6 +27,28 @@ async function loadComptableApp() {
     );
     const invitations = invResp.ok ? await invResp.json() : [];
     CPT.entreprises = invitations || [];
+    // AJOUT (chantier — attribution d'entreprises par collaborateur) :
+    // un collaborateur (pas titulaire) ne voit que les entreprises qui
+    // lui ont été explicitement attribuées, pas tout le portefeuille du
+    // cabinet. Nécessite migration_attribution_cabinet.sql — sans elle,
+    // la RPC échoue et le comportement reste "voit tout" par défaut
+    // (pas de régression, mais pas encore la restriction voulue non plus).
+    if (!CPT.estTitulaireCabinet) {
+      try {
+        const respAttrib = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_entreprises_attribuees', {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        if (respAttrib.ok) {
+          const attribuees = (await respAttrib.json()) || [];
+          const idsAttribues = new Set(attribuees.map(function(a) { return a.entreprise_id; }));
+          if (attribuees.length > 0) {
+            CPT.entreprises = CPT.entreprises.filter(function(inv) { return idsAttribues.has(inv.entreprise_id); });
+          }
+        }
+      } catch (eAttrib) { console.warn('attributions cabinet:', eAttrib); }
+    }
     if (CPT.entreprises.length === 0) {
       renderComptableDashboard();
       chargerNotificationsComptable();
