@@ -1257,6 +1257,12 @@
     <div class="p-card" id="pv-infos-card">
       <div class="p-card-title">Informations entreprise</div>
     </div>
+    <!-- AJOUT (bug réel trouvé) : renderProfil() remplissait déjà ce
+         conteneur (description, réseaux sociaux, horaires, zone
+         d'intervention, moyens de paiement) — il n'existait pas du
+         tout, donc rien ne s'affichait jamais, même une fois les champs
+         ci-dessus renseignés. -->
+    <div class="p-card" id="pv-public-card" style="margin-top:10px"></div>
     <div id="pv-objectif" style="display:none;background:#E9F4F3;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#A67A16"></div>
     <!-- NOUVEAU (retour utilisateur) : même refonte que l'accueil —
          action principale mise en avant, reste regroupé par catégorie
@@ -1331,6 +1337,24 @@
     <label class="f-lbl">Banque</label><input id="pe-banque" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">RIB / IBAN</label><input id="pe-rib" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">Conditions de paiement</label><input id="pe-conditions" class="f-inp" style="margin-bottom:10px">
+    <!-- AJOUT (bug réel trouvé) : ces 12 champs étaient déjà lus et
+         sauvegardés par goProfilEdit()/saveProfil() — le formulaire lui-
+         même n'existait tout simplement pas, donc rien ne pouvait
+         jamais être saisi ni affiché. -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin:14px 0 8px">Informations complémentaires</div>
+    <label class="f-lbl">Objectif de chiffre d'affaires mensuel (MAD)</label><input id="pe-objectif" class="f-inp" type="number" style="margin-bottom:10px">
+    <label class="f-lbl">Format de numérotation</label><input id="pe-numerotation" class="f-inp" placeholder="Ex: FAC-{annee}-{numero}" style="margin-bottom:10px">
+    <label class="f-lbl">Capital social (MAD)</label><input id="pe-capital-social" class="f-inp" type="number" style="margin-bottom:10px">
+    <label class="f-lbl">Date de création de l'entreprise</label><input id="pe-date-creation" class="f-inp" type="date" style="margin-bottom:10px">
+    <label class="f-lbl">Régime fiscal</label><input id="pe-regime-fiscal" class="f-inp" placeholder="Ex: Réel simplifié" style="margin-bottom:10px">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin:14px 0 8px">Profil public (Annuaire Zelto)</div>
+    <label class="f-lbl">Description de l'entreprise</label><textarea id="pe-description" class="f-inp" rows="3" placeholder="Décrivez votre activité..." style="margin-bottom:10px"></textarea>
+    <label class="f-lbl">Horaires d'ouverture</label><input id="pe-horaires" class="f-inp" placeholder="Ex: Lun-Ven 9h-18h" style="margin-bottom:10px">
+    <label class="f-lbl">Zone d'intervention</label><input id="pe-zone-intervention" class="f-inp" placeholder="Ex: Casablanca et environs" style="margin-bottom:10px">
+    <label class="f-lbl">Moyens de paiement acceptés</label><input id="pe-moyens-paiement" class="f-inp" placeholder="Ex: Espèces, virement, chèque" style="margin-bottom:10px">
+    <label class="f-lbl">Facebook</label><input id="pe-facebook" class="f-inp" placeholder="https://facebook.com/..." style="margin-bottom:10px">
+    <label class="f-lbl">Instagram</label><input id="pe-instagram" class="f-inp" placeholder="https://instagram.com/..." style="margin-bottom:10px">
+    <label class="f-lbl">LinkedIn</label><input id="pe-linkedin" class="f-inp" placeholder="https://linkedin.com/..." style="margin-bottom:10px">
     <label class="f-lbl">🎨 Couleur d'accent des PDF (factures)</label>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
       <input id="pe-couleur" type="color" value="#C9971F" style="width:52px;height:40px;border:1.5px solid #E3DCCF;border-radius:10px;padding:2px;cursor:pointer">
