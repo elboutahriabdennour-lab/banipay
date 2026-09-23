@@ -839,7 +839,7 @@ function _barreFiltresReleve() {
       // là où on vient justement de faire les rapprochements.
       '<span style="display:flex;gap:10px">' +
         '<span onclick="exporterRapprochementComptable()" style="font-size:11px;color:#6B5F54;text-decoration:underline;cursor:pointer">📄 Export résumé</span>' +
-        '<span onclick="exporterEcrituresComptables()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer;font-weight:600">📊 Export écritures (partie double)</span>' +
+        '<span onclick="exporterEcrituresRapprochement()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer;font-weight:600">📊 Export écritures (partie double)</span>' +
       '</span>' +
     '</div>' +
     '<input id="releve-filtre-recherche" class="f-inp" placeholder="🔍 Rechercher dans le libellé..." value="' + escapeHTML(STATE._filtreReleveRecherche) + '" oninput="rechercherDansReleve(this.value)" style="margin-bottom:8px">' +
@@ -1821,7 +1821,19 @@ async function supprimerRegleRapprochement(regleId) {
 // ============================================================
 const COMPTES_CGNC_DEFAUT = { banque: '5141', clients: '3421', fournisseurs: '4411' };
 
-function exporterEcrituresComptables() {
+// FIX (bug réel trouvé — collision de noms) : cette fonction s'appelait
+// exporterEcrituresComptables() à l'origine, exactement comme une AUTRE
+// fonction déjà existante dans finance.js (export des écritures de
+// vente/achat générales, appelée par deux vrais boutons — un côté
+// entreprise, un côté comptable). À cause de l'ordre de chargement des
+// scripts, celle-ci écrasait silencieusement l'originale : les deux
+// boutons existants appelaient donc CETTE fonction-ci par erreur, qui
+// lit STATE.factures/STATE.achats au lieu des paramètres qu'on leur
+// passait — côté comptable en particulier, ça exportait les données de
+// la MAUVAISE entreprise (les siennes, pas celles du client consulté).
+// Renommée pour lever l'ambiguïté ; le bouton du rapprochement bancaire
+// (juste en dessous) est mis à jour en conséquence.
+function exporterEcrituresRapprochement() {
   const lignes = [['Journal', 'Date', 'N° Compte', 'Libellé compte', 'Libellé écriture', 'Débit', 'Crédit', 'Référence pièce']];
 
   _collectionActuelle('facture').forEach(function(f) {
