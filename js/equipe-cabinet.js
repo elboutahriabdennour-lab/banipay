@@ -156,3 +156,79 @@ async function revoquerMembreCabinet(id) {
     showToast('Erreur: ' + e.message, 'error');
   }
 }
+
+// ============================================================
+// ATTRIBUTION D'ENTREPRISES PAR COLLABORATEUR (chantier structurel)
+// ============================================================
+// Nécessite migration_attribution_cabinet.sql côté serveur. En son
+// absence, les fonctions ci-dessous échouent proprement (403/404) sans
+// bloquer le reste de l'app — voir les try/catch.
+
+STATE.attributionsCabinet = STATE.attributionsCabinet || [];
+
+async function chargerAttributionsCabinet() {
+  try {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_attributions_cabinet', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.attributionsCabinet = resp.ok ? ((await resp.json()) || []) : [];
+  } catch (e) {
+    STATE.attributionsCabinet = [];
+  }
+}
+
+// FIX (bug réel signalé — deux collaborateurs se marchant dessus) :
+// écran réservé au titulaire (bloqué par renderComptableProfil() déjà
+// existant, qui redirige tout non-titulaire hors de cette zone) pour
+// dire "ce collaborateur voit CES entreprises précises, pas les autres".
+async function renderAttributionsCabinet() {
+  const zone = el('attributions-cabinet-content');
+  if (!zone) return;
+  zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Chargement...</div>';
+  await Promise.all([chargerEquipeCabinet(), chargerAttributionsCabinet()]);
+
+  const collaborateurs = (STATE.membresCabinet || []).filter(function(m) { return m.statut === 'actif'; });
+  if (!collaborateurs.length) {
+    zone.innerHTML = '<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">Aucun collaborateur actif</div><div>Invitez d\'abord un collaborateur ci-dessus</div></div>';
+    return;
+  }
+  const entreprises = CPT.entreprises || [];
+  if (!entreprises.length) {
+    zone.innerHTML = '<div class="empty"><div class="empty-ico">🏢</div><div class="empty-title">Aucune entreprise cliente pour l\'instant</div></div>';
+    return;
+  }
+
+  zone.innerHTML = collaborateurs.map(function(m) {
+    const attribueesDeCeMembre = new Set(
+      (STATE.attributionsCabinet || []).filter(function(a) { return a.membre_id === m.user_id; }).map(function(a) { return a.entreprise_id; })
+    );
+    return '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-bottom:12px">' +
+      '<div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:10px">👤 ' + escapeHTML(m.email) + '</div>' +
+      entreprises.map(function(inv) {
+        const nomEnt = (inv.profil && inv.profil.raison) || inv.entreprise_email || 'Entreprise';
+        const coche = attribueesDeCeMembre.has(inv.entreprise_id);
+        return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;cursor:pointer">' +
+          '<input type="checkbox" ' + (coche ? 'checked' : '') + ' onchange="toggleAttributionEntreprise(' + valeurPourOnclick(m.user_id) + ',' + valeurPourOnclick(inv.entreprise_id) + ',this.checked)">' +
+          escapeHTML(nomEnt) +
+        '</label>';
+      }).join('') +
+    '</div>';
+  }).join('');
+}
+
+async function toggleAttributionEntreprise(membreId, entrepriseId, coche) {
+  try {
+    const fn = coche ? 'attribuer_entreprise_cabinet' : 'retirer_attribution_cabinet';
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + fn, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_membre_id: membreId, p_entreprise_id: entrepriseId })
+    });
+    if (!resp.ok) { showToast('⚠️ Fonction serveur pas encore en place (voir migration_attribution_cabinet.sql)', 'error'); return; }
+    showToast(coche ? '✅ Entreprise attribuée' : '↩️ Attribution retirée', 'success');
+  } catch (e) {
+    showToast('Erreur: ' + e.message, 'error');
+  }
+}
