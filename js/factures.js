@@ -115,6 +115,20 @@ function renderFactureList() {
   // client, en plus des onglets de statut déjà présents.
   const q = (el('facture-recherche')?.value || '').trim().toLowerCase();
   if (q) data = data.filter(f => (f.ref||'').toLowerCase().includes(q) || (f.client||'').toLowerCase().includes(q));
+  // AJOUT (demande utilisateur — organiser comme l'accueil) : tri de la
+  // liste, en plus des onglets de statut et de la recherche déjà là.
+  const tri = el('facture-tri')?.value || 'defaut';
+  if (tri !== 'defaut') {
+    data = data.slice().sort(function(a, b) {
+      if (tri === 'date-asc') return new Date(a.date_emission||0) - new Date(b.date_emission||0);
+      if (tri === 'montant-desc') return (Number(b.ttc)||0) - (Number(a.ttc)||0);
+      if (tri === 'montant-asc') return (Number(a.ttc)||0) - (Number(b.ttc)||0);
+      if (tri === 'client-asc') return (a.client||'').localeCompare(b.client||'', 'fr');
+      return 0;
+    });
+  } else {
+    data = data.slice().sort(function(a, b) { return new Date(b.date_emission||0) - new Date(a.date_emission||0); });
+  }
   if (!data.length) {
     list.innerHTML = `<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune facture</div><div>${q ? 'Aucun résultat pour cette recherche' : 'Créez votre première facture'}</div></div>`;
     return;
@@ -510,6 +524,34 @@ function renderDetail() {
           (l.action ? '<span style="color:#9C9186">→</span>' : '') +
         '</div>';
       }).join('');
+  }
+
+  // AJOUT (chantier — lettrage facture ↔ avoir, détection d'écart) :
+  // liste des avoirs déjà émis contre cette facture, avec le solde net
+  // et une alerte visuelle si leur total dépasse le montant de la
+  // facture (anomalie à corriger plutôt qu'à laisser passer en
+  // silence).
+  const lettrageEl = el('detail-lettrage-avoirs');
+  if (lettrageEl) {
+    const avoirsLies = (STATE.avoirs || []).filter(function(a) { return String(a.facture_origine_id) === String(f.id); });
+    if (!avoirsLies.length) {
+      lettrageEl.innerHTML = '';
+    } else {
+      const totalAvoirs = avoirsLies.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
+      const solde = Number(f.ttc || 0) - totalAvoirs;
+      const ecart = totalAvoirs > Number(f.ttc || 0) + 0.01;
+      lettrageEl.innerHTML =
+        '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">↩️ Avoirs liés (lettrage)</div>' +
+        avoirsLies.map(function(a) {
+          return '<div onclick="openDetailAvoir&&openDetailAvoir(' + a.id + ')" style="background:#fff;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">' +
+            '<div><div style="font-size:11px;color:#9C9186">' + escapeHTML(a.motif||'') + '</div><div style="font-size:13px;font-weight:600">' + escapeHTML(a.ref||'') + '</div></div>' +
+            '<div style="font-size:13px;font-weight:700;color:#8E2E24">-' + fmt(a.ttc) + ' MAD</div>' +
+          '</div>';
+        }).join('') +
+        '<div style="background:' + (ecart ? '#F5E4E1' : '#F1EEE8') + ';border-radius:10px;padding:10px 12px;margin-top:4px;display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:' + (ecart ? '#B23A2E' : '#241F1B') + '">' +
+          '<span>' + (ecart ? '⚠️ Écart — avoirs > facture' : 'Solde après avoirs') + '</span><span>' + fmt(solde) + ' MAD</span>' +
+        '</div>';
+    }
   }
 
   // NOUVEAU (retour utilisateur) : historique des transactions bancaires
