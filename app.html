@@ -2985,6 +2985,8 @@
     </div>
     <button onclick="inviterMembreCabinet()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter</button>
     <div id="equipe-cabinet-liste"></div>
+    <!-- AJOUT (chantier — attribution d'entreprises par collaborateur) -->
+    <button onclick="renderAttributionsCabinet();goScreen('attributions-cabinet',null)" style="width:100%;margin-top:10px;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🗂️ Attribuer des entreprises aux collaborateurs</button>
   </div>
 
   <!-- Actions -->
@@ -2993,6 +2995,15 @@
     <button onclick="window._retourQuiSommesNous='comptable-profil';goScreen('qui-sommes-nous',null)" style="width:100%;padding:12px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">ℹ️ Qui sommes-nous</button>
     <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
   </div>
+  <div class="pb"></div>
+</div>
+
+<!-- AJOUT (chantier — attribution d'entreprises par collaborateur) -->
+<div class="screen" id="screen-attributions-cabinet" style="background:#F1EEE8">
+  <div class="topbar"><button class="back-btn" onclick="goScreen('comptable-profil',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"></div></div>
+  <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Attribution des entreprises</div><div class="hero-sub-txt">Qui voit quoi dans votre cabinet</div></div>
+  <div style="padding:0 20px 10px;font-size:11px;color:#6B5F54">Cochez les entreprises que chaque collaborateur peut consulter. Un collaborateur sans aucune case cochée voit encore tout le portefeuille par défaut — cochez au moins une entreprise pour activer la restriction.</div>
+  <div style="padding:0 20px" id="attributions-cabinet-content"></div>
   <div class="pb"></div>
 </div>
 
