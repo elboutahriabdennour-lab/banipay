@@ -138,6 +138,11 @@ async function _lireReleveBancaireExcel(excelDataUrl) {
 // signé OU deux colonnes Débit/Crédit séparées).
 function _extraireTransactionsReleveExcel(lignes) {
   const transactions = [];
+  // AJOUT (bug réel signalé — message d'échec sans piste, cas Excel) :
+  // conserve les en-têtes de colonnes trouvées, pour diagnostiquer si
+  // l'heuristique de reconnaissance ne couvre juste pas les intitulés
+  // utilisés par cette banque.
+  STATE._dernieresColonnesReleveBrut = lignes && lignes[0] ? Object.keys(lignes[0]) : [];
 
   function valeurColonne(ligne, cles) {
     const clesLigne = Object.keys(ligne);
@@ -210,6 +215,11 @@ function _extraireTransactionsReleveExcel(lignes) {
 // désormais essayés — date en début, puis date en fin — pour couvrir
 // les deux mises en page les plus fréquentes.
 function _extraireTransactionsReleve(texte) {
+  // AJOUT (bug réel signalé — message d'échec sans aucune piste) :
+  // conserve le texte brut lu, succès ou échec, pour pouvoir le montrer
+  // à l'utilisateur si aucune transaction n'est reconnue — jusqu'ici,
+  // ce texte était juste jeté, obligeant à deviner pourquoi ça échouait.
+  STATE._dernierTexteReleveBrut = texte;
   const transactions = [];
   const lignes = texte.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
 
@@ -625,7 +635,13 @@ async function analyserReleve(releveId, skipNavigation) {
   if (!STATE.reglesRapprochement) await chargerReglesRapprochement();
   const transactions = await lireReleveBancaire(releve.data);
   if (!transactions || !transactions.length) {
-    showToast('⚠️ Aucune transaction reconnue dans ce relevé — la mise en page de cette banque n\'est peut-être pas encore prise en charge', 'error');
+    // FIX (bug réel signalé — message trompeur, sans piste concrète) :
+    // au lieu d'un simple toast qui laisse deviner, on montre
+    // directement ce que la lecture a trouvé (texte brut du PDF/photo,
+    // ou en-têtes de colonnes pour un Excel) — de quoi comprendre
+    // immédiatement si le fichier est illisible, vide, ou juste dans un
+    // format que les motifs de reconnaissance ne couvrent pas encore.
+    _afficherDiagnosticEchecLectureReleve();
     return false;
   }
   const avecSuggestions = suggererRapprochements(transactions);
@@ -1907,4 +1923,38 @@ function exporterEcrituresRapprochement() {
   document.body.removeChild(a);
   setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
   showToast('✅ Écritures comptables exportées — ' + (lignes.length-1) + ' ligne(s), en partie double', 'success');
+}
+
+// AJOUT (bug réel signalé — message d'échec sans piste concrète) :
+// affiche ce que la lecture automatique a réellement trouvé, avec un
+// bouton pour copier le texte et le transmettre en cas de souci —
+// remplace le message générique qui ne permettait aucun diagnostic.
+function _afficherDiagnosticEchecLectureReleve() {
+  const texteBrut = STATE._dernierTexteReleveBrut || '';
+  const colonnes = STATE._dernieresColonnesReleveBrut || [];
+  let contenuDiag;
+  if (colonnes.length) {
+    contenuDiag = 'Colonnes trouvées dans le fichier Excel :\n' + colonnes.join(' | ');
+  } else if (texteBrut.trim()) {
+    contenuDiag = texteBrut.slice(0, 3000);
+  } else {
+    contenuDiag = '(aucun texte n\'a pu être extrait — le fichier est peut-être vide, corrompu, ou dans un format non pris en charge)';
+  }
+  const ancien = document.getElementById('diag-releve-overlay');
+  if (ancien) ancien.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'diag-releve-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(36,31,27,0.55);z-index:9999;display:flex;align-items:flex-end';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:80vh;display:flex;flex-direction:column">' +
+      '<div style="font-size:15px;font-weight:700;color:#B23A2E;margin-bottom:8px">⚠️ Aucune transaction reconnue</div>' +
+      '<div style="font-size:12px;color:#6B5F54;margin-bottom:14px">La mise en page de cette banque n\'est peut-être pas encore prise en charge. Voici ce que la lecture a trouvé — copiez-le et transmettez-le au support pour qu\'on l\'ajoute :</div>' +
+      '<textarea readonly style="flex:1;min-height:200px;background:#F1EEE8;border:1px solid #E3DCCF;border-radius:10px;padding:12px;font-size:11px;font-family:monospace;white-space:pre-wrap;resize:none" id="diag-releve-texte"></textarea>' +
+      '<div style="display:flex;gap:8px;margin-top:14px">' +
+        '<button onclick="document.getElementById(\'diag-releve-overlay\').remove()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Fermer</button>' +
+        '<button onclick="navigator.clipboard.writeText(document.getElementById(\'diag-releve-texte\').value).then(()=>showToast(\'✅ Copié !\',\'success\'))" style="flex:1.4;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copier</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  document.getElementById('diag-releve-texte').value = contenuDiag;
 }
