@@ -117,7 +117,12 @@
     <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
     <div class="qa-item" onclick="window._retourMarche='dashboard';loadMarche();goScreen('marche',null)"><div class="qa-ico" style="background:#EDE6F0">🤝</div><div class="qa-lbl">Le Marché</div></div>
   </div>
-  <div style="height:16px"></div>
+  <!-- FIX (bug réel signalé — "Autres outils" cliquable mais inutilisable
+       une fois défilé tout en bas) : ce spacer de 16px n'a jamais été
+       suffisant, mais ça ne se voyait pas tant qu'il n'y avait rien de
+       fixe en bas de l'écran pour recouvrir cette zone. Aligné sur le
+       spacer standard .pb (100px) utilisé partout ailleurs dans l'app. -->
+  <div class="pb"></div>
 
 <!-- MODAL PAIEMENT -->
 
@@ -411,7 +416,7 @@
     <button class="back-btn" onclick="goScreen('abonnements',null)">←</button>
     <div class="form-title">Nouvel abonnement</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="ab-client" class="f-inp" placeholder="Nom du client" list="client-datalist-ab" style="flex:1">
@@ -710,7 +715,7 @@
       <div class="sec-label" style="padding:0 0 12px">🛒 Achats</div>
       <div id="hub-achats-content"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- RUBRIQUE VENTES (hub) -->
@@ -724,7 +729,7 @@
       <select id="demandes-devis-tri" class="f-inp" onchange="renderDemandesDevis()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Nouvelles d'abord</option><option value="client-asc">🔤 Client — A à Z</option></select>
       <div id="demandes-devis-liste"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <div class="screen" id="screen-hub-ventes">
@@ -733,7 +738,7 @@
       <div class="sec-label" style="padding:0 0 12px">💰 Ventes</div>
       <div id="hub-ventes-content"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
 <div class="screen" id="screen-achats">
@@ -830,7 +835,7 @@
     <button class="back-btn" onclick="goBack('dashboard')">←</button>
     <div class="form-title">Nouvelle facture</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section">
     <label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
@@ -989,7 +994,7 @@
     <button class="back-btn" onclick="goScreen('devis-list',null)">←</button>
     <div class="form-title">Nouveau devis</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="d-client" class="f-inp" placeholder="Nom du client" list="client-datalist-devis" style="flex:1">
@@ -1149,7 +1154,7 @@
     <button class="back-btn" onclick="goScreen('produits',null)">←</button>
     <div class="form-title">Nouvel article</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section"><label class="f-lbl">Désignation *</label><input id="p-nom" class="f-inp" placeholder="Ex: Prestation de service"></div>
   <div class="form-section"><label class="f-lbl">Description</label><input id="p-desc" class="f-inp" placeholder="Détail optionnel"></div>
   <div class="form-section">
@@ -1301,7 +1306,7 @@
     <button class="p-btn" onclick="window._retourSupport='profil';window._retourQuiSommesNous='profil';goScreen('support',null)" style="color:#1F6F72">🆘 Support</button>
     <button class="p-btn" onclick="window._retourQuiSommesNous='profil';goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
 
-    <div style="height:8px"></div>
+    <div class="pb"></div>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
   <div id="profil-edit" style="display:none;padding:0 16px">
@@ -1715,7 +1720,7 @@
     <button class="back-btn" onclick="goScreen('detail-client')">&#8592;</button>
     <div class="form-title">Modifier le client</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section"><label class="f-lbl">Nom / Raison sociale *</label><input id="mc-nom" class="f-inp" placeholder="Ex: SARL B&#226;tir Maroc"></div>
   <div class="form-section">
     <div class="f-row">
@@ -1746,7 +1751,7 @@
     <button class="back-btn" onclick="goScreen('produits')">&#8592;</button>
     <div class="form-title">Modifier l'article</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section"><label class="f-lbl">D&#233;signation *</label><input id="mp-nom" class="f-inp"></div>
   <div class="form-section"><label class="f-lbl">R&#233;f&#233;rence</label><input id="mp-ref" class="f-inp"></div>
   <div class="form-section"><label class="f-lbl">Description</label><input id="mp-desc" class="f-inp"></div>
@@ -2400,7 +2405,7 @@
       <div class="back-btn" onclick="goScreen('clients',null)">←</div>
       <div class="form-title">Nouveau client</div>
     </div>
-    <div style="height:14px"></div>
+    <div class="pb"></div>
     <div class="form-section"><div class="form-label">Nom / Raison sociale *</div><input class="form-input" id="cl-nom" placeholder="Ex: SARL Exemple"></div>
     <div class="form-section"><div class="form-label">Téléphone</div><input class="form-input" id="cl-tel" type="tel" placeholder="+212 6XX XX XX XX"></div>
     <div class="form-section"><div class="form-label">Email</div><input class="form-input" id="cl-email" type="email" placeholder="contact@client.ma"></div>
@@ -2430,7 +2435,7 @@
       <button class="send-btn primary" onclick="sauvegarderClient()"><div class="send-icon">💾</div>Sauvegarder</button>
       <button class="send-btn secondary" onclick="goScreen('clients',null)"><div class="send-icon">✕</div>Annuler</button>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- DETAIL CLIENT -->
@@ -2465,7 +2470,7 @@
         <div style="width:36px;height:36px;border-radius:10px;background:#F5E4E1;display:flex;align-items:center;justify-content:center">🗑️</div>Supprimer le client
       </button>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- STATS AVANCEES -->
@@ -2483,7 +2488,7 @@
       <!-- AJOUT (nouveau chantier) : trésorerie prévisionnelle -->
       <button onclick="goScreen('tresorerie',null)" style="width:100%;margin-top:8px;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📈 Trésorerie prévisionnelle</button>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- POSITION FINANCIÈRE -->
@@ -2493,7 +2498,7 @@
       <div class="sec-label" style="padding:0 0 12px">💼 Position financière</div>
       <div id="position-financiere-content"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- AJOUT (nouveau chantier) : Trésorerie prévisionnelle -->
@@ -2503,7 +2508,7 @@
       <div class="sec-label" style="padding:0 0 12px">📈 Trésorerie prévisionnelle</div>
       <div id="tresorerie-content"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- RAPPORT DE STOCK -->
@@ -2529,7 +2534,7 @@
       </select>
       <div id="employes-liste"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <div class="screen" id="screen-nouvel-employe">
@@ -2598,7 +2603,7 @@
       <select id="bc-recus-tri" class="f-inp" onchange="renderBCRecus()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Ordre d'arrivée</option><option value="statut-asc">🏷️ Par statut</option></select>
       <div id="bc-recus-liste"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- FACTURES REÇUES D'AUTRES ENTREPRISES ZELTO (marché B2B) -->
@@ -2611,7 +2616,7 @@
       <select id="factures-recues-tri" class="f-inp" onchange="renderFacturesRecues()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Ordre d'arrivée</option><option value="montant-desc">💰 Montant décroissant</option></select>
       <div id="factures-recues-liste"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <div class="screen" id="screen-rapport-stock">
@@ -2620,7 +2625,7 @@
       <div class="sec-label" style="padding:0 0 12px">📦 Valorisation du stock</div>
       <div id="rapport-stock-content"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- CARNET DE CHANTIER (chantier ajouté) -->
@@ -2633,7 +2638,7 @@
       <input type="file" id="carnet-photo-input" accept="image/*" capture="environment" style="display:none" onchange="traiterNouvellePhotoChantier(event)">
       <div id="carnet-chantier-liste"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- Modale note pour une nouvelle photo de carnet -->
@@ -2661,7 +2666,7 @@
       <div style="font-size:12px;color:#6B5F54;padding-bottom:12px">Cochez les factures que vous avez vérifiées sur votre relevé bancaire.</div>
       <div id="rapprochement-content"></div>
     </div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   <!-- RECHERCHE -->
@@ -2671,7 +2676,7 @@
       <input class="form-input" id="search-global" placeholder="🔍 Rechercher factures, clients, devis..." oninput="rechercheGlobale()" style="margin-top:12px">
     </div>
     <div id="search-results" style="padding:0 20px"></div>
-    <div style="height:30px"></div>
+    <div class="pb"></div>
   </div>
 
   
@@ -2682,7 +2687,7 @@
     <button class="back-btn" onclick="goScreen('bons-commande-list',null)">&#8592;</button>
     <div class="form-title">Bon de commande</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section">
     <label class="f-lbl">Fournisseur *</label>
     <div style="display:flex;gap:8px">
@@ -2773,7 +2778,7 @@
     <button class="back-btn" onclick="goScreen('bons-livraison-list',null)">&#8592;</button>
     <div class="form-title">Bon de livraison</div>
   </div>
-  <div style="height:14px"></div>
+  <div class="pb"></div>
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="bl-client" class="f-inp" placeholder="Nom du client" list="client-datalist" style="flex:1">
