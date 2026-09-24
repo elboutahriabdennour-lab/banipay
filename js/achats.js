@@ -205,7 +205,11 @@ function _chargerJsQR() {
   if (_jsQRPromise) return _jsQRPromise;
   _jsQRPromise = new Promise(function(resolve, reject) {
     const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+    // FIX (bug réel signalé — cdnjs.cloudflare.com bloqué chez un
+    // utilisateur) : bascule sur cdn.jsdelivr.net, comme pour
+    // SheetJS et PDF.js — et comme le chargement global de jsQR dans
+    // app.html, qui utilise déjà cette même source.
+    script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
     script.onload = resolve;
     script.onerror = reject;
     document.head.appendChild(script);
