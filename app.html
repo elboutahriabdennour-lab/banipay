@@ -3050,5 +3050,29 @@
      navigateur, qui ne dépend plus d'aucun service externe une fois
      cette librairie chargée. -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+
+<!-- AJOUT (réorganisation définitive de la navigation) : le CSS et la
+     logique JS (goScreen(), _navMap) de cette barre existaient déjà en
+     entier — seul ce HTML manquait, exactement comme les 8 fenêtres
+     manquantes trouvées plus tôt dans la session. Sans lui, il n'y
+     avait aucun moyen rapide de changer de grande section de l'app
+     sans repasser par le dashboard à chaque fois. -->
+<div class="bottom-nav">
+  <div class="nav-item" id="nav-home" onclick="goScreen('dashboard',null)">
+    <span class="nav-ico">🏠</span><span class="nav-lbl">Accueil</span>
+  </div>
+  <div class="nav-item" id="nav-devis" onclick="goScreen('devis-list',null)">
+    <span class="nav-ico">📝</span><span class="nav-lbl">Devis</span>
+  </div>
+  <div class="nav-fab">
+    <button class="fab" onclick="goScreen('nouvelle',null)" title="Nouvelle facture">+</button>
+  </div>
+  <div class="nav-item" id="nav-clients" onclick="goScreen('clients',null)">
+    <span class="nav-ico">👥</span><span class="nav-lbl">Clients</span>
+  </div>
+  <div class="nav-item" id="nav-profil" onclick="goScreen('profil',null)">
+    <span class="nav-ico">👤</span><span class="nav-lbl">Profil</span>
+  </div>
+</div>
 </body>
 </html>
