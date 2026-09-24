@@ -13,7 +13,7 @@
 button,[onclick]{user-select:none;-webkit-user-select:none;-moz-user-select:none}
 input,textarea,select{user-select:text;-webkit-user-select:text}
 html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-.screen{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;background:var(--paper);-webkit-overflow-scrolling:touch}
+.screen{position:fixed;top:0;left:0;right:0;bottom:0;overflow-y:auto;display:none;background:var(--paper);-webkit-overflow-scrolling:touch;scroll-padding-bottom:80px}
 .screen.active{display:block}
 #screen-chat-ticket.active{display:flex;flex-direction:column}
 .topbar-brand,.auth-logo h1,.hero-amount,.p-nom-big,.form-title,.sec-title,.d-client,.d-amount,.modal-title,.card-name,.detail-top .d-client{font-family:'Baloo 2',-apple-system,sans-serif;}
@@ -184,6 +184,14 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--charcoal);color:#fff;padding:12px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:200;transition:transform 0.3s;white-space:nowrap;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .pb{height:100px}
+/* FIX (bug réel signalé — "Autres outils" du dashboard cliquable mais
+   inutilisable) : ajouter .bottom-nav (fixe en bas de l'écran) a eu un
+   effet de bord — un bouton défilé jusqu'aux ~70 derniers pixels de
+   l'écran se retrouve recouvert par elle et devient impossible à
+   cliquer, quelle que soit la hauteur de ce .pb. La vraie correction
+   est scroll-padding-bottom sur .screen (le conteneur de défilement
+   lui-même), qui empêche le navigateur d'amener un élément jusque dans
+   cette zone réservée — voir la règle .screen ci-dessus.
 .notif-item{display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);align-items:flex-start}
 .notif-item.notif-unread{background:var(--safran-light)}
 .notif-ico{font-size:20px;flex-shrink:0;margin-top:2px}
