@@ -44,6 +44,7 @@ function remplirSelecteurBanques() {
 // n'est pas un PDF), donnant ce message qui laisse croire à tort que
 // c'est la mise en page de la banque qui pose problème.
 async function lireReleveBancaire(fichierDataUrl) {
+  STATE._derniereErreurLectureReleve = null;
   const mime = (fichierDataUrl.match(/^data:([^;]+);base64,/) || [])[1] || '';
   if (/^image\//.test(mime)) {
     return await _lireReleveBancaireImage(fichierDataUrl);
@@ -64,6 +65,7 @@ async function _lireReleveBancaireImage(imageDataUrl) {
     if (typeof _chargerTesseract === 'function') await _chargerTesseract();
   } catch (e) {
     console.warn('Tesseract.js indisponible — lecture automatique de la photo impossible');
+    STATE._derniereErreurLectureReleve = 'La bibliothèque de reconnaissance de texte (Tesseract.js) n\'a pas pu être chargée — vérifiez votre connexion internet et réessayez.';
     return null;
   }
   if (typeof Tesseract === 'undefined') return null;
@@ -72,6 +74,7 @@ async function _lireReleveBancaireImage(imageDataUrl) {
     return _extraireTransactionsReleve(resultat.data.text || '');
   } catch (e) {
     console.warn('_lireReleveBancaireImage:', e);
+    STATE._derniereErreurLectureReleve = 'Photo/scan illisible : ' + (e && e.message || 'erreur inconnue');
     return null;
   }
 }
@@ -83,6 +86,7 @@ async function _lireReleveBancairePdf(pdfDataUrl) {
     await _chargerPdfJs();
   } catch(e) {
     console.warn('PDF.js indisponible — lecture automatique du relevé impossible');
+    STATE._derniereErreurLectureReleve = 'La bibliothèque de lecture PDF (PDF.js) n\'a pas pu être chargée — vérifiez votre connexion internet et réessayez.';
     return null;
   }
   try {
@@ -101,6 +105,7 @@ async function _lireReleveBancairePdf(pdfDataUrl) {
     return _extraireTransactionsReleve(texte);
   } catch(e) {
     console.warn('_lireReleveBancairePdf:', e);
+    STATE._derniereErreurLectureReleve = 'PDF illisible : ' + (e && e.message || 'erreur inconnue');
     return null;
   }
 }
@@ -116,6 +121,7 @@ async function _lireReleveBancaireExcel(excelDataUrl) {
     if (typeof _chargerSheetJS === 'function') await _chargerSheetJS();
     if (typeof XLSX === 'undefined') {
       console.warn('SheetJS indisponible — lecture automatique du relevé Excel impossible');
+      STATE._derniereErreurLectureReleve = 'La bibliothèque de lecture Excel (SheetJS) n\'a pas pu être chargée — vérifiez votre connexion internet et réessayez.';
       return null;
     }
     const base64 = excelDataUrl.split(',')[1];
@@ -128,6 +134,7 @@ async function _lireReleveBancaireExcel(excelDataUrl) {
     return _extraireTransactionsReleveExcel(lignes);
   } catch(e) {
     console.warn('_lireReleveBancaireExcel:', e);
+    STATE._derniereErreurLectureReleve = 'Excel illisible : ' + (e && e.message || 'erreur inconnue');
     return null;
   }
 }
@@ -1932,8 +1939,11 @@ function exporterEcrituresRapprochement() {
 function _afficherDiagnosticEchecLectureReleve() {
   const texteBrut = STATE._dernierTexteReleveBrut || '';
   const colonnes = STATE._dernieresColonnesReleveBrut || [];
+  const erreur = STATE._derniereErreurLectureReleve || '';
   let contenuDiag;
-  if (colonnes.length) {
+  if (erreur) {
+    contenuDiag = '❌ ' + erreur;
+  } else if (colonnes.length) {
     contenuDiag = 'Colonnes trouvées dans le fichier Excel :\n' + colonnes.join(' | ');
   } else if (texteBrut.trim()) {
     contenuDiag = texteBrut.slice(0, 3000);
