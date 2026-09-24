@@ -89,9 +89,13 @@ function _chargerPdfJs() {
   if (_pdfjsChargement) return _pdfjsChargement;
   _pdfjsChargement = new Promise(function(resolve, reject) {
     const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    // FIX (bug réel signalé — même souci que SheetJS, un utilisateur ne
+    // pouvait charger aucune bibliothèque venant de cdnjs.cloudflare.com)
+    // : bascule sur cdn.jsdelivr.net, déjà utilisé ailleurs dans l'app
+    // sans problème chez lui (QR code, Tesseract.js).
+    script.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
     script.onload = function() {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
       resolve();
     };
     script.onerror = reject;
