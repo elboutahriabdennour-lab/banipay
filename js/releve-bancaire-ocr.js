@@ -36,13 +36,44 @@ function remplirSelecteurBanques() {
 // Détecte maintenant le type de fichier reçu et redirige vers la bonne
 // méthode de lecture — le reste de l'app (rapprochement, affichage,
 // confirmation) ne change pas, quel que soit le format d'origine.
+// FIX (bug réel signalé — "Aucune transaction reconnue" trompeur) :
+// le formulaire d'import promet "PDF, image ou Excel", mais le
+// routage ci-dessous n'a jamais su distinguer une IMAGE d'un PDF —
+// tout ce qui n'était pas explicitement reconnu comme Excel partait
+// vers le lecteur PDF, qui échoue silencieusement sur une photo (ce
+// n'est pas un PDF), donnant ce message qui laisse croire à tort que
+// c'est la mise en page de la banque qui pose problème.
 async function lireReleveBancaire(fichierDataUrl) {
-  const estExcel = /^data:application\/(vnd\.openxmlformats-officedocument\.spreadsheetml|vnd\.ms-excel)/.test(fichierDataUrl)
-    || /^data:.*;base64,/.test(fichierDataUrl) === false; // repli si le type mime n'est pas reconnu du tout
+  const mime = (fichierDataUrl.match(/^data:([^;]+);base64,/) || [])[1] || '';
+  if (/^image\//.test(mime)) {
+    return await _lireReleveBancaireImage(fichierDataUrl);
+  }
+  const estExcel = /^application\/(vnd\.openxmlformats-officedocument\.spreadsheetml|vnd\.ms-excel)/.test(mime);
   if (estExcel) {
     return await _lireReleveBancaireExcel(fichierDataUrl);
   }
   return await _lireReleveBancairePdf(fichierDataUrl);
+}
+
+// AJOUT : lecture d'un relevé pris en photo ou scanné en image — réutilise
+// Tesseract.js, déjà chargé ailleurs dans l'app pour l'OCR des factures
+// d'achat (voir ocr-achats.js), pas de nouvelle dépendance. Le texte
+// reconnu passe ensuite par les mêmes heuristiques que le PDF.
+async function _lireReleveBancaireImage(imageDataUrl) {
+  try {
+    if (typeof _chargerTesseract === 'function') await _chargerTesseract();
+  } catch (e) {
+    console.warn('Tesseract.js indisponible — lecture automatique de la photo impossible');
+    return null;
+  }
+  if (typeof Tesseract === 'undefined') return null;
+  try {
+    const resultat = await Tesseract.recognize(imageDataUrl, 'fra', { logger: function() {} });
+    return _extraireTransactionsReleve(resultat.data.text || '');
+  } catch (e) {
+    console.warn('_lireReleveBancaireImage:', e);
+    return null;
+  }
 }
 
 // Lecture PDF (comportement historique, inchangé) — extraction du texte
