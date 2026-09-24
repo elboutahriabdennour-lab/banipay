@@ -413,6 +413,12 @@ function renderFicheEntreprise() {
   cptEntTab('factures');
 }
 
+// AJOUT (simplification — onglets repliés)
+function cptEntTogglePlus() {
+  const rangee = el('cpt-tabs-plus-rangee');
+  if (rangee) rangee.style.display = rangee.style.display === 'none' ? 'flex' : 'none';
+}
+
 function cptEntTab(tab) {
   CPT.currentTab = tab;
   ['factures', 'devis', 'achats', 'avoirs', 'documents', 'extraction', 'infos', 'releves'].forEach(function(t) {
@@ -422,6 +428,12 @@ function cptEntTab(tab) {
       btn.style.color = t === tab ? '#fff' : '#6B5F54';
     }
   });
+  // AJOUT (simplification — onglets repliés) : si l'onglet choisi fait
+  // partie de la rangée repliée, on la déplie automatiquement — sinon
+  // l'onglet actif serait mis en avant dans une rangée invisible.
+  const ongletsReplies = ['devis', 'documents', 'extraction', 'infos'];
+  const rangeePlus = el('cpt-tabs-plus-rangee');
+  if (rangeePlus && ongletsReplies.includes(tab)) rangeePlus.style.display = 'flex';
   if (tab === 'factures') renderCptFactures();
   else if (tab === 'devis') renderCptDevis();
   else if (tab === 'achats') renderCptAchats();
