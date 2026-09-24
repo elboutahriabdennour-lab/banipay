@@ -100,7 +100,7 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .ftab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;border:none;font-family:inherit;transition:all 0.15s}
 .ftab.active{background:var(--safran);color:#fff}
 .ftab:not(.active){background:var(--border);color:var(--ink-soft)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;padding:10px 20px 20px;z-index:50}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:none;padding:10px 20px 20px;z-index:50}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
 .nav-ico{font-size:20px}
 .nav-lbl{font-size:10px;font-weight:600;color:var(--ink-faint)}
@@ -191,7 +191,12 @@ html,body{font-family:'Karla',-apple-system,sans-serif;background:var(--paper);c
 .notif-title{font-size:13px;font-weight:700;color:var(--ink)}
 .notif-msg{font-size:12px;color:var(--ink-soft);margin-top:2px;line-height:1.4}
 #screen-comptable.active{display:flex!important;flex-direction:column}
-.bottom-nav{display:none}
+/* FIX (réorganisation définitive de la navigation) : cette règle
+   masquait complètement la barre de navigation puisque son HTML
+   n'existait pas encore — goScreen() gère déjà correctement son
+   affichage via un style inline (visible sur les écrans entreprise,
+   cachée sur auth/comptable/pdf-viewer/chat), donc cette règle globale
+   n'est plus nécessaire. */
 #screen-chat.active{display:flex!important;flex-direction:column}
 body.dark{--ink:#F1EEE8;--ink-soft:#C7BBAC;--ink-faint:#8A7E72;--paper:#1C1815;--surface:#28221D;--border:#3A332C;--border-dash:#4A4237;--safran-light:#3A2F1A;--zellige-light:#17302F;--brique-light:#3A211D;--sauge-light:#26301C;--ambre-light:#332B18;--plum-light:#2A2333;}
 body.dark .a-inp,body.dark .f-inp,body.dark .m-inp{background:var(--surface)}
