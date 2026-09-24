@@ -2941,13 +2941,21 @@
   <!-- Onglets -->
   <div style="display:flex;gap:6px;padding:10px 16px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto;position:sticky;top:52px;z-index:9">
     <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#1F6F72;color:#fff">🧾 Factures</button>
-    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📝 Devis</button>
     <button id="cpt-tab-achats" onclick="cptEntTab('achats')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🛒 Achats</button>
+    <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 TVA</button>
+    <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🏦 Relevés</button>
+    <!-- AJOUT (simplification — 8 onglets sur une seule rangée, trop
+         chargé) : les 4 les plus utilisés au quotidien (contrôle
+         factures/achats, TVA, rapprochement) restent visibles ; les 4
+         autres, consultés moins souvent, se replient derrière ce
+         bouton. -->
+    <button id="cpt-tab-plus" onclick="cptEntTogglePlus()" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1EEE8;color:#1F6F72">▾ Plus</button>
+  </div>
+  <div id="cpt-tabs-plus-rangee" style="display:none;gap:6px;padding:0 16px 10px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto;flex-wrap:wrap">
+    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📝 Devis</button>
     <button id="cpt-tab-documents" onclick="cptEntTab('documents')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📄 Docs</button>
     <button id="cpt-tab-extraction" onclick="cptEntTab('extraction')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📤 Extraction</button>
-    <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 TVA</button>
     <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">ℹ️ Infos</button>
-    <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🏦 Relevés</button>
   </div>
   <div id="cpt-ent-content"></div>
   <div class="pb"></div>
