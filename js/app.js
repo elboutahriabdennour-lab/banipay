@@ -34,7 +34,15 @@ async function loadAll() {
     } catch(eNotes) { STATE._compteursNotesFactures = {}; }
 
     await genNotifications();
-  } catch(e) { console.error('loadAll:', e); showToast('Erreur de chargement', 'error'); }
+  } catch(e) {
+    console.error('loadAll:', e);
+    // FIX (bug réel signalé — message trop générique pour diagnostiquer,
+    // en particulier lors du passage comptable → mode entreprise) : le
+    // message précis (souvent un refus d'accès RLS côté base plutôt
+    // qu'un vrai bug JS) était seulement dans la console, invisible à
+    // l'utilisateur — impossible à me transmettre pour diagnostic.
+    showToast('Erreur de chargement : ' + (e && e.message ? e.message : 'raison inconnue'), 'error');
+  }
 }
 
 async function loadPortailClient(clientId) {
