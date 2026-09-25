@@ -4,11 +4,25 @@ async function loadAll() {
   const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
   try {
+    // FIX (bug réel signalé — "column produits.archive does not exist")
+    // : cette colonne n'existe pas sur toutes les bases (ajoutée
+    // seulement côté code, jamais migrée en base pour cet utilisateur).
+    // Comme ce chargement se fait en lot avec factures/devis/clients/
+    // avoirs, un seul échec ici faisait échouer TOUT le reste d'un
+    // coup — l'origine probable du tout premier souci signalé cette
+    // session ("les factures disparaissent côté entreprise"). Isolé
+    // dans son propre bloc, avec repli sans le filtre si besoin, pour
+    // que ce problème ne puisse plus jamais bloquer les autres données.
+    const chargerProduits = sb.get('produits', `user_id=eq.${uid}&archive=neq.true&order=nom.asc`)
+      .catch(function(e) {
+        console.warn('loadAll: filtre archive indisponible sur produits, repli sans filtre —', e.message);
+        return sb.get('produits', `user_id=eq.${uid}&order=nom.asc`).catch(function() { return []; });
+      });
     const [f, dv, cl, pr, av, pf] = await Promise.all([
       sb.get('factures', `user_id=eq.${uid}&order=created_at.desc`),
       sb.get('devis', `user_id=eq.${uid}&order=created_at.desc`),
       sb.get('clients', `user_id=eq.${uid}&order=nom.asc`),
-      sb.get('produits', `user_id=eq.${uid}&archive=neq.true&order=nom.asc`),
+      chargerProduits,
       sb.get('avoirs', `user_id=eq.${uid}&order=created_at.desc`),
       sb.get('profils_entreprise', `id=eq.${uid}`),
     ]);
