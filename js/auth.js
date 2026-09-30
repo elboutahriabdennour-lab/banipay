@@ -300,16 +300,15 @@ async function doLogin() {
     // téléphone : si elle n'a jamais été faite, on interrompt la
     // connexion normale et on affiche l'écran de vérification une seule
     // fois — ensuite, les connexions suivantes passent directement.
-    // FIX URGENT (régression du 22/08) : ce blocage a cassé la connexion
-    // pour TOUT LE MONDE — goScreen() cache d'abord tous les écrans, puis
-    // n'affiche le nouveau QUE s'il existe dans le HTML. Comme l'écran
-    // "screen-verification-telephone" n'existe pas encore (pas encore
-    // reçu app.html pour l'ajouter), aucun écran ne se réaffichait :
-    // page blanche à chaque connexion. DÉSACTIVÉ tant que l'écran HTML
-    // et la configuration Twilio ne sont pas prêts — voir plus bas
-    // (activerVerificationTelephoneObligatoire) pour la réactiver
-    // proprement une fois les deux prêts.
-    const verificationTelephoneActive = false;
+    // RÉACTIVÉ (demande du 30/09) : l'écran HTML "screen-verification-
+    // telephone" existe maintenant (confirmé sur le site en ligne) —
+    // le blocage précédent (page blanche faute d'écran) n'a plus lieu
+    // d'être. RAPPEL IMPORTANT : ceci nécessite un fournisseur SMS
+    // (Twilio, etc.) configuré dans Supabase → Authentication →
+    // Providers → Phone, avec un vrai coût par SMS envoyé — sans ça,
+    // chaque personne bloquera sur "Erreur lors de l'envoi du code" à sa
+    // première connexion, sans pouvoir continuer.
+    const verificationTelephoneActive = true;
     if (verificationTelephoneActive && !sb.user?.phone_confirmed_at) {
       if (errEl) errEl.textContent = '';
       goScreen('verification-telephone', null);
@@ -536,13 +535,23 @@ async function _continuerApresAuthentification(email, errEl, remember) {
 }
 
 // ============================================================
-// CHANTIER : VÉRIFICATION TÉLÉPHONE (une seule fois, par SMS)
+// VÉRIFICATION TÉLÉPHONE (une seule fois, par SMS)
 // ============================================================
 // PÉRIMÈTRE : ceci ne remplace PAS la connexion habituelle (email +
 // mot de passe reste le seul moyen de se connecter). Le téléphone est
 // vérifié UNE SEULE FOIS, juste après la toute première connexion
 // réussie (une fois l'email lui-même confirmé), pour qu'il puisse
 // ensuite servir de moyen de récupération/support en cas de problème.
+//
+// POURQUOI PAS PENDANT L'INSCRIPTION ELLE-MÊME : Supabase ne renvoie
+// aucune session active tant que l'email n'est pas confirmé (avec la
+// vérification email obligatoire déjà en place) — sans session, aucun
+// appel authentifié (donc aucun envoi de code par SMS) n'est possible.
+// La première connexion réussie, juste après confirmation de l'email,
+// est le tout premier moment technique où c'est réalisable. C'est
+// pourquoi le compte reste bloqué ici tant que ce n'est pas fait —
+// dans les faits, ça revient au même que si c'était fait "dès le
+// début" : impossible d'utiliser le compte sans passer par cette étape.
 //
 // CONTRAINTE TECHNIQUE IMPORTANTE : ceci nécessite qu'un fournisseur SMS
 // (Twilio, MessageBird...) soit configuré dans Supabase → Authentication
@@ -636,9 +645,9 @@ async function confirmerCodeVerificationTelephone() {
 // sur la vérification téléphone (première fois), soit directement sur le
 // tableau de bord (comptes déjà vérifiés, cas rare pour ce chemin précis).
 async function apresConnexionVerifierTelephone() {
-  // FIX URGENT (même régression que dans doLogin, voir plus haut) —
-  // désactivé tant que l'écran HTML n'existe pas.
-  const verificationTelephoneActive = false;
+  // RÉACTIVÉ (demande du 30/09) — voir le commentaire complet au-dessus
+  // de envoyerCodeVerificationTelephone() pour le détail.
+  const verificationTelephoneActive = true;
   if (verificationTelephoneActive && !sb.user?.phone_confirmed_at) {
     goScreen('verification-telephone', null);
     return;
