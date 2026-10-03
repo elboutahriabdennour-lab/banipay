@@ -308,7 +308,7 @@ async function doLogin() {
     // Providers → Phone, avec un vrai coût par SMS envoyé — sans ça,
     // chaque personne bloquera sur "Erreur lors de l'envoi du code" à sa
     // première connexion, sans pouvoir continuer.
-    const verificationTelephoneActive = true;
+    const verificationTelephoneActive = false; // DÉSACTIVÉ en attendant la configuration Twilio (Supabase → Authentication → Providers → Phone)
     if (verificationTelephoneActive && !sb.user?.phone_confirmed_at) {
       if (errEl) errEl.textContent = '';
       goScreen('verification-telephone', null);
@@ -647,7 +647,7 @@ async function confirmerCodeVerificationTelephone() {
 async function apresConnexionVerifierTelephone() {
   // RÉACTIVÉ (demande du 30/09) — voir le commentaire complet au-dessus
   // de envoyerCodeVerificationTelephone() pour le détail.
-  const verificationTelephoneActive = true;
+  const verificationTelephoneActive = false; // DÉSACTIVÉ en attendant la configuration Twilio (Supabase → Authentication → Providers → Phone)
   if (verificationTelephoneActive && !sb.user?.phone_confirmed_at) {
     goScreen('verification-telephone', null);
     return;
