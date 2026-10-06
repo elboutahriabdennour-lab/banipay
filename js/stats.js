@@ -1,4 +1,4 @@
-// BANIPAY — stats.js
+// ZELTO — stats.js
 // ============================================================
 // FUSION (retour utilisateur) : les écrans "Stats" et "Statistiques
 // avancées" étaient deux écrans séparés, avec deux jeux de filtres
@@ -867,7 +867,7 @@ function exporterCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'banipay_factures_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.download = 'zelto_factures_' + new Date().toISOString().split('T')[0] + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 3000);
   showToast('✅ Export CSV téléchargé !', 'success');
@@ -886,7 +886,7 @@ function exporterCSVDevis() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'banipay_devis_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.download = 'zelto_devis_' + new Date().toISOString().split('T')[0] + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 3000);
   showToast('✅ Export devis CSV !', 'success');
