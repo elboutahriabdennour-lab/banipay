@@ -640,6 +640,7 @@ function goScreen(name, options) {
     'archive': _safe(typeof renderArchive!=='undefined'?renderArchive:undefined,'renderArchive'),
     'annuaire': _safe(typeof filtrerAnnuaire!=='undefined'?filtrerAnnuaire:undefined,'filtrerAnnuaire'),
     'achats': _safe(typeof renderAchats!=='undefined'?renderAchats:undefined,'renderAchats'),
+    'fournisseurs': _safe(typeof renderFournisseurs!=='undefined'?renderFournisseurs:undefined,'renderFournisseurs'),
     'nouvelle-achat': function() { if (typeof renderLignesAchat==='function') renderLignesAchat(); },
     'avoir-list': _safe(typeof renderAvoirList!=='undefined'?renderAvoirList:undefined,'renderAvoirList'),
     'abonnements': typeof renderAbonnements === 'function' ? renderAbonnements : function() { showToast('Module abonnements non installé', 'error'); goScreen('dashboard'); },
