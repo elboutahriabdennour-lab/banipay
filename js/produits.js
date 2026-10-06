@@ -187,7 +187,7 @@ function exporterProduitsCSV() {
   const rows = STATE.produits.map(function(p) {
     return [p.nom || '', p.description || '', p.reference || '', p.prix_ht || 0, p.tva_rate || 20, p.cout_achat || '', p.stock != null ? p.stock : '', p.unite || 'u', p.categorie || 'service'];
   });
-  telechargerCSV('banipay_catalogue_' + today() + '.csv', headers, rows);
+  telechargerCSV('zelto_catalogue_' + today() + '.csv', headers, rows);
   showToast('✅ Export catalogue téléchargé !', 'success');
 }
 async function importerProduitsCSV(event) {
