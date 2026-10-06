@@ -457,6 +457,7 @@ async function _continuerApresAuthentification(email, errEl, remember) {
       // connexion continue quand même.
       await _essai(loadAll, 'loadAll');
       await _essai(loadAchats, 'loadAchats');
+      if (typeof loadFournisseurs === 'function') await _essai(loadFournisseurs, 'loadFournisseurs');
       if (typeof loadBonsCommande === 'function') await _essai(loadBonsCommande, 'loadBonsCommande');
       if (typeof loadBonsLivraison === 'function') await _essai(loadBonsLivraison, 'loadBonsLivraison');
       if (typeof loadRelancesEnvoyees === 'function') await _essai(loadRelancesEnvoyees, 'loadRelancesEnvoyees');
