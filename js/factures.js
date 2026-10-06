@@ -757,7 +757,7 @@ function exporterTout() {
   const b = new Blob(['\uFEFF'+csv], {type:'text/csv'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b);
-  a.download = `banipay_${today()}.csv`;
+  a.download = `zelto_${today()}.csv`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
   showToast('📊 CSV téléchargé !', 'success');
