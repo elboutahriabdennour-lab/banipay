@@ -666,7 +666,7 @@ async function synchroniserProfilComptable() {
   if (!user) return;
   const meta = user.user_metadata || {};
   try {
-    await fetch(SUPABASE_URL + '/rest/v1/profils_comptable', {
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?on_conflict=id', {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -681,6 +681,12 @@ async function synchroniserProfilComptable() {
         cabinet: meta.cabinet || '',
       })
     });
+    // FIX annuaire : l'échec était silencieux — on vérifie maintenant la réponse
+    if (!resp.ok) {
+      const detail = await resp.text().catch(function() { return ''; });
+      console.warn('synchroniserProfilComptable:', resp.status, detail);
+      showToast('⚠️ Profil comptable non enregistré (code ' + resp.status + ')', 'error');
+    }
   } catch(e) { console.warn('synchroniserProfilComptable:', e); }
 }
 
