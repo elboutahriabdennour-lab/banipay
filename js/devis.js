@@ -458,6 +458,11 @@ function choisirFournisseurBC(nom, id) {
   const ctx = window._pickerFournisseurCtx || { champNom: 'bc-fournisseur', champId: 'bc-fournisseur-id' };
   el(ctx.champNom) && (el(ctx.champNom).value = nom);
   if (ctx.champId) el(ctx.champId) && (el(ctx.champId).value = id || '');
+  // Demande de devis : si le fournisseur est enregistré, on pré-remplit son téléphone (WhatsApp)
+  if (ctx.champNom === 'ddf-fournisseur-nom' && el('ddf-fournisseur-tel')) {
+    const f = (STATE.fournisseurs || []).find(function(x) { return (x.nom || '').toLowerCase() === (nom || '').toLowerCase(); });
+    if (f && f.tel) el('ddf-fournisseur-tel').value = f.tel;
+  }
   window._pickerFournisseurCtx = null;
   closeAllModals();
 }
