@@ -418,7 +418,9 @@ function ouvrirPickerFournisseurBC() {
 function afficherFournisseursHistoriqueBC(filtreTexte) {
   const nomsAchats = (STATE.achats || []).map(function(a) { return a.fournisseur; });
   const nomsBC = (STATE.bonsCommande || []).map(function(bc) { return bc.fournisseur; });
-  const noms = Array.from(new Set(nomsAchats.concat(nomsBC).filter(Boolean)));
+  // Rubrique Fournisseurs : les fournisseurs enregistrés passent en premier
+  const enregistres = (STATE.fournisseurs || []).map(function(f) { return f.nom; });
+  const noms = Array.from(new Set(enregistres.concat(nomsAchats).concat(nomsBC).filter(Boolean)));
   const q = (filtreTexte || '').toLowerCase();
   const filtres = q ? noms.filter(function(n) { return n.toLowerCase().includes(q); }) : noms;
   const list = el('fournisseur-bc-picker-list');
