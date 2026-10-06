@@ -692,10 +692,30 @@ async function assurerProfilEntrepriseMinimal() {
   const user = sb.user;
   if (!user) return;
   const meta = user.user_metadata || {};
-  const raisonPlaceholder = meta.nom || user.email.split('@')[0];
+  const raisonPlaceholder = meta.nom || (user.email || '').split('@')[0];
+  // FIX annuaire : on n'utilise plus sb.upsert (échec silencieux observé :
+  // 5 comptes confirmés sur 8 n'avaient aucun nom de profil). Requêtes directes,
+  // avec vérification de la réponse du serveur.
+  const h = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
   try {
-    await sb.upsert('profils_entreprise', { id: user.id, raison: raisonPlaceholder });
-    STATE.profil.raison = raisonPlaceholder;
+    const rGet = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + user.id + '&select=id,raison&limit=1', { headers: h });
+    const rows = rGet.ok ? ((await rGet.json()) || []) : [];
+    if (rows.length && rows[0].raison) {
+      STATE.profil = STATE.profil || {};
+      STATE.profil.raison = rows[0].raison;
+      return;
+    }
+    const rEcr = rows.length
+      ? await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + user.id, { method: 'PATCH', headers: h, body: JSON.stringify({ raison: raisonPlaceholder }) })
+      : await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise', { method: 'POST', headers: h, body: JSON.stringify({ id: user.id, raison: raisonPlaceholder }) });
+    if (rEcr.ok) {
+      STATE.profil = STATE.profil || {};
+      STATE.profil.raison = raisonPlaceholder;
+    } else {
+      const detail = await rEcr.text().catch(function() { return ''; });
+      console.warn('assurerProfilEntrepriseMinimal:', rEcr.status, detail);
+      showToast('⚠️ Profil annuaire non créé (code ' + rEcr.status + ')', 'error');
+    }
   } catch(e) { console.warn('assurerProfilEntrepriseMinimal:', e); }
 }
 
