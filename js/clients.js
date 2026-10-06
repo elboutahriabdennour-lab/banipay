@@ -496,7 +496,7 @@ function exporterClientsCSV() {
   const rows = STATE.clients.map(function(c) {
     return [c.nom || '', c.tel || '', c.email || '', c.adresse || '', c.ice || '', c.identifiant_fiscal || '', c.conditions_paiement || '', c.limite_credit || '', c.notes || ''];
   });
-  telechargerCSV('banipay_clients_' + today() + '.csv', headers, rows);
+  telechargerCSV('zelto_clients_' + today() + '.csv', headers, rows);
   showToast('✅ Export clients téléchargé !', 'success');
 }
 
