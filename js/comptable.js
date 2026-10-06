@@ -1668,10 +1668,11 @@ async function renderCptReleves() {
 
 async function ouvrirFactureComptable(factureId) {
   const fac = (CPT.currentFactures || []).find(function(f) { return String(f.id) === String(factureId); });
-  if (!fac) return;
+  if (!fac) { showToast('Facture introuvable — recharge la page', 'error'); return; }
   CPT.currentFactureId = factureId;
   const ctrl = (CPT.currentControles || []).find(function(c2) { return String(c2.facture_id) === String(factureId); }) || {};
-  if (!ctrl.consulte) { await sauvegarderControle(factureId, { consulte: true, consulte_at: new Date().toISOString() }); }
+  // Le marquage "consulté" ne doit JAMAIS bloquer l'affichage (réseau lent = écran vide)
+  if (!ctrl.consulte) { sauvegarderControle(factureId, { consulte: true, consulte_at: new Date().toISOString() }).catch(function(){}); }
   const ctrlFresh = (CPT.currentControles || []).find(function(c3) { return String(c3.facture_id) === String(factureId); }) || {};
   const overlay = document.createElement('div');
   overlay.id = 'fac-comptable-overlay';
