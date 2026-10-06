@@ -82,6 +82,7 @@
   <div class="quick-actions">
     <div class="qa-item" onclick="goScreen('avoir',null)"><div class="qa-ico" style="background:#EEF3E4">↩️</div><div class="qa-lbl">Avoir</div></div>
     <div class="qa-item" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><div class="qa-ico" style="background:#F5E4E1">🛒</div><div class="qa-lbl">Achats</div></div>
+    <div class="qa-item" onclick="loadFournisseurs();goScreen('fournisseurs',null)"><div class="qa-ico" style="background:#F5E4E1">🏭</div><div class="qa-lbl">Fournisseurs</div></div>
     <div class="qa-item" onclick="renderHubVentes();goScreen('hub-ventes',null)"><div class="qa-ico" style="background:#EEF3E4">💰</div><div class="qa-lbl">Ventes</div></div>
     <!-- FIX (audit) : "Récurrent" (facturation récurrente) est un outil
          de vente, pas de suivi d'équipe — déplacé depuis "Suivi & équipe". -->
@@ -259,6 +260,7 @@
 <script src="js/rh.js?v=1789327380"></script>
 <script src="js/hubs.js?v=1789327380"></script>
 <script src="js/demandes-devis.js?v=1789327380"></script>
+<script src="js/fournisseurs.js?v=1790200000"></script>
 <script src="js/chat-ticket.js?v=1789327380"></script>
 <script src="js/partage-ecran.js?v=1789327380"></script>
 <script src="js/offres.js?v=1789327380"></script>
@@ -699,6 +701,83 @@
     <div class="pb"></div>
   </div>
 
+  <!-- FOURNISSEURS : LISTE -->
+  <div class="screen" id="screen-fournisseurs">
+    <div class="topbar">
+      <button class="back-btn" onclick="goScreen('hub-achats',null)">←</button>
+      <div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div>
+      <div class="topbar-right"><button onclick="ouvrirNouveauFournisseur()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">+ Ajouter</button></div>
+    </div>
+    <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Fournisseurs</div><div class="hero-sub-txt">Vos fournisseurs et leurs coordonnées</div></div>
+    <div style="padding:0 20px 10px"><input class="form-input" id="search-fournisseur-inp" placeholder="🔍 Rechercher un fournisseur..." oninput="renderFournisseurs()"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted)">Fournisseurs (<span id="fournisseurs-count">0</span>)</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span onclick="exporterFournisseursCSV()" style="font-size:11px;font-weight:500;color:#6B5F54;cursor:pointer">📥 Export CSV</span>
+        <div onclick="ouvrirNouveauFournisseur()" style="font-size:12px;font-weight:500;color:#B23A2E;cursor:pointer">+ Ajouter</div>
+      </div>
+    </div>
+    <div id="fournisseurs-list" style="padding:0 20px;display:flex;flex-direction:column;gap:8px"></div>
+    <div style="height:110px"></div>
+  </div>
+
+  <!-- FOURNISSEUR : FORMULAIRE (ajout + modification) -->
+  <div class="screen" id="screen-fournisseur-form">
+    <div class="form-header">
+      <div class="back-btn" onclick="goScreen('fournisseurs',null)">←</div>
+      <div class="form-title" id="fo-form-titre">Nouveau fournisseur</div>
+    </div>
+    <div class="pb"></div>
+    <div class="form-section"><div class="form-label">Nom / Raison sociale *</div><input class="form-input" id="fo-nom" placeholder="Ex: Matériaux du Centre"></div>
+    <div class="form-section"><div class="form-label">Téléphone</div><input class="form-input" id="fo-tel" type="tel" placeholder="+212 6XX XX XX XX"></div>
+    <div class="form-section"><div class="form-label">Email</div><input class="form-input" id="fo-email" type="email" placeholder="contact@fournisseur.ma"></div>
+    <div class="form-section"><div class="form-label">Ville</div><input class="form-input" id="fo-ville" placeholder="Ex: Meknès"></div>
+    <div style="padding:4px 20px 10px">
+      <span onclick="
+        const masque = document.getElementById('fo-options-avancees').style.display === 'none';
+        document.getElementById('fo-options-avancees').style.display = masque ? 'block' : 'none';
+        document.getElementById('fo-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (adresse, ICE, conditions...)';
+      " style="font-size:12px;color:#B23A2E;font-weight:600;cursor:pointer"><span id="fo-lbl-options">▼ Options avancées (adresse, ICE, conditions...)</span></span>
+    </div>
+    <div id="fo-options-avancees" style="display:none">
+      <div class="form-section"><div class="form-label">Adresse</div><input class="form-input" id="fo-adresse" placeholder="Ex: Zone industrielle, Meknès"></div>
+      <div class="form-section"><div class="form-label">ICE</div><input class="form-input" id="fo-ice" placeholder="Ex: 001234567000012"></div>
+      <div class="form-section"><div class="form-label">IF</div><input class="form-input" id="fo-if"></div>
+      <div class="form-section"><div class="form-label">Conditions de paiement</div><input class="form-input" id="fo-conditions" placeholder="Ex: 30 jours"></div>
+      <div class="form-section"><div class="form-label">Notes</div><input class="form-input" id="fo-notes" placeholder="Informations complémentaires..."></div>
+    </div>
+    <div class="send-options">
+      <button class="send-btn primary" onclick="sauvegarderFournisseur()"><div class="send-icon">💾</div>Sauvegarder</button>
+      <button class="send-btn secondary" onclick="goScreen('fournisseurs',null)"><div class="send-icon">✕</div>Annuler</button>
+    </div>
+    <div class="pb"></div>
+  </div>
+
+  <!-- FOURNISSEUR : FICHE -->
+  <div class="screen" id="screen-fournisseur-detail">
+    <div style="background:linear-gradient(135deg,#241F1B,#8E2E24);padding:20px">
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px" onclick="goScreen('fournisseurs',null)">← Retour</div>
+      <div style="font-size:22px;font-weight:700;color:#fff" id="fd-nom"></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px" id="fd-meta"></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:8px" id="fd-stats"></div>
+    </div>
+    <div style="padding:16px">
+      <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid #EAE4DA" id="fd-infos"></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button id="fd-btn-appel" style="flex:1;display:none;padding:10px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📞 Appeler</button>
+        <button id="fd-btn-whatsapp" style="flex:1;display:none;padding:10px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💬 WhatsApp</button>
+        <button id="fd-btn-email" style="flex:1;display:none;padding:10px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Email</button>
+      </div>
+      <button onclick="demanderDevisAuFournisseurFiche()" style="width:100%;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">📝 Demander un devis</button>
+      <button onclick="nouvelAchatPourFournisseurFiche()" style="width:100%;padding:12px;background:linear-gradient(135deg,#B23A2E,#8E2E24);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">🛒 Nouvel achat chez ce fournisseur</button>
+      <div style="display:flex;gap:8px">
+        <button onclick="modifierFournisseurFiche()" style="flex:1;padding:11px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✏️ Modifier</button>
+        <button onclick="supprimerFournisseurFiche()" style="flex:1;padding:11px;background:#fff;color:#B23A2E;border:1px solid #F0C9C4;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🗑️ Supprimer</button>
+      </div>
+    </div>
+    <div class="pb"></div>
+  </div>
+
   <!-- DEMANDER UN DEVIS À UN FOURNISSEUR -->
   <div class="screen" id="screen-demande-devis-fournisseur">
     <div class="form-header">
@@ -759,6 +838,10 @@
 
 <div class="screen" id="screen-achats">
   <div class="topbar"><button class="back-btn" onclick="goScreen('hub-achats',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)">Zel<span>to</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span></div></div>
+  <div style="display:flex;gap:8px;padding:12px 20px 4px">
+    <button onclick="loadFournisseurs();goScreen('fournisseurs',null)" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🏭 Mes fournisseurs</button>
+    <button onclick="ouvrirDemandeDevisFournisseur()" style="flex:1;padding:10px;background:#FBF0DA;color:#A67A16;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>
+  </div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="achats-recherche" placeholder="🔍 Rechercher par fournisseur ou référence..." oninput="renderAchats()"></div>
   <div style="padding:0 20px 8px">
