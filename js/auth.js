@@ -670,7 +670,7 @@ async function synchroniserProfilComptable() {
   try {
     // FIX annuaire : la table n'a pas de contrainte d'unicité sur id (l'upsert
     // échouait en silence, erreur 42P10). On fait donc : lire → modifier ou créer.
-    const rGet = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?id=eq.' + user.id + '&select=id,nom,cabinet&limit=1', { headers: h });
+    const rGet = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?email=eq.' + encodeURIComponent(user.email) + '&select=id,nom,cabinet&limit=1', { headers: h });
     const rows = rGet.ok ? ((await rGet.json()) || []) : [];
     let resp;
     if (rows.length) {
@@ -678,9 +678,9 @@ async function synchroniserProfilComptable() {
       const maj = { email: user.email };
       if (!rows[0].nom) maj.nom = donnees.nom;
       if (!rows[0].cabinet && donnees.cabinet) maj.cabinet = donnees.cabinet;
-      resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?id=eq.' + user.id, { method: 'PATCH', headers: h, body: JSON.stringify(maj) });
+      resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?email=eq.' + encodeURIComponent(user.email), { method: 'PATCH', headers: h, body: JSON.stringify(maj) });
     } else {
-      resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable', { method: 'POST', headers: h, body: JSON.stringify(Object.assign({ id: user.id }, donnees)) });
+      resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable', { method: 'POST', headers: h, body: JSON.stringify(Object.assign({ id: user.id, user_id: user.id }, donnees)) });
     }
     if (!resp.ok) {
       const detail = await resp.text().catch(function() { return ''; });
