@@ -665,23 +665,23 @@ async function synchroniserProfilComptable() {
   const user = sb.user;
   if (!user) return;
   const meta = user.user_metadata || {};
+  const h = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+  const donnees = { email: user.email, nom: meta.nom || user.email.split('@')[0], cabinet: meta.cabinet || '' };
   try {
-    const resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?on_conflict=id', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + sb.token,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify({
-        id: user.id,
-        email: user.email,
-        nom: meta.nom || user.email.split('@')[0],
-        cabinet: meta.cabinet || '',
-      })
-    });
-    // FIX annuaire : l'échec était silencieux — on vérifie maintenant la réponse
+    // FIX annuaire : la table n'a pas de contrainte d'unicité sur id (l'upsert
+    // échouait en silence, erreur 42P10). On fait donc : lire → modifier ou créer.
+    const rGet = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?id=eq.' + user.id + '&select=id,nom,cabinet&limit=1', { headers: h });
+    const rows = rGet.ok ? ((await rGet.json()) || []) : [];
+    let resp;
+    if (rows.length) {
+      // On ne remplace pas un nom/cabinet déjà personnalisé par la valeur par défaut
+      const maj = { email: user.email };
+      if (!rows[0].nom) maj.nom = donnees.nom;
+      if (!rows[0].cabinet && donnees.cabinet) maj.cabinet = donnees.cabinet;
+      resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable?id=eq.' + user.id, { method: 'PATCH', headers: h, body: JSON.stringify(maj) });
+    } else {
+      resp = await fetch(SUPABASE_URL + '/rest/v1/profils_comptable', { method: 'POST', headers: h, body: JSON.stringify(Object.assign({ id: user.id }, donnees)) });
+    }
     if (!resp.ok) {
       const detail = await resp.text().catch(function() { return ''; });
       console.warn('synchroniserProfilComptable:', resp.status, detail);
