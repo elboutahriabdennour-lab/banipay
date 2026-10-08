@@ -640,7 +640,7 @@ async function analyserReleve(releveId, skipNavigation) {
   // apprises avant de lancer le matching — sans ça, une règle enregistrée
   // lors d'une session précédente ne serait jamais prise en compte.
   if (!STATE.reglesRapprochement) await chargerReglesRapprochement();
-  const transactions = await lireReleveBancaire(releve.data);
+  const transactions = await lireReleveBancaire(releve.data, releve.nom_fichier);
   if (!transactions || !transactions.length) {
     // FIX (bug réel signalé — message trompeur, sans piste concrète) :
     // au lieu d'un simple toast qui laisse deviner, on montre
