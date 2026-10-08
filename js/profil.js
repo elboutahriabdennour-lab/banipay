@@ -135,6 +135,14 @@ async function saveProfil() {
     data.capital_social = isNaN(val) ? null : val;
     STATE.profil.capital_social = data.capital_social;
   }
+  // FIX (bug signalé : "invalid input syntax for type numeric") :
+  // objectif_mensuel est aussi une colonne numérique — une chaîne vide
+  // faisait échouer TOUTE la sauvegarde du profil. Vide -> null.
+  if ('objectif_mensuel' in data) {
+    const objectif = parseFloat(String(data.objectif_mensuel).replace(/\s/g, '').replace(',', '.'));
+    data.objectif_mensuel = isNaN(objectif) ? null : objectif;
+    STATE.profil.objectif_mensuel = data.objectif_mensuel;
+  }
   // date_creation est une colonne "date" — une chaîne vide y est
   // refusée par Postgres, contrairement à une colonne "text". Vide ->
   // null, comme pour capital_social ci-dessus.
