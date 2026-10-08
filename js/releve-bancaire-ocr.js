@@ -651,7 +651,17 @@ async function analyserReleve(releveId, skipNavigation) {
     _afficherDiagnosticEchecLectureReleve();
     return false;
   }
-  const avecSuggestions = suggererRapprochements(transactions);
+  // NOUVEAU (retour utilisateur) : le titulaire valide la lecture (en-têtes
+  // ignorés, 1ère → dernière opération, contrôle des soldes) avant tout rapprochement.
+  let transactionsValidees = transactions;
+  if (typeof window._validerLectureReleve === 'function') {
+    transactionsValidees = await window._validerLectureReleve(transactions, STATE._resumeReleve);
+    if (!transactionsValidees || !transactionsValidees.length) {
+      showToast('Import annulé — rien n\'a été enregistré', 'error');
+      return false;
+    }
+  }
+  const avecSuggestions = suggererRapprochements(transactionsValidees);
   STATE._transactionsReleveActuel = avecSuggestions;
   STATE._releveActuelId = releveId;
   _sauvegarderTransactionsReleveLocal(releveId, avecSuggestions);
@@ -1968,3 +1978,593 @@ function _afficherDiagnosticEchecLectureReleve() {
   document.body.appendChild(overlay);
   document.getElementById('diag-releve-texte').value = contenuDiag;
 }
+
+// ═════════════════════════════════════════════════════════════
+// ZELTO — releve-formats.js
+// Lecture des relevés bancaires dans TOUS les formats courants.
+// À charger APRÈS js/releve-bancaire-ocr.js : remplace lireReleveBancaire().
+//
+// Formats pris en charge :
+//   PDF texte, PDF scanné (OCR), photo / scan (JPG, PNG, WEBP, BMP, GIF),
+//   Excel (.xlsx .xls .xlsm .xlsb .ods), CSV / TSV / TXT (séparateur et
+//   encodage détectés), OFX / QFX, QIF, MT940 (.sta .mt940 .swi), HTML.
+//
+// Tout est lu dans le navigateur ; les transactions sont renvoyées dans le
+// même format qu'avant : { dateBrute, description, montant } (montant signé).
+
+(function () {
+  function _octetsDepuisDataUrl(dataUrl) {
+    var base64 = String(dataUrl).split(',')[1] || '';
+    var bin = atob(base64);
+    var octets = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) octets[i] = bin.charCodeAt(i);
+    return octets;
+  }
+
+  // UTF-8 si valide, sinon Windows-1252 (cas fréquent des exports bancaires)
+  function _texteDepuisOctets(octets) {
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(octets).replace(/^﻿/, ''); }
+    catch (e) { return new TextDecoder('windows-1252').decode(octets); }
+  }
+
+  function _extension(nom) {
+    var m = String(nom || '').toLowerCase().match(/\.([a-z0-9]+)$/);
+    return m ? m[1] : '';
+  }
+
+  function _nombre(valeur) {
+    var s = String(valeur == null ? '' : valeur).trim();
+    if (!s) return NaN;
+    var negatif = /^\(.*\)$/.test(s) || /-\s*$/.test(s) || /^-/.test(s);
+    s = s.replace(/[()\s_ A-Za-z€$]/g, '').replace(/^-|-$/g, '');
+    // 1.234,56 (FR/MA) ou 1,234.56 (EN)
+    if (s.indexOf(',') > -1 && s.indexOf('.') > -1) {
+      if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+      else s = s.replace(/,/g, '');
+    } else if (s.indexOf(',') > -1) {
+      s = s.replace(',', '.');
+    }
+    var n = parseFloat(s);
+    return isNaN(n) ? NaN : (negatif ? -Math.abs(n) : n);
+  }
+
+  function _dateFR(d) {
+    return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  }
+
+  // ───────── Tableaux (CSV, Excel, HTML) : détection de la ligne d'en-têtes ─────────
+  var MOTS_MONTANT = ['montant', 'amount', 'débit', 'debit', 'crédit', 'credit', 'somme', 'sortie', 'entrée', 'entree', 'retrait', 'dépôt', 'depot', 'withdrawal', 'deposit'];
+
+  function _lignesDepuisRangees(rangees) {
+    var idx = -1;
+    for (var i = 0; i < Math.min(rangees.length, 60); i++) {
+      var cells = (rangees[i] || []).map(function (c) { return String(c == null ? '' : c).toLowerCase().trim(); });
+      var aDate = cells.some(function (c) { return c.indexOf('date') > -1; });
+      var aMontant = cells.some(function (c) { return MOTS_MONTANT.some(function (m) { return c.indexOf(m) > -1; }); });
+      if (aDate && aMontant) { idx = i; break; }
+    }
+    if (idx < 0) return [];
+    var entetes = (rangees[idx] || []).map(function (c, k) {
+      var nom = String(c == null ? '' : c).trim();
+      return nom || ('col' + k);
+    });
+    var vus = {};
+    entetes = entetes.map(function (nom) { vus[nom] = (vus[nom] || 0) + 1; return vus[nom] > 1 ? nom + ' ' + vus[nom] : nom; });
+    var lignes = [];
+    for (var j = idx + 1; j < rangees.length; j++) {
+      // Cellules "date" Excel : SheetJS peut décaler de quelques secondes (jour précédent) -> on arrondit au jour le plus proche
+      var r = (rangees[j] || []).map(function (c) {
+        return (c instanceof Date && !isNaN(c.getTime())) ? _dateFR(new Date(c.getTime() + 12 * 3600 * 1000)) : c;
+      });
+      if (!r.some(function (c) { return String(c == null ? '' : c).trim() !== ''; })) continue;
+      var o = {};
+      entetes.forEach(function (nom, k) { o[nom] = r[k] === undefined ? '' : r[k]; });
+      lignes.push(o);
+    }
+    return lignes;
+  }
+
+  function _transactionsDepuisRangees(rangees) {
+    var lignes = _lignesDepuisRangees(rangees);
+    if (!lignes.length) return [];
+    return _extraireTransactionsReleveExcel(lignes);
+  }
+
+  // ───────── CSV / TSV : séparateur détecté, guillemets gérés ─────────
+  function _parserCSV(texte) {
+    var echantillon = texte.split(/\r?\n/).slice(0, 15).join('\n');
+    var sep = ';', meilleur = -1;
+    [';', ',', '\t', '|'].forEach(function (s) {
+      var n = echantillon.split(s).length - 1;
+      if (n > meilleur) { meilleur = n; sep = s; }
+    });
+    var rangees = [], rang = [], champ = '', guillemets = false;
+    for (var i = 0; i < texte.length; i++) {
+      var c = texte[i];
+      if (guillemets) {
+        if (c === '"') { if (texte[i + 1] === '"') { champ += '"'; i++; } else guillemets = false; }
+        else champ += c;
+      } else if (c === '"') guillemets = true;
+      else if (c === sep) { rang.push(champ); champ = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && texte[i + 1] === '\n') i++;
+        rang.push(champ); champ = ''; rangees.push(rang); rang = [];
+      } else champ += c;
+    }
+    if (champ !== '' || rang.length) { rang.push(champ); rangees.push(rang); }
+    return rangees;
+  }
+
+  // ───────── OFX / QFX ─────────
+  function _transactionsOFX(texte) {
+    var res = [];
+    var blocs = texte.split(/<STMTTRN>/i).slice(1);
+    blocs.forEach(function (bloc) {
+      function champ(nom) {
+        var m = bloc.match(new RegExp('<' + nom + '>([^<\\r\\n]*)', 'i'));
+        return m ? m[1].trim() : '';
+      }
+      var montant = _nombre(champ('TRNAMT'));
+      var d = champ('DTPOSTED').match(/^(\d{4})(\d{2})(\d{2})/);
+      if (isNaN(montant) || !d) return;
+      var description = [champ('NAME'), champ('MEMO')].filter(Boolean).join(' ').trim() || 'Transaction';
+      res.push({ dateBrute: d[3] + '/' + d[2] + '/' + d[1], description: description.slice(0, 80), montant: montant });
+    });
+    return res;
+  }
+
+  // ───────── QIF ─────────
+  function _transactionsQIF(texte) {
+    var res = [], cur = {};
+    texte.split(/\r?\n/).forEach(function (l) {
+      if (!l) return;
+      var code = l[0], val = l.slice(1).trim();
+      if (code === '^') {
+        if (cur.T !== undefined && cur.D) {
+          var m = String(cur.D).match(/(\d{1,2})[\/\-.'](\d{1,2})[\/\-.'](\d{2,4})/);
+          var montant = _nombre(cur.T);
+          if (m && !isNaN(montant)) {
+            var an = m[3].length === 2 ? '20' + m[3] : m[3];
+            res.push({ dateBrute: m[1].padStart(2, '0') + '/' + m[2].padStart(2, '0') + '/' + an, description: String(cur.P || cur.M || 'Transaction').slice(0, 80), montant: montant });
+          }
+        }
+        cur = {};
+      } else if ('DTPM'.indexOf(code) > -1) cur[code] = val;
+    });
+    return res;
+  }
+
+  // ───────── MT940 (SWIFT) ─────────
+  function _transactionsMT940(texte) {
+    var res = [];
+    var lignes = texte.split(/\r?\n/);
+    for (var i = 0; i < lignes.length; i++) {
+      var m = lignes[i].match(/^:61:(\d{2})(\d{2})(\d{2})(?:\d{4})?(R?[CD])[A-Z]?([\d,]+)/);
+      if (!m) continue;
+      var libelle = '';
+      var k = i + 1;
+      if (lignes[k] && lignes[k].indexOf(':86:') === 0) {
+        libelle = lignes[k].slice(4);
+        k++;
+        while (lignes[k] && !/^:\d{2}[A-Z]?:/.test(lignes[k]) && lignes[k] !== '-') { libelle += ' ' + lignes[k]; k++; }
+      }
+      var montant = parseFloat(m[5].replace(',', '.'));
+      if (isNaN(montant)) continue;
+      if (m[4].indexOf('D') > -1) montant = -montant;
+      res.push({ dateBrute: m[3] + '/' + m[2] + '/20' + m[1], description: (libelle.replace(/\?\d{2}/g, ' ').replace(/\s+/g, ' ').trim() || 'Transaction').slice(0, 80), montant: montant });
+    }
+    return res;
+  }
+
+  // ───────── HTML (tableau enregistré depuis l'e-banking) ─────────
+  function _transactionsHTML(texte) {
+    var doc = new DOMParser().parseFromString(texte, 'text/html');
+    var rangees = [];
+    doc.querySelectorAll('tr').forEach(function (tr) {
+      var cells = Array.prototype.map.call(tr.querySelectorAll('th,td'), function (c) { return c.textContent.replace(/\s+/g, ' ').trim(); });
+      if (cells.length) rangees.push(cells);
+    });
+    var t = _transactionsDepuisRangees(rangees);
+    return t.length ? t : _extraireTransactionsReleve(doc.body ? doc.body.innerText || doc.body.textContent || '' : '');
+  }
+
+  // ───────── Excel / ODS (tous les onglets) ─────────
+  async function _transactionsExcel(octets) {
+    if (typeof _chargerSheetJS === 'function') await _chargerSheetJS();
+    if (typeof XLSX === 'undefined') {
+      STATE._derniereErreurLectureReleve = 'La bibliothèque de lecture Excel (SheetJS) n\'a pas pu être chargée — vérifiez votre connexion internet et réessayez.';
+      return null;
+    }
+    var classeur = XLSX.read(octets, { type: 'array', cellDates: true });
+    var meilleures = [];
+    for (var s = 0; s < classeur.SheetNames.length; s++) {
+      var feuille = classeur.Sheets[classeur.SheetNames[s]];
+      var rangees = XLSX.utils.sheet_to_json(feuille, { header: 1, defval: '', raw: true });
+      var t = _transactionsDepuisRangees(rangees);
+      if (!t.length) {
+        // Ancienne méthode (première ligne = en-têtes) en secours
+        var lignes = XLSX.utils.sheet_to_json(feuille, { defval: '' });
+        t = _extraireTransactionsReleveExcel(lignes);
+      }
+      if (t.length > meilleures.length) meilleures = t;
+    }
+    return meilleures;
+  }
+
+  // ───────── PDF : texte, puis OCR si le PDF est un scan ─────────
+  // ───────── PDF : lecture structurée (colonnes Débit / Crédit, entêtes ignorés) ─────────
+  var RE_DATE_DEBUT = /^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?(?=$|\s)/;
+  var RE_MONTANT = /^[-+(]?\s*\d{1,3}(?:[ .  ]\d{3})*[.,]\d{2}\s*[)-]?\s*(?:DB|CR|D|C)?$|^[-+(]?\s*\d+[.,]\d{2}\s*[)-]?\s*(?:DB|CR|D|C)?$/i;
+  var RE_PIED = /(solde|total|report|page\s*\d|^page|capital|r\.?c\.?\s*n|ice\s*:|siège|siege|agr[ée]ment|reproduit|veuillez|conform[ée]ment|sous r[ée]serve|arr[êe]t[ée]|cnss|patente|identifiant fiscal|if\s*:|swift|bic\b|tel\b|t[ée]l[ée]phone|fax|www\.|@)/i;
+  var BANQUES = ['Attijariwafa bank', 'Bank of Africa', 'BMCE', 'CIH Bank', 'Banque Populaire', 'Société Générale', 'BMCI', 'Crédit du Maroc', 'Crédit Agricole du Maroc', 'Al Barid Bank', 'CFG Bank', 'Umnia', 'Bank Al Yousr', 'Arab Bank', 'Citibank', 'BNP Paribas', 'Crédit Agricole', 'LCL', 'Boursorama', 'Qonto', 'Revolut', 'Caisse d\'Epargne', 'Banque Postale', 'Crédit Mutuel', 'CIC', 'HSBC', 'Shine', 'N26'];
+
+  // Regroupe les éléments de texte d'une page en lignes, puis en "cellules" (colonnes)
+  function _lignesPage(items) {
+    var tous = items.filter(function (it) { return it.str && it.str.trim(); }).map(function (it) {
+      return { s: it.str, x: it.transform[4], y: it.transform[5], w: it.width || it.str.length * 4, h: it.height || 9 };
+    });
+    tous.sort(function (a, b) { return b.y - a.y || a.x - b.x; });
+    var lignes = [];
+    tous.forEach(function (it) {
+      var l = lignes.length ? lignes[lignes.length - 1] : null;
+      if (l && Math.abs(l.y - it.y) <= 3) l.items.push(it);
+      else lignes.push({ y: it.y, items: [it] });
+    });
+    return lignes.map(function (l) {
+      l.items.sort(function (a, b) { return a.x - b.x; });
+      var cellules = [];
+      l.items.forEach(function (it) {
+        var c = cellules[cellules.length - 1];
+        if (c && it.x - (c.x + c.w) < 6) {
+          var trou = it.x - (c.x + c.w);
+          c.s += (trou > 0.8 ? ' ' : '') + it.s;
+          c.w = it.x + it.w - c.x;
+        } else cellules.push({ s: it.s, x: it.x, w: it.w });
+      });
+      cellules.forEach(function (c) { c.s = c.s.replace(/\s+/g, ' ').trim(); c.c = c.x + c.w / 2; c.r = c.x + c.w; });
+      return { y: l.y, cellules: cellules.filter(function (c) { return c.s; }) };
+    });
+  }
+
+  function _anneeDe(t) { return t < 100 ? (t < 70 ? 2000 + t : 1900 + t) : t; }
+
+  // Cœur du lecteur : prend des lignes de cellules, renvoie transactions + résumé.
+  // Fonction pure (testable sans navigateur).
+  function _analyserLignesReleve(lignes, options) {
+    options = options || {};
+    var colonnes = null;              // {debit:{c,r}, credit:{c,r}, solde:{c,r}, montant:{c,r}}
+    var txs = [];
+    var derniere = null, dernierY = null;
+    var avant = [];                   // textes avant la 1re transaction (entêtes)
+    var resume = { soldeInitial: null, soldeFinal: null };
+    var anneeRef = null;
+    var texteComplet = lignes.map(function (l) { return l.cellules.map(function (c) { return c.s; }).join(' '); }).join('\n');
+    var my = texteComplet.match(/\b(\d{1,2})[\/.\-](\d{1,2})[\/.\-](20\d{2})\b/);
+    if (my) anneeRef = parseInt(my[3], 10);
+    if (!anneeRef) anneeRef = (options.anneeDefaut || new Date().getFullYear());
+
+    function amountsOf(cells) { return cells.filter(function (c) { return RE_MONTANT.test(c.s); }); }
+
+    function detecterColonnes(cells) {
+      var res = {};
+      cells.forEach(function (c) {
+        var t = c.s.toLowerCase();
+        if (/^(d[ée]bit|retrait|sortie|d[ée]bits?)/.test(t)) res.debit = c;
+        else if (/^(cr[ée]dit|versement|entr[ée]e|d[ée]p[ôo]t|cr[ée]dits?)/.test(t)) res.credit = c;
+        else if (/^solde/.test(t)) res.solde = c;
+        else if (/^montant/.test(t)) res.montant = c;
+      });
+      return (res.debit && res.credit) || res.montant ? res : null;
+    }
+
+    function signeParColonne(cell) {
+      if (!colonnes) return null;
+      var cands = [];
+      ['debit', 'credit', 'solde', 'montant'].forEach(function (k) {
+        var h = colonnes[k]; if (!h) return;
+        cands.push({ k: k, d: Math.min(Math.abs(cell.c - h.c), Math.abs(cell.r - h.r)) });
+      });
+      if (!cands.length) return null;
+      cands.sort(function (a, b) { return a.d - b.d; });
+      return cands[0].k;
+    }
+
+    function signeTexte(t, desc) {
+      var s = t.trim();
+      if (/^\(.*\)$/.test(s) || /-\s*$/.test(s) || /^-/.test(s) || /(DB|D)$/i.test(s)) return -1;
+      if (/^\+/.test(s) || /(CR|C)$/i.test(s)) return 1;
+      var dn = _sansAccentsLocal(desc.toLowerCase());
+      var mots = ['vir emis', 'virement emis', 'prlv', 'prelevement', 'retrait', 'paiement', 'cheque emis', 'frais', 'commission', 'agios', 'echeance', 'cotisation'];
+      if (mots.some(function (m) { return dn.indexOf(m) > -1; })) return -1;
+      return 1;
+    }
+    function _sansAccentsLocal(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+
+    lignes.forEach(function (ligne) {
+      var cells = ligne.cellules;
+      if (!cells.length) return;
+      var texte = cells.map(function (c) { return c.s; }).join(' ');
+
+      var col = detecterColonnes(cells);
+      if (col) { colonnes = col; derniere = null; return; }
+
+      // Soldes initial / final (hors opérations)
+      if (/solde|ancien\s+report/i.test(texte)) {
+        var finalMot = /(nouveau\s+solde|solde\s*(final|fin\b|de\s+cl[ôo]ture|cl[ôo]ture|en\s+fin)|solde\s+cr[ée]diteur|solde\s+d[ée]biteur)/i.test(texte);
+        var initMot = /(solde\s*(initial|pr[ée]c[ée]dent|ant[ée]rieur|d[ée]but|report[ée]|de\s+d[ée]part)|ancien\s+solde|report\s+solde)/i.test(texte);
+        var auMot = /solde\s+au\s+\d/i.test(texte);
+        if (finalMot || initMot || auMot) {
+          var am = amountsOf(cells).pop();
+          if (am) {
+            var v = Math.abs(_nombre(am.s));
+            var kc = signeParColonne(am);
+            var neg = kc === 'debit' || /d[ée]biteur/i.test(texte) || /^-|-$|^\(/.test(am.s.trim());
+            var val = neg ? -v : v;
+            var commeFinal = finalMot || (auMot && !initMot && txs.length > 0);
+            if (commeFinal) resume.soldeFinal = val;
+            else if (resume.soldeInitial === null) resume.soldeInitial = val;
+          }
+          derniere = null; return;
+        }
+      }
+
+      var d = texte.match(RE_DATE_DEBUT) && cells[0].s.match(RE_DATE_DEBUT);
+      if (!d) {
+        // Ligne sans date : suite de libellé de l'opération précédente ?
+        if (derniere && !amountsOf(cells).length && !RE_PIED.test(texte) && texte.length < 70 && dernierY - ligne.y < 22) {
+          derniere.description = (derniere.description + ' ' + texte).trim().slice(0, 90);
+          dernierY = ligne.y;
+        } else if (!txs.length) {
+          avant.push(texte);
+        } else {
+          derniere = null;
+        }
+        return;
+      }
+
+      // Ligne d'opération : date, [date valeur], libellé, montant(s)
+      var montants = amountsOf(cells.slice(1));
+      if (!montants.length) { if (!txs.length) avant.push(texte); return; }
+      var jour = parseInt(d[1], 10), mois = parseInt(d[2], 10);
+      if (jour < 1 || jour > 31 || mois < 1 || mois > 12) { return; }
+      var an = d[3] ? _anneeDe(parseInt(d[3], 10)) : anneeRef;
+      var dateBrute = String(jour).padStart(2, '0') + '/' + String(mois).padStart(2, '0') + '/' + an;
+
+      var libCells = cells.slice(1).filter(function (c) {
+        return montants.indexOf(c) < 0 && !(RE_DATE_DEBUT.test(c.s) && c.s.length <= 10);
+      });
+      var description = libCells.map(function (c) { return c.s; }).join(' ').replace(/[|;]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 90);
+
+      // Choix du montant : on ignore la colonne "solde" courant
+      var retenu = null, genre = null;
+      montants.forEach(function (m) {
+        var k = signeParColonne(m);
+        if (k === 'solde') return;
+        if (!retenu || (k === 'debit' || k === 'credit')) { retenu = m; genre = k; }
+      });
+      if (!retenu) { retenu = montants[0]; genre = null; }
+      var valeur = Math.abs(_nombre(retenu.s));
+      if (isNaN(valeur) || valeur === 0) return;
+      var signe = genre === 'debit' ? -1 : genre === 'credit' ? 1 : signeTexte(retenu.s, description);
+      if (description.length < 2) description = 'Opération ' + dateBrute;
+
+      derniere = { dateBrute: dateBrute, description: description, montant: signe * valeur };
+      dernierY = ligne.y;
+      txs.push(derniere);
+    });
+
+    // Résumé
+    var tout = avant.join('\n');
+    var titulaire = null;
+    var mt = tout.match(/(?:titulaire|intitul[ée]\s*(?:du\s*compte)?|nom\s*(?:du\s*client|et\s*pr[ée]nom)?|client|raison\s*sociale|soci[ée]t[ée]|m(?:onsieur|me|adame|\.)?)\s*[:\-]\s*([^\n]{3,60})/i);
+    if (mt) titulaire = mt[1].replace(/\s{2,}.*$/, '').trim();
+    var banque = null;
+    for (var i = 0; i < BANQUES.length; i++) {
+      if (new RegExp(BANQUES[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(texteComplet)) { banque = BANQUES[i]; break; }
+    }
+    var compte = null;
+    var mc = tout.match(/(?:rib|compte|iban)[^\d\n]{0,25}((?:[A-Z]{2}\d{2}[ ]?)?[\d ]{12,34})/i);
+    if (mc) compte = mc[1].replace(/\s+/g, ' ').trim();
+    var periode = null;
+    var mp = tout.match(/du\s+(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})\s+au\s+(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})/i);
+    if (mp) periode = mp[1] + ' → ' + mp[2];
+    resume.titulaire = titulaire; resume.banque = banque; resume.compte = compte; resume.periode = periode;
+    return { transactions: txs, resume: resume };
+  }
+
+  async function _transactionsPDF(octets) {
+    try { await _chargerPdfJs(); } catch (e) {
+      STATE._derniereErreurLectureReleve = 'La bibliothèque de lecture PDF (PDF.js) n\'a pas pu être chargée — vérifiez votre connexion internet et réessayez.';
+      return null;
+    }
+    var doc = await pdfjsLib.getDocument({ data: octets.slice() }).promise;
+    var toutesLignes = [];
+    var texte = '';
+    var nbPages = Math.min(doc.numPages, 40);
+    for (var p = 1; p <= nbPages; p++) {
+      var page = await doc.getPage(p);
+      var contenu = await page.getTextContent();
+      var lp = _lignesPage(contenu.items);
+      lp.forEach(function (l) { l.y = l.y - p * 10000; });   // ordre global page par page
+      toutesLignes = toutesLignes.concat(lp);
+      lp.forEach(function (l) { texte += l.cellules.map(function (c) { return c.s; }).join('  ') + '\n'; });
+    }
+    var res = _analyserLignesReleve(toutesLignes);
+    if (res.transactions.length) {
+      STATE._resumeReleve = res.resume;
+      STATE._dernierTexteReleveBrut = texte;
+      return res.transactions;
+    }
+    // Repli : ancien lecteur ligne à ligne sur le texte brut
+    var t = _extraireTransactionsReleve(texte);
+    if (t.length) return t;
+    // Pas de texte exploitable -> PDF scanné : lecture par OCR
+    if (texte.replace(/\s/g, '').length < 80) {
+      try { if (typeof _chargerTesseract === 'function') await _chargerTesseract(); } catch (e) {}
+      if (typeof Tesseract === 'undefined') {
+        STATE._derniereErreurLectureReleve = 'PDF scanné : la reconnaissance de texte (Tesseract.js) n\'a pas pu être chargée — vérifiez votre connexion internet.';
+        return null;
+      }
+      var ocr = '';
+      var pagesOCR = Math.min(doc.numPages, 12);
+      for (var q = 1; q <= pagesOCR; q++) {
+        var pg = await doc.getPage(q);
+        var vp = pg.getViewport({ scale: 2 });
+        var cv = document.createElement('canvas');
+        cv.width = vp.width; cv.height = vp.height;
+        await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+        var r = await Tesseract.recognize(cv, 'fra', { logger: function () {} });
+        ocr += (r.data.text || '') + '\n';
+      }
+      // L'OCR donne du texte sans colonnes : on découpe sur les grands espaces
+      var lignesOCR = ocr.split('\n').map(function (ln, i) {
+        var parts = ln.trim().split(/\s{2,}|\t/).filter(Boolean);
+        var cells = parts.map(function (s, k) { return { s: s, x: k * 100, w: 90, c: k * 100 + 45, r: k * 100 + 90 }; });
+        return { y: -i * 12, cellules: cells };
+      });
+      var r2 = _analyserLignesReleve(lignesOCR);
+      if (r2.transactions.length) { STATE._resumeReleve = r2.resume; return r2.transactions; }
+      return _extraireTransactionsReleve(ocr);
+    }
+    return t;
+  }
+
+  async function _transactionsImage(dataUrl) {
+    return await _lireReleveBancaireImage(dataUrl);
+  }
+
+  // ───────── Routeur principal ─────────
+  function _normaliserDates(transactions) {
+    if (!transactions) return transactions;
+    transactions.forEach(function (t) {
+      var m = String(t.dateBrute || '').match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+      if (m) t.dateBrute = m[3].padStart(2, '0') + '/' + m[2].padStart(2, '0') + '/' + m[1];
+    });
+    return transactions;
+  }
+
+  var _lireBrut = null;
+  window.lireReleveBancaire = async function (fichierDataUrl, nomFichier) {
+    return _normaliserDates(await _lireReleveBancaireTousFormats(fichierDataUrl, nomFichier));
+  };
+
+  async function _lireReleveBancaireTousFormats(fichierDataUrl, nomFichier) {
+    STATE._derniereErreurLectureReleve = null;
+    STATE._resumeReleve = null;
+    try {
+      var mime = ((String(fichierDataUrl).match(/^data:([^;,]*)/) || [])[1] || '').toLowerCase();
+      var ext = _extension(nomFichier);
+      var octets = _octetsDepuisDataUrl(fichierDataUrl);
+      var debut = String.fromCharCode.apply(null, Array.prototype.slice.call(octets.slice(0, 8)));
+
+      var estPDF = ext === 'pdf' || mime === 'application/pdf' || debut.indexOf('%PDF') === 0;
+      var estImage = /^(jpg|jpeg|png|webp|bmp|gif|tif|tiff|heic|heif)$/.test(ext) || /^image\//.test(mime);
+      var estExcel = /^(xlsx|xls|xlsm|xlsb|ods)$/.test(ext) || (debut.indexOf('PK') === 0 && ext !== 'docx') || debut.indexOf('\xD0\xCF\x11\xE0') === 0;
+
+      if (/^(heic|heif)$/.test(ext) || /image\/hei[cf]/.test(mime)) {
+        STATE._derniereErreurLectureReleve = 'Format photo HEIC (iPhone) non lisible par le navigateur. Réglez l\'appareil photo sur "Le plus compatible" (JPG) ou faites une capture d\'écran.';
+        return null;
+      }
+      if (/^(doc|docx)$/.test(ext)) {
+        STATE._derniereErreurLectureReleve = 'Les fichiers Word ne sont pas lisibles. Exportez le relevé en PDF, Excel ou CSV depuis votre banque.';
+        return null;
+      }
+      if (estPDF) return await _transactionsPDF(octets);
+      if (estImage) return await _transactionsImage(fichierDataUrl);
+      if (estExcel) {
+        var tx = await _transactionsExcel(octets);
+        if (tx && tx.length) return tx;
+        if (ext === 'xls' || ext === 'xlsx' || ext === 'xlsm' || ext === 'xlsb' || ext === 'ods') return tx;
+      }
+
+      // Formats texte : OFX, QIF, MT940, CSV, TXT, HTML...
+      var texte = _texteDepuisOctets(octets);
+      var t;
+      if (/<OFX>|OFXHEADER|<STMTTRN>/i.test(texte)) { t = _transactionsOFX(texte); if (t.length) return t; }
+      if (/^:20:|:61:/m.test(texte)) { t = _transactionsMT940(texte); if (t.length) return t; }
+      if (/^!Type:/mi.test(texte) || ext === 'qif') { t = _transactionsQIF(texte); if (t.length) return t; }
+      if (/<table|<html|<tr/i.test(texte) && /^(html|htm)$/.test(ext || 'html')) { t = _transactionsHTML(texte); if (t.length) return t; }
+      t = _transactionsDepuisRangees(_parserCSV(texte));
+      if (t.length) { STATE._dernierTexteReleveBrut = texte; return t; }
+      // Dernier recours : texte brut (relevé copié-collé dans un .txt)
+      return _extraireTransactionsReleve(texte);
+    } catch (e) {
+      console.warn('lireReleveBancaire:', e);
+      STATE._derniereErreurLectureReleve = 'Fichier illisible : ' + (e && e.message || 'erreur inconnue');
+      return null;
+    }
+  }
+
+  // ───────── Validation par le titulaire après l'analyse ─────────
+  function _esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function _mad(n) { return (n < 0 ? '-' : '') + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ').replace('.', ',') ; }
+
+  // Affiche le résumé de la lecture ; renvoie la liste validée (ou null si refusée)
+  window._validerLectureReleve = function (transactions, resume) {
+    return new Promise(function (resolve) {
+      resume = resume || {};
+      var debit = 0, credit = 0;
+      transactions.forEach(function (t) { if (t.montant < 0) debit += -t.montant; else credit += t.montant; });
+      var dates = transactions.map(function (t) { var m = String(t.dateBrute).match(/(\d+)\/(\d+)\/(\d+)/); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : null; }).filter(Boolean);
+      var periode = resume.periode || (dates.length ? (_dateFR(new Date(Math.min.apply(null, dates))) + ' → ' + _dateFR(new Date(Math.max.apply(null, dates)))) : '—');
+
+      var controle = '';
+      if (resume.soldeInitial != null && resume.soldeFinal != null) {
+        var ecart = Math.round((resume.soldeInitial + credit - debit - resume.soldeFinal) * 100) / 100;
+        controle = Math.abs(ecart) < 0.05
+          ? '<div style="background:#E8F5EC;color:#1E7B45;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">✅ <b>Contrôle OK</b> : solde initial + crédits − débits = solde final. Aucune opération ne semble manquer.</div>'
+          : '<div style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">⚠️ <b>Écart de ' + _mad(ecart) + ' MAD</b> entre les soldes du relevé et les opérations lues. Il manque peut-être une ligne, ou un sens (débit/crédit) est faux. Vérifiez avant de valider.</div>';
+      } else {
+        controle = '<div style="background:#FFF6E5;color:#8A5A00;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">ℹ️ Soldes de début/fin non trouvés dans le fichier : le contrôle automatique n\'est pas possible. Comparez avec votre relevé papier.</div>';
+      }
+      var nomEnt = (typeof STATE !== 'undefined' && STATE.profil && STATE.profil.raison) || '';
+      var alerteTit = '';
+      if (resume.titulaire && nomEnt && typeof _similariteNom === 'function' && _similariteNom(nomEnt, resume.titulaire) < 0.3) {
+        alerteTit = '<div style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">⚠️ Le titulaire lu (<b>' + _esc(resume.titulaire) + '</b>) ne ressemble pas au nom de votre entreprise (<b>' + _esc(nomEnt) + '</b>). Est-ce bien votre relevé ?</div>';
+      }
+
+      var lignesHtml = transactions.map(function (t, i) {
+        var col = t.montant < 0 ? '#B3261E' : '#1E7B45';
+        return '<label style="display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid #EFE9DF;font-size:12px;cursor:pointer">' +
+          '<input type="checkbox" data-i="' + i + '" checked style="flex:none;width:18px;height:18px">' +
+          '<span style="flex:none;width:72px;color:#6B5F54">' + _esc(t.dateBrute) + '</span>' +
+          '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(t.description) + '</span>' +
+          '<b style="flex:none;color:' + col + '">' + _mad(t.montant) + '</b></label>';
+      }).join('');
+
+      var ov = document.createElement('div');
+      ov.id = 'releve-validation';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(30,25,20,.55);display:flex;align-items:flex-end;justify-content:center';
+      ov.innerHTML =
+        '<div style="background:#FBF8F3;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden">' +
+        '<div style="padding:16px 18px 8px"><div style="font-size:17px;font-weight:700;color:#2B2118">🔍 Vérifiez la lecture du relevé</div>' +
+        '<div style="font-size:12px;color:#6B5F54;margin-top:2px">Les en-têtes ont été ignorés : lecture de la 1ère à la dernière opération.</div></div>' +
+        '<div style="padding:0 18px;overflow:auto;flex:1">' +
+        '<div style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:10px">' +
+        '<div>🏦 <b>Banque :</b> ' + _esc(resume.banque || '—') + '</div>' +
+        '<div>👤 <b>Titulaire :</b> ' + _esc(resume.titulaire || '—') + '</div>' +
+        '<div>🔢 <b>Compte :</b> ' + _esc(resume.compte || '—') + '</div>' +
+        '<div>📅 <b>Période :</b> ' + _esc(periode) + '</div>' +
+        (resume.soldeInitial != null ? '<div>➡️ <b>Solde initial :</b> ' + _mad(resume.soldeInitial) + ' MAD</div>' : '') +
+        (resume.soldeFinal != null ? '<div>⬅️ <b>Solde final :</b> ' + _mad(resume.soldeFinal) + ' MAD</div>' : '') +
+        '<div style="margin-top:4px"><b>' + transactions.length + '</b> opérations — Débits <b style="color:#B3261E">' + _mad(-debit) + '</b> · Crédits <b style="color:#1E7B45">' + _mad(credit) + '</b></div></div>' +
+        alerteTit + controle +
+        '<div style="font-size:11px;color:#9C9186;margin:4px 0">Décochez les lignes qui ne sont pas de vraies opérations.</div>' +
+        '<div id="rv-liste" style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:2px 8px;margin-bottom:12px">' + lignesHtml + '</div></div>' +
+        '<div style="display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #EFE9DF;background:#FBF8F3">' +
+        '<button id="rv-non" style="flex:1;padding:13px;border-radius:12px;border:1px solid #E3DCCF;background:#fff;font-size:14px;font-weight:600;color:#6B5F54">✖ Ce n\'est pas bon</button>' +
+        '<button id="rv-oui" style="flex:1.4;padding:13px;border-radius:12px;border:none;background:#2F7F82;color:#fff;font-size:14px;font-weight:700">✅ Je valide</button></div></div>';
+      document.body.appendChild(ov);
+      function fermer(res) { try { ov.remove(); } catch (e) {} resolve(res); }
+      ov.querySelector('#rv-non').onclick = function () { fermer(null); };
+      ov.querySelector('#rv-oui').onclick = function () {
+        var gardees = [];
+        ov.querySelectorAll('input[type=checkbox]').forEach(function (cb) { if (cb.checked) gardees.push(transactions[+cb.getAttribute('data-i')]); });
+        fermer(gardees);
+      };
+    });
+  };
+
+  // Exposé pour les tests
+  window._releveFormats = { analyserLignesReleve: _analyserLignesReleve, lignesPage: _lignesPage, parserCSV: _parserCSV, transactionsDepuisRangees: _transactionsDepuisRangees, transactionsOFX: _transactionsOFX, transactionsQIF: _transactionsQIF, transactionsMT940: _transactionsMT940, nombre: _nombre };
+})();
