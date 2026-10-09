@@ -2298,7 +2298,7 @@ function _afficherDiagnosticEchecLectureReleve() {
     function detecterColonnes(cells) {
       var res = {};
       cells.forEach(function (c) {
-        var t = c.s.toLowerCase().replace(/[^a-zéèêàç ]/g, '');
+        var t = c.s.toLowerCase().replace(/[^a-zéèêàç ]/g, '').trim();
         if (/^(d[eé]b[il1]t|retrait|sortie)/.test(t)) res.debit = c;
         else if (/^(cr[eé]d[il1]t|versement|entr[eé]e|d[eé]p[oô]t)/.test(t)) res.credit = c;
         else if (/^solde/.test(t)) res.solde = c;
@@ -2317,6 +2317,33 @@ function _afficherDiagnosticEchecLectureReleve() {
       return 1;
     }
     function _sansAccentsLocal(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+
+    // Sans en-têtes lisibles (OCR) : on déduit les colonnes Débit / Crédit d'après l'alignement
+    // à droite des montants des lignes d'opérations (débit = colonne la plus à gauche).
+    if (!lignes.some(function (l) { return detecterColonnes(l.cellules); })) {
+      var droites = [], largeurs = [];
+      lignes.forEach(function (l) {
+        var c0 = l.cellules[0];
+        if (!c0 || !RE_DATE_DEBUT.test(c0.s)) return;
+        l.cellules.slice(1).forEach(function (c) { if (RE_MONTANT.test(c.s)) { droites.push(c.r); largeurs.push(c.w); } });
+      });
+      if (droites.length >= 2) {
+        droites.sort(function (a, b) { return a - b; });
+        largeurs.sort(function (a, b) { return a - b; });
+        var lMed = largeurs[Math.floor(largeurs.length / 2)] || 60;
+        var tol = Math.max(lMed * 0.6, 10);
+        var groupes = [[droites[0]]];
+        for (var gi = 1; gi < droites.length; gi++) {
+          var gdn = groupes[groupes.length - 1];
+          if (droites[gi] - gdn[gdn.length - 1] > tol) groupes.push([droites[gi]]); else gdn.push(droites[gi]);
+        }
+        if (groupes.length >= 2) {
+          var pseudo = function (g) { var rm = g.reduce(function (a, b) { return a + b; }, 0) / g.length; return { s: '', x: rm - lMed, w: lMed, c: rm - lMed / 2, r: rm }; };
+          colonnes = { debit: pseudo(groupes[0]), credit: pseudo(groupes[1]) };
+          if (groupes[2]) colonnes.solde = pseudo(groupes[2]);
+        }
+      }
+    }
 
     lignes.forEach(function (ligne) {
       var cells = ligne.cellules;
@@ -2344,7 +2371,7 @@ function _afficherDiagnosticEchecLectureReleve() {
       // Soldes initial / final (hors opérations)
       if (/sol(?:de|ide|dé)\b|ancien\s+report/i.test(texte)) {
         var finalMot = /(nouveau\s+solde|solde\s*(final|fin\b|de\s+cl[ôo]ture|cl[ôo]ture|en\s+fin)|solde\s+cr[ée]diteur|solde\s+d[ée]biteur)/i.test(texte);
-        var initMot = /(solde\s*(initial|pr[ée]c[ée]dent|ant[ée]rieur|d[ée]but|report[ée]|de\s+d[ée]part)|ancien\s+solde|report\s+solde)/i.test(texte);
+        var initMot = /(solde\s*(initial|pr[ée]c[ée]dent|ant[ée]rieur|d[ée]but|report[ée]|de\s+d[ée]part)|ancien\s+solde|report\s+solde|sol(?:de|ide)\s+report)/i.test(texte);
         var auMot = /sol(?:de|ide)\s+au\s*:?\s*\d/i.test(texte);
         if (finalMot || initMot || auMot) {
           var am = amountsOf(cells).pop();
@@ -2355,7 +2382,11 @@ function _afficherDiagnosticEchecLectureReleve() {
             var val = neg ? -v : v;
             var commeFinal = finalMot || (auMot && !initMot && txs.length > 0);
             if (commeFinal) resume.soldeFinal = val;
-            else if (resume.soldeInitial === null) resume.soldeInitial = val;
+            else if (resume.soldeInitial === null) {
+              resume.soldeInitial = val;
+              // le report figure aussi dans les totaux « mouvements » de certaines banques
+              if (kc === 'debit') resume.reportDebit = v; else if (kc === 'credit') resume.reportCredit = v;
+            }
           }
           derniere = null; return;
         }
@@ -2434,8 +2465,12 @@ function _afficherDiagnosticEchecLectureReleve() {
       if (new RegExp(BANQUES[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i').test(texteComplet)) { banque = BANQUES[i]; break; }
     }
     var compte = null;
-    var mc = tout.match(/(?:r\.?i\.?b\.?|compte|iban)[^\d\n]{0,25}((?:[A-Z]{2}\d{2}[ ]?)?[\d ]{12,34})/i);
-    if (mc) compte = mc[1].replace(/\s+/g, ' ').trim();
+    var mc = tout.match(/(?:compte|iban)[^\d\n]{0,25}((?:[A-Z]{2}\d{2}[ ]?)?\d[\d ]{10,32}\d)/i) || tout.match(/(?:r\.?i\.?b\.?)[^\d\n]{0,25}(\d[\d ]{12,32}\d)/i);
+    if (mc) { var gr = mc[1].replace(/\s+/g, ' ').trim().split(' '); compte = gr[0].length >= 10 ? gr[0] : gr.join(' '); }
+    if (!titulaire) {
+      var lt = avant.filter(function (l) { return /\b(SARL|S\.A\.R\.L|SARLAU|SA|S\.A|STE|SOCI[ÉE]T[ÉE]|ETS|ETABLISSEMENTS?|SNC|SCI|GROUPE|CABINET)\b/i.test(l) && !/relev|compte\s*:|agence/i.test(l); })[0];
+      if (lt) titulaire = lt.replace(/\s+/g, ' ').trim().slice(0, 60);
+    }
     var periode = null;
     var mp = tout.match(/du\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})\s*(?:\S{0,8}\s*)?au\s*:?\s*(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4})/i);
     if (mp) periode = mp[1] + ' → ' + mp[2];
@@ -2497,6 +2532,26 @@ function _afficherDiagnosticEchecLectureReleve() {
       else { val = (val - bas) * 255 / Math.max(1, haut - bas); val = val < 0 ? 0 : val > 255 ? 255 : val; }
       d[j] = d[j + 1] = d[j + 2] = val; d[j + 3] = 255;
     }
+    if (binariser) {
+      // Efface les traits du tableau (longs segments noirs) : ils collent aux chiffres et faussent la lecture
+      var minH = Math.round(w * 0.025), minV = Math.round(h * 0.02), x, y, run, start;
+      for (y = 0; y < h; y++) {
+        run = 0; start = 0;
+        for (x = 0; x <= w; x++) {
+          var noir = x < w && d[(y * w + x) * 4] === 0;
+          if (noir) { if (!run) start = x; run++; }
+          else { if (run >= minH) for (var xx = start; xx < start + run; xx++) d[(y * w + xx) * 4] = d[(y * w + xx) * 4 + 1] = d[(y * w + xx) * 4 + 2] = 255; run = 0; }
+        }
+      }
+      for (x = 0; x < w; x++) {
+        run = 0; start = 0;
+        for (y = 0; y <= h; y++) {
+          var noir2 = y < h && d[(y * w + x) * 4] === 0;
+          if (noir2) { if (!run) start = y; run++; }
+          else { if (run >= minV) for (var yy = start; yy < start + run; yy++) d[(yy * w + x) * 4] = d[(yy * w + x) * 4 + 1] = d[(yy * w + x) * 4 + 2] = 255; run = 0; }
+        }
+      }
+    }
     ctx.putImageData(img, 0, 0);
     return cv;
   }
@@ -2518,10 +2573,13 @@ function _afficherDiagnosticEchecLectureReleve() {
     return lignes.map(function (l) {
       l.mots.sort(function (a, b) { return a.bbox.x0 - b.bbox.x0; });
       var cells = [];
+      var coupe = false;
       l.mots.forEach(function (m) {
+        if (/^[|¦│\[\]!:;,.\-_~=—–']+$/.test(m.text.trim()) ) { coupe = true; return; }   // trait de tableau : sépare deux colonnes
         var c = cells[cells.length - 1];
-        if (c && m.bbox.x0 - c.r < hMed * 1.3) { c.s += ' ' + m.text; c.r = m.bbox.x1; }
+        if (c && !coupe && m.bbox.x0 - c.r < hMed * 1.3) { c.s += ' ' + m.text; c.r = m.bbox.x1; }
         else cells.push({ s: m.text, x: m.bbox.x0, r: m.bbox.x1 });
+        coupe = false;
       });
       cells.forEach(function (c) { c.w = c.r - c.x; c.c = c.x + c.w / 2; });
       return { y: -(l.yc + (decalageY || 0)), cellules: cells };
@@ -2536,6 +2594,18 @@ function _afficherDiagnosticEchecLectureReleve() {
     return worker;
   }
 
+  // Note de fiabilité d'une lecture : nombre d'opérations, + gros bonus si les totaux du relevé sont retrouvés
+  function _scoreLecture(res) {
+    var deb = 0, cre = 0;
+    res.transactions.forEach(function (t) { if (t.montant < 0) deb -= t.montant; else cre += t.montant; });
+    var r = res.resume || {};
+    deb += r.reportDebit || 0; cre += r.reportCredit || 0;
+    var ok = (r.totalDebit != null || r.totalCredit != null)
+      && (r.totalDebit == null || Math.abs(deb - r.totalDebit) < 0.05)
+      && (r.totalCredit == null || Math.abs(cre - r.totalCredit) < 0.05);
+    return res.transactions.length + (ok && res.transactions.length ? 1000 : 0);
+  }
+
   // Lit une ou plusieurs images (dataUrl ou canvas) : essaie contraste puis noir/blanc, garde le meilleur
   async function _transactionsParOCR(sources) {
     var worker;
@@ -2545,7 +2615,7 @@ function _afficherDiagnosticEchecLectureReleve() {
     }
     try {
       var meilleur = null, meilleurTexte = '';
-      for (var mode = 0; mode < 2; mode++) {
+      for (var mode = 1; mode >= 0; mode--) {   // d'abord noir/blanc sans traits de tableau, puis niveaux de gris
         var lignes = [], texte = '', decal = 0;
         for (var i = 0; i < sources.length; i++) {
           var src = sources[i];
@@ -2557,8 +2627,9 @@ function _afficherDiagnosticEchecLectureReleve() {
           decal += cv.height + 200;
         }
         var res = _analyserLignesReleve(lignes, { ocr: true });
-        if (!meilleur || res.transactions.length > meilleur.transactions.length) { meilleur = res; meilleurTexte = texte; }
-        if (res.transactions.length >= 3) break;     // 1er essai suffisant
+        var sc = _scoreLecture(res);
+        if (!meilleur || sc > meilleur.score) { res.score = sc; meilleur = res; meilleurTexte = texte; }
+        if (sc >= 1000) break;     // totaux du relevé retrouvés : lecture fiable
       }
       STATE._dernierTexteReleveBrut = meilleurTexte;
       if (meilleur && meilleur.transactions.length) { STATE._resumeReleve = meilleur.resume; return meilleur.transactions; }
@@ -2697,11 +2768,11 @@ function _afficherDiagnosticEchecLectureReleve() {
 
       var controle = '';
       if (resume.totalDebit != null || resume.totalCredit != null) {
-        var eD = resume.totalDebit != null ? Math.round((debit - resume.totalDebit) * 100) / 100 : 0;
-        var eC = resume.totalCredit != null ? Math.round((credit - resume.totalCredit) * 100) / 100 : 0;
+        var eD = resume.totalDebit != null ? Math.round((debit + (resume.reportDebit || 0) - resume.totalDebit) * 100) / 100 : 0;
+        var eC = resume.totalCredit != null ? Math.round((credit + (resume.reportCredit || 0) - resume.totalCredit) * 100) / 100 : 0;
         controle = (Math.abs(eD) < 0.05 && Math.abs(eC) < 0.05)
           ? '<div style="background:#E8F5EC;color:#1E7B45;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">✅ <b>Contrôle OK</b> : les totaux lus correspondent à la ligne « Total mouvements » du relevé (débit ' + _mad(resume.totalDebit || 0) + ' · crédit ' + _mad(resume.totalCredit || 0) + '). Aucune opération ne semble manquer.</div>'
-          : '<div style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">⚠️ <b>Les totaux ne correspondent pas</b> à la ligne « Total mouvements » du relevé (débit attendu ' + _mad(resume.totalDebit || 0) + ', lu ' + _mad(debit) + ' · crédit attendu ' + _mad(resume.totalCredit || 0) + ', lu ' + _mad(credit) + '). Une opération manque ou un montant est mal lu : vérifiez avant de valider.</div>';
+          : '<div style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">⚠️ <b>Les totaux ne correspondent pas</b> à la ligne « Total mouvements » du relevé (débit attendu ' + _mad(resume.totalDebit || 0) + ', lu ' + _mad(debit + (resume.reportDebit || 0)) + ' · crédit attendu ' + _mad(resume.totalCredit || 0) + ', lu ' + _mad(credit + (resume.reportCredit || 0)) + '). Une opération manque ou un montant est mal lu : vérifiez avant de valider.</div>';
       } else if (resume.soldeInitial != null && resume.soldeFinal != null) {
         var ecart = Math.round((resume.soldeInitial + credit - debit - resume.soldeFinal) * 100) / 100;
         controle = Math.abs(ecart) < 0.05
