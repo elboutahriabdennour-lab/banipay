@@ -2589,7 +2589,9 @@ function _afficherDiagnosticEchecLectureReleve() {
   async function _creerWorkerOCR() {
     if (typeof _chargerTesseract === 'function') await _chargerTesseract();
     if (typeof Tesseract === 'undefined') throw new Error('Tesseract indisponible');
-    var worker = await Tesseract.createWorker('fra', 1, window.__TESS_OPTS || {});
+    var worker;
+    try { worker = await Tesseract.createWorker('fra', 1, window.__TESS_OPTS || { langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/fra/4.0.0_best_int' }); }
+    catch (e) { worker = await Tesseract.createWorker('fra'); }   // repli : modèle par défaut
     try { await worker.setParameters({ tessedit_pageseg_mode: '6', preserve_interword_spaces: '1', user_defined_dpi: '300' }); } catch (e) {}
     return worker;
   }
@@ -2757,75 +2759,127 @@ function _afficherDiagnosticEchecLectureReleve() {
   function _esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function _mad(n) { return (n < 0 ? '-' : '') + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ').replace('.', ',') ; }
 
-  // Affiche le résumé de la lecture ; renvoie la liste validée (ou null si refusée)
-  window._validerLectureReleve = function (transactions, resume) {
+  // Affiche le résumé de la lecture ; renvoie la liste validée (ou null si refusée).
+  // Le titulaire peut décocher une ligne fausse ET ajouter une opération que la lecture a manquée.
+  window._validerLectureReleve = function (transactionsLues, resume) {
     return new Promise(function (resolve) {
       resume = resume || {};
-      var debit = 0, credit = 0;
-      transactions.forEach(function (t) { if (t.montant < 0) debit += -t.montant; else credit += t.montant; });
-      var dates = transactions.map(function (t) { var m = String(t.dateBrute).match(/(\d+)\/(\d+)\/(\d+)/); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : null; }).filter(Boolean);
-      var periode = resume.periode || (dates.length ? (_dateFR(new Date(Math.min.apply(null, dates))) + ' → ' + _dateFR(new Date(Math.max.apply(null, dates)))) : '—');
-
-      var controle = '';
-      if (resume.totalDebit != null || resume.totalCredit != null) {
-        var eD = resume.totalDebit != null ? Math.round((debit + (resume.reportDebit || 0) - resume.totalDebit) * 100) / 100 : 0;
-        var eC = resume.totalCredit != null ? Math.round((credit + (resume.reportCredit || 0) - resume.totalCredit) * 100) / 100 : 0;
-        controle = (Math.abs(eD) < 0.05 && Math.abs(eC) < 0.05)
-          ? '<div style="background:#E8F5EC;color:#1E7B45;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">✅ <b>Contrôle OK</b> : les totaux lus correspondent à la ligne « Total mouvements » du relevé (débit ' + _mad(resume.totalDebit || 0) + ' · crédit ' + _mad(resume.totalCredit || 0) + '). Aucune opération ne semble manquer.</div>'
-          : '<div style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">⚠️ <b>Les totaux ne correspondent pas</b> à la ligne « Total mouvements » du relevé (débit attendu ' + _mad(resume.totalDebit || 0) + ', lu ' + _mad(debit + (resume.reportDebit || 0)) + ' · crédit attendu ' + _mad(resume.totalCredit || 0) + ', lu ' + _mad(credit + (resume.reportCredit || 0)) + '). Une opération manque ou un montant est mal lu : vérifiez avant de valider.</div>';
-      } else if (resume.soldeInitial != null && resume.soldeFinal != null) {
-        var ecart = Math.round((resume.soldeInitial + credit - debit - resume.soldeFinal) * 100) / 100;
-        controle = Math.abs(ecart) < 0.05
-          ? '<div style="background:#E8F5EC;color:#1E7B45;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">✅ <b>Contrôle OK</b> : solde initial + crédits − débits = solde final. Aucune opération ne semble manquer.</div>'
-          : '<div style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">⚠️ <b>Écart de ' + _mad(ecart) + ' MAD</b> entre les soldes du relevé et les opérations lues. Il manque peut-être une ligne, ou un sens (débit/crédit) est faux. Vérifiez avant de valider.</div>';
-      } else {
-        controle = '<div style="background:#FFF6E5;color:#8A5A00;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">ℹ️ Soldes de début/fin non trouvés dans le fichier : le contrôle automatique n\'est pas possible. Comparez avec votre relevé papier.</div>';
-      }
-      var nomEnt = (typeof STATE !== 'undefined' && STATE.profil && STATE.profil.raison) || '';
-      var alerteTit = '';
-      if (resume.titulaire && nomEnt && typeof _similariteNom === 'function' && _similariteNom(nomEnt, resume.titulaire) < 0.3) {
-        alerteTit = '<div style="background:#FDECEA;color:#B3261E;border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px">⚠️ Le titulaire lu (<b>' + _esc(resume.titulaire) + '</b>) ne ressemble pas au nom de votre entreprise (<b>' + _esc(nomEnt) + '</b>). Est-ce bien votre relevé ?</div>';
-      }
-
-      var lignesHtml = transactions.map(function (t, i) {
-        var col = t.montant < 0 ? '#B3261E' : '#1E7B45';
-        return '<label style="display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid #EFE9DF;font-size:12px;cursor:pointer">' +
-          '<input type="checkbox" data-i="' + i + '" checked style="flex:none;width:18px;height:18px">' +
-          '<span style="flex:none;width:72px;color:#6B5F54">' + _esc(t.dateBrute) + '</span>' +
-          '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(t.description) + '</span>' +
-          '<b style="flex:none;color:' + col + '">' + _mad(t.montant) + '</b></label>';
-      }).join('');
-
+      var transactions = transactionsLues.slice();
+      var coche = transactions.map(function () { return true; });
+      var formOuvert = false;
       var ov = document.createElement('div');
       ov.id = 'releve-validation';
       ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(30,25,20,.55);display:flex;align-items:flex-end;justify-content:center';
-      ov.innerHTML =
-        '<div style="background:#FBF8F3;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden">' +
-        '<div style="padding:16px 18px 8px"><div style="font-size:17px;font-weight:700;color:#2B2118">🔍 Vérifiez la lecture du relevé</div>' +
-        '<div style="font-size:12px;color:#6B5F54;margin-top:2px">Les en-têtes ont été ignorés : lecture de la 1ère à la dernière opération.</div></div>' +
-        '<div style="padding:0 18px;overflow:auto;flex:1">' +
-        '<div style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:10px">' +
-        '<div>🏦 <b>Banque :</b> ' + _esc(resume.banque || '—') + '</div>' +
-        '<div>👤 <b>Titulaire :</b> ' + _esc(resume.titulaire || '—') + '</div>' +
-        '<div>🔢 <b>Compte :</b> ' + _esc(resume.compte || '—') + '</div>' +
-        '<div>📅 <b>Période :</b> ' + _esc(periode) + '</div>' +
-        (resume.soldeInitial != null ? '<div>➡️ <b>Solde initial :</b> ' + _mad(resume.soldeInitial) + ' MAD</div>' : '') +
-        (resume.soldeFinal != null ? '<div>⬅️ <b>Solde final :</b> ' + _mad(resume.soldeFinal) + ' MAD</div>' : '') +
-        '<div style="margin-top:4px"><b>' + transactions.length + '</b> opérations — Débits <b style="color:#B3261E">' + _mad(-debit) + '</b> · Crédits <b style="color:#1E7B45">' + _mad(credit) + '</b></div></div>' +
-        alerteTit + controle +
-        '<div style="font-size:11px;color:#9C9186;margin:4px 0">Décochez les lignes qui ne sont pas de vraies opérations.</div>' +
-        '<div id="rv-liste" style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:2px 8px;margin-bottom:12px">' + lignesHtml + '</div></div>' +
-        '<div style="display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #EFE9DF;background:#FBF8F3">' +
-        '<button id="rv-non" style="flex:1;padding:13px;border-radius:12px;border:1px solid #E3DCCF;background:#fff;font-size:14px;font-weight:600;color:#6B5F54">✖ Ce n\'est pas bon</button>' +
-        '<button id="rv-oui" style="flex:1.4;padding:13px;border-radius:12px;border:none;background:#2F7F82;color:#fff;font-size:14px;font-weight:700">✅ Je valide</button></div></div>';
       document.body.appendChild(ov);
+
+      function boite(bg, col, html) { return '<div style="background:' + bg + ';color:' + col + ';border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px;line-height:1.5">' + html + '</div>'; }
+      var inputCss = 'width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #E3DCCF;border-radius:8px;font-size:14px;background:#fff;font-family:inherit';
+
+      function rendre() {
+        var debit = 0, credit = 0, nb = 0;
+        transactions.forEach(function (t, i) { if (!coche[i]) return; nb++; if (t.montant < 0) debit += -t.montant; else credit += t.montant; });
+        var dates = transactions.map(function (t, i) { if (!coche[i]) return null; var m = String(t.dateBrute).match(/(\d+)\/(\d+)\/(\d+)/); return m ? new Date(+m[3], +m[2] - 1, +m[1]).getTime() : null; }).filter(Boolean);
+        var periode = resume.periode || (dates.length ? (_dateFR(new Date(Math.min.apply(null, dates))) + ' → ' + _dateFR(new Date(Math.max.apply(null, dates)))) : '—');
+
+        var controle = '', ecartDebit = 0, ecartCredit = 0;
+        if (resume.totalDebit != null || resume.totalCredit != null) {
+          var lD = debit + (resume.reportDebit || 0), lC = credit + (resume.reportCredit || 0);
+          ecartDebit = resume.totalDebit != null ? Math.round((resume.totalDebit - lD) * 100) / 100 : 0;
+          ecartCredit = resume.totalCredit != null ? Math.round((resume.totalCredit - lC) * 100) / 100 : 0;
+          if (Math.abs(ecartDebit) < 0.05 && Math.abs(ecartCredit) < 0.05) {
+            controle = boite('#E8F5EC', '#1E7B45', '✅ <b>Contrôle OK</b> : les totaux correspondent à la ligne « Total mouvements » du relevé (débit ' + _mad(resume.totalDebit || 0) + ' · crédit ' + _mad(resume.totalCredit || 0) + '). Aucune opération ne manque.');
+          } else {
+            var manque = [];
+            if (ecartDebit > 0.05) manque.push('<b>' + _mad(ecartDebit) + ' MAD de débit</b>');
+            if (ecartCredit > 0.05) manque.push('<b>' + _mad(ecartCredit) + ' MAD de crédit</b>');
+            controle = boite('#FDECEA', '#B3261E', '⚠️ <b>Les totaux ne correspondent pas</b> au relevé (débit attendu ' + _mad(resume.totalDebit || 0) + ', lu ' + _mad(lD) + ' · crédit attendu ' + _mad(resume.totalCredit || 0) + ', lu ' + _mad(lC) + ').' +
+              (manque.length ? '<br>👉 Il manque probablement ' + manque.join(' et ') + ' : utilisez « ➕ Ajouter une opération » ci-dessous.' : '<br>Un montant ou un sens est mal lu : décochez la ligne fausse puis ajoutez-la corrigée.'));
+          }
+        } else if (resume.soldeInitial != null && resume.soldeFinal != null) {
+          var ecart = Math.round((resume.soldeInitial + credit - debit - resume.soldeFinal) * 100) / 100;
+          controle = Math.abs(ecart) < 0.05
+            ? boite('#E8F5EC', '#1E7B45', '✅ <b>Contrôle OK</b> : solde initial + crédits − débits = solde final.')
+            : boite('#FDECEA', '#B3261E', '⚠️ <b>Écart de ' + _mad(ecart) + ' MAD</b> entre les soldes du relevé et les opérations lues. Il manque peut-être une ligne, ou un sens (débit/crédit) est faux.');
+        } else {
+          controle = boite('#FFF6E5', '#8A5A00', 'ℹ️ Aucun total ni solde trouvé dans le fichier : contrôle automatique impossible. Comparez avec votre relevé.');
+        }
+        var nomEnt = (typeof STATE !== 'undefined' && STATE.profil && STATE.profil.raison) || '';
+        var alerteTit = '';
+        if (resume.titulaire && nomEnt && typeof _similariteNom === 'function' && _similariteNom(nomEnt, resume.titulaire) < 0.3) {
+          alerteTit = boite('#FDECEA', '#B3261E', '⚠️ Le titulaire lu (<b>' + _esc(resume.titulaire) + '</b>) ne ressemble pas au nom de votre entreprise (<b>' + _esc(nomEnt) + '</b>). Est-ce bien votre relevé ?');
+        }
+
+        var lignesHtml = transactions.map(function (t, i) {
+          var col = t.montant < 0 ? '#B3261E' : '#1E7B45';
+          return '<label style="display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid #EFE9DF;font-size:12px;cursor:pointer;' + (coche[i] ? '' : 'opacity:.45') + '">' +
+            '<input type="checkbox" data-i="' + i + '"' + (coche[i] ? ' checked' : '') + ' style="flex:none;width:18px;height:18px">' +
+            '<span style="flex:none;width:72px;color:#6B5F54">' + _esc(t.dateBrute) + '</span>' +
+            '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(t.description) + (t.ajoute ? ' ✍️' : '') + '</span>' +
+            '<b style="flex:none;color:' + col + '">' + _mad(t.montant) + '</b></label>';
+        }).join('');
+
+        var suggMontant = ecartDebit > 0.05 ? ecartDebit : (ecartCredit > 0.05 ? ecartCredit : '');
+        var suggSens = ecartCredit > 0.05 && !(ecartDebit > 0.05) ? 'credit' : 'debit';
+        var dateDef = dates.length ? _dateFR(new Date(Math.max.apply(null, dates))) : '';
+        var form = formOuvert
+          ? '<div style="background:#fff;border:1px solid #6FB3B5;border-radius:12px;padding:12px;margin-bottom:12px">' +
+            '<div style="font-size:13px;font-weight:700;margin-bottom:8px">➕ Ajouter une opération manquante</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+            '<input id="rv-f-date" placeholder="JJ/MM/AAAA" inputmode="numeric" value="' + _esc(dateDef) + '" style="' + inputCss + '">' +
+            '<select id="rv-f-sens" style="' + inputCss + '"><option value="debit"' + (suggSens === 'debit' ? ' selected' : '') + '>Débit (sortie)</option><option value="credit"' + (suggSens === 'credit' ? ' selected' : '') + '>Crédit (entrée)</option></select></div>' +
+            '<input id="rv-f-lib" placeholder="Libellé (ex. RET GAB)" style="' + inputCss + ';margin-bottom:8px">' +
+            '<input id="rv-f-montant" placeholder="Montant (ex. 2000,00)" inputmode="decimal" value="' + (suggMontant === '' ? '' : String(suggMontant).replace('.', ',')) + '" style="' + inputCss + ';margin-bottom:8px">' +
+            '<div id="rv-f-err" style="color:#B3261E;font-size:12px;margin-bottom:6px"></div>' +
+            '<div style="display:flex;gap:8px"><button id="rv-f-annuler" style="flex:1;padding:10px;border-radius:10px;border:1px solid #E3DCCF;background:#fff;font-size:13px">Annuler</button>' +
+            '<button id="rv-f-ok" style="flex:1.4;padding:10px;border-radius:10px;border:none;background:#2F7F82;color:#fff;font-size:13px;font-weight:700">Ajouter la ligne</button></div></div>'
+          : '<button id="rv-ajout" style="width:100%;padding:11px;border-radius:10px;border:1px dashed #6FB3B5;background:#fff;color:#2F7F82;font-size:13px;font-weight:700;margin-bottom:12px">➕ Ajouter une opération manquante</button>';
+
+        ov.innerHTML =
+          '<div style="background:#FBF8F3;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden">' +
+          '<div style="padding:16px 18px 8px"><div style="font-size:17px;font-weight:700;color:#2B2118">🔍 Vérifiez la lecture du relevé</div>' +
+          '<div style="font-size:12px;color:#6B5F54;margin-top:2px">Les en-têtes ont été ignorés : lecture de la 1ère à la dernière opération.</div></div>' +
+          '<div id="rv-corps" style="padding:0 18px;overflow:auto;flex:1">' +
+          '<div style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:10px">' +
+          '<div>🏦 <b>Banque :</b> ' + _esc(resume.banque || '—') + '</div>' +
+          '<div>👤 <b>Titulaire :</b> ' + _esc(resume.titulaire || '—') + '</div>' +
+          '<div>🔢 <b>Compte :</b> ' + _esc(resume.compte || '—') + '</div>' +
+          '<div>📅 <b>Période :</b> ' + _esc(periode) + '</div>' +
+          (resume.soldeInitial != null ? '<div>➡️ <b>Solde initial :</b> ' + _mad(resume.soldeInitial) + ' MAD</div>' : '') +
+          (resume.soldeFinal != null ? '<div>⬅️ <b>Solde final :</b> ' + _mad(resume.soldeFinal) + ' MAD</div>' : '') +
+          '<div style="margin-top:4px"><b>' + nb + '</b> opérations — Débits <b style="color:#B3261E">' + _mad(-debit) + '</b> · Crédits <b style="color:#1E7B45">' + _mad(credit) + '</b></div></div>' +
+          alerteTit + controle +
+          '<div style="font-size:11px;color:#9C9186;margin:4px 0">Décochez les lignes qui ne sont pas de vraies opérations.</div>' +
+          '<div style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:2px 8px;margin-bottom:12px">' + lignesHtml + '</div>' + form + '</div>' +
+          '<div style="display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #EFE9DF;background:#FBF8F3">' +
+          '<button id="rv-non" style="flex:1;padding:13px;border-radius:12px;border:1px solid #E3DCCF;background:#fff;font-size:14px;font-weight:600;color:#6B5F54">✖ Ce n\'est pas bon</button>' +
+          '<button id="rv-oui" style="flex:1.4;padding:13px;border-radius:12px;border:none;background:#2F7F82;color:#fff;font-size:14px;font-weight:700">✅ Je valide</button></div></div>';
+
+        ov.querySelector('#rv-non').onclick = function () { fermer(null); };
+        ov.querySelector('#rv-oui').onclick = function () { fermer(transactions.filter(function (t, i) { return coche[i]; })); };
+        ov.querySelectorAll('input[type=checkbox]').forEach(function (cb) {
+          cb.onchange = function () { var sc = ov.querySelector('#rv-corps').scrollTop; coche[+cb.getAttribute('data-i')] = cb.checked; rendre(); ov.querySelector('#rv-corps').scrollTop = sc; };
+        });
+        var bAj = ov.querySelector('#rv-ajout');
+        if (bAj) bAj.onclick = function () { formOuvert = true; rendre(); var c = ov.querySelector('#rv-corps'); c.scrollTop = c.scrollHeight; };
+        var bAn = ov.querySelector('#rv-f-annuler');
+        if (bAn) bAn.onclick = function () { formOuvert = false; rendre(); };
+        var bOk = ov.querySelector('#rv-f-ok');
+        if (bOk) bOk.onclick = function () {
+          var err = ov.querySelector('#rv-f-err');
+          var dm = ov.querySelector('#rv-f-date').value.trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/);
+          var mont = Math.abs(_nombre(ov.querySelector('#rv-f-montant').value.replace(/\s/g, '')));
+          var lib = ov.querySelector('#rv-f-lib').value.trim();
+          if (!dm || +dm[1] < 1 || +dm[1] > 31 || +dm[2] < 1 || +dm[2] > 12) { err.textContent = 'Date invalide (format JJ/MM/AAAA).'; return; }
+          if (!mont || isNaN(mont)) { err.textContent = 'Montant invalide.'; return; }
+          var an = +dm[3] < 100 ? 2000 + +dm[3] : +dm[3];
+          var sens = ov.querySelector('#rv-f-sens').value === 'debit' ? -1 : 1;
+          transactions.push({ dateBrute: String(+dm[1]).padStart(2, '0') + '/' + String(+dm[2]).padStart(2, '0') + '/' + an, description: lib || 'Opération ajoutée', montant: sens * mont, ajoute: true });
+          coche.push(true);
+          formOuvert = false; rendre();
+        };
+      }
       function fermer(res) { try { ov.remove(); } catch (e) {} resolve(res); }
-      ov.querySelector('#rv-non').onclick = function () { fermer(null); };
-      ov.querySelector('#rv-oui').onclick = function () {
-        var gardees = [];
-        ov.querySelectorAll('input[type=checkbox]').forEach(function (cb) { if (cb.checked) gardees.push(transactions[+cb.getAttribute('data-i')]); });
-        fermer(gardees);
-      };
+      rendre();
     });
   };
 
