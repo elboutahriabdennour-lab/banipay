@@ -1414,6 +1414,7 @@
     <button class="p-btn" onclick="window._retourQuiSommesNous='profil';goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
 
     <div class="pb"></div>
+    <a class="p-btn" href="legal.html" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📄 Mentions légales · CGU · Confidentialité</a>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
   <div id="profil-edit" style="display:none;padding:0 16px">
@@ -1660,6 +1661,7 @@
         <button class="a-btn a-btn-blue" onclick="doLogin()">Se connecter</button>
         <div class="a-link" style="margin-top:10px"><a onclick="doForgotPassword()">Mot de passe oublié ?</a></div>
         <div class="a-link">Pas de compte ? <a onclick="switchTab('signup')">Créer un compte</a></div>
+        <div class="a-link" style="font-size:11px;margin-top:6px"><a href="legal.html#mentions" target="_blank" rel="noopener">Mentions légales</a> · <a href="legal.html#cgu" target="_blank" rel="noopener">CGU</a> · <a href="legal.html#confidentialite" target="_blank" rel="noopener">Confidentialité</a></div>
       </div>
       <div id="aw-signup" style="display:none">
         <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
@@ -1710,6 +1712,10 @@
              (sans message qui aiderait un robot à comprendre pourquoi). -->
         <input type="text" id="signup-piege" name="site_web_2" autocomplete="off" tabindex="-1"
                style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
+        <div style="display:flex;align-items:flex-start;gap:8px;margin:12px 0 4px">
+          <input type="checkbox" id="signup-cgu" style="width:18px;height:18px;margin-top:2px;flex:none;cursor:pointer">
+          <label for="signup-cgu" style="font-size:12px;color:#6B5F54;line-height:1.5;cursor:pointer">J'accepte les <a href="legal.html#cgu" target="_blank" rel="noopener" style="color:#2F7F82;font-weight:600">conditions d'utilisation</a> et la <a href="legal.html#confidentialite" target="_blank" rel="noopener" style="color:#2F7F82;font-weight:600">politique de confidentialité</a>.</label>
+        </div>
         <button class="a-btn a-btn-blue" onclick="doSignup()" style="margin-top:8px">Créer mon compte</button>
         <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
       </div>
