@@ -169,6 +169,7 @@ async function doSignup() {
   if (!/[A-Z]/.test(pwd)) { if(errEl) errEl.textContent = 'Au moins une majuscule'; return; }
   if (!/[0-9]/.test(pwd)) { if(errEl) errEl.textContent = 'Au moins un chiffre'; return; }
   if (pwd !== pwd2) { if(errEl) errEl.textContent = 'Mots de passe différents'; return; }
+  if (el('signup-cgu') && !el('signup-cgu').checked) { if(errEl) errEl.textContent = 'Veuillez accepter les conditions d\'utilisation et la politique de confidentialité'; return; }
   // NOUVEAU (retour utilisateur) : Supabase ne peut jamais confirmer si
   // un email de confirmation a vraiment été délivré — l'inscription
   // réussit même si l'adresse contient une faute de frappe (ex: .con au
