@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zelto — Mentions légales, CGU et confidentialité</title>
+<meta name="robots" content="index,follow">
+<style>
+  :root{--bg:#F1EEE8;--card:#fff;--ink:#241F1B;--muted:#6B5F54;--gold:#C9971F;--teal:#2F7F82;--line:#E3DCCF}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{background:linear-gradient(135deg,#241F1B,#1F6F72);color:#fff;padding:22px 16px}
+  header .in,main{max-width:820px;margin:0 auto}
+  header a.brand{color:#fff;text-decoration:none;font-size:26px;font-weight:800;letter-spacing:-.5px}
+  header a.brand span{color:#6FB3B5}
+  header p{margin:4px 0 0;opacity:.85;font-size:14px}
+  nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  nav .in{max-width:820px;margin:0 auto;display:flex;gap:4px;padding:8px 12px;overflow-x:auto}
+  nav a{white-space:nowrap;padding:8px 14px;border-radius:20px;text-decoration:none;color:var(--muted);font-size:14px;font-weight:600}
+  nav a.on{background:var(--ink);color:#fff}
+  main{padding:20px 16px 60px}
+  section{display:none;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin-bottom:16px}
+  section.on{display:block}
+  h1{font-size:24px;margin:0 0 4px}
+  h2{font-size:18px;margin:26px 0 6px;color:var(--teal)}
+  p,li{color:#3b332c}
+  ul{padding-left:20px}
+  .maj{color:var(--muted);font-size:13px;margin-bottom:14px}
+  .todo{background:#FFF0C2;color:#8A4B00;padding:0 4px;border-radius:4px;font-weight:700}
+  #alerte{display:none;background:#FDECEA;color:#B3261E;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13px}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:0 16px 30px}
+  footer a{color:var(--teal)}
+  @media print{nav,header p{display:none}section{display:block!important;border:0;page-break-after:always}}
+</style>
+</head>
+<body>
+<header><div class="in"><a class="brand" href="app.html">Zel<span>to</span></a><p>Informations légales</p></div></header>
+<nav><div class="in">
+  <a href="#mentions" data-s="mentions">Mentions légales</a>
+  <a href="#cgu" data-s="cgu">Conditions d'utilisation</a>
+  <a href="#confidentialite" data-s="confidentialite">Confidentialité (CNDP)</a>
+</div></nav>
+
+<main>
+<div id="alerte"></div>
+
+<!-- ═══════════ MENTIONS LÉGALES ═══════════ -->
+<section id="mentions">
+  <h1>Mentions légales</h1>
+  <div class="maj">Dernière mise à jour : <span data-c="dateMaj"></span></div>
+
+  <h2>Éditeur du service</h2>
+  <p><b data-c="nom"></b> — <span data-c="forme"></span><br>
+  Siège social : <span data-c="adresse"></span><br>
+  Registre du commerce (RC) : <span data-c="rc"></span> — ICE : <span data-c="ice"></span> — Identifiant fiscal (IF) : <span data-c="identifiantFiscal"></span><br>
+  Contact : <a data-c-mail="email"></a> — Tél. : <span data-c="tel"></span></p>
+  <p>Directeur de la publication : <span data-c="directeur"></span></p>
+
+  <h2>Hébergement</h2>
+  <ul>
+    <li><b>Application web :</b> Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis.</li>
+    <li><b>Base de données et authentification :</b> Supabase Inc. (infrastructure : <span data-c="regionBase"></span>).</li>
+  </ul>
+
+  <h2>Propriété intellectuelle</h2>
+  <p>La marque Zelto, le logo, l'interface, les textes et le code de l'application sont la propriété de l'éditeur. Toute reproduction non autorisée est interdite. Les documents que vous créez (factures, devis, etc.) et les données de votre entreprise restent votre propriété.</p>
+</section>
+
+<!-- ═══════════ CGU ═══════════ -->
+<section id="cgu">
+  <h1>Conditions générales d'utilisation</h1>
+  <div class="maj">Dernière mise à jour : <span data-c="dateMaj"></span></div>
+
+  <h2>1. Objet</h2>
+  <p>Zelto est une application en ligne de gestion destinée aux petites et moyennes entreprises et aux experts-comptables : factures, devis, clients, fournisseurs, achats, trésorerie, rapprochement bancaire, échanges avec le comptable. Les présentes conditions encadrent son utilisation. En créant un compte, vous les acceptez.</p>
+
+  <h2>2. Compte</h2>
+  <ul>
+    <li>Vous devez fournir des informations exactes et garder votre mot de passe confidentiel. Toute action effectuée depuis votre compte est réputée faite par vous.</li>
+    <li>Un compte correspond à une entreprise (ou à un cabinet comptable). Vous pouvez inviter un comptable ou des collaborateurs et leur retirer l'accès à tout moment.</li>
+    <li>Vous devez avoir la capacité de conclure un contrat et agir pour le compte de l'entreprise que vous renseignez.</li>
+  </ul>
+
+  <h2>3. Offres et paiement</h2>
+  <p>Certaines fonctions peuvent dépendre d'une offre. Les tarifs, la durée d'engagement et les modalités de paiement sont indiqués dans l'application avant toute souscription. Sauf mention contraire, les abonnements sont sans engagement et résiliables à tout moment ; la période en cours reste due.</p>
+
+  <h2>4. Vos responsabilités</h2>
+  <ul>
+    <li><b>Contenu des documents.</b> Vous restez seul responsable de l'exactitude de vos factures, devis, écritures et déclarations, ainsi que du respect de vos obligations légales, comptables et fiscales (mentions obligatoires, TVA, conservation des pièces).</li>
+    <li><b>Outils d'aide.</b> Les lectures automatiques (reconnaissance de texte sur factures et relevés bancaires), suggestions de rapprochement et calculs sont des <b>aides à vérifier</b>. Vous devez contrôler les résultats avant de les valider.</li>
+    <li><b>Usage conforme.</b> Il est interdit d'utiliser Zelto pour des activités illégales, d'essayer d'accéder aux données d'autrui, de perturber le service ou de contourner ses protections.</li>
+  </ul>
+
+  <h2>5. Rôle du comptable</h2>
+  <p>Lorsque vous invitez un comptable, vous lui donnez accès aux données de votre entreprise nécessaires à sa mission. Zelto fournit l'outil ; la relation contractuelle entre vous et votre comptable ne concerne pas l'éditeur.</p>
+
+  <h2>6. Disponibilité et sauvegardes</h2>
+  <p>L'éditeur met en œuvre les moyens raisonnables pour assurer un service continu et sécurisé, sans garantie d'absence d'interruption. Des opérations de maintenance peuvent avoir lieu. Nous vous conseillons d'exporter régulièrement vos données (fonction d'export de l'application).</p>
+
+  <h2>7. Responsabilité</h2>
+  <p>Dans les limites permises par la loi, la responsabilité de l'éditeur est limitée aux dommages directs et prévisibles, et ne peut excéder les sommes versées au titre de l'abonnement sur les 12 derniers mois. L'éditeur n'est pas responsable des pertes indirectes (perte de chiffre d'affaires, de clientèle, pénalités fiscales) ni des conséquences d'une saisie erronée ou d'une absence de vérification par l'utilisateur.</p>
+
+  <h2>8. Résiliation et suppression</h2>
+  <p>Vous pouvez supprimer votre compte depuis votre profil. Les données sont alors effacées, sous réserve des obligations légales de conservation. L'éditeur peut suspendre un compte en cas de violation des présentes conditions, après information lorsque c'est possible.</p>
+
+  <h2>9. Modifications</h2>
+  <p>Les conditions peuvent évoluer. La version en vigueur est celle publiée sur cette page ; les changements importants vous sont signalés dans l'application.</p>
+
+  <h2>10. Droit applicable</h2>
+  <p>Les présentes conditions sont soumises au droit marocain. En cas de litige, les parties recherchent d'abord une solution amiable ; à défaut, les tribunaux compétents de <span data-c="tribunal"></span> sont seuls compétents, sauf disposition légale impérative contraire.</p>
+</section>
+
+<!-- ═══════════ CONFIDENTIALITÉ ═══════════ -->
+<section id="confidentialite">
+  <h1>Politique de confidentialité</h1>
+  <div class="maj">Dernière mise à jour : <span data-c="dateMaj"></span></div>
+  <p>Cette politique explique quelles données personnelles Zelto traite, pourquoi, et quels sont vos droits, conformément à la <b>loi n° 09-08</b> relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel et à ses textes d'application (Commission nationale de contrôle de la protection des données à caractère personnel — <b>CNDP</b>).</p>
+
+  <h2>1. Responsable du traitement</h2>
+  <p><b data-c="nom"></b>, <span data-c="adresse"></span> — contact : <a data-c-mail="email"></a>.<br>
+  Récépissé / autorisation CNDP : <span data-c="cndp"></span></p>
+
+  <h2>2. Données traitées</h2>
+  <ul>
+    <li><b>Compte :</b> nom, adresse email, mot de passe (chiffré, jamais lisible), rôle (entreprise ou comptable).</li>
+    <li><b>Entreprise :</b> raison sociale, adresse, téléphone, email, RC, ICE, identifiant fiscal, secteur, logo, coordonnées bancaires que vous saisissez.</li>
+    <li><b>Activité :</b> clients, fournisseurs, factures, devis, achats, paiements, pièces jointes, relevés bancaires et leurs opérations, messages échangés.</li>
+    <li><b>Données techniques :</b> journaux d'erreurs et de sécurité, type d'appareil. Aucun suivi publicitaire.</li>
+  </ul>
+  <p>Les données de vos clients et fournisseurs sont saisies par vous : vous en êtes responsable vis-à-vis d'eux, Zelto agissant comme sous-traitant technique.</p>
+
+  <h2>3. Finalités</h2>
+  <ul>
+    <li>Fournir le service (création de documents, comptabilité, rapprochement, échanges avec votre comptable).</li>
+    <li>Sécuriser les comptes et prévenir les abus.</li>
+    <li>Vous contacter pour le service (confirmation de compte, mot de passe, notifications que vous activez).</li>
+    <li>Améliorer l'application (statistiques agrégées, correction d'erreurs).</li>
+  </ul>
+
+  <h2>4. Annuaire</h2>
+  <p>Si vous apparaissez dans l'annuaire Zelto, votre raison sociale, ville et secteur sont visibles des autres utilisateurs. Vos coordonnées (téléphone, email) ne le sont que si l'option « contact visible » est activée dans votre profil ; vous pouvez la désactiver à tout moment.</p>
+
+  <h2>5. Destinataires et sous-traitants</h2>
+  <p>Vos données sont accessibles à vous, aux personnes que vous autorisez (comptable, équipe) et à nos prestataires techniques strictement nécessaires : hébergement (Vercel), base de données et authentification (Supabase)<span data-c-opt="prestataires"></span>. Elles ne sont ni vendues ni cédées à des fins publicitaires.</p>
+
+  <h2>6. Transfert hors du Maroc</h2>
+  <p>Nos prestataires d'hébergement peuvent stocker les données hors du Maroc (région : <span data-c="regionBase"></span>). Ce transfert est encadré par des garanties contractuelles et déclaré à la CNDP conformément à la loi 09-08.</p>
+
+  <h2>7. Durée de conservation</h2>
+  <ul>
+    <li>Données de compte et d'activité : pendant la durée de votre abonnement, puis supprimées à la clôture du compte.</li>
+    <li>Pièces comptables : l'application ne se substitue pas à votre obligation légale de conservation (10 ans au Maroc) ; pensez à exporter vos données avant clôture.</li>
+    <li>Journaux techniques : 12 mois maximum.</li>
+  </ul>
+
+  <h2>8. Sécurité</h2>
+  <p>Chiffrement des échanges (HTTPS), mots de passe chiffrés, isolation des données par compte (règles d'accès au niveau de la base), contrôle des accès. Aucun système n'étant infaillible, signalez-nous toute anomalie à <a data-c-mail="email"></a>.</p>
+
+  <h2>9. Vos droits</h2>
+  <p>Vous disposez d'un droit d'accès, de rectification, d'opposition (pour motifs légitimes) et de suppression de vos données, ainsi que du droit de vous opposer à la prospection. Pour les exercer, écrivez à <a data-c-mail="email"></a> en joignant un justificatif d'identité ; réponse sous 30 jours. Une partie de ces droits s'exerce directement dans l'application (modification du profil, export, suppression du compte). Vous pouvez également saisir la CNDP (<a href="https://www.cndp.ma" target="_blank" rel="noopener">www.cndp.ma</a>).</p>
+
+  <h2>10. Stockage local et cookies</h2>
+  <p>Zelto utilise le stockage de votre navigateur (session de connexion, préférences, relevés en cours d'analyse) pour fonctionner. Aucun cookie publicitaire ou traceur tiers n'est utilisé.</p>
+
+  <h2>11. Mises à jour</h2>
+  <p>Cette politique peut évoluer ; la date de dernière mise à jour figure en tête de page.</p>
+</section>
+</main>
+
+<footer><a href="app.html">← Retour à Zelto</a></footer>
+
+<script>
+/* ═══════════════ À COMPLÉTER UNE SEULE FOIS ═══════════════
+   Remplacez chaque valeur entre guillemets par les informations réelles de votre société.
+   Tant qu'une valeur contient « À COMPLÉTER », elle s'affiche en jaune sur la page. */
+var ENTREPRISE = {
+  nom: "À COMPLÉTER (nom légal de la société)",
+  forme: "À COMPLÉTER (ex. SARL, SARL AU, SA, auto-entrepreneur)",
+  adresse: "À COMPLÉTER (adresse du siège, ville, Maroc)",
+  rc: "À COMPLÉTER",
+  ice: "À COMPLÉTER",
+  identifiantFiscal: "À COMPLÉTER",
+  email: "contact@À-COMPLÉTER.ma",
+  tel: "À COMPLÉTER",
+  directeur: "À COMPLÉTER (nom du représentant légal)",
+  tribunal: "À COMPLÉTER (ville, ex. Meknès)",
+  regionBase: "À COMPLÉTER (région choisie dans Supabase, ex. Europe — Paris)",
+  cndp: "À COMPLÉTER (n° de récépissé de déclaration CNDP, ou « déclaration en cours »)",
+  dateMaj: "9 octobre 2026",
+  prestataires: ""
+};
+/* ══════════════════════════════════════════════════════════ */
+
+(function () {
+  var manque = 0;
+  function estATrouver(v) { return /À COMPLÉTER/.test(v); }
+  document.querySelectorAll('[data-c]').forEach(function (n) {
+    var v = ENTREPRISE[n.getAttribute('data-c')] || '';
+    n.textContent = v;
+    if (estATrouver(v)) { n.className = 'todo'; manque++; }
+  });
+  document.querySelectorAll('[data-c-mail]').forEach(function (n) {
+    var v = ENTREPRISE[n.getAttribute('data-c-mail')] || '';
+    n.textContent = v;
+    if (estATrouver(v)) { n.className = 'todo'; manque++; } else n.href = 'mailto:' + v;
+  });
+  document.querySelectorAll('[data-c-opt]').forEach(function (n) {
+    var v = ENTREPRISE[n.getAttribute('data-c-opt')] || '';
+    if (v) n.textContent = ', ' + v;
+  });
+  if (manque) {
+    var a = document.getElementById('alerte');
+    a.style.display = 'block';
+    a.textContent = '⚠️ Page non finalisée : ' + manque + ' information(s) légale(s) à compléter dans le bloc ENTREPRISE en haut du script de ce fichier (légal.html).';
+  }
+  function afficher() {
+    var h = (location.hash || '#mentions').slice(1);
+    if (!document.getElementById(h)) h = 'mentions';
+    document.querySelectorAll('section').forEach(function (s) { s.classList.toggle('on', s.id === h); });
+    document.querySelectorAll('nav a').forEach(function (l) { l.classList.toggle('on', l.getAttribute('data-s') === h); });
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', afficher);
+  afficher();
+})();
+</script>
+</body>
+</html>
