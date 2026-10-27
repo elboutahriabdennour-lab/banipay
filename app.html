@@ -132,7 +132,6 @@
   <div class="groupe-label" id="groupe-label-reseau" style="display:none">Réseau Zelto</div>
   <div class="quick-actions" id="qa-reseau-zelto" style="display:none">
     <div class="qa-item" onclick="window._retourAnnuaire='dashboard';loadAnnuaire();goScreen('annuaire',null)"><div class="qa-ico" style="background:#EEF3E4">🏢</div><div class="qa-lbl">Annuaire</div></div>
-    <div class="qa-item" onclick="window._retourMarche='dashboard';loadMarche();goScreen('marche',null)"><div class="qa-ico" style="background:#EDE6F0">🤝</div><div class="qa-lbl">Le Marché</div></div>
   </div>
   <!-- FIX (bug réel signalé — "Autres outils" cliquable mais inutilisable
        une fois défilé tout en bas) : ce spacer de 16px n'a jamais été
@@ -242,7 +241,6 @@
 <script src="js/achats.js?v=1789327380"></script>
 <script src="js/stock.js?v=1789327380"></script>
 <script src="js/finance.js?v=1789327380"></script>
-<script src="js/tresorerie.js?v=1789327380"></script>
 <script src="js/ubl.js?v=1789327380"></script>
 <script src="js/relances.js?v=1789327380"></script>
 <!-- FIX (grand audit) : ces deux fichiers existaient déjà dans le
@@ -256,13 +254,13 @@
 <script src="js/ocr-achats.js?v=1789327380"></script>
 <script src="js/releve-bancaire-ocr.js?v=1790400000"></script>
 <script src="js/equipe.js?v=1789327380"></script>
+<script src="js/partage-ecran.js?v=1789327380"></script>
 <script src="js/equipe-cabinet.js?v=1789327380"></script>
 <script src="js/rh.js?v=1789327380"></script>
 <script src="js/hubs.js?v=1789327380"></script>
 <script src="js/demandes-devis.js?v=1789327380"></script>
 <script src="js/fournisseurs.js?v=1790200000"></script>
 <script src="js/chat-ticket.js?v=1789327380"></script>
-<script src="js/partage-ecran.js?v=1789327380"></script>
 <script src="js/offres.js?v=1789327380"></script>
 <script src="js/acces-total.js?v=1790300000"></script>
 <script src="js/onboarding.js?v=1789327380"></script>
@@ -554,7 +552,6 @@
       <button class="back-btn" onclick="fermerChatTicket()">←</button><div class="topbar-brand" style="flex:1" id="chat-ticket-titre">Discussion</div>
       <div class="topbar-right" style="display:flex;gap:6px">
         <span onclick="demanderAppelVocalDepuisChat()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.12);border-radius:14px">🎙️</span>
-        <span onclick="demanderPartageEcranDepuisChat()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.12);border-radius:14px">🖥️</span>
         <span onclick="terminerAppel()" style="font-size:11px;color:rgba(255,255,255,0.85);cursor:pointer;padding:6px 10px;background:rgba(178,58,46,0.35);border-radius:14px">⏹️</span>
       </div>
     </div>
@@ -1402,7 +1399,6 @@
       <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">🤝 Parrainer une entreprise</div>
       <div id="parrainage-content" style="padding:14px 16px">Chargement...</div>
     </div>
-    <button class="p-btn" onclick="window._retourMarche='profil';loadMarche();goScreen('marche',null)" style="color:#7C5CA6">🤝 Le Marché</button>
 
     <div class="groupe-label">Mon compte</div>
     <button class="p-btn" onclick="ouvrirHistoriqueSiAdmin()" style="color:#6B5F54">📋 Historique</button>
@@ -2029,8 +2025,8 @@
         <button onclick="document.getElementById('pe-raison')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('pe-raison')?.focus()" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
       </div>
     </div>
-    <!-- Équipe (fondation multi-utilisateurs) -->
-    <div class="p-card" style="margin-bottom:14px">
+    <!-- Équipe (fondation multi-utilisateurs) — masquée au lancement : les rôles ne sont pas encore appliqués -->
+    <div class="p-card" style="margin-bottom:14px;display:none">
       <div class="p-card-title">👥 Équipe</div>
       <div style="padding:14px 16px">
         <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des membres et leur attribuer un rôle, mais les écrans de l'app (factures, achats...) ne leur montrent pas encore vos données — cette partie arrive dans une prochaine mise à jour.</div>
@@ -2599,7 +2595,6 @@
       </div>
       <button onclick="goScreen('position-financiere',null)" style="width:100%;margin-top:14px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💼 Voir ma position financière</button>
       <!-- AJOUT (nouveau chantier) : trésorerie prévisionnelle -->
-      <button onclick="goScreen('tresorerie',null)" style="width:100%;margin-top:8px;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📈 Trésorerie prévisionnelle</button>
     </div>
     <div class="pb"></div>
   </div>
