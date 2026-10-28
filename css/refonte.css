@@ -148,3 +148,19 @@ body{font-size:15px;line-height:1.45}
   body.menu-ferme .bottom-nav::after{content:"";}
   body.sans-menu .bottom-nav{display:none!important}
 }
+
+/* ── Espace comptable : onglets en barre du bas (téléphone) ou menu à gauche (ordinateur) ── */
+#cpt-tabs{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.97);border-top:1px solid var(--border);padding:6px 4px calc(6px + var(--safe-b));gap:0!important;overflow:visible!important}
+.cpt-tab{flex:1;display:flex!important;flex-direction:column;align-items:center;gap:3px;background:none!important;color:var(--ink-faint)!important;font-size:10px!important;font-weight:600!important;padding:6px 0!important;border-radius:12px!important}
+.cpt-tab .ic{font-size:20px}
+.cpt-tab.on{color:var(--zellige)!important;background:var(--zellige-light)!important;font-weight:800!important}
+#cpt-main-content{padding-bottom:calc(84px + var(--safe-b))}
+@media (min-width:1000px){
+  #screen-comptable{padding-left:232px}
+  #cpt-tabs{top:0;right:auto;width:232px;flex-direction:column;border-top:none;border-right:1px solid var(--border);padding:84px 14px 20px;gap:4px!important;background:var(--surface)}
+  #cpt-tabs::before{content:"Espace comptable";position:absolute;top:30px;left:24px;font-family:'Baloo 2',sans-serif;font-size:18px;font-weight:800;color:var(--ink)}
+  .cpt-tab{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;font-size:14px!important;padding:12px 14px!important}
+  .cpt-tab:hover{background:var(--paper)!important}.cpt-tab.on:hover{background:var(--zellige-light)!important}
+  .cpt-tab .ic{font-size:20px}
+  #cpt-main-content{padding-bottom:40px}
+}

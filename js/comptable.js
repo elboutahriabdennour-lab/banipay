@@ -1343,6 +1343,7 @@ function switchCptNav(tab) {
   ['dashboard','entreprises','traiter','historique','activite','notifs'].forEach(function(t) {
     const btn = document.getElementById('cpt-nav-' + t);
     if (!btn) return;
+    btn.classList.toggle('on', t === tab);
     if (t === tab) { btn.style.background = 'rgba(255,255,255,0.9)'; btn.style.color = '#1F6F72'; }
     else { btn.style.background = 'rgba(255,255,255,0.15)'; btn.style.color = 'rgba(255,255,255,0.7)'; }
   });
