@@ -4,14 +4,14 @@ function construireRefsQRFacture(f) {
   const base = window.location.origin + window.location.pathname;
   if (f.devis_ref) {
     const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === f.devis_ref; });
-    refsQR.push({ icon: '📝', label: 'Devis', ref: f.devis_ref, url: devisTrouve ? base + '?doc=' + devisTrouve.id + '&type=devis' + '&t=' + (devisTrouve.token_public||'') : '' });
+    refsQR.push({ icon: '', label: 'Devis', ref: f.devis_ref, url: devisTrouve ? base + '?doc=' + devisTrouve.id + '&type=devis' + '&t=' + (devisTrouve.token_public||'') : '' });
   }
   if (f.bc_id) {
     const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === f.bc_id; });
-    if (bcTrouve) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bcTrouve.ref, url: base + '?bc=' + bcTrouve.id + '&t=' + (bcTrouve.token_public||'') });
+    if (bcTrouve) refsQR.push({ icon: '', label: 'Bon de commande', ref: bcTrouve.ref, url: base + '?bc=' + bcTrouve.id + '&t=' + (bcTrouve.token_public||'') });
   }
   const blTrouve = (STATE.bonsLivraison || []).find(function(bl) { return bl.facture_id === f.id; });
-  if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id + '&t=' + (blTrouve.token_public||'') });
+  if (blTrouve) refsQR.push({ icon: '', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id + '&t=' + (blTrouve.token_public||'') });
   return refsQR;
 }
 function exportPDF(id) {
@@ -186,10 +186,10 @@ tbody td{border-bottom:1px solid #EAE4DA}
 <div class="stripe"></div>
 <div style="height:12px"></div>
 ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wrap;align-items:center">
-  ${devis_ref?`<span>📝 ${t.devisRef} : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
-  ${bl_ref?`<span>📦 ${t.blRef} : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
+  ${devis_ref?`<span>${t.devisRef} : <strong>${escapeHTML(devis_ref)}</strong></span>`:''}
+  ${bl_ref?`<span>${t.blRef} : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
   ${refsQR.map(function(r) {
-    return '<span style="display:inline-flex;align-items:center;gap:6px">' + (r.icon||'🔗') + ' ' + r.label + ' ' + t.refSuffixe + ' : <strong>' + escapeHTML(String(r.ref||'')) + '</strong>' +
+    return '<span style="display:inline-flex;align-items:center;gap:6px">' + r.label + ' ' + t.refSuffixe + ' : <strong>' + escapeHTML(String(r.ref||'')) + '</strong>' +
       (r.url ? '<img src="https://api.qrserver.com/v1/create-qr-code/?size=44x44&data=' + encodeURIComponent(r.url) + '" width="30" height="30" style="border-radius:3px;vertical-align:middle">' : '') +
     '</span>';
   }).join('')}
@@ -199,19 +199,19 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
     <div class="bloc-hd">${isAvoir?t.avoirPour:isDevis?t.destinataire:t.factureA}</div>
     <div class="bloc-bd">
       <div class="main">${escapeHTML(destinataire.nom||'—')}</div>
-      ${destinataire.chantier?`<div class="line">📋 ${t.projet} : ${escapeHTML(destinataire.chantier)}</div>`:''}
-      ${destinataire.adresse?`<div class="line">📍 ${escapeHTML(destinataire.adresse||'')}</div>`:''}
+      ${destinataire.chantier?`<div class="line">${t.projet} : ${escapeHTML(destinataire.chantier)}</div>`:''}
+      ${destinataire.adresse?`<div class="line">${escapeHTML(destinataire.adresse||'')}</div>`:''}
       ${destinataire.ice?`<div class="line">ICE : ${escapeHTML(destinataire.ice)}</div>`:''}
-      ${destinataire.tel?`<div class="line">📞 ${escapeHTML(destinataire.tel)}</div>`:''}
+      ${destinataire.tel?`<div class="line">Tél. : ${escapeHTML(destinataire.tel)}</div>`:''}
     </div>
   </div>
   <div class="bloc">
     <div class="bloc-hd">${t.emetteur}</div>
     <div class="bloc-bd">
       <div class="main">${escapeHTML(p.raison||'—')}</div>
-      ${p.adresse?`<div class="line">📍 ${escapeHTML(p.adresse||'')}${p.ville?', '+escapeHTML(p.ville):''}</div>`:''}
-      ${p.email?`<div class="line">✉️ ${escapeHTML(p.email)}</div>`:''}
-      ${p.tel?`<div class="line">📞 ${escapeHTML(p.tel)}</div>`:''}
+      ${p.adresse?`<div class="line">${escapeHTML(p.adresse||'')}${p.ville?', '+escapeHTML(p.ville):''}</div>`:''}
+      ${p.email?`<div class="line">E-mail : ${escapeHTML(p.email)}</div>`:''}
+      ${p.tel?`<div class="line">Tél. : ${escapeHTML(p.tel)}</div>`:''}
     </div>
   </div>
 </div>
@@ -240,7 +240,7 @@ ${showPrices?`
 ${note?`<div style="margin:4px 24px;background:#F7EFDC;border-left:3px solid #B8860B;border-radius:0 6px 6px 0;padding:5px 8px;font-size:9px;color:#7A5A0E"><strong>${t.note} :</strong> ${escapeHTML(note)}</div>`:''}
 ${motif?`<div style="margin:6px 28px;background:#F5E4E1;border-left:3px solid #B23A2E;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#7A2E24"><strong>${t.motif} :</strong> ${escapeHTML(motif)}</div>`:''}
 ${(p.banque||p.rib)?`<div class="bank-box">
-  🏦 ${t.coordBancaires} — ${escapeHTML(p.banque||'')}${p.rib?' · RIB/IBAN : <strong>'+escapeHTML(p.rib)+'</strong>':''}
+  ${t.coordBancaires} — ${escapeHTML(p.banque||'')}${p.rib?' · RIB/IBAN : <strong>'+escapeHTML(p.rib)+'</strong>':''}
   ${p.conditions?'<br>⏱️ '+t.conditions+' : '+escapeHTML(p.conditions):''}
 </div>`:`${p.conditions?`<div class="bank-box" style="background:#E9F4F3;border-color:#CFE3E2;color:#A67A16">⏱️ ${t.conditionsPaiement} : ${escapeHTML(p.conditions)}</div>`:''}`}
 <div style="flex:1;min-height:20px"></div>
@@ -252,8 +252,8 @@ ${(p.banque||p.rib)?`<div class="bank-box">
 <div class="footer">
   <div class="footer-brand">Zel<span>to</span></div>
   <div class="footer-center">
-    ${[p.rc?'RC: '+escapeHTML(p.rc):'', p.identifiant_fiscal?'IF: '+escapeHTML(p.identifiant_fiscal):'', p.ice?'ICE: '+escapeHTML(p.ice):'', p.patente?'Pat: '+escapeHTML(p.patente):'', p.tel?'📞 '+escapeHTML(p.tel):'', p.email?'✉️ '+escapeHTML(p.email):''].filter(Boolean).join(' · ')}
-    ${p.adresse?'<br>📍 '+escapeHTML(p.adresse||'')+(p.ville?', '+escapeHTML(p.ville):''):''}
+    ${[p.rc?'RC: '+escapeHTML(p.rc):'', p.identifiant_fiscal?'IF: '+escapeHTML(p.identifiant_fiscal):'', p.ice?'ICE: '+escapeHTML(p.ice):'', p.patente?'Pat: '+escapeHTML(p.patente):'', p.tel?'Tél. : '+escapeHTML(p.tel):'', p.email?'E-mail : '+escapeHTML(p.email):''].filter(Boolean).join(' · ')}
+    ${p.adresse?'<br>'+escapeHTML(p.adresse||'')+(p.ville?', '+escapeHTML(p.ville):''):''}
   </div>
   <div class="footer-right" style="text-align:right">
     ${(badge_lettre||badge_tva)?`<div style="display:flex;gap:4px;justify-content:flex-end;margin-bottom:4px">
@@ -289,7 +289,7 @@ function ouvrirPDFViewer(htmlContent, ref) {
   title.textContent = ref;
   title.style.cssText = 'color:#fff;font-size:13px;font-weight:600;flex:1;text-align:center';
   const btnDl = document.createElement('button');
-  btnDl.textContent = '💾 Télécharger';
+  btnDl.textContent = 'Télécharger';
   btnDl.style.cssText = 'background:#6E8F4E;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
   btnDl.onclick = function() {
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
@@ -300,7 +300,7 @@ function ouvrirPDFViewer(htmlContent, ref) {
     setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
   };
   const btnShare = document.createElement('button');
-  btnShare.textContent = '📤';
+  btnShare.textContent = 'Partager';
   btnShare.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:15px;cursor:pointer';
   btnShare.onclick = async function() {
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
