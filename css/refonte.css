@@ -182,3 +182,10 @@ body{font-size:15px;line-height:1.45}
   body.menu-ferme .cpt-tab{font-size:0!important;justify-content:center;padding:12px 0!important}
   body.menu-ferme .cpt-tab .ic{font-size:22px}
 }
+
+/* Espace comptable : plus large, sans barre de défilement intérieure */
+#cpt-main-content{overflow:visible!important;flex:none!important}
+@media (min-width:1000px){
+  #cpt-main-content{max-width:1400px}
+  #cpt-main-content div[style*="repeat(2,1fr)"]{grid-template-columns:repeat(3,1fr)!important}
+}
