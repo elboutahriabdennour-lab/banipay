@@ -60,10 +60,24 @@ function renderAccueilBonjour() {
 function basculerMenu(forcer) {
   var ferme = typeof forcer === 'boolean' ? forcer : !document.body.classList.contains('menu-ferme');
   document.body.classList.toggle('menu-ferme', ferme);
+  document.querySelectorAll('.cpt-toggle').forEach(function (b) {
+    b.innerHTML = '<i class="ic ' + (ferme ? 'ic-arrow-right' : 'ic-arrow-left') + '"></i>' + (ferme ? 'Agrandir le menu' : 'Réduire le menu');
+  });
   var t = document.querySelector('#nav-toggle .nav-lbl'); if (t) t.textContent = ferme ? 'Agrandir le menu' : 'Réduire le menu';
   var i = document.querySelector('#nav-toggle .ic'); if (i) i.className = 'ic ' + (ferme ? 'ic-arrow-right' : 'ic-arrow-left') + ' nav-ico';
   try { localStorage.setItem('zelto_menu_ferme', ferme ? '1' : '0'); } catch (e) {}
 }
 document.addEventListener('DOMContentLoaded', function () {
   try { if (localStorage.getItem('zelto_menu_ferme') === '1') basculerMenu(true); } catch (e) {}
+});
+
+// Espace comptable : même bouton « Réduire le menu » que l'espace entreprise.
+document.addEventListener('DOMContentLoaded', function () {
+  var barre = document.getElementById('cpt-tabs');
+  if (!barre || barre.querySelector('.cpt-toggle')) return;
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = 'cpt-tab cpt-toggle'; b.onclick = function () { basculerMenu(); };
+  var ferme = document.body.classList.contains('menu-ferme');
+  b.innerHTML = '<i class="ic ' + (ferme ? 'ic-arrow-right' : 'ic-arrow-left') + '"></i>' + (ferme ? 'Agrandir le menu' : 'Réduire le menu');
+  barre.appendChild(b);
 });
