@@ -2200,6 +2200,14 @@
     </select>
     <label class="a-lbl">Prix unitaire HT (MAD)</label>
     <input class="m-inp" id="ml-pu" type="number" placeholder="0.00" step="0.01">
+    <label class="a-lbl">TVA</label>
+    <select class="m-inp" id="ml-tva">
+      <option value="20" selected>20 %</option>
+      <option value="14">14 %</option>
+      <option value="10">10 %</option>
+      <option value="7">7 %</option>
+      <option value="0">0 % (exonéré)</option>
+    </select>
     <button class="m-btn" onclick="confirmerLigne()">✓ Ajouter</button>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>

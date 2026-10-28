@@ -263,11 +263,11 @@ async function convertirEnFacture(id) {
   const d = STATE.devis.find(x=>x.id===id); if(!d) return;
   showToast('⏳ Conversion...');
   try {
-    const ht = d.ht; const ref = getRef('FAC', STATE.factures);
+    const tot = calculerTotauxLignes(d.lignes); const ht = tot.ht; const ref = getRef('FAC', STATE.factures);
     const r = await sb.post('factures', {
       user_id: (STATE.entrepriseId || sb.user.id), cree_par: sb.user.id, ref, client: d.client, chantier: d.chantier,
       date_emission: today(), paiement: 'virement', statut: 'envoyee',
-      lignes: d.lignes, ht, tva: ht*0.2, ttc: ht*1.2, devis_ref: d.ref,
+      lignes: d.lignes, ht, tva: tot.tva, ttc: tot.ttc, devis_ref: d.ref,
       bc_id: d.bc_id || null,
       devise: d.devise||'MAD', montant_recu: 0,
       destinataire_id: d.destinataire_id || null,

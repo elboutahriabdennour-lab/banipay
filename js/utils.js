@@ -425,3 +425,71 @@ function genererQrDataUrl(texte, taillePx) {
     return null;
   }
 }
+
+
+// ── Calculs de facturation (TVA par taux, arrondis à 2 décimales) ──
+function arrondir2(n) { return Math.round((Number(n) + 1e-9) * 100) / 100; }
+function lignesEnTableau(l) {
+  if (Array.isArray(l)) return l;
+  if (typeof l === 'string') { try { var j = JSON.parse(l || '[]'); return Array.isArray(j) ? j : []; } catch (e) { return []; } }
+  return [];
+}
+function calculerTotauxLignes(lignes) {
+  var groupes = {}, ht = 0;
+  lignesEnTableau(lignes).forEach(function (l) {
+    var lht = arrondir2((Number(l.qte) || 0) * (Number(l.pu) || 0));
+    var taux = Number(l.tva) >= 0 ? Number(l.tva) : 20;
+    groupes[taux] = (groupes[taux] || 0) + lht;
+    ht += lht;
+  });
+  var parTaux = Object.keys(groupes).map(Number).sort(function (a, b) { return a - b; }).map(function (t) {
+    return { taux: t, base: arrondir2(groupes[t]), tva: arrondir2(groupes[t] * t / 100) };
+  });
+  var tva = parTaux.reduce(function (s, x) { return s + x.tva; }, 0);
+  return { ht: arrondir2(ht), tva: arrondir2(tva), ttc: arrondir2(ht + tva), parTaux: parTaux };
+}
+
+// ── Montant en lettres (français) ──
+function nombreEnLettres(n) {
+  n = Math.floor(Math.abs(Number(n) || 0));
+  if (n === 0) return 'zéro';
+  var U = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+  var D = ['', '', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante'];
+  function moinsDeCent(x, fin) {
+    if (x < 20) return U[x];
+    var d = Math.floor(x / 10), u = x % 10;
+    if (d === 7 || d === 9) {
+      var base = d === 7 ? 'soixante' : 'quatre-vingt';
+      var r = 10 + u;
+      if (d === 7) return base + (u === 1 ? ' et onze' : '-' + U[r]);
+      return base + '-' + U[r];
+    }
+    if (d === 8) return u === 0 ? (fin ? 'quatre-vingts' : 'quatre-vingt') : 'quatre-vingt-' + U[u];
+    if (u === 0) return D[d];
+    if (u === 1) return D[d] + ' et un';
+    return D[d] + '-' + U[u];
+  }
+  function moinsDeMille(x, fin) {
+    var c = Math.floor(x / 100), r = x % 100, s = '';
+    if (c > 0) {
+      s = (c === 1 ? 'cent' : U[c] + ' cent') + (c > 1 && r === 0 && fin ? 's' : '');
+      if (r > 0) s += ' ';
+    }
+    if (r > 0) s += moinsDeCent(r, fin);
+    return s;
+  }
+  var parts = [], milliards = Math.floor(n / 1e9), millions = Math.floor((n % 1e9) / 1e6), milliers = Math.floor((n % 1e6) / 1e3), reste = n % 1e3;
+  if (milliards) parts.push(moinsDeMille(milliards, false) + ' milliard' + (milliards > 1 ? 's' : ''));
+  if (millions) parts.push(moinsDeMille(millions, false) + ' million' + (millions > 1 ? 's' : ''));
+  if (milliers) parts.push(milliers === 1 ? 'mille' : moinsDeMille(milliers, false) + ' mille');
+  if (reste) parts.push(moinsDeMille(reste, true));
+  return parts.join(' ');
+}
+function montantEnLettres(montant, devise) {
+  var m = arrondir2(montant), ent = Math.floor(m), cts = Math.round((m - ent) * 100);
+  var noms = { MAD: ['dirham', 'dirhams', 'centime', 'centimes'], EUR: ['euro', 'euros', 'centime', 'centimes'], USD: ['dollar', 'dollars', 'cent', 'cents'] };
+  var n = noms[devise || 'MAD'] || [devise || 'MAD', devise || 'MAD', 'centime', 'centimes'];
+  var s = nombreEnLettres(ent) + ' ' + (ent > 1 ? n[1] : n[0]);
+  if (cts > 0) s += ' et ' + nombreEnLettres(cts) + ' ' + (cts > 1 ? n[3] : n[2]);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}

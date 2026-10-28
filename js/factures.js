@@ -225,7 +225,7 @@ function renderLignesF() {
     <div class="ligne-item">
       <div class="ligne-body">
         <div class="ligne-desc">${l.desc}</div>
-        <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseF}</div>
+        <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseF} · TVA ${Number(l.tva) >= 0 ? Number(l.tva) : 20} %</div>
       </div>
       <div class="ligne-amt">${fmt(l.qte * l.pu)} ${STATE.deviseF}</div>
       <button class="ligne-del" onclick="supprimerLigneF(${i})">×</button>
@@ -236,16 +236,10 @@ function renderLignesF() {
 function supprimerLigneF(i) { STATE.lignesF.splice(i, 1); renderLignesF(); }
 
 function updateTotauxF() {
-  const ht = STATE.lignesF.reduce((s, l) => s + (Number(l.qte)||0) * (Number(l.pu)||0), 0);
-  const tva = STATE.lignesF.reduce((s, l) => {
-    const lineHt = (Number(l.qte)||0) * (Number(l.pu)||0);
-    const taux = Number(l.tva) >= 0 ? Number(l.tva) : 20;
-    return s + lineHt * taux / 100;
-  }, 0);
-  const ttc = ht + tva;
-  setEl('total-ht', fmt(ht) + ' ' + STATE.deviseF);
-  setEl('total-tva', fmt(tva) + ' ' + STATE.deviseF);
-  setEl('total-ttc', fmt(ttc) + ' ' + STATE.deviseF);
+  const t = calculerTotauxLignes(STATE.lignesF);
+  setEl('total-ht', fmt(t.ht) + ' ' + STATE.deviseF);
+  setEl('total-tva', fmt(t.tva) + ' ' + STATE.deviseF);
+  setEl('total-ttc', fmt(t.ttc) + ' ' + STATE.deviseF);
 }
 
 function chercherHistoriquePrixClient(clientNom, description) {
@@ -302,7 +296,8 @@ function confirmerLigne() {
   const unite = el('ml-unite')?.value || 'u';
   if (!desc) { showToast('Entrez une description', 'error'); return; }
   if (pu <= 0) { showToast('Entrez un prix', 'error'); return; }
-  STATE.lignesF.push({ desc, qte, pu, unite });
+  const tvaL = parseFloat(el('ml-tva')?.value);
+  STATE.lignesF.push({ desc, qte, pu, unite, tva: tvaL >= 0 ? tvaL : 20 });
   closeAllModals();
   renderLignesF();
 }
@@ -332,7 +327,7 @@ function ajouterDepuisCatalogue(id) {
   if (typeof ajouterDepuisCatalogueAchatSiActif === 'function' && ajouterDepuisCatalogueAchatSiActif(id)) return;
   const p = STATE.produits.find(x => x.id === id);
   if (!p) return;
-  STATE.lignesF.push({ desc: p.nom, qte: 1, pu: p.prix_ht, unite: p.unite || 'u', produit_id: p.id });
+  STATE.lignesF.push({ desc: p.nom, qte: 1, pu: p.prix_ht, unite: p.unite || 'u', produit_id: p.id, tva: [0,7,10,14,20].indexOf(Number(p.tva_rate)) >= 0 ? Number(p.tva_rate) : 20 });
   closeAllModals();
   renderLignesF();
   showToast('✅ ' + p.nom + ' ajouté');
@@ -349,7 +344,16 @@ async function sauvegarderFacture(isDraft = false) {
     showToast('⚠️ L\'échéance ne peut pas être avant la date d\'émission', 'error');
     return;
   }
-  const ht = STATE.lignesF.reduce((s,l) => s + l.qte*l.pu, 0);
+  const tot = calculerTotauxLignes(STATE.lignesF);
+  const ht = tot.ht;
+  if (!isDraft) {
+    const pe = STATE.profil || {};
+    if (!/^\d{15}$/.test(String(pe.ice || '').trim())) {
+      showToast('Pour émettre une facture, complétez d\'abord votre ICE (15 chiffres) dans votre profil.', 'error');
+      setTimeout(function () { goScreen('profil', null); }, 1200);
+      return;
+    }
+  }
   const statut = isDraft ? 'brouillon' : (el('f-statut')?.value || 'envoyee');
   showToast('⏳ Sauvegarde...');
   try {
@@ -364,7 +368,7 @@ async function sauvegarderFacture(isDraft = false) {
       paiement: el('f-paiement')?.value,
       note: el('f-note')?.value.trim(),
       bc_id: el('f-bc-lie')?.value ? parseInt(el('f-bc-lie').value) : null,
-      statut, ht, tva: ht * 0.2, ttc: ht * 1.2,
+      statut, ht, tva: tot.tva, ttc: tot.ttc,
       lignes: STATE.lignesF,
       devise: STATE.deviseF,
       montant_recu: 0,
@@ -373,7 +377,10 @@ async function sauvegarderFacture(isDraft = false) {
     const r = await sb.post('factures', body);
     if (r && r.length > 0) { STATE.factures.unshift(r[0]); } else { throw new Error("Erreur serveur"); }
     autoAddClient(client);
-    showToast(isDraft ? '📋 Brouillon sauvegardé' : '✅ Facture enregistrée !', 'success');
+    showToast(isDraft ? '📋 Brouillon sauvegardé' : '✅ Facture ' + (r[0].ref || '') + ' enregistrée !', 'success');
+    if (!isDraft && tot.tva > 0 && clientConnu && !/^\d{15}$/.test(String(clientConnu.ice || '').trim())) {
+      setTimeout(function () { showToast('ICE du client manquant : il ne pourra pas déduire la TVA. Ajoutez-le dans sa fiche.'); }, 2200);
+    }
     logAudit('facture', r[0].id, 'creation', (r[0].ref || '') + ' — ' + client + ' — ' + fmt(body.ttc) + ' MAD');
     if (!isDraft) await decrementerStockDepuisLignes(STATE.lignesF, r[0].ref);
     setTimeout(() => goScreen('dashboard'), 800);
@@ -484,7 +491,7 @@ function renderDetail() {
   const totalAvoirs = avoirsLies.reduce(function(s, a) { return s + (Number(a.ttc) || 0); }, 0);
   if (totEl) totEl.innerHTML = `
     <div class="d-tot-row"><span>Sous-total HT</span><span>${fmt(f.ht)} ${dv}</span></div>
-    <div class="d-tot-row"><span>TVA 20%</span><span>${fmt(f.tva)} ${dv}</span></div>
+    ${_lignesTVAHtml(f, dv)}
     ${recu > 0 ? `<div class="d-tot-row"><span>Déjà reçu</span><span style="color:#6E8F4E">-${fmt(recu)} ${dv}</span></div>` : ''}
     <div class="d-tot-row main"><span>Total TTC</span><span>${fmt(f.ttc)} ${dv}</span></div>
     ${restant > 0 && recu > 0 ? `<div class="d-tot-row" style="color:#B23A2E"><span>Solde restant</span><span>${fmt(restant)} ${dv}</span></div>` : ''}
@@ -666,8 +673,12 @@ async function marquerRetard(id) {
 }
 
 async function supprimerFacture(id) {
-  if (!confirm('Supprimer cette facture ?')) return;
   const f = STATE.factures.find(x => x.id === id);
+  if (f && f.statut !== 'brouillon') {
+    showToast('Une facture émise ne peut pas être supprimée (conservation légale). Annulez-la ou créez un avoir.', 'error');
+    return;
+  }
+  if (!confirm('Supprimer ce brouillon ?')) return;
   await sb.del('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
   STATE.factures = STATE.factures.filter(x => x.id !== id);
   showToast('Facture supprimée');
@@ -887,13 +898,16 @@ function exportPDFString(factureOrId) {
   const accent = p.couleur_accent || '#C9971F';
   const dv = f.devise||'MAD';
   const recu = Number(f.montant_recu||0);
+  const cli = (STATE.clients||[]).find(function(c){return c.nom===f.client;}) || {};
+  const tv = calculerTotauxLignes(f.lignes);
+  const ventTVA = (tv.parTaux.length && Math.abs(tv.tva-Number(f.tva||0))<=0.02) ? tv.parTaux.map(function(x){return '<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>'+(x.taux===0?'TVA 0 % (exonéré)':'TVA '+x.taux+' %')+'</span><span>'+fmt(x.tva)+' '+dv+'</span></div>';}).join('') : '<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>TVA</span><span>'+fmt(f.tva)+' '+dv+'</span></div>';
   const restant = Math.max(0, Number(f.ttc)-recu);
   const legalParts=[p.rc?'RC: '+p.rc:null,p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:null,p.ice?'ICE: '+p.ice:null,p.patente?'Patente: '+p.patente:null].filter(Boolean).join(' · ');
   // FIX (même bug que renderDetail) : garde contre des lignes stockées
   // comme texte JSON brut plutôt qu'un vrai tableau.
   const lignesPourPDF = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
   const lignesHTML=lignesPourPDF.map((l,i)=>`<tr style="background:${i%2===0?'#F1EEE8':'#fff'}"><td style="padding:8px 12px;font-size:12px">${escapeHTML(l.desc||'')}<\/td><td style="padding:8px 12px;text-align:center;font-size:12px">${l.qte} ${l.unite||''}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px">${fmt(l.pu)} ${dv}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}<\/td><\/tr>`).join('');
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${f.ref}<\/title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#2A2420;font-size:12px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}<\/style><\/head><body><div style="background:#2A2420;padding:20px 28px;display:flex;justify-content:space-between"><div><div style="font-size:16px;font-weight:700;color:#fff">${escapeHTML(p.raison||'Mon Entreprise')}<\/div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px">${p.tel||''} · ${p.email||''}<\/div><\/div><div style="text-align:right"><div style="background:${accent};color:#fff;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700">FACTURE<\/div><div style="color:#fff;font-size:12px;margin-top:6px">${f.ref}<\/div><div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:2px">Date: ${f.date_emission||''}<\/div><\/div><\/div><div style="background:#F1EEE8;padding:6px 28px;text-align:center;font-size:9px;color:#6B5F54;border-bottom:1px solid #E3DCCF">${legalParts}<\/div><div style="display:flex;gap:10px;padding:12px 28px"><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Facturé à<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(f.client)}<\/div>${f.chantier?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">Projet: ${escapeHTML(f.chantier)}<\/div>`:''}<\/div><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Émetteur<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(p.raison||'')}<\/div>${p.rc?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">RC: ${p.rc}<\/div>`:''}<\/div><\/div><div style="padding:0 28px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#2A2420"><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:left">Désignation<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:center">Qté<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">P.U. HT<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">Total HT<\/th><\/tr><\/thead><tbody>${lignesHTML}<\/tbody><\/table><\/div><div style="padding:10px 28px;display:flex;justify-content:flex-end"><div style="width:250px;border:1px solid #E3DCCF;border-radius:8px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>HT<\/span><span>${fmt(f.ht)} ${dv}<\/span><\/div><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>TVA 20%<\/span><span>${fmt(f.tva)} ${dv}<\/span><\/div>${recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;color:#6E8F4E"><span>Déjà reçu<\/span><span>-${fmt(recu)} ${dv}<\/span><\/div>`:''}<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#2A2420"><span style="font-size:12px;font-weight:700;color:#fff">TOTAL TTC<\/span><span style="font-size:14px;font-weight:700;color:#6FB3B5">${fmt(f.ttc)} ${dv}<\/span><\/div>${restant>0&&recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;color:#B23A2E;font-size:11px"><span>Solde restant<\/span><span>${fmt(restant)} ${dv}<\/span><\/div>`:''}<\/div><\/div><div style="padding:3px 28px 10px;font-size:10px;color:#6B5F54;font-style:italic">Arrêté à la somme de ${fmt(f.ttc)} ${dv==='MAD'?'dirhams':dv} TTC.<\/div>${f.note?`<div style="margin:0 28px 10px;background:#F7EFDC;border-left:3px solid #B8860B;padding:10px;font-size:11px;color:#7A5A0E">📌 ${escapeHTML(f.note)}<\/div>`:''}<div style="background:#2A2420;padding:12px 28px;margin-top:16px;text-align:center"><div style="font-size:11px;font-weight:700;color:#fff">Zel<span style="color:#6FB3B5">to<\/span><\/div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px">${legalParts}<\/div><\/div><\/body><\/html>`;
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${f.ref}<\/title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#2A2420;font-size:12px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}<\/style><\/head><body><div style="background:#2A2420;padding:20px 28px;display:flex;justify-content:space-between"><div><div style="font-size:16px;font-weight:700;color:#fff">${escapeHTML(p.raison||'Mon Entreprise')}<\/div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px">${p.tel||''} · ${p.email||''}<\/div><\/div><div style="text-align:right"><div style="background:${accent};color:#fff;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700">FACTURE<\/div><div style="color:#fff;font-size:12px;margin-top:6px">${f.ref}<\/div><div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:2px">Date: ${f.date_emission||''}<\/div><\/div><\/div><div style="background:#F1EEE8;padding:6px 28px;text-align:center;font-size:9px;color:#6B5F54;border-bottom:1px solid #E3DCCF">${legalParts}<\/div><div style="display:flex;gap:10px;padding:12px 28px"><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Facturé à<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(f.client)}<\/div>${cli.adresse?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">${escapeHTML(cli.adresse)}<\/div>`:''}${cli.ice?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">ICE: ${escapeHTML(String(cli.ice))}<\/div>`:''}${f.chantier?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">Projet: ${escapeHTML(f.chantier)}<\/div>`:''}<\/div><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Émetteur<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(p.raison||'')}<\/div>${p.adresse?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">${escapeHTML(p.adresse)}${p.ville?', '+escapeHTML(p.ville):''}<\/div>`:''}${p.rc?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">RC: ${escapeHTML(String(p.rc))}<\/div>`:''}<\/div><\/div><div style="padding:0 28px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#2A2420"><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:left">Désignation<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:center">Qté<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">P.U. HT<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">Total HT<\/th><\/tr><\/thead><tbody>${lignesHTML}<\/tbody><\/table><\/div><div style="padding:10px 28px;display:flex;justify-content:flex-end"><div style="width:250px;border:1px solid #E3DCCF;border-radius:8px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>HT<\/span><span>${fmt(f.ht)} ${dv}<\/span><\/div>${ventTVA}${recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;color:#6E8F4E"><span>Déjà reçu<\/span><span>-${fmt(recu)} ${dv}<\/span><\/div>`:''}<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#2A2420"><span style="font-size:12px;font-weight:700;color:#fff">TOTAL TTC<\/span><span style="font-size:14px;font-weight:700;color:#6FB3B5">${fmt(f.ttc)} ${dv}<\/span><\/div>${restant>0&&recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;color:#B23A2E;font-size:11px"><span>Solde restant<\/span><span>${fmt(restant)} ${dv}<\/span><\/div>`:''}<\/div><\/div><div style="padding:3px 28px 10px;font-size:10px;color:#6B5F54;font-style:italic">Arrêtée à la somme de : ${montantEnLettres(f.ttc, dv)} TTC.${f.echeance?' Échéance : '+f.echeance+'.':''} Tout retard de paiement peut entraîner des pénalités, conformément à la réglementation en vigueur.<\/div>${f.note?`<div style="margin:0 28px 10px;background:#F7EFDC;border-left:3px solid #B8860B;padding:10px;font-size:11px;color:#7A5A0E">📌 ${escapeHTML(f.note)}<\/div>`:''}<div style="background:#2A2420;padding:12px 28px;margin-top:16px;text-align:center"><div style="font-size:11px;font-weight:700;color:#fff">Zel<span style="color:#6FB3B5">to<\/span><\/div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px">${legalParts}<\/div><\/div><\/body><\/html>`;
 }
 
 function calculerSoldeFacture(factureId) {
@@ -1289,3 +1303,15 @@ ${p.tel||''}`
   window.ouvrirPDFViewer = _viewerReel;
   window.addEventListener('load', function () { window.ouvrirPDFViewer = _viewerReel; });
 })();
+
+
+// Lignes de TVA par taux pour l'écran détail (« TVA 20 % », « TVA 10 % »…).
+function _lignesTVAHtml(f, dv) {
+  const t = calculerTotauxLignes(f.lignes);
+  if (!t.parTaux.length || Math.abs(t.tva - Number(f.tva || 0)) > 0.02) {
+    return '<div class="d-tot-row"><span>TVA</span><span>' + fmt(f.tva) + ' ' + dv + '</span></div>';
+  }
+  return t.parTaux.map(function (x) {
+    return '<div class="d-tot-row"><span>' + (x.taux === 0 ? 'TVA 0 % (exonéré)' : 'TVA ' + x.taux + ' %') + '</span><span>' + fmt(x.tva) + ' ' + dv + '</span></div>';
+  }).join('');
+}
