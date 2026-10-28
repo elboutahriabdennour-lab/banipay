@@ -170,3 +170,15 @@ body{font-size:15px;line-height:1.45}
 #screen-auth .auth-wrap{width:100%!important;max-width:400px!important;margin:auto!important}
 #screen-auth>*{max-width:none}
 #screen-auth .auth-wrap>*{margin-left:auto;margin-right:auto}
+
+/* Espace comptable : menu réductible (ordinateur) */
+.cpt-toggle{display:none!important}
+@media (min-width:1000px){
+  .cpt-toggle{display:flex!important;margin-top:auto;cursor:pointer;border:none;font-family:inherit}
+  #cpt-tabs{transition:width .2s}
+  body.menu-ferme #screen-comptable{padding-left:72px}
+  body.menu-ferme #cpt-tabs{width:72px;padding-left:10px;padding-right:10px;overflow:hidden}
+  body.menu-ferme #cpt-tabs::before{display:none}
+  body.menu-ferme .cpt-tab{font-size:0!important;justify-content:center;padding:12px 0!important}
+  body.menu-ferme .cpt-tab .ic{font-size:22px}
+}
