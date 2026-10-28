@@ -1,0 +1,130 @@
+/* ZELTO — refonte.css : refonte visuelle (chargée après style.css). Mobile d'abord, puis ordinateur. */
+:root{--r-card:18px;--sh-sm:0 1px 2px rgba(36,31,27,.06),0 4px 14px rgba(36,31,27,.05);--sh-md:0 8px 28px rgba(36,31,27,.12);--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px)}
+html,body{background:var(--paper)}
+body{font-size:15px;line-height:1.45}
+
+/* ── En-têtes : une seule barre sombre, sobre et identique partout ── */
+.topbar,.form-header,.sec-header{background:var(--charcoal);padding-top:calc(14px + var(--safe-t))}
+.topbar{box-shadow:none}
+.form-header{border-bottom:none}
+.sec-header{padding-top:12px;padding-bottom:12px}
+.topbar-brand{letter-spacing:-.3px}
+.back-btn{background:rgba(255,255,255,.14);color:#fff}
+.t-icon{background:rgba(255,255,255,.12);color:#fff}
+.t-icon .ic{font-size:18px}
+
+/* ── Accueil ── */
+.dash-top{background:var(--charcoal);padding:calc(14px + var(--safe-t)) 20px 74px;display:flex;justify-content:space-between;align-items:center}
+.dash-top .topbar-brand{font-size:22px;font-weight:800;color:#fff;cursor:pointer}
+.dash-top .topbar-brand span{color:var(--safran)}
+.dash-hello{padding:0 20px;margin-top:-58px;position:relative;z-index:2}
+.dash-hi{font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;color:#fff;line-height:1.2}
+.dash-sub{font-size:13px;color:rgba(255,255,255,.65);margin-top:2px}
+.dash-card{margin:18px 16px 0;background:var(--surface);border-radius:22px;padding:18px 18px 16px;box-shadow:var(--sh-md);position:relative;z-index:3}
+.dash-card .hero-lbl{color:var(--ink-faint);font-weight:700;letter-spacing:.08em}
+.dash-card .hero-amount{color:var(--ink);font-size:34px;margin:2px 0}
+.dash-card .hero-sub-txt{color:var(--ink-faint);margin-bottom:14px}
+.dash-card .hero-grid{gap:8px}
+.dash-card .hero-box{border-radius:14px;padding:10px 6px}
+.dash-card .hero-box:nth-child(1){background:var(--sauge-light)}
+.dash-card .hero-box:nth-child(2){background:var(--ambre-light)}
+.dash-card .hero-box:nth-child(3){background:var(--brique-light)}
+.dash-card .hero-box-val.g{color:var(--sauge-dark)}.dash-card .hero-box-val.o{color:var(--ambre)}.dash-card .hero-box-val.r{color:var(--brique-dark)}
+.dash-card .hero-box-val{font-size:18px;font-weight:800}
+.dash-card .hero-box-lbl{color:var(--ink-soft);font-size:11px;font-weight:600}
+.dash-ca{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border);font-size:12px;color:var(--ink-soft)}
+.dash-ca strong{font-family:'Baloo 2',sans-serif;font-size:15px;color:var(--ink)}
+.alerte-bar{margin:14px 16px 0;border-radius:14px}
+.dash-cta{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;padding:16px 16px 4px}
+.btn-primary,.btn-secondary{display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:14px;padding:15px 12px;font-family:'Baloo 2',sans-serif;font-size:15px;font-weight:700;cursor:pointer;min-height:50px}
+.btn-primary{background:linear-gradient(135deg,var(--safran),var(--safran-dark));color:#fff;box-shadow:0 6px 16px rgba(201,151,31,.32)}
+.btn-secondary{background:var(--surface);color:var(--zellige-dark);border:1.5px solid var(--border)}
+.btn-primary:active,.btn-secondary:active{transform:scale(.98)}
+.dash-sec{display:flex;justify-content:space-between;align-items:baseline;padding:22px 20px 8px}
+.dash-sec-t{font-family:'Baloo 2',sans-serif;font-size:16px;font-weight:700;color:var(--ink)}
+.dash-sec-a{font-size:13px;font-weight:700;color:var(--zellige);cursor:pointer}
+#accueil-recents{margin:0 16px;background:var(--surface);border-radius:var(--r-card);box-shadow:var(--sh-sm);border:1px solid var(--border);overflow:hidden}
+.rec-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.rec-row:last-child{border-bottom:none}.rec-row:active{background:var(--paper)}
+.rec-main{min-width:0}.rec-name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-ref{font-size:11px;color:var(--ink-faint);margin-top:2px}
+.rec-end{text-align:right;flex-shrink:0}.rec-amt{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px}
+.pill{display:inline-block;margin-top:3px;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;background:var(--border);color:var(--ink-soft)}
+.pill-payee{background:var(--sauge-light);color:var(--sauge-dark)}.pill-attente,.pill-envoyee{background:var(--ambre-light);color:var(--ambre)}
+.pill-retard{background:var(--brique-light);color:var(--brique-dark)}.pill-brouillon{background:var(--border);color:var(--ink-soft)}.pill-annulee{background:var(--border);color:var(--ink-faint)}
+.empty-card{padding:28px 20px;text-align:center}
+.empty-card .empty-ico{width:54px;height:54px;border-radius:16px;background:var(--safran-light);color:var(--safran-dark);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px}
+.empty-t{font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px}.empty-s{font-size:13px;color:var(--ink-soft);margin:4px 0 16px}
+.empty-card .btn-primary{margin:0 auto;padding:13px 20px}
+
+/* ── Raccourcis (tuiles) ── */
+.groupe-label{padding:22px 20px 8px;font-family:'Baloo 2',sans-serif;font-size:15px}
+.quick-actions{gap:10px;padding:0 16px}
+.qa-item{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 4px;box-shadow:var(--sh-sm)}
+.qa-item:active{background:var(--paper)}
+.qa-ico{width:44px;height:44px;border-radius:12px;font-size:21px}
+.qa-lbl{font-size:11px}
+
+/* ── Listes, cartes, champs ── */
+.card-list{padding:0 16px;gap:10px}
+.card{border-radius:var(--r-card);padding:14px 16px;box-shadow:var(--sh-sm)}
+.card-ico{border-radius:12px}
+.card-amt{font-family:'Baloo 2',sans-serif}
+.f-inp,.a-inp{border-radius:12px;font-size:16px;min-height:46px}
+.f-inp:focus,.a-inp:focus{border-color:var(--zellige);box-shadow:0 0 0 3px rgba(31,111,114,.14)}
+.ftab{padding:8px 16px;font-size:13px;min-height:36px}
+.sec-title{font-family:'Baloo 2',sans-serif}
+.toast{border-radius:14px;font-size:14px;bottom:calc(96px + var(--safe-b))}
+.toast:not(.show){opacity:0;pointer-events:none}
+
+/* ── Barre du bas ── */
+.bottom-nav{display:none;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:8px 10px calc(8px + var(--safe-b));justify-content:space-around;align-items:flex-end;z-index:60}
+.nav-item{padding:6px 2px;min-width:56px;color:var(--ink-faint);position:relative}
+.nav-item .ic{font-size:22px;color:var(--ink-faint)}
+.nav-lbl{font-size:11px}
+.nav-item.active .ic{color:var(--zellige)}.nav-item.active .nav-lbl{color:var(--zellige);font-weight:800}
+.nav-item.active::before{content:"";position:absolute;top:-9px;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--zellige)}
+.nav-fab .fab{width:54px;height:54px;border-radius:18px;margin-top:-26px;border:4px solid var(--paper);box-shadow:0 8px 20px rgba(201,151,31,.4);color:#fff;font-size:26px}
+.nav-fab .fab .ic{color:#fff;font-size:26px}
+.screen.active:not(#screen-auth):not(#screen-chat-ticket){padding-bottom:calc(84px + var(--safe-b))}
+
+/* ── Menu « + » ── */
+#sheet-nouveau{position:fixed;inset:0;background:rgba(36,31,27,.5);z-index:120;display:none;align-items:flex-end;justify-content:center}
+#sheet-nouveau.active{display:flex}
+.sheet{background:var(--surface);width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:10px 16px calc(20px + var(--safe-b))}
+.sheet-handle{width:40px;height:4px;border-radius:2px;background:var(--border);margin:6px auto 14px}
+.sheet-t{font-family:'Baloo 2',sans-serif;font-size:17px;font-weight:700;margin:0 4px 12px}
+.sheet-it{display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:14px;cursor:pointer}
+.sheet-it:active{background:var(--paper)}
+.sheet-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.sheet-n{font-weight:700;font-size:15px}.sheet-d{font-size:12px;color:var(--ink-soft)}
+
+/* ── Ordinateur : menu à gauche, contenu centré ── */
+@media (min-width:1000px){
+  body{background:#E9E4DA}
+  .bottom-nav{top:0;bottom:0;right:auto;width:232px;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;padding:84px 14px 20px;border-top:none;border-right:1px solid var(--border);background:var(--surface)}
+  .bottom-nav::before{content:attr(data-brand-nom);position:absolute;top:22px;left:24px;font-family:'Baloo 2',sans-serif;font-size:24px;font-weight:800;color:var(--ink)}
+  .nav-item{flex:none;flex-direction:row;gap:12px;padding:12px 14px;border-radius:12px;justify-content:flex-start}
+  .nav-item:hover{background:var(--paper)}
+  .nav-item.active{background:var(--zellige-light)}.nav-item.active::before{display:none}
+  .nav-lbl{font-size:14px}
+  .nav-fab{order:-1;flex:none;justify-content:flex-start;margin-bottom:10px}
+  .nav-fab .fab{width:100%;height:48px;margin:0;border:none;border-radius:12px;font-size:15px;gap:8px;font-family:'Baloo 2',sans-serif;font-weight:700}
+  .nav-fab .fab::after{content:"Nouveau";font-size:15px}
+  .screen{left:232px}
+  .screen.active:not(#screen-auth){padding-bottom:40px}
+  .screen>*:not(.topbar):not(.form-header):not(.sec-header):not(.dash-top):not(.modal-overlay):not([style*="position:fixed"]){max-width:880px;margin-left:auto;margin-right:auto}
+  .screen>.dash-top{padding-left:max(20px,calc((100% - 880px)/2 + 20px));padding-right:max(20px,calc((100% - 880px)/2 + 20px))}
+  .dash-hello{padding:0}
+  #accueil-recents{margin:0 auto}
+  .dash-cta{padding-left:0;padding-right:0}.dash-sec{padding-left:4px;padding-right:4px}
+  .dash-card,.alerte-bar{margin-left:auto;margin-right:auto}
+  .toast{bottom:30px}
+  .dash-cta{grid-template-columns:1fr 1fr 2fr}
+  .quick-actions{grid-template-columns:repeat(6,1fr)}
+}
+
+/* Listes : les petits boutons restent dans le détail de la facture */
+.card .card-end button{display:none}
+.card-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.screen>.topbar+.sec-header{margin-top:0!important;padding-top:0;padding-bottom:14px}

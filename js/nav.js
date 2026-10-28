@@ -624,11 +624,11 @@ function goScreen(name, options) {
   const sc = el('screen-' + name);
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
 
-  const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','pdf-viewer','chat'];
+  const _noNav = ['auth','comptable','cpt-entreprise','comptable-profil','pdf-viewer','chat','nouvelle','nouveau-devis','nouveau-client','avoir','detail','detail-devis','detail-client'];
   const _bottomNav = document.querySelector('.bottom-nav');
   if (_bottomNav) _bottomNav.style.display = _noNav.includes(name) ? 'none' : 'flex';
 
-  const _navMap = {'dashboard':'nav-home','nouvelle':'nav-home','detail':'nav-home',
+  const _navMap = {'dashboard':'nav-home','nouvelle':'nav-factures','detail':'nav-factures','mes-factures':'nav-factures',
     'devis-list':'nav-devis','nouveau-devis':'nav-devis','detail-devis':'nav-devis',
     'clients':'nav-clients','nouveau-client':'nav-clients','detail-client':'nav-clients',
     'profil':'nav-profil','stats':'nav-profil','parametres':'nav-profil','archive':'nav-profil'};
