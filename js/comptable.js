@@ -229,28 +229,28 @@ function renderListeEntreprises(filtre) {
     const etat = inv._etat || 'vert';
     const nomAffiche = p.raison || inv.entreprise_email || 'Entreprise';
     const initiales = (nomAffiche || '?').split(' ').slice(0, 2).map(function(w) { return w[0] || ''; }).join('').toUpperCase() || '?';
-    return '<div onclick="ouvrirEntreprise(\'' + inv.entreprise_id + '\')" style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;border:1px solid #E3DCCF;cursor:pointer">' +
+    return '<div onclick="ouvrirEntreprise(\'' + inv.entreprise_id + '\')" style="background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;border:1px solid #DDE3DA;cursor:pointer">' +
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">' +
-        '<div style="width:44px;height:44px;border-radius:12px;background:#FBF0DA;color:#1F6F72;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + initiales + '</div>' +
+        '<div style="width:44px;height:44px;border-radius:12px;background:#E7F2EC;color:#1B5E4B;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0">' + initiales + '</div>' +
         '<div style="flex:1">' +
-          '<div style="font-size:13px;font-weight:700;color:#2A2420">' + escapeHTML(nomAffiche) + '</div>' +
-          '<div style="font-size:11px;color:#6B5F54">' + (p.secteur || '') + (p.ville ? ' · ' + p.ville : '') + '</div>' +
+          '<div style="font-size:13px;font-weight:700;color:#14241F">' + escapeHTML(nomAffiche) + '</div>' +
+          '<div style="font-size:11px;color:#5B6B64">' + (p.secteur || '') + (p.ville ? ' · ' + p.ville : '') + '</div>' +
         '</div>' +
-        '<button onclick="event.stopPropagation();messagerAvecEntreprise(' + valeurPourOnclick(inv.entreprise_id) + ',' + valeurPourOnclick(inv.entreprise_email||'') + ')" title="Ecrire a cette entreprise" style="background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0">💬</button>' +
+        '<button onclick="event.stopPropagation();messagerAvecEntreprise(' + valeurPourOnclick(inv.entreprise_id) + ',' + valeurPourOnclick(inv.entreprise_email||'') + ')" title="Ecrire a cette entreprise" style="background:#E7F2EC;color:#1B5E4B;border:none;border-radius:8px;width:32px;height:32px;font-size:14px;cursor:pointer;flex-shrink:0">💬</button>' +
         '<div style="font-size:12px;font-weight:700;color:' + etatColor(etat) + '">' + etatLabel(etat) + '</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
-        '<div style="text-align:center;background:#F1EEE8;border-radius:8px;padding:6px">' +
-          '<div style="font-size:11px;font-weight:700;color:#2A2420">' + total + '</div>' +
-          '<div style="font-size:9px;color:#9C9186">Documents</div>' +
+        '<div style="text-align:center;background:#F5F6F1;border-radius:8px;padding:6px">' +
+          '<div style="font-size:11px;font-weight:700;color:#14241F">' + total + '</div>' +
+          '<div style="font-size:9px;color:#8E9C95">Documents</div>' +
         '</div>' +
         '<div style="text-align:center;background:#F7EFDC;border-radius:8px;padding:6px">' +
           '<div style="font-size:11px;font-weight:700;color:#B8860B">' + txL + '%</div>' +
-          '<div style="font-size:9px;color:#9C9186">Lettrage</div>' +
+          '<div style="font-size:9px;color:#8E9C95">Lettrage</div>' +
         '</div>' +
         '<div style="text-align:center;background:#EDE6F0;border-radius:8px;padding:6px">' +
           '<div style="font-size:11px;font-weight:700;color:#7C5CA6">' + txT + '%</div>' +
-          '<div style="font-size:9px;color:#9C9186">TVA</div>' +
+          '<div style="font-size:9px;color:#8E9C95">TVA</div>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -319,15 +319,15 @@ function toggleEntrepriseDropdownCpt(event) {
   if (existant) { existant.remove(); document.removeEventListener('click', _fermerEntrepriseDropdownCptSiExterieur, true); return; }
   const panel = document.createElement('div');
   panel.id = 'entreprise-dropdown-cpt';
-  panel.style.cssText = 'position:fixed;top:66px;left:12px;right:12px;max-width:380px;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(42,36,32,0.3);z-index:9999;max-height:60vh;overflow-y:auto;border:1px solid #E3DCCF';
+  panel.style.cssText = 'position:fixed;top:66px;left:12px;right:12px;max-width:380px;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(42,36,32,0.3);z-index:9999;max-height:60vh;overflow-y:auto;border:1px solid #DDE3DA';
   panel.innerHTML = (CPT.entreprises || []).map(function(inv) {
     const p = inv.profil || {};
     const nom = p.raison || inv.entreprise_email || 'Entreprise';
     const actif = inv.entreprise_id === CPT.currentEntrepriseId;
-    return '<div class="item-entreprise-dropdown" data-eid="' + inv.entreprise_id + '" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid #F1EEE8;background:' + (actif ? '#E9F4F3' : '#fff') + '">' +
-      (p.logo ? '<img src="' + p.logo + '" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0">' : '<div style="width:32px;height:32px;border-radius:8px;background:#EAE4DA;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#6B5F54;flex-shrink:0">' + (nom[0]||'?').toUpperCase() + '</div>') +
-      '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#2A2420;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHTML(nom) + '</div><div style="font-size:10px;color:#9C9186">' + etatLabel(inv._etat) + '</div></div>' +
-      (actif ? '<span style="color:#1F6F72;font-size:14px">✓</span>' : '') +
+    return '<div class="item-entreprise-dropdown" data-eid="' + inv.entreprise_id + '" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;border-bottom:1px solid #F5F6F1;background:' + (actif ? '#E7F2EC' : '#fff') + '">' +
+      (p.logo ? '<img src="' + p.logo + '" style="width:32px;height:32px;border-radius:8px;object-fit:cover;flex-shrink:0">' : '<div style="width:32px;height:32px;border-radius:8px;background:#EAE4DA;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5B6B64;flex-shrink:0">' + (nom[0]||'?').toUpperCase() + '</div>') +
+      '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#14241F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHTML(nom) + '</div><div style="font-size:10px;color:#8E9C95">' + etatLabel(inv._etat) + '</div></div>' +
+      (actif ? '<span style="color:#1B5E4B;font-size:14px">✓</span>' : '') +
     '</div>';
   }).join('');
   document.body.appendChild(panel);
@@ -381,12 +381,12 @@ function renderFicheEntreprise() {
     '<div style="padding:16px">' +
       '<div style="background:' + etatColor(etat) + '20;border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">' +
         '<span style="font-size:13px;font-weight:700;color:' + etatColor(etat) + '">' + etatLabel(etat) + '</span>' +
-        '<span style="font-size:11px;color:#6B5F54">Controle global: ' + txG + '%</span>' +
+        '<span style="font-size:11px;color:#5B6B64">Controle global: ' + txG + '%</span>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">' +
-        '<div style="background:#E9F4F3;border-radius:12px;padding:12px;text-align:center">' +
-          '<div style="font-size:20px;font-weight:800;color:#C9971F">' + total + '</div>' +
-          '<div style="font-size:10px;color:#C9971F">Factures</div>' +
+        '<div style="background:#E7F2EC;border-radius:12px;padding:12px;text-align:center">' +
+          '<div style="font-size:20px;font-weight:800;color:#1B5E4B">' + total + '</div>' +
+          '<div style="font-size:10px;color:#1B5E4B">Factures</div>' +
         '</div>' +
         '<div style="background:#F7EFDC;border-radius:12px;padding:12px;text-align:center">' +
           '<div style="font-size:20px;font-weight:800;color:#B8860B">' + nonLettres + '</div>' +
@@ -398,16 +398,16 @@ function renderFicheEntreprise() {
         '</div>' +
       '</div>' +
       '<div style="margin-bottom:8px">' +
-        '<div style="display:flex;justify-content:space-between;font-size:11px;color:#6B5F54;margin-bottom:4px"><span>Lettrage</span><span style="font-weight:700">' + txL + '%</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px;color:#5B6B64;margin-bottom:4px"><span>Lettrage</span><span style="font-weight:700">' + txL + '%</span></div>' +
         '<div style="height:8px;background:#EAE4DA;border-radius:4px"><div style="height:100%;background:#B8860B;border-radius:4px;width:' + txL + '%"></div></div>' +
       '</div>' +
       '<div style="margin-bottom:8px">' +
-        '<div style="display:flex;justify-content:space-between;font-size:11px;color:#6B5F54;margin-bottom:4px"><span>Verification TVA</span><span style="font-weight:700">' + txT + '%</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px;color:#5B6B64;margin-bottom:4px"><span>Verification TVA</span><span style="font-weight:700">' + txT + '%</span></div>' +
         '<div style="height:8px;background:#EAE4DA;border-radius:4px"><div style="height:100%;background:#7C5CA6;border-radius:4px;width:' + txT + '%"></div></div>' +
       '</div>' +
       '<div>' +
-        '<div style="display:flex;justify-content:space-between;font-size:11px;color:#6B5F54;margin-bottom:4px"><span>Controle global</span><span style="font-weight:700">' + txG + '%</span></div>' +
-        '<div style="height:8px;background:#EAE4DA;border-radius:4px"><div style="height:100%;background:#1F6F72;border-radius:4px;width:' + txG + '%"></div></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px;color:#5B6B64;margin-bottom:4px"><span>Controle global</span><span style="font-weight:700">' + txG + '%</span></div>' +
+        '<div style="height:8px;background:#EAE4DA;border-radius:4px"><div style="height:100%;background:#1B5E4B;border-radius:4px;width:' + txG + '%"></div></div>' +
       '</div>' +
     '</div>';
   cptEntTab('factures');
@@ -424,8 +424,8 @@ function cptEntTab(tab) {
   ['factures', 'devis', 'achats', 'avoirs', 'documents', 'extraction', 'infos', 'releves'].forEach(function(t) {
     const btn = el('cpt-tab-' + t);
     if (btn) {
-      btn.style.background = t === tab ? '#1F6F72' : '#EAE4DA';
-      btn.style.color = t === tab ? '#fff' : '#6B5F54';
+      btn.style.background = t === tab ? '#1B5E4B' : '#EAE4DA';
+      btn.style.color = t === tab ? '#fff' : '#5B6B64';
     }
   });
   // AJOUT (simplification — onglets repliés) : si l'onglet choisi fait
@@ -453,7 +453,7 @@ function appliquerFiltreCpt(type, val) {
 
 function creerFiltreRechercheCpt(cle, valeurActuelle, placeholder, fonctionRerender) {
   return '<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #EAE4DA">' +
-    '<input value="' + escapeHTML(valeurActuelle || '') + '" oninput="CPT.filtres[\'' + cle + '\']=this.value;' + fonctionRerender + '()" placeholder="' + placeholder + '" style="width:100%;padding:8px 12px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;color:#2A2420;background:#F1EEE8;box-sizing:border-box">' +
+    '<input value="' + escapeHTML(valeurActuelle || '') + '" oninput="CPT.filtres[\'' + cle + '\']=this.value;' + fonctionRerender + '()" placeholder="' + placeholder + '" style="width:100%;padding:8px 12px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:12px;font-family:inherit;color:#14241F;background:#F5F6F1;box-sizing:border-box">' +
   '</div>';
 }
 function creerFiltreStatutCpt(cle, valeurs, labels, fonctionRerender) {
@@ -462,7 +462,7 @@ function creerFiltreStatutCpt(cle, valeurs, labels, fonctionRerender) {
     [''].concat(valeurs).map(function(v) {
       const label = v === '' ? 'Tous' : (labels[v] || v);
       const actif = actuel === v;
-      return '<button onclick="CPT.filtres[\'' + cle + '\']=\'' + v + '\';' + fonctionRerender + '()" style="padding:5px 12px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (actif ? '#1F6F72' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#6B5F54') + '">' + label + '</button>';
+      return '<button onclick="CPT.filtres[\'' + cle + '\']=\'' + v + '\';' + fonctionRerender + '()" style="padding:5px 12px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (actif ? '#1B5E4B' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#5B6B64') + '">' + label + '</button>';
     }).join('') +
   '</div>';
 }
@@ -471,7 +471,7 @@ function creerFiltreMoisCpt(cle, documents, champDate) {
   if (!mois.length) return '';
   const actuel = CPT.filtres[cle] || '';
   return '<div style="padding:8px 16px;background:#fff;border-bottom:1px solid #EAE4DA">' +
-    '<select onchange="CPT.filtres[\'' + cle + '\']=this.value;' + (cle === 'moisFactures' ? 'renderCptFactures()' : 'renderCptAchats()') + '" style="width:100%;padding:8px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;color:#2A2420;background:#F1EEE8">' +
+    '<select onchange="CPT.filtres[\'' + cle + '\']=this.value;' + (cle === 'moisFactures' ? 'renderCptFactures()' : 'renderCptAchats()') + '" style="width:100%;padding:8px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:12px;font-family:inherit;color:#14241F;background:#F5F6F1">' +
       '<option value="">Tous les mois</option>' +
       mois.map(function(m) { return '<option value="' + m + '"' + (m === actuel ? ' selected' : '') + '>' + m + '</option>'; }).join('') +
     '</select>' +
@@ -485,9 +485,9 @@ function creerFiltreCpt() {
   ];
   const boutonsHtml = btns.map(function(b) {
     const active = (b.val === 'false' ? CPT.filtres[b.key] === false : CPT.filtres[b.key]);
-    return '<button class="btn-filtre-cpt" data-key="' + b.key + '" data-val="' + b.val + '" style="padding:5px 10px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (active ? b.bg : '#EAE4DA') + ';color:' + (active ? b.color : '#6B5F54') + '">' + b.label + '</button>';
+    return '<button class="btn-filtre-cpt" data-key="' + b.key + '" data-val="' + b.val + '" style="padding:5px 10px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (active ? b.bg : '#EAE4DA') + ';color:' + (active ? b.color : '#5B6B64') + '">' + b.label + '</button>';
   }).join('');
-  const boutonTous = '<button class="btn-filtre-cpt-tous" style="padding:5px 10px;border:none;border-radius:16px;font-size:11px;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#6B5F54">Tous</button>';
+  const boutonTous = '<button class="btn-filtre-cpt-tous" style="padding:5px 10px;border:none;border-radius:16px;font-size:11px;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#5B6B64">Tous</button>';
   return '<div style="padding:10px 16px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #EAE4DA;background:#fff">' + boutonsHtml + boutonTous + '</div>';
 }
 
@@ -510,8 +510,8 @@ function renderCptFactures() {
     const avecRemarque = (CPT.currentRemarques || []).filter(function(r) { return r.statut === 'ouverte'; }).map(function(r) { return r.facture_id; });
     f = f.filter(function(fac) { return avecRemarque.includes(String(fac.id)); });
   }
-  const statutBg = { payee:'#EEF3E4', attente:'#F7EFDC', retard:'#F5E4E1', brouillon:'#EAE4DA', envoyee:'#E9F4F3', annulee:'#EAE4DA' };
-  const statutColor = { payee:'#6E8F4E', attente:'#B8860B', retard:'#B23A2E', brouillon:'#9C9186', envoyee:'#C9971F', annulee:'#9C9186' };
+  const statutBg = { payee:'#EEF3E4', attente:'#F7EFDC', retard:'#F5E4E1', brouillon:'#EAE4DA', envoyee:'#E7F2EC', annulee:'#EAE4DA' };
+  const statutColor = { payee:'#6E8F4E', attente:'#B8860B', retard:'#B23A2E', brouillon:'#8E9C95', envoyee:'#1B5E4B', annulee:'#8E9C95' };
   const statutLabel = { payee:'Payee', attente:'En attente', retard:'En retard', brouillon:'Brouillon', envoyee:'Envoyee', annulee:'Annulee' };
   const caTotal = f.reduce(function(s, fac) { return s + (Number(fac.ttc) || 0); }, 0);
   const caPaye = f.filter(function(fac) { return fac.statut === 'payee'; }).reduce(function(s, fac) { return s + (Number(fac.ttc) || 0); }, 0);
@@ -520,15 +520,15 @@ function renderCptFactures() {
       '<span style="font-size:12px;color:#55702E;font-weight:600">💰 Chiffre d affaires' + (CPT.filtres.moisFactures ? ' (' + CPT.filtres.moisFactures + ')' : '') + '</span>' +
       '<span style="font-size:15px;font-weight:800;color:#55702E">' + fmt(caTotal) + ' MAD</span>' +
     '</div>' +
-    '<div style="padding:6px 16px;background:#EEF3E4;font-size:10px;color:#55702E;border-bottom:1px solid #E3DCCF">dont ' + fmt(caPaye) + ' MAD encaisse(s)</div>' +
+    '<div style="padding:6px 16px;background:#EEF3E4;font-size:10px;color:#55702E;border-bottom:1px solid #DDE3DA">dont ' + fmt(caPaye) + ' MAD encaisse(s)</div>' +
     creerFiltreMoisCpt('moisFactures', CPT.currentFactures, 'date_emission') +
     creerFiltreRechercheCpt('rechercheClient', CPT.filtres.rechercheClient, 'Rechercher un client...', 'renderCptFactures') +
     creerFiltreStatutCpt('statutFacture', ['envoyee','attente','payee','retard','annulee'], { envoyee:'Envoyee', attente:'En attente', payee:'Payee', retard:'En retard', annulee:'Annulee' }, 'renderCptFactures') +
     creerFiltreCpt() +
-    '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:8px 16px;background:#F1EEE8;border-bottom:1px solid #EAE4DA">' +
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Facture</div>' +
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Voir</div>' +
-      '<div style="font-size:11px;font-weight:800;color:#1F6F72;text-align:center">🏦</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:8px 16px;background:#F5F6F1;border-bottom:1px solid #EAE4DA">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#8E9C95">Facture</div>' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#8E9C95;text-align:center">Voir</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#1B5E4B;text-align:center">🏦</div>' +
       '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
       '<div style="font-size:11px;font-weight:800;color:#7C5CA6;text-align:center">T</div>' +
     '</div>' +
@@ -546,29 +546,29 @@ function renderCptFactures() {
       // rapprochement partiel du total.
       const aDesLiens = (fac.transactions_bancaires_liees || []).length > 0;
       const estRapprochee = fac.statut === 'payee';
-      return '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+      return '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:12px 16px;border-bottom:1px solid #F5F6F1;align-items:center">' +
         '<div class="fac-row-click" data-fid="' + fac.id + '" style="cursor:pointer">' +
           '<div style="font-size:12px;font-weight:700">' + escapeHTML(fac.ref || '') + '</div>' +
-          '<div style="font-size:11px;color:#6B5F54">' + escapeHTML(fac.client || '') + ' · ' + fmt(fac.ttc || 0) + ' MAD</div>' +
+          '<div style="font-size:11px;color:#5B6B64">' + escapeHTML(fac.client || '') + ' · ' + fmt(fac.ttc || 0) + ' MAD</div>' +
           '<div style="display:flex;gap:6px;margin-top:3px;align-items:center">' +
-            '<span style="background:' + (statutBg[fac.statut] || '#EAE4DA') + ';color:' + (statutColor[fac.statut] || '#6B5F54') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[fac.statut] || '') + '</span>' +
-            (estRapprochee ? '<span style="font-size:9px;color:#1F6F72;background:#E9F4F3;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Rapprochée</span>' : (aDesLiens ? '<span style="font-size:9px;color:#96751B;background:#FBF0DA;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Partiel</span>' : '')) +
+            '<span style="background:' + (statutBg[fac.statut] || '#EAE4DA') + ';color:' + (statutColor[fac.statut] || '#5B6B64') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[fac.statut] || '') + '</span>' +
+            (estRapprochee ? '<span style="font-size:9px;color:#1B5E4B;background:#E7F2EC;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Rapprochée</span>' : (aDesLiens ? '<span style="font-size:9px;color:#96751B;background:#E7F2EC;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Partiel</span>' : '')) +
             (remarques.length ? '<span style="font-size:9px;color:#B23A2E;font-weight:600">📝 ' + remarques.length + ' remarque(s)</span>' : '') +
-            '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.lettre ? '#6E8F4E' : '#E3DCCF') + ';color:' + (ctrl.lettre ? '#fff' : '#9C9186') + '">L</span>' +
-            '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#9C9186') + '">T</span>' +
+            '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.lettre ? '#6E8F4E' : '#DDE3DA') + ';color:' + (ctrl.lettre ? '#fff' : '#8E9C95') + '">L</span>' +
+            '<span style="font-size:10px;font-weight:800;width:18px;height:18px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#DDE3DA') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#8E9C95') + '">T</span>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-voir-facture" onclick="voirFactureComptable(\'' + fac.id + '\')" title="Visualiser la facture" style="width:30px;height:30px;border-radius:8px;border:1.5px solid #CFE3E2;background:#E9F4F3;color:#1F6F72;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
+          '<button class="btn-voir-facture" onclick="voirFactureComptable(\'' + fac.id + '\')" title="Visualiser la facture" style="width:30px;height:30px;border-radius:8px;border:1.5px solid #CFE3E2;background:#E7F2EC;color:#1B5E4B;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-rapprocher-facture-cpt" onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(\'' + fac.id + '\',\'facture\')" title="Rapprocher avec une transaction bancaire" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (estRapprochee ? '#1F6F72' : (aDesLiens ? '#FBF0DA' : '#EAE4DA')) + ';font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (estRapprochee ? '#fff' : '#6B5F54') + '">🏦</button>' +
+          '<button class="btn-rapprocher-facture-cpt" onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(\'' + fac.id + '\',\'facture\')" title="Rapprocher avec une transaction bancaire" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (estRapprochee ? '#1B5E4B' : (aDesLiens ? '#E7F2EC' : '#EAE4DA')) + ';font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (estRapprochee ? '#fff' : '#5B6B64') + '">🏦</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
+          '<button class="btn-lettr" data-facid="' + fac.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#BFCBBF') + '">L</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-tva" data-facid="' + fac.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.tva_verifie ? '#fff' : '#CDBEA0') + '">T</button>' +
+          '<button class="btn-tva" data-facid="' + fac.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (ctrl.tva_verifie ? '#fff' : '#BFCBBF') + '">T</button>' +
         '</div>' +
       '</div>';
     }).join('') : '<div class="empty"><div class="empty-ico">🧾</div><div class="empty-title">Aucune facture</div></div>');
@@ -605,7 +605,7 @@ async function toggleLettrageRapide(factureId, btn) {
     if (!confirm('Retirer le lettrage ?')) return;
     await sauvegarderControle(factureId, { lettre: false, lettre_at: null, lettre_par: null });
     btn.dataset.lettre = '0';
-    btn.textContent = 'L'; btn.style.background = '#EAE4DA'; btn.style.color = '#CDBEA0';
+    btn.textContent = 'L'; btn.style.background = '#EAE4DA'; btn.style.color = '#BFCBBF';
   } else {
     await sauvegarderControle(factureId, { lettre: true, lettre_at: new Date().toISOString(), lettre_par: nom });
     btn.dataset.lettre = '1';
@@ -623,7 +623,7 @@ async function toggleTVARapide(factureId, btn) {
   if (isTVA) {
     await sauvegarderControle(factureId, { tva_verifie: false, tva_verifie_at: null, tva_verifie_par: null });
     btn.dataset.tva = '0';
-    btn.textContent = 'T'; btn.style.background = '#EAE4DA'; btn.style.color = '#CDBEA0';
+    btn.textContent = 'T'; btn.style.background = '#EAE4DA'; btn.style.color = '#BFCBBF';
   } else {
     await sauvegarderControle(factureId, { tva_verifie: true, tva_verifie_at: new Date().toISOString(), tva_verifie_par: nom });
     btn.dataset.tva = '1';
@@ -650,7 +650,7 @@ function renderCptAchats() {
       ['', 'attente', 'payee'].map(function(s) {
         const label = s === '' ? 'Tous' : (statutLabel[s] || s);
         const actif = (CPT.filtres.statutAchat || '') === s;
-        return '<button onclick="CPT.filtres.statutAchat=\'' + s + '\';renderCptAchats()" style="padding:5px 12px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (actif ? '#B23A2E' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#6B5F54') + '">' + label + '</button>';
+        return '<button onclick="CPT.filtres.statutAchat=\'' + s + '\';renderCptAchats()" style="padding:5px 12px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:' + (actif ? '#B23A2E' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#5B6B64') + '">' + label + '</button>';
       }).join('') +
     '</div>';
   if (!achats.length) {
@@ -671,10 +671,10 @@ function renderCptAchats() {
     creerFiltreMoisCpt('moisAchats', CPT.currentAchats, 'date_achat') +
     creerFiltreRechercheCpt('rechercheFournisseur', CPT.filtres.rechercheFournisseur, 'Rechercher un fournisseur...', 'renderCptAchats') +
     filtreStatutHtml +
-    '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F1EEE8">' +
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186">Achat</div>' +
-      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Voir</div>' +
-      '<div style="font-size:11px;font-weight:800;color:#1F6F72;text-align:center">🏦</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:8px 16px;background:#F8FAFC;border-bottom:1px solid #F5F6F1">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#8E9C95">Achat</div>' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#8E9C95;text-align:center">Voir</div>' +
+      '<div style="font-size:11px;font-weight:800;color:#1B5E4B;text-align:center">🏦</div>' +
       '<div style="font-size:11px;font-weight:800;color:#6E8F4E;text-align:center">L</div>' +
       '<div style="font-size:11px;font-weight:800;color:#7C5CA6;text-align:center">T</div>' +
     '</div>' +
@@ -685,26 +685,26 @@ function renderCptAchats() {
       // total, au lieu de traiter les deux pareil.
       const aDesLiens = (a.transactions_bancaires_liees || []).length > 0;
       const estRapprochee = a.statut === 'payee';
-      return '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:12px 16px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+      return '<div style="display:grid;grid-template-columns:1fr 34px 34px 34px 34px;padding:12px 16px;border-bottom:1px solid #F5F6F1;align-items:center">' +
         '<div>' +
           '<div style="font-size:12px;font-weight:700">' + escapeHTML(a.fournisseur || '') + '</div>' +
-          '<div style="font-size:11px;color:#6B5F54">' + (a.ref_fournisseur || '') + ' · ' + fmt(a.ttc || 0) + ' MAD · ' + (a.date_achat || '') + '</div>' +
+          '<div style="font-size:11px;color:#5B6B64">' + (a.ref_fournisseur || '') + ' · ' + fmt(a.ttc || 0) + ' MAD · ' + (a.date_achat || '') + '</div>' +
           '<div style="display:flex;gap:6px;margin-top:3px;align-items:center">' +
-            '<span style="background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[a.statut] || '') + '</span>' +
-            (estRapprochee ? '<span style="font-size:9px;color:#1F6F72;background:#E9F4F3;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Rapprochée</span>' : (aDesLiens ? '<span style="font-size:9px;color:#96751B;background:#FBF0DA;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Partiel</span>' : '')) +
+            '<span style="background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#5B6B64') + ';font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px">' + (statutLabel[a.statut] || '') + '</span>' +
+            (estRapprochee ? '<span style="font-size:9px;color:#1B5E4B;background:#E7F2EC;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Rapprochée</span>' : (aDesLiens ? '<span style="font-size:9px;color:#96751B;background:#E7F2EC;font-weight:600;padding:2px 6px;border-radius:4px">🏦 Partiel</span>' : '')) +
           '</div>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
           '<button class="btn-voir-achat" data-achatid="' + a.id + '" title="Visualiser l achat" style="width:30px;height:30px;border-radius:8px;border:1.5px solid #E0B6AC;background:#F5E4E1;color:#8E2E24;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">👁️</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-rapprocher-achat-cpt" onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" title="Rapprocher avec une transaction bancaire" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (estRapprochee ? '#1F6F72' : (aDesLiens ? '#FBF0DA' : '#EAE4DA')) + ';font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (estRapprochee ? '#fff' : '#6B5F54') + '">🏦</button>' +
+          '<button class="btn-rapprocher-achat-cpt" onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" title="Rapprocher avec une transaction bancaire" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (estRapprochee ? '#1B5E4B' : (aDesLiens ? '#E7F2EC' : '#EAE4DA')) + ';font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;color:' + (estRapprochee ? '#fff' : '#5B6B64') + '">🏦</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-lettr-achat" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#CDBEA0') + '">L</button>' +
+          '<button class="btn-lettr-achat" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.lettre ? '#fff' : '#BFCBBF') + '">L</button>' +
         '</div>' +
         '<div style="display:flex;justify-content:center">' +
-          '<button class="btn-tva-achat" data-achatid="' + a.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.tva_verifie ? '#fff' : '#CDBEA0') + '">T</button>' +
+          '<button class="btn-tva-achat" data-achatid="' + a.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:30px;height:30px;border-radius:8px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;color:' + (ctrl.tva_verifie ? '#fff' : '#BFCBBF') + '">T</button>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -763,35 +763,35 @@ async function ouvrirAchatComptable(achatId) {
   }
   const overlay = document.createElement('div');
   overlay.id = 'achat-comptable-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F1EEE8;overflow-y:auto;font-family:inherit';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F5F6F1;overflow-y:auto;font-family:inherit';
   overlay.innerHTML =
-    '<div style="background:linear-gradient(135deg,#241F1B,#8E2E24);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">' +
+    '<div style="background:linear-gradient(135deg,#0F1F1A,#8E2E24);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">' +
       '<button class="close-achat-overlay" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
       '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(a.ref_fournisseur || 'Achat') + '</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">' + escapeHTML(a.fournisseur || '') + '</div></div>' +
     '</div>' +
-    '<div style="margin:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+    '<div style="margin:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:10px">' +
-        '<div><div style="font-size:10px;color:#9C9186">Date</div><div style="font-size:12px;font-weight:600">' + (a.date_achat || '') + '</div></div>' +
-        '<div><div style="font-size:10px;color:#9C9186">TTC</div><div style="font-size:18px;font-weight:800">' + fmt(a.ttc || 0) + ' MAD</div></div>' +
+        '<div><div style="font-size:10px;color:#8E9C95">Date</div><div style="font-size:12px;font-weight:600">' + (a.date_achat || '') + '</div></div>' +
+        '<div><div style="font-size:10px;color:#8E9C95">TTC</div><div style="font-size:18px;font-weight:800">' + fmt(a.ttc || 0) + ' MAD</div></div>' +
       '</div>' +
       '<div style="display:flex;gap:8px">' +
-        '<div style="flex:1;background:#F1EEE8;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#9C9186">HT</div><div style="font-size:12px;font-weight:600">' + fmt(a.ht || 0) + '</div></div>' +
+        '<div style="flex:1;background:#F5F6F1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#8E9C95">HT</div><div style="font-size:12px;font-weight:600">' + fmt(a.ht || 0) + '</div></div>' +
         '<div style="flex:1;background:#EDE6F0;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#7C5CA6">TVA</div><div style="font-size:12px;font-weight:600;color:#7C5CA6">' + fmt(a.tva || 0) + '</div></div>' +
       '</div>' +
     '</div>' +
-    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">' +
       '<div style="font-size:13px;font-weight:700;margin-bottom:12px">Checklist</div>' +
       '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA">' +
         '<div><div style="font-size:12px;font-weight:600">Lettrage</div></div>' +
-        '<button class="btn-lettr-achat-ov" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.lettre ? '#B8860B' : '#E3DCCF') + ';background:' + (ctrl.lettre ? '#F7EFDC' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.lettre ? '☑' : '☐') + '</button>' +
+        '<button class="btn-lettr-achat-ov" data-achatid="' + a.id + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.lettre ? '#B8860B' : '#DDE3DA') + ';background:' + (ctrl.lettre ? '#F7EFDC' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.lettre ? '☑' : '☐') + '</button>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA">' +
         '<div><div style="font-size:12px;font-weight:600">TVA verifiee</div></div>' +
-        '<button class="btn-tva-achat-ov" data-achatid="' + a.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';background:' + (ctrl.tva_verifie ? '#EDE6F0' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.tva_verifie ? '☑' : '☐') + '</button>' +
+        '<button class="btn-tva-achat-ov" data-achatid="' + a.id + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrl.tva_verifie ? '#7C5CA6' : '#DDE3DA') + ';background:' + (ctrl.tva_verifie ? '#EDE6F0' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrl.tva_verifie ? '☑' : '☐') + '</button>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">' +
-        '<div><div style="font-size:12px;font-weight:600">Rapprochement bancaire</div><div style="font-size:10px;color:#9C9186">' + ((a.transactions_bancaires_liees||[]).length ? (a.transactions_bancaires_liees||[]).length + ' transaction(s) liée(s)' : 'Aucune transaction liée') + '</div></div>' +
-        '<button class="btn-rapprocher-achat-ov" onclick="ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" style="padding:7px 12px;border-radius:8px;border:none;background:' + ((a.transactions_bancaires_liees||[]).length ? '#1F6F72' : '#E9F4F3') + ';color:' + ((a.transactions_bancaires_liees||[]).length ? '#fff' : '#1F6F72') + ';font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher</button>' +
+        '<div><div style="font-size:12px;font-weight:600">Rapprochement bancaire</div><div style="font-size:10px;color:#8E9C95">' + ((a.transactions_bancaires_liees||[]).length ? (a.transactions_bancaires_liees||[]).length + ' transaction(s) liée(s)' : 'Aucune transaction liée') + '</div></div>' +
+        '<button class="btn-rapprocher-achat-ov" onclick="ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" style="padding:7px 12px;border-radius:8px;border:none;background:' + ((a.transactions_bancaires_liees||[]).length ? '#1B5E4B' : '#E7F2EC') + ';color:' + ((a.transactions_bancaires_liees||[]).length ? '#fff' : '#1B5E4B') + ';font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher</button>' +
       '</div>' +
     '</div>' +
     '<div style="height:40px"></div>';
@@ -805,14 +805,14 @@ async function ouvrirAchatComptable(achatId) {
   if (btnLOv) btnLOv.onclick = async function() {
     await toggleControleAchatRapide(achatId, 'lettre', btnLOv);
     btnLOv.textContent = btnLOv.dataset.lettre === '1' ? '☑' : '☐';
-    btnLOv.style.borderColor = btnLOv.dataset.lettre === '1' ? '#B8860B' : '#E3DCCF';
+    btnLOv.style.borderColor = btnLOv.dataset.lettre === '1' ? '#B8860B' : '#DDE3DA';
     btnLOv.style.background = btnLOv.dataset.lettre === '1' ? '#F7EFDC' : '#fff';
   };
   const btnTOv = overlay.querySelector('.btn-tva-achat-ov');
   if (btnTOv) btnTOv.onclick = async function() {
     await toggleControleAchatRapide(achatId, 'tva_verifie', btnTOv);
     btnTOv.textContent = btnTOv.dataset.tva === '1' ? '☑' : '☐';
-    btnTOv.style.borderColor = btnTOv.dataset.tva === '1' ? '#7C5CA6' : '#E3DCCF';
+    btnTOv.style.borderColor = btnTOv.dataset.tva === '1' ? '#7C5CA6' : '#DDE3DA';
     btnTOv.style.background = btnTOv.dataset.tva === '1' ? '#EDE6F0' : '#fff';
   };
 }
@@ -831,8 +831,8 @@ async function toggleControleAchatRapide(achatId, champ, btn) {
     const resultat = await resp.json();
     if (!resultat) return;
     btn.dataset[cle] = nouvelleValeur ? '1' : '0';
-    if (champ === 'lettre') { btn.style.background = nouvelleValeur ? '#6E8F4E' : '#EAE4DA'; btn.style.color = nouvelleValeur ? '#fff' : '#CDBEA0'; }
-    else { btn.style.background = nouvelleValeur ? '#7C5CA6' : '#EAE4DA'; btn.style.color = nouvelleValeur ? '#fff' : '#CDBEA0'; }
+    if (champ === 'lettre') { btn.style.background = nouvelleValeur ? '#6E8F4E' : '#EAE4DA'; btn.style.color = nouvelleValeur ? '#fff' : '#BFCBBF'; }
+    else { btn.style.background = nouvelleValeur ? '#7C5CA6' : '#EAE4DA'; btn.style.color = nouvelleValeur ? '#fff' : '#BFCBBF'; }
     const local = (CPT.currentControlesAchats || []).find(function(c) { return String(c.facture_id) === String(achatId); });
     if (local) { Object.assign(local, resultat); }
     else { CPT.currentControlesAchats = CPT.currentControlesAchats || []; CPT.currentControlesAchats.push(resultat); }
@@ -845,17 +845,17 @@ function renderCptDevis() {
   if (!list) return;
   const d = CPT.currentDevis || [];
   if (!d.length) { list.innerHTML = '<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">Aucun devis</div></div>'; return; }
-  const statutColor = { envoye: '#B8860B', accepte: '#6E8F4E', refuse: '#B23A2E', brouillon: '#9C9186' };
+  const statutColor = { envoye: '#B8860B', accepte: '#6E8F4E', refuse: '#B23A2E', brouillon: '#8E9C95' };
   const statutLabel = { envoye: 'Envoye', accepte: 'Accepte', refuse: 'Refuse', brouillon: 'Brouillon' };
   list.innerHTML = d.map(function(dv) {
-    return '<div style="padding:14px 16px;border-bottom:1px solid #F1EEE8">' +
+    return '<div style="padding:14px 16px;border-bottom:1px solid #F5F6F1">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
         '<span style="font-size:13px;font-weight:700">' + escapeHTML(dv.ref || '') + '</span>' +
         '<span style="font-size:13px;font-weight:700">' + fmt(dv.ttc || 0) + ' MAD</span>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between">' +
-        '<span style="font-size:11px;color:#6B5F54">' + escapeHTML(dv.client || '') + ' · ' + (dv.date_emission || '') + '</span>' +
-        '<span style="font-size:10px;font-weight:600;color:' + (statutColor[dv.statut] || '#6B5F54') + '">' + (statutLabel[dv.statut] || dv.statut || '') + '</span>' +
+        '<span style="font-size:11px;color:#5B6B64">' + escapeHTML(dv.client || '') + ' · ' + (dv.date_emission || '') + '</span>' +
+        '<span style="font-size:10px;font-weight:600;color:' + (statutColor[dv.statut] || '#5B6B64') + '">' + (statutLabel[dv.statut] || dv.statut || '') + '</span>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -897,7 +897,7 @@ function renderCptTVA() {
         '<div style="font-size:16px;font-weight:800;color:#B23A2E">' + fmt(totalTVADeductible) + ' MAD</div>' +
       '</div>' +
     '</div>' +
-    '<div style="background:#241F1B;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">' +
+    '<div style="background:#0F1F1A;border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">' +
       '<div style="font-size:12px;font-weight:600;color:#fff">TVA nette a payer</div>' +
       '<div style="font-size:20px;font-weight:800;color:' + (totalTVANette >= 0 ? '#9CBB7A' : '#D98177') + '">' + fmt(totalTVANette) + ' MAD</div>' +
     '</div>' +
@@ -906,8 +906,8 @@ function renderCptTVA() {
       const net = d.tva - d.tvaAchats;
       return '<div style="padding:12px 0;border-bottom:1px solid #EAE4DA">' +
         '<div style="display:flex;justify-content:space-between">' +
-          '<div><div style="font-size:12px;font-weight:600">' + m + '</div><div style="font-size:10px;color:#9C9186">' + d.count + ' facture(s) · ' + d.achatsCount + ' achat(s)</div></div>' +
-          '<div style="text-align:right"><div style="font-size:11px;color:#6B5F54">Collectee: ' + fmt(d.tva) + ' · Deductible: ' + fmt(d.tvaAchats) + '</div><div style="font-size:13px;font-weight:700;color:' + (net >= 0 ? '#7C5CA6' : '#B23A2E') + '">Nette: ' + fmt(net) + ' MAD</div></div>' +
+          '<div><div style="font-size:12px;font-weight:600">' + m + '</div><div style="font-size:10px;color:#8E9C95">' + d.count + ' facture(s) · ' + d.achatsCount + ' achat(s)</div></div>' +
+          '<div style="text-align:right"><div style="font-size:11px;color:#5B6B64">Collectee: ' + fmt(d.tva) + ' · Deductible: ' + fmt(d.tvaAchats) + '</div><div style="font-size:13px;font-weight:700;color:' + (net >= 0 ? '#7C5CA6' : '#B23A2E') + '">Nette: ' + fmt(net) + ' MAD</div></div>' +
         '</div>' +
       '</div>';
     }).join('') +
@@ -915,7 +915,7 @@ function renderCptTVA() {
         '<button onclick="declarerTVAMois()" style="flex:1;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✅ Declarer TVA du mois</button>' +
         '<button onclick="exportCptTVA()" style="flex:1;padding:12px;background:#7C5CA6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export CSV</button>' +
       '</div>' +
-    '<button onclick="typeof exporterEcrituresComptables===\'function\' && exporterEcrituresComptables(CPT.currentFactures, CPT.currentAchats, CPT.currentPaiements, CPT.currentProfil)" style="width:100%;margin-top:8px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (plan comptable marocain)</button>' +
+    '<button onclick="typeof exporterEcrituresComptables===\'function\' && exporterEcrituresComptables(CPT.currentFactures, CPT.currentAchats, CPT.currentPaiements, CPT.currentProfil)" style="width:100%;margin-top:8px;padding:12px;background:#0F1F1A;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (plan comptable marocain)</button>' +
   '</div>';
 }
 
@@ -934,17 +934,17 @@ function renderCptExtraction() {
     '<div style="display:flex;gap:6px;margin-bottom:12px">' +
       [['factures','Ventes'],['achats','Achats'],['devis','Devis']].map(function(t) {
         const actif = ex.type === t[0];
-        return '<button onclick="CPT.extraction.type=\'' + t[0] + '\';renderCptExtraction()" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (actif?'#1F6F72':'#EAE4DA') + ';color:' + (actif?'#fff':'#6B5F54') + '">' + t[1] + '</button>';
+        return '<button onclick="CPT.extraction.type=\'' + t[0] + '\';renderCptExtraction()" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (actif?'#1B5E4B':'#EAE4DA') + ';color:' + (actif?'#fff':'#5B6B64') + '">' + t[1] + '</button>';
       }).join('') +
     '</div>' +
     '<div class="f-lbl">Mois</div>' +
-    '<select onchange="CPT.extraction.mois=this.value;renderCptExtraction()" style="width:100%;padding:8px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;background:#F1EEE8;margin-bottom:12px">' +
+    '<select onchange="CPT.extraction.mois=this.value;renderCptExtraction()" style="width:100%;padding:8px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:12px;font-family:inherit;background:#F5F6F1;margin-bottom:12px">' +
       '<option value="">Tous les mois</option>' +
       moisDisponibles.map(function(m) { return '<option value="' + m + '"' + (m===ex.mois?' selected':'') + '>' + m + '</option>'; }).join('') +
     '</select>' +
     (ex.type !== 'devis' ? (
       '<div class="f-lbl">Statut</div>' +
-      '<select onchange="CPT.extraction.statut=this.value;renderCptExtraction()" style="width:100%;padding:8px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:12px;font-family:inherit;background:#F1EEE8;margin-bottom:12px">' +
+      '<select onchange="CPT.extraction.statut=this.value;renderCptExtraction()" style="width:100%;padding:8px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:12px;font-family:inherit;background:#F5F6F1;margin-bottom:12px">' +
         '<option value="">Tous les statuts</option>' +
         (ex.type === 'factures'
           ? ['envoyee','attente','payee','retard','annulee'].map(function(s){return '<option value="'+s+'"'+(s===ex.statut?' selected':'')+'>'+({envoyee:'Envoyee',attente:'En attente',payee:'Payee',retard:'En retard',annulee:'Annulee'}[s])+'</option>';}).join('')
@@ -952,8 +952,8 @@ function renderCptExtraction() {
         ) +
       '</select>'
     ) : '') +
-    '<div style="background:#F1EEE8;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#6B5F54">' + calculerApercuExtractionCpt() + ' ligne(s) correspondent a ce filtre</div>' +
-    '<button onclick="extraireCSVCpt()" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Extraire le CSV</button>' +
+    '<div style="background:#F5F6F1;border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:#5B6B64">' + calculerApercuExtractionCpt() + ' ligne(s) correspondent a ce filtre</div>' +
+    '<button onclick="extraireCSVCpt()" style="width:100%;padding:12px;background:#0F1F1A;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Extraire le CSV</button>' +
   '</div>';
 }
 function _filtrerExtractionCpt() {
@@ -1000,24 +1000,24 @@ function renderCptDocuments() {
   const bcs = CPT.currentBonsCommande || [];
   const bls = CPT.currentBonsLivraison || [];
   const statutLabelBC = { brouillon: 'Brouillon', envoye: 'Envoye', confirme: '✅ Confirme', refuse: '❌ Refuse' };
-  const statutColorBC = { brouillon: '#9C9186', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
+  const statutColorBC = { brouillon: '#8E9C95', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
   list.innerHTML =
-    '<div style="padding:10px 16px;font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase">📋 Bons de commande (' + bcs.length + ')</div>' +
+    '<div style="padding:10px 16px;font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase">📋 Bons de commande (' + bcs.length + ')</div>' +
     (bcs.length ? bcs.map(function(bc) {
       const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes||[])).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #F1EEE8">' +
-        '<div><div style="font-size:12px;font-weight:700">' + escapeHTML(bc.fournisseur||'') + '</div><div style="font-size:11px;color:#9C9186">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div></div>' +
-        '<div style="text-align:right"><div style="font-size:12px;font-weight:700">' + fmt(ht*1.2) + ' MAD</div><div style="font-size:10px;font-weight:600;color:' + (statutColorBC[bc.statut]||'#9C9186') + '">' + (statutLabelBC[bc.statut]||bc.statut) + '</div></div>' +
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #F5F6F1">' +
+        '<div><div style="font-size:12px;font-weight:700">' + escapeHTML(bc.fournisseur||'') + '</div><div style="font-size:11px;color:#8E9C95">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div></div>' +
+        '<div style="text-align:right"><div style="font-size:12px;font-weight:700">' + fmt(ht*1.2) + ' MAD</div><div style="font-size:10px;font-weight:600;color:' + (statutColorBC[bc.statut]||'#8E9C95') + '">' + (statutLabelBC[bc.statut]||bc.statut) + '</div></div>' +
       '</div>';
-    }).join('') : '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucun bon de commande</div>') +
-    '<div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase">📦 Bons de livraison (' + bls.length + ')</div>' +
+    }).join('') : '<div style="text-align:center;padding:16px;color:#8E9C95;font-size:12px">Aucun bon de commande</div>') +
+    '<div style="padding:14px 16px 10px;font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase">📦 Bons de livraison (' + bls.length + ')</div>' +
     (bls.length ? bls.map(function(bl) {
       const facture = bl.facture_id ? (CPT.currentFactures || []).find(function(f) { return f.id === bl.facture_id; }) : null;
-      return '<div style="padding:12px 16px;border-bottom:1px solid #F1EEE8">' +
+      return '<div style="padding:12px 16px;border-bottom:1px solid #F5F6F1">' +
         '<div style="font-size:12px;font-weight:700">' + escapeHTML(bl.client||'') + '</div>' +
-        '<div style="font-size:11px;color:#9C9186">' + (bl.ref||'') + ' · ' + (bl.date_livraison||'') + (facture ? ' · 🔗 ' + escapeHTML(facture.ref) : '') + '</div>' +
+        '<div style="font-size:11px;color:#8E9C95">' + (bl.ref||'') + ' · ' + (bl.date_livraison||'') + (facture ? ' · 🔗 ' + escapeHTML(facture.ref) : '') + '</div>' +
       '</div>';
-    }).join('') : '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucun bon de livraison</div>');
+    }).join('') : '<div style="text-align:center;padding:16px;color:#8E9C95;font-size:12px">Aucun bon de livraison</div>');
 }
 
 function renderCptInfos() {
@@ -1033,11 +1033,11 @@ function renderCptInfos() {
     ['Banque', p.banque], ['RIB', p.rib],
   ].filter(function(x) { return x[1]; });
   list.innerHTML = '<div style="padding:16px">' +
-    '<div style="background:#fff;border-radius:16px;border:1px solid #E3DCCF;padding:16px;margin-bottom:16px">' +
+    '<div style="background:#fff;border-radius:16px;border:1px solid #DDE3DA;padding:16px;margin-bottom:16px">' +
       '<div style="font-size:16px;font-weight:700;margin-bottom:14px">' + escapeHTML(p.raison || '—') + '</div>' +
       fields.map(function(x) {
-        return '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F1EEE8;font-size:12px">' +
-          '<span style="color:#6B5F54">' + x[0] + '</span>' +
+        return '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F5F6F1;font-size:12px">' +
+          '<span style="color:#5B6B64">' + x[0] + '</span>' +
           '<span style="font-weight:600">' + escapeHTML(String(x[1])) + '</span>' +
         '</div>';
       }).join('') +
@@ -1093,21 +1093,21 @@ async function renderVueATraiter() {
   const totalRem = items.filter(function(i) { return i.type === 'remarque'; }).reduce(function(s, i) { return s + i.count; }, 0);
   list.innerHTML =
     '<div style="padding:16px">' +
-      '<div style="font-size:14px;font-weight:700;color:#2A2420;margin-bottom:12px">📥 A traiter</div>' +
+      '<div style="font-size:14px;font-weight:700;color:#14241F;margin-bottom:12px">📥 A traiter</div>' +
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">' +
         '<div style="background:#F7EFDC;border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:#B8860B">' + totalLettrage + '</div><div style="font-size:10px;color:#B8860B">Non lettrees</div></div>' +
         '<div style="background:#EDE6F0;border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:#7C5CA6">' + totalTVA + '</div><div style="font-size:10px;color:#7C5CA6">TVA a verifier</div></div>' +
         '<div style="background:#F5E4E1;border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:#B23A2E">' + totalRem + '</div><div style="font-size:10px;color:#B23A2E">Remarques</div></div>' +
       '</div>' +
       (items.length ?
-        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">Par entreprise</div>' +
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8E9C95;margin-bottom:10px">Par entreprise</div>' +
         items.map(function(item) {
           return '<div style="background:#fff;border-radius:12px;padding:14px;border:1px solid ' + item.bg.replace('F', 'E') + ';margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">' +
             '<div><div style="font-size:12px;font-weight:700">' + escapeHTML(item.entreprise) + '</div><div style="font-size:11px;color:' + item.color + ';font-weight:600;margin-top:2px">' + item.label + '</div></div>' +
             '<button data-eid="' + item.eid + '" data-filtre="' + item.type + '" class="btn-voir-ent" style="background:' + item.bg + ';color:' + item.color + ';border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Voir →</button>' +
           '</div>';
         }).join('') :
-        '<div style="text-align:center;padding:40px;color:#9C9186"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:14px;font-weight:600">Tout est a jour !</div></div>'
+        '<div style="text-align:center;padding:40px;color:#8E9C95"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:14px;font-weight:600">Tout est a jour !</div></div>'
       ) +
     '</div>';
   if (list.dataset.clickBound !== '1') {
@@ -1144,13 +1144,13 @@ function renderHistorique() {
   if (!list) return;
   const hist = CPT.historique || [];
   list.innerHTML = '<div style="padding:16px">' +
-    '<div style="font-size:14px;font-weight:700;color:#2A2420;margin-bottom:14px">📋 Historique des actions</div>' +
+    '<div style="font-size:14px;font-weight:700;color:#14241F;margin-bottom:14px">📋 Historique des actions</div>' +
     (hist.length ? hist.map(function(h) {
-      return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #F1EEE8;align-items:flex-start">' +
-        '<div style="width:6px;height:6px;border-radius:50%;background:#1F6F72;margin-top:5px;flex-shrink:0"></div>' +
-        '<div><div style="font-size:12px;font-weight:600;color:#2A2420">' + escapeHTML(h.action) + '</div><div style="font-size:10px;color:#9C9186;margin-top:2px">' + h.date + ' · ' + escapeHTML(h.comptable) + '</div></div>' +
+      return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #F5F6F1;align-items:flex-start">' +
+        '<div style="width:6px;height:6px;border-radius:50%;background:#1B5E4B;margin-top:5px;flex-shrink:0"></div>' +
+        '<div><div style="font-size:12px;font-weight:600;color:#14241F">' + escapeHTML(h.action) + '</div><div style="font-size:10px;color:#8E9C95;margin-top:2px">' + h.date + ' · ' + escapeHTML(h.comptable) + '</div></div>' +
       '</div>';
-    }).join('') : '<div style="text-align:center;color:#9C9186;padding:40px">Aucune action enregistree</div>') +
+    }).join('') : '<div style="text-align:center;color:#8E9C95;padding:40px">Aucune action enregistree</div>') +
   '</div>';
 }
 
@@ -1230,28 +1230,28 @@ async function ouvrirGestionEntreprises() {
   overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:flex-end';
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;max-height:85vh;overflow-y:auto';
-  const statutColor = { en_attente:'#B8860B', acceptee:'#6E8F4E', refusee:'#B23A2E', revoquee:'#9C9186', archivee:'#9C9186' };
+  const statutColor = { en_attente:'#B8860B', acceptee:'#6E8F4E', refusee:'#B23A2E', revoquee:'#8E9C95', archivee:'#8E9C95' };
   const statutLabel = { en_attente:'⏳ En attente', acceptee:'✅ Active', refusee:'❌ Refusee', revoquee:'🚫 Revoquee', archivee:'📦 Archivee' };
-  box.innerHTML = '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 20px"></div>' +
+  box.innerHTML = '<div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 20px"></div>' +
     '<div style="font-size:17px;font-weight:700;margin-bottom:16px">🏢 Mes entreprises</div>' +
-    '<div style="background:#FBF0DA;border-radius:14px;padding:16px;margin-bottom:16px">' +
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1F6F72;margin-bottom:10px">Inviter une entreprise</div>' +
+    '<div style="background:#E7F2EC;border-radius:14px;padding:16px;margin-bottom:16px">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1B5E4B;margin-bottom:10px">Inviter une entreprise</div>' +
       '<input id="invite-ent-email" style="width:100%;padding:10px;border:1.5px solid #E8D9AE;border-radius:10px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px" type="text" placeholder="Lien Tafir, nom de l entreprise, ou email">' +
-      '<button id="btn-send-invite-ent" style="width:100%;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📧 Envoyer l invitation</button>' +
+      '<button id="btn-send-invite-ent" style="width:100%;padding:11px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📧 Envoyer l invitation</button>' +
     '</div>' +
-    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">Portefeuille (' + invites.length + ')</div>' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8E9C95;margin-bottom:10px">Portefeuille (' + invites.length + ')</div>' +
     invites.map(function(inv) {
       const nomAffiche = nomEntreprise(inv.entreprise_id, inv.entreprise_email);
       return '<div style="background:#fff;border-radius:12px;border:1px solid #EAE4DA;padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">' +
-        '<div><div style="font-size:13px;font-weight:600">' + escapeHTML(nomAffiche) + '</div><div style="font-size:11px;margin-top:2px;color:' + (statutColor[inv.statut] || '#6B5F54') + ';font-weight:600">' + (statutLabel[inv.statut] || inv.statut) + '</div></div>' +
+        '<div><div style="font-size:13px;font-weight:600">' + escapeHTML(nomAffiche) + '</div><div style="font-size:11px;margin-top:2px;color:' + (statutColor[inv.statut] || '#5B6B64') + ';font-weight:600">' + (statutLabel[inv.statut] || inv.statut) + '</div></div>' +
         (inv.statut === 'acceptee' ?
-          '<button data-inv="' + inv.id + '" data-action="archiver" class="btn-inv-action" style="background:#EAE4DA;color:#6B5F54;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">Archiver</button>' :
+          '<button data-inv="' + inv.id + '" data-action="archiver" class="btn-inv-action" style="background:#EAE4DA;color:#5B6B64;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">Archiver</button>' :
           inv.statut === 'en_attente' ?
           '<button data-inv="' + inv.id + '" data-action="revoquer" class="btn-inv-action" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">Annuler</button>' : ''
         ) +
       '</div>';
     }).join('') +
-    '<button id="btn-close-gestion" style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>';
+    '<button id="btn-close-gestion" style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   overlay.appendChild(box);
   document.body.appendChild(overlay);
@@ -1331,11 +1331,11 @@ async function mettreAJourInvitation(invId, statut) {
 }
 
 function _cptEmptyState() {
-  return '<div style="margin:16px;background:#FBF0DA;border-radius:16px;padding:20px;text-align:center">' +
+  return '<div style="margin:16px;background:#E7F2EC;border-radius:16px;padding:20px;text-align:center">' +
     '<div style="font-size:32px;margin-bottom:10px">🤝</div>' +
-    '<div style="font-size:14px;font-weight:700;color:#1F6F72;margin-bottom:6px">Aucune entreprise</div>' +
-    '<div style="font-size:12px;color:#6B5F54;margin-bottom:14px">Invitez vos clients depuis votre profil</div>' +
-    '<button class="btn-go-profil-cpt" style="padding:11px 20px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Inviter</button>' +
+    '<div style="font-size:14px;font-weight:700;color:#1B5E4B;margin-bottom:6px">Aucune entreprise</div>' +
+    '<div style="font-size:12px;color:#5B6B64;margin-bottom:14px">Invitez vos clients depuis votre profil</div>' +
+    '<button class="btn-go-profil-cpt" style="padding:11px 20px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Inviter</button>' +
   '</div>';
 }
 
@@ -1344,7 +1344,7 @@ function switchCptNav(tab) {
     const btn = document.getElementById('cpt-nav-' + t);
     if (!btn) return;
     btn.classList.toggle('on', t === tab);
-    if (t === tab) { btn.style.background = 'rgba(255,255,255,0.9)'; btn.style.color = '#1F6F72'; }
+    if (t === tab) { btn.style.background = 'rgba(255,255,255,0.9)'; btn.style.color = '#1B5E4B'; }
     else { btn.style.background = 'rgba(255,255,255,0.15)'; btn.style.color = 'rgba(255,255,255,0.7)'; }
   });
   const content = el('cpt-main-content');
@@ -1381,24 +1381,24 @@ function switchCptNav(tab) {
     const nbEnts = (CPT.entreprises||[]).length;
     content.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 16px 8px">' +
-        kpiBox(nbEnts, 'Entreprises', '#1F6F72', '#FBF0DA', 'entreprises') +
-        kpiBox(docsAControler, 'A controler', '#C9971F', '#E9F4F3', 'action') +
+        kpiBox(nbEnts, 'Entreprises', '#1B5E4B', '#E7F2EC', 'entreprises') +
+        kpiBox(docsAControler, 'A controler', '#1B5E4B', '#E7F2EC', 'action') +
         kpiBox(nonLettres, 'Non lettrees', '#B8860B', '#F7EFDC', 'action') +
         kpiBox(tvaKo, 'TVA a verifier', '#7C5CA6', '#EDE6F0', 'action') +
         kpiBox(facturesEnRetard, 'Factures en retard', '#B23A2E', '#F5E4E1', 'action') +
-        kpiBox(nonRapprochees, 'A rapprocher', '#1F6F72', '#E9F4F3', 'action') +
+        kpiBox(nonRapprochees, 'A rapprocher', '#1B5E4B', '#E7F2EC', 'action') +
       '</div>' +
       (nbEnts === 0 ? _cptEmptyState() : '') +
-      (nbEnts > 0 ? '<div style="padding:0 16px 8px;text-align:right"><span onclick="exporterRapportMultiClients()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">📊 Exporter le portefeuille (CSV)</span></div>' : '') +
+      (nbEnts > 0 ? '<div style="padding:0 16px 8px;text-align:right"><span onclick="exporterRapportMultiClients()" style="font-size:11px;color:#1B5E4B;text-decoration:underline;cursor:pointer">📊 Exporter le portefeuille (CSV)</span></div>' : '') +
       '<div style="padding:0 16px 8px">' +
         '<input id="cpt-recherche-entreprise" class="f-inp" placeholder="🔍 Rechercher une entreprise..." oninput="CPT.rechercheEntreprise=this.value;renderListeEntreprises()" value="' + escapeHTML(CPT.rechercheEntreprise || '') + '">' +
       '</div>' +
       '<div style="padding:0 16px 4px;display:flex;justify-content:space-between;align-items:center">' +
-        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186">Mes entreprises</div>' +
+        '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8E9C95">Mes entreprises</div>' +
         '<div style="display:flex;gap:6px">' +
-          '<button class="btn-tri-action" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#FBF0DA;color:#1F6F72;cursor:pointer;font-family:inherit;font-weight:600">Priorite</button>' +
-          '<button class="btn-tri-lettrage" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#EAE4DA;color:#6B5F54;cursor:pointer;font-family:inherit">Lettrage</button>' +
-          '<button class="btn-tri-nom" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#EAE4DA;color:#6B5F54;cursor:pointer;font-family:inherit">Nom</button>' +
+          '<button class="btn-tri-action" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#E7F2EC;color:#1B5E4B;cursor:pointer;font-family:inherit;font-weight:600">Priorite</button>' +
+          '<button class="btn-tri-lettrage" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#EAE4DA;color:#5B6B64;cursor:pointer;font-family:inherit">Lettrage</button>' +
+          '<button class="btn-tri-nom" style="font-size:10px;padding:4px 8px;border:none;border-radius:8px;background:#EAE4DA;color:#5B6B64;cursor:pointer;font-family:inherit">Nom</button>' +
         '</div>' +
       '</div>' +
       '<div id="cpt-entreprises-list" style="padding:0 16px"></div>';
@@ -1414,15 +1414,15 @@ function switchCptNav(tab) {
       '<div style="padding:16px">' +
         '<input id="cpt-recherche-entreprise-2" class="f-inp" placeholder="🔍 Rechercher une entreprise..." oninput="CPT.rechercheEntreprise=this.value;renderListeEntreprises()" value="' + escapeHTML(CPT.rechercheEntreprise || '') + '" style="margin-bottom:12px">' +
         '<div style="display:flex;gap:8px;margin-bottom:14px">' +
-          '<button onclick="trierEntreprises(\'action\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#FBF0DA;color:#1F6F72;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🔴 Priorite</button>' +
+          '<button onclick="trierEntreprises(\'action\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#E7F2EC;color:#1B5E4B;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">🔴 Priorite</button>' +
           '<button onclick="trierEntreprises(\'lettrage\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#F7EFDC;color:#B8860B;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">Lettrage ↑</button>' +
           '<button onclick="trierEntreprises(\'tva\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#EDE6F0;color:#7C5CA6;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">TVA ↑</button>' +
-          '<button onclick="trierEntreprises(\'nom\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#EAE4DA;color:#6B5F54;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">A-Z</button>' +
+          '<button onclick="trierEntreprises(\'nom\')" style="flex:1;padding:8px;border:none;border-radius:10px;background:#EAE4DA;color:#5B6B64;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit">A-Z</button>' +
         '</div>' +
       '</div>' +
       '<div id="cpt-entreprises-list" style="padding:0 16px"></div>' +
       '<div style="padding:12px 16px">' +
-        '<button onclick="ouvrirGestionEntreprises()" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">➕ Inviter une entreprise</button>' +
+        '<button onclick="ouvrirGestionEntreprises()" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">➕ Inviter une entreprise</button>' +
       '</div>';
     renderListeEntreprises();
   } else if (tab === 'traiter') {
@@ -1522,7 +1522,7 @@ function revenirEspaceComptable() {
 async function renderActiviteClients() {
   const list = el('cpt-ent-content');
   if (!list) return;
-  list.innerHTML = '<div style="padding:16px"><div style="font-size:14px;font-weight:700;color:#2A2420;margin-bottom:14px">🔴 Activite recente</div><div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div></div>';
+  list.innerHTML = '<div style="padding:16px"><div style="font-size:14px;font-weight:700;color:#14241F;margin-bottom:14px">🔴 Activite recente</div><div style="text-align:center;padding:20px;color:#8E9C95">⏳ Chargement...</div></div>';
   try {
     const ids = (CPT.entreprises || []).map(function(e) { return e.entreprise_id; });
     if (!ids.length) { list.innerHTML = '<div class="empty"><div class="empty-ico">📡</div><div class="empty-title">Aucune entreprise</div></div>'; return; }
@@ -1548,21 +1548,21 @@ async function renderActiviteClients() {
     });
     events.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
     if (!events.length) { list.innerHTML = '<div class="empty"><div class="empty-ico">📡</div><div class="empty-title">Aucune activite recente</div><div>Rien de nouveau ces 7 derniers jours</div></div>'; return; }
-    const statutColor = { payee: '#6E8F4E', attente: '#B8860B', retard: '#B23A2E', brouillon: '#9C9186', envoyee: '#C9971F', accepte: '#6E8F4E', refuse: '#B23A2E' };
+    const statutColor = { payee: '#6E8F4E', attente: '#B8860B', retard: '#B23A2E', brouillon: '#8E9C95', envoyee: '#1B5E4B', accepte: '#6E8F4E', refuse: '#B23A2E' };
     const statutLabel = { payee: 'Payee', attente: 'En attente', retard: 'En retard', brouillon: 'Brouillon', envoyee: 'Envoyee', accepte: 'Accepte', refuse: 'Refuse' };
     list.innerHTML = '<div style="padding:16px">' +
-      '<div style="font-size:14px;font-weight:700;color:#2A2420;margin-bottom:4px">📡 Activite recente</div>' +
-      '<div style="font-size:11px;color:#9C9186;margin-bottom:14px">7 derniers jours · ' + events.length + ' evenement(s)</div>' +
+      '<div style="font-size:14px;font-weight:700;color:#14241F;margin-bottom:4px">📡 Activite recente</div>' +
+      '<div style="font-size:11px;color:#8E9C95;margin-bottom:14px">7 derniers jours · ' + events.length + ' evenement(s)</div>' +
       events.map(function(ev) {
         const dateStr = new Date(ev.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-        return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F1EEE8;align-items:flex-start">' +
-          '<div style="width:36px;height:36px;border-radius:10px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">' + ev.icon + '</div>' +
+        return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #F5F6F1;align-items:flex-start">' +
+          '<div style="width:36px;height:36px;border-radius:10px;background:#F5F6F1;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">' + ev.icon + '</div>' +
           '<div style="flex:1">' +
             '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
-              '<div><div style="font-size:12px;font-weight:700;color:#2A2420">' + escapeHTML(ev.label) + '</div><div style="font-size:11px;color:#6B5F54;margin-top:1px">' + escapeHTML(ev.entreprise) + ' · ' + escapeHTML(ev.sous) + '</div></div>' +
-              '<div style="text-align:right;flex-shrink:0"><div style="font-size:12px;font-weight:700;color:#2A2420">' + ev.montant + '</div><div style="font-size:9px;color:' + (statutColor[ev.statut] || '#9C9186') + ';font-weight:600">' + (statutLabel[ev.statut] || ev.statut || '') + '</div></div>' +
+              '<div><div style="font-size:12px;font-weight:700;color:#14241F">' + escapeHTML(ev.label) + '</div><div style="font-size:11px;color:#5B6B64;margin-top:1px">' + escapeHTML(ev.entreprise) + ' · ' + escapeHTML(ev.sous) + '</div></div>' +
+              '<div style="text-align:right;flex-shrink:0"><div style="font-size:12px;font-weight:700;color:#14241F">' + ev.montant + '</div><div style="font-size:9px;color:' + (statutColor[ev.statut] || '#8E9C95') + ';font-weight:600">' + (statutLabel[ev.statut] || ev.statut || '') + '</div></div>' +
             '</div>' +
-            '<div style="font-size:10px;color:#9C9186;margin-top:3px">' + dateStr + '</div>' +
+            '<div style="font-size:10px;color:#8E9C95;margin-top:3px">' + dateStr + '</div>' +
           '</div>' +
         '</div>';
       }).join('') +
@@ -1603,7 +1603,7 @@ async function declarerTVAMois(mois) {
 async function renderCptReleves() {
   const list = el('cpt-ent-content');
   if (!list) return;
-  list.innerHTML = '<div style="padding:20px;text-align:center;color:#9C9186">Chargement...</div>';
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#8E9C95">Chargement...</div>';
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_releves_entreprise', {
       method: 'POST',
@@ -1617,14 +1617,14 @@ async function renderCptReleves() {
     list.innerHTML = '<div style="padding:16px">' +
       '<div style="font-size:14px;font-weight:700;margin-bottom:14px">🏦 Releves bancaires</div>' +
       releves.map(function(rv) {
-        return '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-bottom:10px">' +
+        return '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA;margin-bottom:10px">' +
           '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">' +
             '<div style="width:44px;height:44px;border-radius:12px;background:#EEF3E4;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
-            '<div style="flex:1"><div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(rv.mois)] || rv.mois) + ' ' + rv.annee + '</div><div style="font-size:11px;color:#6B5F54">' + escapeHTML(rv.banque || '') + '</div></div>' +
+            '<div style="flex:1"><div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(rv.mois)] || rv.mois) + ' ' + rv.annee + '</div><div style="font-size:11px;color:#5B6B64">' + escapeHTML(rv.banque || '') + '</div></div>' +
             '<span data-rid="' + rv.id + '" class="badge-releve" style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;cursor:pointer;background:' + (rv.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (rv.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (rv.vu_par_comptable ? 'Vu' : 'Marquer vu') + '</span>' +
           '</div>' +
-          '<button class="btn-telecharger-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:6px">📥 Telecharger</button>' +
-          '<button class="btn-rapprocher-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Consulter et rapprocher</button>' +
+          '<button class="btn-telecharger-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:6px">📥 Telecharger</button>' +
+          '<button class="btn-rapprocher-releve" data-rid="' + rv.id + '" style="width:100%;padding:8px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🔍 Consulter et rapprocher</button>' +
         '</div>';
       }).join('') +
     '</div>';
@@ -1677,36 +1677,36 @@ async function ouvrirFactureComptable(factureId) {
   const ctrlFresh = (CPT.currentControles || []).find(function(c3) { return String(c3.facture_id) === String(factureId); }) || {};
   const overlay = document.createElement('div');
   overlay.id = 'fac-comptable-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F1EEE8;overflow-y:auto;font-family:inherit';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F5F6F1;overflow-y:auto;font-family:inherit';
   overlay.innerHTML =
-    '<div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">' +
+    '<div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">' +
       '<button class="close-fac-overlay" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
       '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(fac.ref || '') + '</div><div style="font-size:11px;color:rgba(255,255,255,0.5)">' + escapeHTML(fac.client || '') + '</div></div>' +
       '<button class="btn-voir-pdf-cpt" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 PDF</button>' +
     '</div>' +
-    '<div style="margin:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+    '<div style="margin:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:10px">' +
-        '<div><div style="font-size:10px;color:#9C9186">Date</div><div style="font-size:12px;font-weight:600">' + (fac.date_emission || '') + '</div></div>' +
-        '<div><div style="font-size:10px;color:#9C9186">TTC</div><div style="font-size:18px;font-weight:800">' + fmt(fac.ttc || 0) + ' MAD</div></div>' +
+        '<div><div style="font-size:10px;color:#8E9C95">Date</div><div style="font-size:12px;font-weight:600">' + (fac.date_emission || '') + '</div></div>' +
+        '<div><div style="font-size:10px;color:#8E9C95">TTC</div><div style="font-size:18px;font-weight:800">' + fmt(fac.ttc || 0) + ' MAD</div></div>' +
       '</div>' +
       '<div style="display:flex;gap:8px">' +
-        '<div style="flex:1;background:#F1EEE8;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#9C9186">HT</div><div style="font-size:12px;font-weight:600">' + fmt(fac.ht || 0) + '</div></div>' +
+        '<div style="flex:1;background:#F5F6F1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#8E9C95">HT</div><div style="font-size:12px;font-weight:600">' + fmt(fac.ht || 0) + '</div></div>' +
         '<div style="flex:1;background:#EDE6F0;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#7C5CA6">TVA</div><div style="font-size:12px;font-weight:600;color:#7C5CA6">' + fmt(fac.tva || 0) + '</div></div>' +
       '</div>' +
     '</div>' +
-    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+    '<div style="margin:0 14px 14px;background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">' +
       '<div style="font-size:13px;font-weight:700;margin-bottom:12px">Checklist</div>' +
       '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA">' +
         '<div><div style="font-size:12px;font-weight:600">Lettrage</div></div>' +
-        '<button id="btn-lettrage-ov" class="btn-lettr-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.lettre ? '#B8860B' : '#E3DCCF') + ';background:' + (ctrlFresh.lettre ? '#F7EFDC' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.lettre ? '☑' : '☐') + '</button>' +
+        '<button id="btn-lettrage-ov" class="btn-lettr-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.lettre ? '#B8860B' : '#DDE3DA') + ';background:' + (ctrlFresh.lettre ? '#F7EFDC' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.lettre ? '☑' : '☐') + '</button>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA">' +
         '<div><div style="font-size:12px;font-weight:600">TVA verifiee</div></div>' +
-        '<button id="btn-tva-ov" class="btn-tva-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.tva_verifie ? '#7C5CA6' : '#E3DCCF') + ';background:' + (ctrlFresh.tva_verifie ? '#EDE6F0' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.tva_verifie ? '☑' : '☐') + '</button>' +
+        '<button id="btn-tva-ov" class="btn-tva-ov" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (ctrlFresh.tva_verifie ? '#7C5CA6' : '#DDE3DA') + ';background:' + (ctrlFresh.tva_verifie ? '#EDE6F0' : '#fff') + ';font-size:16px;cursor:pointer;font-family:inherit">' + (ctrlFresh.tva_verifie ? '☑' : '☐') + '</button>' +
       '</div>' +
       '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">' +
-        '<div><div style="font-size:12px;font-weight:600">Rapprochement bancaire</div><div style="font-size:10px;color:#9C9186">' + ((fac.transactions_bancaires_liees||[]).length ? (fac.transactions_bancaires_liees||[]).length + ' transaction(s) liée(s)' : 'Aucune transaction liée') + '</div></div>' +
-        '<button class="btn-rapprocher-ov" onclick="ouvrirRapprochementDepuisFacture(\'' + factureId + '\',\'facture\')" style="padding:7px 12px;border-radius:8px;border:none;background:' + ((fac.transactions_bancaires_liees||[]).length ? '#1F6F72' : '#E9F4F3') + ';color:' + ((fac.transactions_bancaires_liees||[]).length ? '#fff' : '#1F6F72') + ';font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher</button>' +
+        '<div><div style="font-size:12px;font-weight:600">Rapprochement bancaire</div><div style="font-size:10px;color:#8E9C95">' + ((fac.transactions_bancaires_liees||[]).length ? (fac.transactions_bancaires_liees||[]).length + ' transaction(s) liée(s)' : 'Aucune transaction liée') + '</div></div>' +
+        '<button class="btn-rapprocher-ov" onclick="ouvrirRapprochementDepuisFacture(\'' + factureId + '\',\'facture\')" style="padding:7px 12px;border-radius:8px;border:none;background:' + ((fac.transactions_bancaires_liees||[]).length ? '#1B5E4B' : '#E7F2EC') + ';color:' + ((fac.transactions_bancaires_liees||[]).length ? '#fff' : '#1B5E4B') + ';font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher</button>' +
       '</div>' +
     '</div>' +
     '<div style="margin:0 14px 14px" id="notes-facture-zone"></div>' +
@@ -1764,7 +1764,7 @@ async function toggleLettrage(factureId) {
     if (!confirm('Voulez-vous retirer le lettrage de cette facture ?')) return;
     await sauvegarderControle(factureId, { lettre: false, lettre_at: null, lettre_par: null });
     const btn = document.getElementById('btn-lettrage-ov');
-    if (btn) { btn.textContent = '☐'; btn.style.borderColor = '#E3DCCF'; btn.style.background = '#fff'; }
+    if (btn) { btn.textContent = '☐'; btn.style.borderColor = '#DDE3DA'; btn.style.background = '#fff'; }
     ajouterHistorique('Lettrage retire — ', factureId);
     showToast('Lettrage retire', 'success');
   } else {
@@ -1782,7 +1782,7 @@ async function toggleTVA(factureId) {
   if (ctrl.tva_verifie) {
     await sauvegarderControle(factureId, { tva_verifie: false, tva_verifie_at: null, tva_verifie_par: null });
     const btn = document.getElementById('btn-tva-ov');
-    if (btn) { btn.textContent = '☐'; btn.style.borderColor = '#E3DCCF'; btn.style.background = '#fff'; }
+    if (btn) { btn.textContent = '☐'; btn.style.borderColor = '#DDE3DA'; btn.style.background = '#fff'; }
     ajouterHistorique('TVA non verifiee — ', factureId);
     showToast('TVA non verifiee', 'success');
   } else {
@@ -1854,13 +1854,13 @@ function renderComptableProfil() {
   const qrContainer = el('cpt-qr-container');
   if (qrContainer) {
     const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(lien);
-    qrContainer.innerHTML = '<img src="' + qrUrl + '" style="border-radius:10px;border:3px solid #FBF0DA" width="140" height="140">';
+    qrContainer.innerHTML = '<img src="' + qrUrl + '" style="border-radius:10px;border:3px solid #E7F2EC" width="140" height="140">';
   }
   const infos = el('cpt-profil-infos');
   if (infos) {
     const rows = [['Nom', nom], ['Cabinet', cabinet], ['Email', email], ['Specialite', meta.specialite || ''], ['Telephone', meta.tel || '']].filter(function(r) { return r[1]; });
     infos.innerHTML = rows.map(function(r) {
-      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1EEE8;font-size:12px"><span style="color:#9C9186">' + r[0] + '</span><span style="font-weight:600">' + escapeHTML(String(r[1])) + '</span></div>';
+      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F5F6F1;font-size:12px"><span style="color:#8E9C95">' + r[0] + '</span><span style="font-weight:600">' + escapeHTML(String(r[1])) + '</span></div>';
     }).join('');
   }
   window._cptLien = lien;
@@ -1918,7 +1918,7 @@ function appendModeBanner() {
   document.head.appendChild(style);
   const pill = document.createElement('div');
   pill.id = 'cpt-mode-pill';
-  pill.style.cssText = 'position:fixed;top:0;left:0;right:0;height:30px;z-index:99999;background:#1F6F72;color:#fff;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;gap:6px;border-bottom:2px solid #C9971F;box-sizing:border-box';
+  pill.style.cssText = 'position:fixed;top:0;left:0;right:0;height:30px;z-index:99999;background:#1B5E4B;color:#fff;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;gap:6px;border-bottom:2px solid #1B5E4B;box-sizing:border-box';
   pill.innerHTML = '📊 Espace comptable';
   pill.onclick = revenirEspaceComptable;
   document.body.appendChild(pill);
@@ -1973,27 +1973,27 @@ async function renderNotificationsComptable() {
   content.innerHTML =
     '<div style="padding:16px">' +
       '<div style="font-size:16px;font-weight:700;margin-bottom:16px">🔔 Notifications</div>' +
-      (invitations.length ? '<div style="font-size:12px;font-weight:700;color:#1F6F72;text-transform:uppercase;margin-bottom:10px">Invitations en attente</div>' +
+      (invitations.length ? '<div style="font-size:12px;font-weight:700;color:#1B5E4B;text-transform:uppercase;margin-bottom:10px">Invitations en attente</div>' +
         invitations.map(function(inv) {
           const p = inv._profil || {};
-          return '<div style="background:#FBF0DA;border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid #E8D9AE" id="inv-cpt-carte-' + inv.id + '">' +
+          return '<div style="background:#E7F2EC;border-radius:14px;padding:16px;margin-bottom:10px;border:1px solid #E8D9AE" id="inv-cpt-carte-' + inv.id + '">' +
             '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' +
               '<div style="font-size:24px">🏢</div>' +
               '<div><div style="font-size:13px;font-weight:700">' + escapeHTML(p.raison || inv.entreprise_email || '') + '</div>' +
-                '<div style="font-size:11px;color:#6B5F54">' + [p.secteur, p.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
-                (p.tel ? '<div style="font-size:11px;color:#6B5F54">📞 ' + escapeHTML(p.tel) + '</div>' : '') +
-                '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(inv.entreprise_email || '') + '</div>' +
+                '<div style="font-size:11px;color:#5B6B64">' + [p.secteur, p.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
+                (p.tel ? '<div style="font-size:11px;color:#5B6B64">📞 ' + escapeHTML(p.tel) + '</div>' : '') +
+                '<div style="font-size:11px;color:#8E9C95;margin-top:2px">' + escapeHTML(inv.entreprise_email || '') + '</div>' +
               '</div>' +
             '</div>' +
             '<div style="display:flex;gap:6px">' +
               '<button class="btn-accept-inv" data-id="' + inv.id + '" data-eid="' + (inv.entreprise_id||'') + '" style="flex:1;padding:10px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
-              '<button class="btn-plus-tard-inv" data-id="' + inv.id + '" style="flex:1;padding:10px 4px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⏳ Plus tard</button>' +
+              '<button class="btn-plus-tard-inv" data-id="' + inv.id + '" style="flex:1;padding:10px 4px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⏳ Plus tard</button>' +
               '<button class="btn-reject-inv" data-id="' + inv.id + '" style="flex:1;padding:10px 4px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
             '</div>' +
           '</div>';
         }).join('') : '') +
-      (notifs.length ? '<div style="font-size:12px;font-weight:700;color:#9C9186;text-transform:uppercase;margin:14px 0 10px">Autres notifications</div><div id="cpt-autres-notifs"></div>' : '') +
-      (!invitations.length && !notifs.length ? '<div style="text-align:center;padding:40px;color:#9C9186"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:14px;font-weight:600">Aucune notification</div></div>' : '') +
+      (notifs.length ? '<div style="font-size:12px;font-weight:700;color:#8E9C95;text-transform:uppercase;margin:14px 0 10px">Autres notifications</div><div id="cpt-autres-notifs"></div>' : '') +
+      (!invitations.length && !notifs.length ? '<div style="text-align:center;padding:40px;color:#8E9C95"><div style="font-size:40px;margin-bottom:12px">✅</div><div style="font-size:14px;font-weight:600">Aucune notification</div></div>' : '') +
     '</div>';
   const zoneAutres = document.getElementById('cpt-autres-notifs');
   if (zoneAutres && typeof htmlListeNotifications === 'function') {
@@ -2064,7 +2064,7 @@ function voirFactureComptable(facId) {
 function ouvrirPDFComptable(fac, profil) {
   const lignes = typeof fac.lignes === 'string' ? JSON.parse(fac.lignes || '[]') : (fac.lignes || []);
   genDocPDF({
-    type: 'FACTURE', ref: fac.ref, color: '#C9971F', emetteur: profil,
+    type: 'FACTURE', ref: fac.ref, color: '#1B5E4B', emetteur: profil,
     destinataire: { nom: fac.client, chantier: fac.chantier },
     date: fac.date_emission, echeance: fac.echeance, paiement: fac.paiement, statut: fac.statut,
     lignes: lignes, note: fac.note || '', ht: fac.ht, tva: fac.tva, ttc: fac.ttc, devise: fac.devise || 'MAD',
@@ -2104,7 +2104,7 @@ function attacherControlsToViewer(factureId) {
   const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(factureId); }) || {};
   const bar = document.createElement('div');
   bar.id = 'pdf-cpt-controls';
-  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#fff;border-top:1px solid #E3DCCF;padding:12px 16px;display:flex;gap:10px;align-items:center;box-shadow:0 -4px 20px rgba(0,0,0,0.1)';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#fff;border-top:1px solid #DDE3DA;padding:12px 16px;display:flex;gap:10px;align-items:center;box-shadow:0 -4px 20px rgba(0,0,0,0.1)';
   // FIX (grand audit - correctif 1): les 2 boutons n'avaient jamais leur
   // etat initial (data-lettre/data-tva) - toggleLettrageRapide()/
   // toggleTVARapide() lisent justement cet attribut pour savoir s'il faut
@@ -2113,12 +2113,12 @@ function attacherControlsToViewer(factureId) {
   // de la de-lettrer (comportement inverse), un second clic etait
   // necessaire pour revenir a un comportement normal.
   bar.innerHTML =
-    '<button class="btn-l-ctrl" data-fid="' + factureId + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:44px;height:44px;border-radius:10px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';color:' + (ctrl.lettre ? '#fff' : '#9C9186') + ';font-size:18px;font-weight:900;cursor:pointer;font-family:inherit">L</button>' +
-    '<div style="flex:1"><div style="font-size:12px;font-weight:700" id="pdf-ctrl-lettre-txt">' + (ctrl.lettre ? '✓ Lettre' : 'Non lettre') + '</div><div style="font-size:10px;color:#9C9186">' + (ctrl.lettre_at ? new Date(ctrl.lettre_at).toLocaleDateString('fr-FR') : '') + '</div></div>' +
-    '<button class="btn-t-ctrl" data-fid="' + factureId + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:44px;height:44px;border-radius:10px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#9C9186') + ';font-size:18px;font-weight:900;cursor:pointer;font-family:inherit">T</button>' +
-    '<div style="flex:1"><div style="font-size:12px;font-weight:700" id="pdf-ctrl-tva-txt">' + (ctrl.tva_verifie ? '✓ TVA ok' : 'TVA non verifiee') + '</div><div style="font-size:10px;color:#9C9186">' + (ctrl.tva_verifie_at ? new Date(ctrl.tva_verifie_at).toLocaleDateString('fr-FR') : '') + '</div></div>' +
-    '<button class="btn-rapprocher-ctrl" onclick="ouvrirRapprochementDepuisFacture(\'' + factureId + '\',\'facture\')" title="Rapprocher avec une transaction bancaire" style="width:44px;height:44px;border-radius:10px;border:none;background:#1F6F72;color:#fff;font-size:18px;cursor:pointer;font-family:inherit">🏦</button>' +
-    '<button class="btn-open-remarques" style="padding:8px 12px;background:#241F1B;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📝 Remarques</button>';
+    '<button class="btn-l-ctrl" data-fid="' + factureId + '" data-lettre="' + (ctrl.lettre ? '1' : '0') + '" style="width:44px;height:44px;border-radius:10px;border:none;background:' + (ctrl.lettre ? '#6E8F4E' : '#EAE4DA') + ';color:' + (ctrl.lettre ? '#fff' : '#8E9C95') + ';font-size:18px;font-weight:900;cursor:pointer;font-family:inherit">L</button>' +
+    '<div style="flex:1"><div style="font-size:12px;font-weight:700" id="pdf-ctrl-lettre-txt">' + (ctrl.lettre ? '✓ Lettre' : 'Non lettre') + '</div><div style="font-size:10px;color:#8E9C95">' + (ctrl.lettre_at ? new Date(ctrl.lettre_at).toLocaleDateString('fr-FR') : '') + '</div></div>' +
+    '<button class="btn-t-ctrl" data-fid="' + factureId + '" data-tva="' + (ctrl.tva_verifie ? '1' : '0') + '" style="width:44px;height:44px;border-radius:10px;border:none;background:' + (ctrl.tva_verifie ? '#7C5CA6' : '#EAE4DA') + ';color:' + (ctrl.tva_verifie ? '#fff' : '#8E9C95') + ';font-size:18px;font-weight:900;cursor:pointer;font-family:inherit">T</button>' +
+    '<div style="flex:1"><div style="font-size:12px;font-weight:700" id="pdf-ctrl-tva-txt">' + (ctrl.tva_verifie ? '✓ TVA ok' : 'TVA non verifiee') + '</div><div style="font-size:10px;color:#8E9C95">' + (ctrl.tva_verifie_at ? new Date(ctrl.tva_verifie_at).toLocaleDateString('fr-FR') : '') + '</div></div>' +
+    '<button class="btn-rapprocher-ctrl" onclick="ouvrirRapprochementDepuisFacture(\'' + factureId + '\',\'facture\')" title="Rapprocher avec une transaction bancaire" style="width:44px;height:44px;border-radius:10px;border:none;background:#1B5E4B;color:#fff;font-size:18px;cursor:pointer;font-family:inherit">🏦</button>' +
+    '<button class="btn-open-remarques" style="padding:8px 12px;background:#0F1F1A;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📝 Remarques</button>';
   viewer.appendChild(bar);
   bar.querySelector('.btn-l-ctrl').onclick = async function() {
     await toggleLettrageRapide(factureId, this);

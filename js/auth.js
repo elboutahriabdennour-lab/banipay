@@ -58,19 +58,19 @@ function selectRole(role) {
   if (!entBtn || !cptBtn) return;
 
   if (role === 'entreprise') {
-    entBtn.style.border = '2px solid #C9971F';
-    entBtn.style.background = '#E9F4F3';
+    entBtn.style.border = '2px solid #1B5E4B';
+    entBtn.style.background = '#E7F2EC';
     entBtn.style.transform = 'scale(1.02)';
-    cptBtn.style.border = '2px solid #E3DCCF';
-    cptBtn.style.background = '#F1EEE8';
+    cptBtn.style.border = '2px solid #DDE3DA';
+    cptBtn.style.background = '#F5F6F1';
     cptBtn.style.transform = 'scale(1)';
     if (cptFields) cptFields.style.display = 'none';
   } else {
     cptBtn.style.border = '2px solid #7C5CA6';
     cptBtn.style.background = '#EDE6F0';
     cptBtn.style.transform = 'scale(1.02)';
-    entBtn.style.border = '2px solid #E3DCCF';
-    entBtn.style.background = '#F1EEE8';
+    entBtn.style.border = '2px solid #DDE3DA';
+    entBtn.style.background = '#F5F6F1';
     entBtn.style.transform = 'scale(1)';
     if (cptFields) cptFields.style.display = 'block';
   }
@@ -108,7 +108,7 @@ function checkPwdStrength() {
     { largeur: '25%', couleur: '#B23A2E', texte: 'Faible — 8 caractères min., 1 majuscule, 1 chiffre' },
     { largeur: '50%', couleur: '#B8860B', texte: 'Moyen — ajoutez ce qui manque' },
     { largeur: '75%', couleur: '#6E8F4E', texte: 'Bon' },
-    { largeur: '100%', couleur: '#1F6F72', texte: 'Excellent' },
+    { largeur: '100%', couleur: '#1B5E4B', texte: 'Excellent' },
   ];
   const n = niveaux[Math.max(0, score - 1)] || niveaux[0];
   barre.style.width = n.largeur;

@@ -29,14 +29,14 @@ function renderTVA() {
   tbody.innerHTML = moisTries.length
     ? moisTries.map(function(m) {
         const d = parMois[m];
-        return '<tr style="border-bottom:1px solid #F1EEE8">' +
+        return '<tr style="border-bottom:1px solid #F5F6F1">' +
           '<td style="padding:10px 12px;font-size:12px">' + m + '</td>' +
           '<td style="padding:10px 12px;font-size:12px;text-align:right">' + fmt(d.ht) + '</td>' +
           '<td style="padding:10px 12px;font-size:12px;text-align:right;color:#6E8F4E;font-weight:700">' + fmt(d.tva) + '</td>' +
           '<td style="padding:10px 12px;font-size:12px;text-align:right;font-weight:700">' + fmt(d.ttc) + '</td>' +
         '</tr>';
       }).join('')
-    : '<tr><td colspan="4" style="padding:20px;text-align:center;color:#9C9186;font-size:12px">Aucune facture payée pour l\'instant</td></tr>';
+    : '<tr><td colspan="4" style="padding:20px;text-align:center;color:#8E9C95;font-size:12px">Aucune facture payée pour l\'instant</td></tr>';
 }
 
 function renderDashboard() {
@@ -134,7 +134,7 @@ function renderFactureList() {
     return;
   }
   const icons = { attente:'🧱', retard:'⚠️', payee:'✅', envoyee:'📤' };
-  const bgs   = { attente:'#F7EFDC', retard:'#F5E4E1', payee:'#EEF3E4', envoyee:'#E9F4F3' };
+  const bgs   = { attente:'#F7EFDC', retard:'#F5E4E1', payee:'#EEF3E4', envoyee:'#E7F2EC' };
   list.innerHTML = data.map(f => {
     const recu = Number(f.montant_recu || 0);
     const pct = f.ttc > 0 ? Math.round(recu / f.ttc * 100) : 0;
@@ -146,11 +146,11 @@ function renderFactureList() {
       <div class="card-body">
         <div class="card-name">${escapeHTML(f.client)}</div>
         <div class="card-ref">${f.ref} · ${f.date_emission||''}</div>
-        ${recu > 0 && f.statut !== 'payee' ? `<div style="margin-top:4px;height:3px;background:#E3DCCF;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#6E8F4E;border-radius:2px"></div></div>` : ''}
+        ${recu > 0 && f.statut !== 'payee' ? `<div style="margin-top:4px;height:3px;background:#DDE3DA;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#6E8F4E;border-radius:2px"></div></div>` : ''}
         ${(function() {
           const n = (STATE._compteursNotesFactures || {})[f.id];
           if (!n) return '';
-          return '<div style="margin-top:4px;font-size:10px;color:#1F6F72;background:#E9F4F3;display:inline-block;padding:2px 7px;border-radius:8px">💬 ' + n.nb_notes + '</div>';
+          return '<div style="margin-top:4px;font-size:10px;color:#1B5E4B;background:#E7F2EC;display:inline-block;padding:2px 7px;border-radius:8px">💬 ' + n.nb_notes + '</div>';
         })()}
       </div>
       <div class="card-end">
@@ -165,8 +165,8 @@ function renderFactureList() {
           const aDesLiens = (f.transactions_bancaires_liees||[]).length > 0;
           const estTotal = f.statut === 'payee';
           const libelle = estTotal ? 'Rapprochée' : (aDesLiens ? 'Partiel' : 'Rapprocher');
-          const couleurFond = estTotal ? '#1F6F72' : (aDesLiens ? '#FBF0DA' : '#E9F4F3');
-          const couleurTexte = estTotal ? '#fff' : (aDesLiens ? '#96751B' : '#1F6F72');
+          const couleurFond = estTotal ? '#1B5E4B' : (aDesLiens ? '#E7F2EC' : '#E7F2EC');
+          const couleurTexte = estTotal ? '#fff' : (aDesLiens ? '#96751B' : '#1B5E4B');
           return `<button onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(${f.id},'facture')" title="Rapprocher avec une transaction bancaire" style="font-size:9px;color:${couleurTexte};background:${couleurFond};border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit;font-weight:600">🏦 ${libelle}</button>`;
         })()}
         ${!enSelection ? `<button onclick="event.stopPropagation();creerAvoirDepuisFacture(${f.id})" style="font-size:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit">↩️ Avoir</button>` : ''}
@@ -316,11 +316,11 @@ function filtrerProduits() {
   picker.innerHTML = filtered.length ? filtered.map(p => `
     <div class="produit-picker-item" onclick="ajouterDepuisCatalogue(${p.id})">
       <div>
-        <div style="font-size:13px;font-weight:600;color:#2A2420">${p.nom}</div>
-        <div style="font-size:11px;color:#9C9186">${p.unite||'u'} · ${fmt(p.prix_ht)} MAD HT</div>
+        <div style="font-size:13px;font-weight:600;color:#14241F">${p.nom}</div>
+        <div style="font-size:11px;color:#8E9C95">${p.unite||'u'} · ${fmt(p.prix_ht)} MAD HT</div>
       </div>
-      <div style="color:#C9971F;font-size:22px;font-weight:300">＋</div>
-    </div>`).join('') : '<div style="text-align:center;padding:20px;color:#9C9186">Aucun article</div>';
+      <div style="color:#1B5E4B;font-size:22px;font-weight:300">＋</div>
+    </div>`).join('') : '<div style="text-align:center;padding:20px;color:#8E9C95">Aucun article</div>';
 }
 
 function ajouterDepuisCatalogue(id) {
@@ -476,7 +476,7 @@ function renderDetail() {
     <div class="d-ligne">
       <div>
         <div style="font-size:13px;font-weight:500">${escapeHTML(l.desc)}</div>
-        <div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div>
+        <div style="font-size:11px;color:#8E9C95">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div>
       </div>
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
     </div>`).join('');
@@ -522,12 +522,12 @@ function renderDetail() {
     if (blTrouve) liens.push({ icone: '📦', label: 'Bon de livraison', ref: blTrouve.ref, action: 'voirBonLivraison(' + blTrouve.id + ')' });
 
     docsLiesEl.innerHTML = !liens.length ? '' :
-      '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🔗 Documents liés</div>' +
+      '<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;margin-bottom:6px">🔗 Documents liés</div>' +
       liens.map(function(l) {
-        return '<div ' + (l.action ? 'onclick="' + l.action + '" style="cursor:pointer"' : '') + ' style="background:#fff;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px' + (l.action ? ';cursor:pointer' : '') + '">' +
+        return '<div ' + (l.action ? 'onclick="' + l.action + '" style="cursor:pointer"' : '') + ' style="background:#fff;border:1px solid #DDE3DA;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px' + (l.action ? ';cursor:pointer' : '') + '">' +
           '<span style="font-size:18px">' + l.icone + '</span>' +
-          '<div style="flex:1"><div style="font-size:11px;color:#9C9186">' + l.label + '</div><div style="font-size:13px;font-weight:600">' + escapeHTML(l.ref||'') + '</div></div>' +
-          (l.action ? '<span style="color:#9C9186">→</span>' : '') +
+          '<div style="flex:1"><div style="font-size:11px;color:#8E9C95">' + l.label + '</div><div style="font-size:13px;font-weight:600">' + escapeHTML(l.ref||'') + '</div></div>' +
+          (l.action ? '<span style="color:#8E9C95">→</span>' : '') +
         '</div>';
       }).join('');
   }
@@ -547,14 +547,14 @@ function renderDetail() {
       const solde = Number(f.ttc || 0) - totalAvoirs;
       const ecart = totalAvoirs > Number(f.ttc || 0) + 0.01;
       lettrageEl.innerHTML =
-        '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">↩️ Avoirs liés (lettrage)</div>' +
+        '<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;margin-bottom:6px">↩️ Avoirs liés (lettrage)</div>' +
         avoirsLies.map(function(a) {
-          return '<div onclick="openDetailAvoir&&openDetailAvoir(' + a.id + ')" style="background:#fff;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">' +
-            '<div><div style="font-size:11px;color:#9C9186">' + escapeHTML(a.motif||'') + '</div><div style="font-size:13px;font-weight:600">' + escapeHTML(a.ref||'') + '</div></div>' +
+          return '<div onclick="openDetailAvoir&&openDetailAvoir(' + a.id + ')" style="background:#fff;border:1px solid #DDE3DA;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">' +
+            '<div><div style="font-size:11px;color:#8E9C95">' + escapeHTML(a.motif||'') + '</div><div style="font-size:13px;font-weight:600">' + escapeHTML(a.ref||'') + '</div></div>' +
             '<div style="font-size:13px;font-weight:700;color:#8E2E24">-' + fmt(a.ttc) + ' MAD</div>' +
           '</div>';
         }).join('') +
-        '<div style="background:' + (ecart ? '#F5E4E1' : '#F1EEE8') + ';border-radius:10px;padding:10px 12px;margin-top:4px;display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:' + (ecart ? '#B23A2E' : '#241F1B') + '">' +
+        '<div style="background:' + (ecart ? '#F5E4E1' : '#F5F6F1') + ';border-radius:10px;padding:10px 12px;margin-top:4px;display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:' + (ecart ? '#B23A2E' : '#0F1F1A') + '">' +
           '<span>' + (ecart ? '⚠️ Écart — avoirs > facture' : 'Solde après avoirs') + '</span><span>' + fmt(solde) + ' MAD</span>' +
         '</div>';
     }
@@ -578,12 +578,12 @@ function renderDetail() {
         rapprochementsEl.innerHTML = '';
       } else {
         rapprochementsEl.innerHTML =
-          '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🏦 Rapprochements bancaires (' + transactionsLiees.length + ')</div>' +
+          '<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;margin-bottom:6px">🏦 Rapprochements bancaires (' + transactionsLiees.length + ')</div>' +
           transactionsLiees.map(function(ref) {
             const parts = String(ref).split('|');
             return '<div style="background:#EEF3E4;border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:12px">' +
-              '<div style="display:flex;justify-content:space-between"><span style="color:#6B5F54">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#55702E">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
-              (parts[2] ? '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
+              '<div style="display:flex;justify-content:space-between"><span style="color:#5B6B64">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#55702E">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
+              (parts[2] ? '<div style="font-size:11px;color:#8E9C95;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
             '</div>';
           }).join('');
       }
@@ -625,24 +625,24 @@ function renderDetail() {
     </div>`);
   }
 
-  actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
+  actions.push(`<button class="action-item" style="color:#1B5E4B;border-left-color:#1B5E4B" onclick="ouvrirModalEnvoi('facture',${f.id})"><div class="action-ico" style="background:#E7F2EC">📨</div>Envoyer</button>`);
   // FIX (fonction déjà codée, jamais reliée) : ouvrirHistoriquePaiements()
   // et son écran dédié existaient déjà, sans aucun bouton pour y accéder.
-  actions.push(`<button class="action-item" style="color:#6B5F54;border-left-color:#6B5F54" onclick="ouvrirHistoriquePaiements(${f.id})"><div class="action-ico" style="background:#F1EEE8">🧾</div>Historique des paiements</button>`);
+  actions.push(`<button class="action-item" style="color:#5B6B64;border-left-color:#5B6B64" onclick="ouvrirHistoriquePaiements(${f.id})"><div class="action-ico" style="background:#F5F6F1">🧾</div>Historique des paiements</button>`);
   if (f.statut !== 'payee') {
     actions.push(`<button class="action-item success" onclick="marquerPayee(${f.id})"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer payée</button>`);
-    actions.push(`<button class="action-item" onclick="ouvrirPaiementPartiel(${f.id})"><div class="action-ico" style="background:#E9F4F3">💰</div>Enregistrer un paiement</button>`);
+    actions.push(`<button class="action-item" onclick="ouvrirPaiementPartiel(${f.id})"><div class="action-ico" style="background:#E7F2EC">💰</div>Enregistrer un paiement</button>`);
     // NOUVEAU (retour utilisateur) : accès direct au rapprochement
     // bancaire depuis la facture elle-même — jusqu'ici, cette
     // fonctionnalité n'existait que côté relevé, sans aucun bouton
     // visible ici pour la déclencher.
-    actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="typeof ouvrirRapprochementDepuisFacture==='function' && ouvrirRapprochementDepuisFacture(${f.id},'facture')"><div class="action-ico" style="background:#E9F4F3">🏦</div>Rapprocher avec un relevé bancaire</button>`);
+    actions.push(`<button class="action-item" style="color:#1B5E4B;border-left-color:#1B5E4B" onclick="typeof ouvrirRapprochementDepuisFacture==='function' && ouvrirRapprochementDepuisFacture(${f.id},'facture')"><div class="action-ico" style="background:#E7F2EC">🏦</div>Rapprocher avec un relevé bancaire</button>`);
     if (['attente','envoyee'].includes(f.statut))
       actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="marquerRetard(${f.id})"><div class="action-ico" style="background:#F7EFDC">⚠️</div>Marquer en retard</button>`);
   }
-  actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#E9F4F3">👁️</div>Aperçu PDF</button>`);
+  actions.push(`<button class="action-item" onclick="exportPDF(${f.id})"><div class="action-ico" style="background:#E7F2EC">👁️</div>Aperçu PDF</button>`);
   actions.push(`<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="typeof telechargerXMLUBLFacture==='function' && telechargerXMLUBLFacture(${f.id})"><div class="action-ico" style="background:#F7EFDC">🧬</div>Export XML UBL (préparation DGI)${typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('export_ubl') : ''}</button>`);
-  actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#E9F4F3">💾</div>Enregistrer PDF</button>`);
+  actions.push(`<button class="action-item" onclick="enregistrerPDFFacture(${f.id})"><div class="action-ico" style="background:#E7F2EC">💾</div>Enregistrer PDF</button>`);
   actions.push(`<button class="action-item whatsapp" onclick="relancerWhatsApp(${f.id})"><div class="action-ico" style="background:#EEF3E4">📱</div>Relance WhatsApp</button>`);
   actions.push(`<button class="action-item" style="color:#7C5CA6;border-left-color:#7C5CA6" onclick="creerAvoirDepuisFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">↩️</div>Créer un avoir</button>`);
   actions.push(`<button class="action-item" style="color:#55702E;border-left-color:#55702E" onclick="creerBonLivraisonDepuisFacture(${f.id})"><div class="action-ico" style="background:#EEF3E4">📦</div>Créer un bon de livraison</button>`);
@@ -726,7 +726,7 @@ function genRecuPaiement(id) {
   const p = STATE.profil;
   const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Reçu ${f.ref}<\/title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:420px;margin:40px auto;padding:20px}
-.card{border:1px solid #E3DCCF;border-radius:16px;overflow:hidden}
+.card{border:1px solid #DDE3DA;border-radius:16px;overflow:hidden}
 .header{background:#6E8F4E;color:#fff;padding:24px;text-align:center}
 .body{padding:20px}
 .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA;font-size:14px}
@@ -736,13 +736,13 @@ function genRecuPaiement(id) {
 <div class="card">
   <div class="header"><div style="font-size:40px;margin-bottom:8px">✅</div><h2>Reçu de paiement</h2><div style="opacity:0.8;margin-top:4px">${f.ref}</div></div>
   <div class="body">
-    <div class="row"><span style="color:#6B5F54">Client</span><strong>${escapeHTML(f.client)}</strong></div>
-    <div class="row"><span style="color:#6B5F54">Date</span><span>${new Date().toLocaleDateString('fr-MA')}</span></div>
-    <div class="row"><span style="color:#6B5F54">Mode</span><span>${f.paiement||'Virement'}</span></div>
-    <div class="row"><span style="color:#6B5F54">Référence</span><span>${f.ref}</span></div>
-    ${f.chantier ? `<div class="row"><span style="color:#6B5F54">Projet</span><span>${escapeHTML(f.chantier)}</span></div>` : ''}
+    <div class="row"><span style="color:#5B6B64">Client</span><strong>${escapeHTML(f.client)}</strong></div>
+    <div class="row"><span style="color:#5B6B64">Date</span><span>${new Date().toLocaleDateString('fr-MA')}</span></div>
+    <div class="row"><span style="color:#5B6B64">Mode</span><span>${f.paiement||'Virement'}</span></div>
+    <div class="row"><span style="color:#5B6B64">Référence</span><span>${f.ref}</span></div>
+    ${f.chantier ? `<div class="row"><span style="color:#5B6B64">Projet</span><span>${escapeHTML(f.chantier)}</span></div>` : ''}
     <div class="total"><span>Montant reçu</span><span>${fmt(f.ttc)} ${f.devise||'MAD'}</span></div>
-    <div style="font-size:11px;color:#9C9186;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #EAE4DA">
+    <div style="font-size:11px;color:#8E9C95;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #EAE4DA">
       ${p.raison||''} · ${p.tel||''} · ${p.email||''}
     </div>
   </div>
@@ -1253,14 +1253,14 @@ ${p.tel||''}`
     var urlHtml = URL.createObjectURL(blobHtml);
     var ov = document.createElement('div');
     ov.id = 'pdf-fullscreen';
-    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#F1EEE8;display:flex;flex-direction:column';
+    ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#F5F6F1;display:flex;flex-direction:column';
     var barre = document.createElement('div');
-    barre.style.cssText = 'background:linear-gradient(135deg,#241F1B,#1F6F72);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0';
+    barre.style.cssText = 'background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0';
     var btnStyle = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
     barre.innerHTML =
       '<button type="button" class="pdfv-retour" style="' + btnStyle + '" aria-label="Retour">← Retour</button>' +
       '<div style="flex:1;font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" class="pdfv-titre"></div>' +
-      '<button type="button" class="pdfv-dl" style="' + btnStyle + ';background:#C9971F" aria-label="Télécharger le PDF">⬇️ Télécharger PDF</button>' +
+      '<button type="button" class="pdfv-dl" style="' + btnStyle + ';background:#1B5E4B" aria-label="Télécharger le PDF">⬇️ Télécharger PDF</button>' +
       '<button type="button" class="pdfv-share" style="' + btnStyle + '" aria-label="Partager">📤</button>';
     barre.querySelector('.pdfv-titre').textContent = ref || 'Document';
     var cadre = document.createElement('iframe');
@@ -1314,7 +1314,7 @@ function demanderIdentiteEmetteur(apres) {
   ov.innerHTML = '<div class="modal">' +
     '<div class="modal-handle"></div>' +
     '<div class="modal-title">Avant votre première facture</div>' +
-    '<div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Ces informations sont obligatoires sur une facture au Maroc. Elles sont enregistrées dans votre profil, une seule fois.</div>' +
+    '<div style="font-size:12px;color:#5B6B64;margin-bottom:10px">Ces informations sont obligatoires sur une facture au Maroc. Elles sont enregistrées dans votre profil, une seule fois.</div>' +
     '<label class="a-lbl">Nom de l\'entreprise</label><input class="m-inp" id="idn-raison" value="' + escapeHTML(p.raison || '') + '">' +
     '<label class="a-lbl">ICE (15 chiffres)</label><input class="m-inp" id="idn-ice" inputmode="numeric" maxlength="15" value="' + escapeHTML(p.ice || '') + '">' +
     '<label class="a-lbl">Adresse</label><input class="m-inp" id="idn-adresse" value="' + escapeHTML(p.adresse || '') + '">' +

@@ -891,19 +891,19 @@ function _barreFiltresReleve() {
     // règles apprises — jusqu'ici, aucun écran ne permettait de les
     // revoir ou d'en supprimer une une fois créées.
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">' +
-      '<span onclick="ouvrirGestionRegles()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">🔒 Gérer mes règles (' + (STATE.reglesRapprochement||[]).length + ')</span>' +
+      '<span onclick="ouvrirGestionRegles()" style="font-size:11px;color:#1B5E4B;text-decoration:underline;cursor:pointer">🔒 Gérer mes règles (' + (STATE.reglesRapprochement||[]).length + ')</span>' +
       // AJOUT (fonction déjà codée, jamais affichée) : reanalyserReleveDepuisZero()
       // existait pour relancer le rapprochement automatique depuis zéro
       // (utile après avoir créé une nouvelle règle ou ajouté des
       // factures) — sans bouton nulle part pour le déclencher.
-      (STATE._releveActuelId ? '<span onclick="if(confirm(' + valeurPourOnclick('Relancer analyse depuis zéro ? Les correspondances déjà proposées seront recalculées.') + '))reanalyserReleveDepuisZero(' + valeurPourOnclick(STATE._releveActuelId) + ')" style="font-size:11px;color:#6B5F54;text-decoration:underline;cursor:pointer">🔄 Réanalyser</span>' : '') +
+      (STATE._releveActuelId ? '<span onclick="if(confirm(' + valeurPourOnclick('Relancer analyse depuis zéro ? Les correspondances déjà proposées seront recalculées.') + '))reanalyserReleveDepuisZero(' + valeurPourOnclick(STATE._releveActuelId) + ')" style="font-size:11px;color:#5B6B64;text-decoration:underline;cursor:pointer">🔄 Réanalyser</span>' : '') +
       // AJOUT (demande utilisateur) : les deux exports comptables
       // existaient déjà en code mais n'étaient déclenchables depuis
       // AUCUN bouton nulle part dans l'app — rendus accessibles ici,
       // là où on vient justement de faire les rapprochements.
       '<span style="display:flex;gap:10px">' +
-        '<span onclick="exporterRapprochementComptable()" style="font-size:11px;color:#6B5F54;text-decoration:underline;cursor:pointer">📄 Export résumé</span>' +
-        '<span onclick="exporterEcrituresRapprochement()" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer;font-weight:600">📊 Export écritures (partie double)</span>' +
+        '<span onclick="exporterRapprochementComptable()" style="font-size:11px;color:#5B6B64;text-decoration:underline;cursor:pointer">📄 Export résumé</span>' +
+        '<span onclick="exporterEcrituresRapprochement()" style="font-size:11px;color:#1B5E4B;text-decoration:underline;cursor:pointer;font-weight:600">📊 Export écritures (partie double)</span>' +
       '</span>' +
     '</div>' +
     '<input id="releve-filtre-recherche" class="f-inp" placeholder="🔍 Rechercher dans le libellé..." value="' + escapeHTML(STATE._filtreReleveRecherche) + '" oninput="rechercherDansReleve(this.value)" style="margin-bottom:8px">' +
@@ -926,7 +926,7 @@ function _barreFiltresReleve() {
     // n'afficher que l'un ou l'autre.
     '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
       '<input type="number" id="releve-filtre-montant-min" class="f-inp" placeholder="Montant min" value="' + (STATE._filtreReleveMontantMin!=null?STATE._filtreReleveMontantMin:'') + '" onchange="appliquerFiltreMontantReleve()" style="flex:1">' +
-      '<span style="font-size:12px;color:#9C9186">à</span>' +
+      '<span style="font-size:12px;color:#8E9C95">à</span>' +
       '<input type="number" id="releve-filtre-montant-max" class="f-inp" placeholder="Montant max" value="' + (STATE._filtreReleveMontantMax!=null?STATE._filtreReleveMontantMax:'') + '" onchange="appliquerFiltreMontantReleve()" style="flex:1">' +
       '<select id="releve-filtre-sens" class="f-inp" style="flex:1" onchange="changerFiltreReleveSens(this.value)">' +
         '<option value="tous"' + ((STATE._filtreReleveSens||'tous')==='tous'?' selected':'') + '>Entrées et sorties</option>' +
@@ -937,7 +937,7 @@ function _barreFiltresReleve() {
     // AJOUT (demande utilisateur) : filtre par période.
     '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">' +
       '<input type="date" id="releve-filtre-date-debut" class="f-inp" value="' + (STATE._filtreReleveDateDebut||'') + '" onchange="appliquerFiltreDateReleve()" style="flex:1">' +
-      '<span style="font-size:12px;color:#9C9186">à</span>' +
+      '<span style="font-size:12px;color:#8E9C95">à</span>' +
       '<input type="date" id="releve-filtre-date-fin" class="f-inp" value="' + (STATE._filtreReleveDateFin||'') + '" onchange="appliquerFiltreDateReleve()" style="flex:1">' +
     '</div>' +
     // AJOUT (demande utilisateur) : tri par date ou par montant.
@@ -953,7 +953,7 @@ function _barreFiltresReleve() {
       '</select>' +
     '</div>' +
     ((STATE._filtreReleveStatut!=='tous'||STATE._filtreReleveRecherche||STATE._filtreReleveMontantMin!=null||STATE._filtreReleveMontantMax!=null||STATE._filtreReleveConfiance!=='tous'||(STATE._filtreReleveSens&&STATE._filtreReleveSens!=='tous')||STATE._filtreReleveDateDebut||STATE._filtreReleveDateFin||(STATE._triReleve&&STATE._triReleve!=='defaut'))
-      ? '<span onclick="effacerFiltresReleve()" style="font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Effacer les filtres</span>'
+      ? '<span onclick="effacerFiltresReleve()" style="font-size:11px;color:#8E9C95;text-decoration:underline;cursor:pointer">Effacer les filtres</span>'
       : '') +
   '</div>';
 }
@@ -1013,7 +1013,7 @@ function _rafraichirLignesReleve() {
   // chaque ligne : il passe dans une bulle qui s'ouvre au clic sur la
   // ligne (voir ouvrirBulleTransaction), pour garder le tableau lisible.
   conteneur.innerHTML =
-    '<div style="padding:0 20px 10px;font-size:11px;color:#9C9186">Lecture automatique — à vérifier avant de confirmer. Touchez une ligne pour la traiter.' +
+    '<div style="padding:0 20px 10px;font-size:11px;color:#8E9C95">Lecture automatique — à vérifier avant de confirmer. Touchez une ligne pour la traiter.' +
       (filtrees.length !== transactions.length ? ' · <strong>' + filtrees.length + '</strong> sur ' + transactions.length + ' affichée(s)' : '') +
     '</div>' +
     (!filtrees.length ? '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-title">Aucune transaction ne correspond à ces filtres</div></div>' :
@@ -1025,12 +1025,12 @@ function _rafraichirLignesReleve() {
       // AJOUT (demande utilisateur) : en-têtes cliquables pour trier —
       // Date, Libellé (alphabétique) et Débit/Crédit (montant), avec
       // une flèche indiquant le sens du tri actif.
-      return '<div style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;padding:6px 20px;background:#F1EEE8;position:sticky;top:0;z-index:1">' +
-        '<div onclick="trierParColonneReleve(\'date\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;cursor:pointer">Date' + flecheDate + '</div>' +
-        '<div onclick="trierParColonneReleve(\'libelle\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;cursor:pointer">Libellé' + flecheLibelle + '</div>' +
+      return '<div style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;padding:6px 20px;background:#F5F6F1;position:sticky;top:0;z-index:1">' +
+        '<div onclick="trierParColonneReleve(\'date\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8E9C95;cursor:pointer">Date' + flecheDate + '</div>' +
+        '<div onclick="trierParColonneReleve(\'libelle\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8E9C95;cursor:pointer">Libellé' + flecheLibelle + '</div>' +
         '<div onclick="trierParColonneReleve(\'montant\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#B23A2E;text-align:right;cursor:pointer">Débit' + flecheMontant + '</div>' +
         '<div onclick="trierParColonneReleve(\'montant\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#55702E;text-align:right;cursor:pointer">Crédit' + flecheMontant + '</div>' +
-        '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;text-align:center">Statut</div>' +
+        '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8E9C95;text-align:center">Statut</div>' +
       '</div>';
     })() +
     filtrees.map(function(item, position) {
@@ -1074,9 +1074,9 @@ function _rafraichirLignesReleve() {
         statutIcone = '—'; statutTitre = 'Aucune correspondance';
       }
 
-      return '<div onclick="ouvrirBulleTransaction(' + i + ')" style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;align-items:center;gap:4px;background:' + fondZebre + ';padding:10px 20px;border-bottom:1px solid #E3DCCF;border-left:4px solid ' + (t._traitee||dejaLieeAvec ? '#6E8F4E' : (t.montant>=0?'#1F6F72':'#B23A2E')) + ';cursor:pointer">' +
-        '<div style="font-size:10px;font-weight:700;color:#9C9186;line-height:1.3">' + escapeHTML((t.dateBrute||'').slice(0,5)) + '</div>' +
-        '<div style="font-size:12px;font-weight:600;color:#2A2420;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">' + escapeHTML(t.description) + '</div>' +
+      return '<div onclick="ouvrirBulleTransaction(' + i + ')" style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;align-items:center;gap:4px;background:' + fondZebre + ';padding:10px 20px;border-bottom:1px solid #DDE3DA;border-left:4px solid ' + (t._traitee||dejaLieeAvec ? '#6E8F4E' : (t.montant>=0?'#1B5E4B':'#B23A2E')) + ';cursor:pointer">' +
+        '<div style="font-size:10px;font-weight:700;color:#8E9C95;line-height:1.3">' + escapeHTML((t.dateBrute||'').slice(0,5)) + '</div>' +
+        '<div style="font-size:12px;font-weight:600;color:#14241F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">' + escapeHTML(t.description) + '</div>' +
         colDebit +
         colCredit +
         '<div style="text-align:center;font-size:14px" title="' + escapeHTML(statutTitre) + '">' + statutIcone + '</div>' +
@@ -1117,37 +1117,37 @@ function ouvrirBulleTransaction(indexTransaction) {
           const estAchat = f._type === 'achat';
           const libelle = estAchat ? 'l\'achat' : 'la facture';
           const icone = estAchat ? '🛒' : '🧾';
-          const pointCouleur = f._score >= 0.75 ? '#1F6F72' : f._score >= 0.5 ? '#C9971F' : '#9C9186';
+          const pointCouleur = f._score >= 0.75 ? '#1B5E4B' : f._score >= 0.5 ? '#1B5E4B' : '#8E9C95';
           const texteConfiance = f._score >= 0.75 ? 'Forte correspondance' : f._score >= 0.5 ? 'Correspondance probable' : 'À vérifier';
           const badge = '<span style="color:' + pointCouleur + ';font-size:10px;font-weight:700;margin-left:6px">● ' + texteConfiance + '</span>';
           const detailScore = f._detail
-            ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">nom ' + Math.round((f._detail.nom||0)*100) + '% · montant ' + Math.round((f._detail.montant||0)*100) + '% · date ' + Math.round((f._detail.date||0)*100) + '%' + (f._detail.regle ? ' · 🔒 règle' : '') + (f._detail.reference >= 1 ? ' · 🎯 référence' : '') + '</div>'
+            ? '<div style="font-size:10px;color:#8E9C95;margin-top:3px">nom ' + Math.round((f._detail.nom||0)*100) + '% · montant ' + Math.round((f._detail.montant||0)*100) + '% · date ' + Math.round((f._detail.date||0)*100) + '%' + (f._detail.regle ? ' · 🔒 règle' : '') + (f._detail.reference >= 1 ? ' · 🎯 référence' : '') + '</div>'
             : '';
           const infoAcompte = f._dejaLiees > 0
-            ? '<div style="font-size:10px;color:#1F6F72;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
-            : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#9C9186;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
+            ? '<div style="font-size:10px;color:#1B5E4B;margin-top:3px">ℹ️ ' + f._dejaLiees + ' paiement(s) déjà lié(s) — solde restant : ' + fmt(f._soldeRestant) + ' MAD</div>'
+            : (f._soldeRestant - Math.abs(t.montant) > 1 ? '<div style="font-size:10px;color:#8E9C95;margin-top:3px">Paiement partiel — resterait ' + fmt(f._soldeRestant - Math.abs(t.montant)) + ' MAD après ce lien</div>' : '');
           return '<div style="margin-bottom:8px">' +
-            '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ');document.getElementById(\'bulle-transaction-overlay\').remove()" style="width:100%;padding:11px;background:#F8F6F2;color:#2A2420;border:1px solid #EAE4DA;border-radius:10px 10px 0 0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">' + icone + ' Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>' +
-            '<button onclick="ouvrirCreationRegle(' + i + ',' + _valeurPourOnclick(f.client || '') + ',' + _valeurPourOnclick(f._type) + ')" style="width:100%;padding:6px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-top:none;border-radius:0 0 10px 10px;font-size:10px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ' + escapeHTML(f.client || 'ce nom') + ' automatiquement</button>' +
+            '<button onclick="confirmerRapprochementReleve(\'' + f.id + '\',\'' + f._type + '\',' + i + ');document.getElementById(\'bulle-transaction-overlay\').remove()" style="width:100%;padding:11px;background:#F8F6F2;color:#14241F;border:1px solid #EAE4DA;border-radius:10px 10px 0 0;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left">' + icone + ' Lier à ' + libelle + ' ' + escapeHTML(f.ref || '') + ' — ' + escapeHTML(f.client || '') + badge + detailScore + infoAcompte + '</button>' +
+            '<button onclick="ouvrirCreationRegle(' + i + ',' + _valeurPourOnclick(f.client || '') + ',' + _valeurPourOnclick(f._type) + ')" style="width:100%;padding:6px;background:#F5F6F1;color:#5B6B64;border:1px solid #EAE4DA;border-top:none;border-radius:0 0 10px 10px;font-size:10px;cursor:pointer;font-family:inherit;text-align:left">🔒 Créer une règle pour reconnaître ' + escapeHTML(f.client || 'ce nom') + ' automatiquement</button>' +
           '</div>';
         }).join('')
-      : '<div style="font-size:12px;color:#9C9186;margin-bottom:10px">Aucune correspondance trouvée</div>' +
-        '<button onclick="ouvrirCreationRegle(' + i + ',\'\',' + _valeurPourOnclick(t.montant >= 0 ? 'facture' : 'achat') + ')" style="width:100%;padding:9px;background:#F1EEE8;color:#6B5F54;border:1px solid #EAE4DA;border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px">🔒 Créer une règle pour reconnaître ce virement</button>') +
-      '<button onclick="document.getElementById(\'bulle-transaction-overlay\').remove();ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:10px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:2px">🔗 Répartir sur plusieurs factures/achats</button>';
+      : '<div style="font-size:12px;color:#8E9C95;margin-bottom:10px">Aucune correspondance trouvée</div>' +
+        '<button onclick="ouvrirCreationRegle(' + i + ',\'\',' + _valeurPourOnclick(t.montant >= 0 ? 'facture' : 'achat') + ')" style="width:100%;padding:9px;background:#F5F6F1;color:#5B6B64;border:1px solid #EAE4DA;border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit;text-align:left;margin-bottom:8px">🔒 Créer une règle pour reconnaître ce virement</button>') +
+      '<button onclick="document.getElementById(\'bulle-transaction-overlay\').remove();ouvrirRapprochementMultipleTransaction(' + i + ')" style="width:100%;padding:10px;background:none;color:#1B5E4B;border:1px dashed #1B5E4B;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:2px">🔗 Répartir sur plusieurs factures/achats</button>';
   }
 
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto">' +
-      '<div style="width:36px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 16px"></div>' +
+      '<div style="width:36px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 16px"></div>' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">' +
         '<div>' +
-          '<div style="font-size:11px;color:#9C9186;font-weight:700;margin-bottom:2px">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
-          '<div style="font-size:15px;font-weight:700;color:#2A2420;line-height:1.35">' + escapeHTML(t.description) + '</div>' +
+          '<div style="font-size:11px;color:#8E9C95;font-weight:700;margin-bottom:2px">📅 ' + escapeHTML(t.dateBrute) + '</div>' +
+          '<div style="font-size:15px;font-weight:700;color:#14241F;line-height:1.35">' + escapeHTML(t.description) + '</div>' +
         '</div>' +
         '<div style="font-weight:800;font-size:17px;color:' + couleurMontant + ';white-space:nowrap;margin-left:12px">' + (t.montant >= 0 ? '+' : '') + fmt(t.montant) + ' MAD</div>' +
       '</div>' +
       corps +
-      '<button onclick="document.getElementById(\'bulle-transaction-overlay\').remove()" style="width:100%;padding:10px;background:none;color:#9C9186;border:none;font-size:12px;cursor:pointer;font-family:inherit;margin-top:10px">Fermer</button>' +
+      '<button onclick="document.getElementById(\'bulle-transaction-overlay\').remove()" style="width:100%;padding:10px;background:none;color:#8E9C95;border:none;font-size:12px;cursor:pointer;font-family:inherit;margin-top:10px">Fermer</button>' +
     '</div>';
   document.body.appendChild(overlay);
 }
@@ -1257,30 +1257,30 @@ async function ouvrirRapprochementDepuisFacture(factureId, type) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:78vh;overflow-y:auto">' +
-      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
+      '<div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 14px"></div>' +
       '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🏦 Toutes les opérations bancaires</div>' +
-      '<div style="font-size:12px;color:#9C9186;margin-bottom:14px">' + escapeHTML(doc.ref || doc.ref_fournisseur || '') + ' — solde restant : ' + fmt(soldeRestant) + ' MAD</div>' +
+      '<div style="font-size:12px;color:#8E9C95;margin-bottom:14px">' + escapeHTML(doc.ref || doc.ref_fournisseur || '') + ' — solde restant : ' + fmt(soldeRestant) + ' MAD</div>' +
       candidats.map(function(c) {
         const badge = c.sensIncoherent ? '⚠️ Sens incohérent' : c.detail.regle ? '🔒 Règle' : c.detail.reference >= 1 ? '🎯 Réf. trouvée' : c.score >= 0.75 ? '✓✓ Forte' : c.score >= 0.5 ? '✓ Probable' : c.score >= 0.15 ? '? Faible' : '— Aucun signal';
-        const couleurBadge = c.sensIncoherent ? '#B23A2E' : c.detail.regle || c.detail.reference >= 1 ? '#1F6F72' : c.score >= 0.75 ? '#1F6F72' : c.score >= 0.5 ? '#C9971F' : '#9C9186';
+        const couleurBadge = c.sensIncoherent ? '#B23A2E' : c.detail.regle || c.detail.reference >= 1 ? '#1B5E4B' : c.score >= 0.75 ? '#1B5E4B' : c.score >= 0.5 ? '#1B5E4B' : '#8E9C95';
         const couleurMontant = c.t.montant >= 0 ? '#55702E' : '#B23A2E';
-        return '<div style="border:1px solid #E3DCCF;border-radius:10px;padding:10px;margin-bottom:8px">' +
+        return '<div style="border:1px solid #DDE3DA;border-radius:10px;padding:10px;margin-bottom:8px">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
-            '<span style="font-size:11px;color:#6B5F54">' + escapeHTML(c.t.dateBrute) + '</span>' +
+            '<span style="font-size:11px;color:#5B6B64">' + escapeHTML(c.t.dateBrute) + '</span>' +
             '<span style="font-size:9px;font-weight:700;color:#fff;background:' + couleurBadge + ';padding:1px 6px;border-radius:6px">' + badge + '</span>' +
           '</div>' +
           '<div style="font-size:12px;margin-bottom:6px">' + escapeHTML(c.t.description) + ' — <strong style="color:' + couleurMontant + '">' + (c.t.montant >= 0 ? '+' : '') + fmt(c.t.montant) + ' MAD</strong></div>' +
           '<div style="display:flex;gap:6px">' +
             '<button onclick="confirmerRapprochementReleve(\'' + factureId + '\',\'' + (type||'facture') + '\',' + c.idx + ');document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="flex:1;padding:7px;background:#EEF3E4;color:#55702E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Lier</button>' +
-            '<button onclick="ouvrirCreationRegle(' + c.idx + ',' + _valeurPourOnclick(nomDoc) + ',' + _valeurPourOnclick(type||'facture') + ')" style="padding:7px 10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">🔒 Créer une règle</button>' +
+            '<button onclick="ouvrirCreationRegle(' + c.idx + ',' + _valeurPourOnclick(nomDoc) + ',' + _valeurPourOnclick(type||'facture') + ')" style="padding:7px 10px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">🔒 Créer une règle</button>' +
           '</div>' +
         '</div>';
       }).join('') +
       // NOUVEAU (retour utilisateur) : accès direct au réglage en
       // plusieurs virements (acompte + solde, tranches...) depuis cette
       // même liste.
-      '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove();ouvrirRapprochementMultipleFacture(\'' + factureId + '\',\'' + (type||'facture') + '\')" style="width:100%;padding:10px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;margin-bottom:6px">🔗 Régler avec plusieurs virements (acompte + solde...)</button>' +
-      '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
+      '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove();ouvrirRapprochementMultipleFacture(\'' + factureId + '\',\'' + (type||'facture') + '\')" style="width:100%;padding:10px;background:none;color:#1B5E4B;border:1px dashed #1B5E4B;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;margin-bottom:6px">🔗 Régler avec plusieurs virements (acompte + solde...)</button>' +
+      '<button onclick="document.getElementById(\'rapprochement-depuis-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#8E9C95;border:none;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -1314,20 +1314,20 @@ function ouvrirCreationRegle(indexTransaction, nomCible, type) {
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%">' +
       '<div style="font-size:14px;font-weight:700;margin-bottom:6px">🔒 Créer une règle de rapprochement</div>' +
-      '<div style="font-size:11px;color:#9C9186;margin-bottom:12px">Quand un virement contient ce mot, il sera automatiquement proposé pour le client/fournisseur choisi ci-dessous.</div>' +
-      '<label style="font-size:11px;font-weight:600;color:#6B5F54;display:block;margin-bottom:4px">Mot-clé à reconnaître</label>' +
+      '<div style="font-size:11px;color:#8E9C95;margin-bottom:12px">Quand un virement contient ce mot, il sera automatiquement proposé pour le client/fournisseur choisi ci-dessous.</div>' +
+      '<label style="font-size:11px;font-weight:600;color:#5B6B64;display:block;margin-bottom:4px">Mot-clé à reconnaître</label>' +
       '<input id="regle-motif-input" class="f-inp" value="' + escapeHTML(motifSuggere) + '" style="margin-bottom:12px">' +
-      '<label style="font-size:11px;font-weight:600;color:#6B5F54;display:block;margin-bottom:4px">Pour quel client/fournisseur ?</label>' +
+      '<label style="font-size:11px;font-weight:600;color:#5B6B64;display:block;margin-bottom:4px">Pour quel client/fournisseur ?</label>' +
       '<input id="regle-cible-input" class="f-inp" value="' + escapeHTML(nomCible || '') + '" list="regle-cible-datalist" placeholder="Nom du client ou fournisseur" style="margin-bottom:12px">' +
       '<datalist id="regle-cible-datalist">' + suggestions.map(function(s) { return '<option value="' + escapeHTML(s) + '">'; }).join('') + '</datalist>' +
-      '<label style="font-size:11px;font-weight:600;color:#6B5F54;display:block;margin-bottom:4px">Type de document</label>' +
+      '<label style="font-size:11px;font-weight:600;color:#5B6B64;display:block;margin-bottom:4px">Type de document</label>' +
       '<select id="regle-type-input" class="f-inp" style="margin-bottom:12px">' +
         '<option value="facture"' + (type !== 'achat' ? ' selected' : '') + '>🧾 Facture (client)</option>' +
         '<option value="achat"' + (type === 'achat' ? ' selected' : '') + '>🛒 Achat (fournisseur)</option>' +
       '</select>' +
       '<div style="display:flex;gap:8px">' +
-        '<button onclick="document.getElementById(\'creation-regle-overlay\').remove()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
-        '<button onclick="confirmerCreationRegle()" style="flex:1;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enregistrer</button>' +
+        '<button onclick="document.getElementById(\'creation-regle-overlay\').remove()" style="flex:1;padding:11px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
+        '<button onclick="confirmerCreationRegle()" style="flex:1;padding:11px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enregistrer</button>' +
       '</div>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
@@ -1415,22 +1415,22 @@ function ouvrirRapprochementMultipleTransaction(indexTransaction) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto">' +
-      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
+      '<div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 14px"></div>' +
       '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🔗 Rapprochement multiple</div>' +
-      '<div style="font-size:12px;color:#9C9186;margin-bottom:6px">' + escapeHTML(t.description) + ' — ' + (estEntree?'+':'') + fmt(t.montant) + ' MAD</div>' +
-      '<div style="font-size:11px;color:#6B5F54;margin-bottom:14px">Cochez une ou plusieurs ' + (estEntree?'factures':'achats') + ' à régler avec ce virement.</div>' +
+      '<div style="font-size:12px;color:#8E9C95;margin-bottom:6px">' + escapeHTML(t.description) + ' — ' + (estEntree?'+':'') + fmt(t.montant) + ' MAD</div>' +
+      '<div style="font-size:11px;color:#5B6B64;margin-bottom:14px">Cochez une ou plusieurs ' + (estEntree?'factures':'achats') + ' à régler avec ce virement.</div>' +
       '<div id="rapprochement-multiple-liste">' +
         (candidats.length ? candidats.map(function(c) {
-          return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #E3DCCF;border-radius:10px;margin-bottom:6px;cursor:pointer">' +
+          return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #DDE3DA;border-radius:10px;margin-bottom:6px;cursor:pointer">' +
             '<input type="checkbox" onchange="_toggleSelectionRapprochementMultiple(\'' + c.id + '\',\'' + c.type + '\',' + c.solde + ',this.checked)" style="width:18px;height:18px">' +
             '<div style="flex:1"><div style="font-size:12px;font-weight:600">' + escapeHTML(c.ref||'') + ' — ' + escapeHTML(c.nom||'') + '</div>' +
-            '<div style="font-size:11px;color:#9C9186">Solde restant : ' + fmt(c.solde) + ' MAD</div></div>' +
+            '<div style="font-size:11px;color:#8E9C95">Solde restant : ' + fmt(c.solde) + ' MAD</div></div>' +
           '</label>';
-        }).join('') : '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucune ' + (estEntree?'facture':'achat') + ' avec un solde restant à régler.</div>') +
+        }).join('') : '<div style="text-align:center;padding:20px;color:#8E9C95;font-size:12px">Aucune ' + (estEntree?'facture':'achat') + ' avec un solde restant à régler.</div>') +
       '</div>' +
-      '<div id="rapprochement-multiple-total" style="margin-top:12px;padding:12px;border-radius:10px;background:#F1EEE8;font-size:13px;font-weight:700;text-align:center">Sélectionné : 0 MAD / ' + fmt(montantTransaction) + ' MAD</div>' +
-      '<button id="rapprochement-multiple-confirmer" onclick="confirmerRapprochementMultipleTransaction()" disabled style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#9C9186;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit">✅ Confirmer le rapprochement</button>' +
-      '<button onclick="document.getElementById(\'rapprochement-multiple-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
+      '<div id="rapprochement-multiple-total" style="margin-top:12px;padding:12px;border-radius:10px;background:#F5F6F1;font-size:13px;font-weight:700;text-align:center">Sélectionné : 0 MAD / ' + fmt(montantTransaction) + ' MAD</div>' +
+      '<button id="rapprochement-multiple-confirmer" onclick="confirmerRapprochementMultipleTransaction()" disabled style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#8E9C95;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit">✅ Confirmer le rapprochement</button>' +
+      '<button onclick="document.getElementById(\'rapprochement-multiple-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#8E9C95;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -1462,8 +1462,8 @@ function _majAffichageTotalMultiple() {
     couleur = '#EEF3E4'; texte = '✅ Équilibré — ' + fmt(totalSelectionne) + ' / ' + fmt(sel.montantTransaction) + ' MAD'; peutConfirmer = true;
     zone.style.color = '#55702E';
   } else if (ecart > 0) {
-    couleur = '#FBF0DA'; texte = '⚠️ Reste ' + fmt(ecart) + ' MAD non affecté — ' + fmt(totalSelectionne) + ' / ' + fmt(sel.montantTransaction) + ' MAD'; peutConfirmer = totalSelectionne > 0;
-    zone.style.color = '#A67A16';
+    couleur = '#E7F2EC'; texte = '⚠️ Reste ' + fmt(ecart) + ' MAD non affecté — ' + fmt(totalSelectionne) + ' / ' + fmt(sel.montantTransaction) + ' MAD'; peutConfirmer = totalSelectionne > 0;
+    zone.style.color = '#134436';
   } else {
     couleur = '#F5E4E1'; texte = '❌ Dépasse le virement de ' + fmt(-ecart) + ' MAD — décochez une ligne'; peutConfirmer = false;
     zone.style.color = '#8E2E24';
@@ -1472,8 +1472,8 @@ function _majAffichageTotalMultiple() {
   zone.textContent = texte;
   if (btn) {
     btn.disabled = !peutConfirmer;
-    btn.style.background = peutConfirmer ? '#1F6F72' : '#EAE4DA';
-    btn.style.color = peutConfirmer ? '#fff' : '#9C9186';
+    btn.style.background = peutConfirmer ? '#1B5E4B' : '#EAE4DA';
+    btn.style.color = peutConfirmer ? '#fff' : '#8E9C95';
     btn.style.cursor = peutConfirmer ? 'pointer' : 'not-allowed';
   }
 }
@@ -1587,7 +1587,7 @@ function _statutPaiementLisible(doc) {
   const recu = Number(doc.montant_recu) || 0;
   if (recu <= 0.5) return { libelle: 'Impayée', couleur: '#B23A2E', fond: '#F5E4E1' };
   if (ttc - recu <= 0.5) return { libelle: 'Payée', couleur: '#55702E', fond: '#EEF3E4' };
-  return { libelle: 'Payée partiellement', couleur: '#A67A16', fond: '#FBF0DA' };
+  return { libelle: 'Payée partiellement', couleur: '#134436', fond: '#E7F2EC' };
 }
 
 // Efface un écart signalé une fois que l'entreprise l'a vérifié et
@@ -1633,21 +1633,21 @@ function ouvrirRapprochementMultipleFacture(factureId, type) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:80vh;overflow-y:auto">' +
-      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
+      '<div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 14px"></div>' +
       '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🔗 Régler avec plusieurs virements</div>' +
-      '<div style="font-size:12px;color:#9C9186;margin-bottom:14px">' + escapeHTML(doc.ref || doc.ref_fournisseur || '') + ' — solde restant : ' + fmt(soldeRestant) + ' MAD</div>' +
-      '<div style="font-size:11px;color:#6B5F54;margin-bottom:10px">Utile pour un acompte suivi d\'un solde, ou plusieurs tranches — cochez tout ce qui doit être appliqué à cette facture.</div>' +
+      '<div style="font-size:12px;color:#8E9C95;margin-bottom:14px">' + escapeHTML(doc.ref || doc.ref_fournisseur || '') + ' — solde restant : ' + fmt(soldeRestant) + ' MAD</div>' +
+      '<div style="font-size:11px;color:#5B6B64;margin-bottom:10px">Utile pour un acompte suivi d\'un solde, ou plusieurs tranches — cochez tout ce qui doit être appliqué à cette facture.</div>' +
       (candidats.length ? candidats.map(function(c) {
         const signe = c.t.montant >= 0 ? '+' : '';
-        return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #E3DCCF;border-radius:10px;margin-bottom:6px;cursor:pointer">' +
+        return '<label style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #DDE3DA;border-radius:10px;margin-bottom:6px;cursor:pointer">' +
           '<input type="checkbox" onchange="_toggleSelectionRapprochementMultipleFacture(' + c.idx + ',' + Math.abs(c.t.montant) + ',this.checked)" style="width:18px;height:18px">' +
           '<div style="flex:1"><div style="font-size:12px">' + escapeHTML(c.t.dateBrute) + ' · ' + escapeHTML(c.t.description) + '</div>' +
           '<div style="font-size:12px;font-weight:700;color:' + (c.t.montant>=0?'#55702E':'#B23A2E') + '">' + signe + fmt(c.t.montant) + ' MAD</div></div>' +
         '</label>';
-      }).join('') : '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucune transaction du bon sens disponible dans le relevé actuellement ouvert.</div>') +
-      '<div id="rapprochement-multiple-facture-total" style="margin-top:12px;padding:12px;border-radius:10px;background:#F1EEE8;font-size:13px;font-weight:700;text-align:center">Sélectionné : 0 MAD / ' + fmt(soldeRestant) + ' MAD restant</div>' +
-      '<button id="rapprochement-multiple-facture-confirmer" onclick="confirmerRapprochementMultipleFacture()" disabled style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#9C9186;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit">✅ Confirmer</button>' +
-      '<button onclick="document.getElementById(\'rapprochement-multiple-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
+      }).join('') : '<div style="text-align:center;padding:20px;color:#8E9C95;font-size:12px">Aucune transaction du bon sens disponible dans le relevé actuellement ouvert.</div>') +
+      '<div id="rapprochement-multiple-facture-total" style="margin-top:12px;padding:12px;border-radius:10px;background:#F5F6F1;font-size:13px;font-weight:700;text-align:center">Sélectionné : 0 MAD / ' + fmt(soldeRestant) + ' MAD restant</div>' +
+      '<button id="rapprochement-multiple-facture-confirmer" onclick="confirmerRapprochementMultipleFacture()" disabled style="width:100%;margin-top:12px;padding:12px;background:#EAE4DA;color:#8E9C95;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit">✅ Confirmer</button>' +
+      '<button onclick="document.getElementById(\'rapprochement-multiple-facture-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#8E9C95;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -1667,7 +1667,7 @@ function _toggleSelectionRapprochementMultipleFacture(idxTransaction, montant, c
     zone.style.background = '#EEF3E4'; zone.style.color = '#55702E';
     zone.textContent = '✅ Équilibré — ' + fmt(total) + ' / ' + fmt(sel.soldeRestant) + ' MAD'; peutConfirmer = true;
   } else if (ecart > 0) {
-    zone.style.background = '#FBF0DA'; zone.style.color = '#A67A16';
+    zone.style.background = '#E7F2EC'; zone.style.color = '#134436';
     zone.textContent = '⚠️ Restera ' + fmt(ecart) + ' MAD après ces virements — ' + fmt(total) + ' / ' + fmt(sel.soldeRestant) + ' MAD'; peutConfirmer = total > 0;
   } else {
     zone.style.background = '#F5E4E1'; zone.style.color = '#8E2E24';
@@ -1675,8 +1675,8 @@ function _toggleSelectionRapprochementMultipleFacture(idxTransaction, montant, c
   }
   if (btn) {
     btn.disabled = !peutConfirmer;
-    btn.style.background = peutConfirmer ? '#1F6F72' : '#EAE4DA';
-    btn.style.color = peutConfirmer ? '#fff' : '#9C9186';
+    btn.style.background = peutConfirmer ? '#1B5E4B' : '#EAE4DA';
+    btn.style.color = peutConfirmer ? '#fff' : '#8E9C95';
     btn.style.cursor = peutConfirmer ? 'pointer' : 'not-allowed';
   }
 }
@@ -1841,16 +1841,16 @@ function ouvrirGestionRegles() {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;max-width:460px;width:100%;max-height:75vh;overflow-y:auto">' +
-      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 14px"></div>' +
+      '<div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 14px"></div>' +
       '<div style="font-size:15px;font-weight:700;margin-bottom:14px">🔒 Mes règles de rapprochement (' + regles.length + ')</div>' +
       (regles.length ? regles.map(function(r, i) {
-        return '<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;margin-bottom:6px">' +
+        return '<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #DDE3DA;border-radius:10px;padding:10px 12px;margin-bottom:6px">' +
           '<div><div style="font-size:12px;font-weight:600">"' + escapeHTML(r.motif) + '"</div>' +
-          '<div style="font-size:11px;color:#9C9186">→ ' + escapeHTML(r.nom_cible) + ' (' + (r.type==='achat'?'achat':'facture') + ')</div></div>' +
+          '<div style="font-size:11px;color:#8E9C95">→ ' + escapeHTML(r.nom_cible) + ' (' + (r.type==='achat'?'achat':'facture') + ')</div></div>' +
           '<button onclick="supprimerRegleRapprochement(' + r.id + ')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
         '</div>';
-      }).join('') : '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucune règle créée pour l\'instant — vous pouvez en créer une depuis l\'écran de rapprochement, bouton "🔒 Créer une règle".</div>') +
-      '<button onclick="document.getElementById(\'gestion-regles-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:10px">Fermer</button>' +
+      }).join('') : '<div style="text-align:center;padding:20px;color:#8E9C95;font-size:12px">Aucune règle créée pour l\'instant — vous pouvez en créer une depuis l\'écran de rapprochement, bouton "🔒 Créer une règle".</div>') +
+      '<button onclick="document.getElementById(\'gestion-regles-overlay\').remove()" style="width:100%;padding:11px;background:none;color:#8E9C95;border:none;font-size:13px;cursor:pointer;font-family:inherit;margin-top:10px">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -1968,11 +1968,11 @@ function _afficherDiagnosticEchecLectureReleve() {
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:80vh;display:flex;flex-direction:column">' +
       '<div style="font-size:15px;font-weight:700;color:#B23A2E;margin-bottom:8px">⚠️ Aucune transaction reconnue</div>' +
-      '<div style="font-size:12px;color:#6B5F54;margin-bottom:14px">La mise en page de cette banque n\'est peut-être pas encore prise en charge. Voici ce que la lecture a trouvé — copiez-le et transmettez-le au support pour qu\'on l\'ajoute :</div>' +
-      '<textarea readonly style="flex:1;min-height:200px;background:#F1EEE8;border:1px solid #E3DCCF;border-radius:10px;padding:12px;font-size:11px;font-family:monospace;white-space:pre-wrap;resize:none" id="diag-releve-texte"></textarea>' +
+      '<div style="font-size:12px;color:#5B6B64;margin-bottom:14px">La mise en page de cette banque n\'est peut-être pas encore prise en charge. Voici ce que la lecture a trouvé — copiez-le et transmettez-le au support pour qu\'on l\'ajoute :</div>' +
+      '<textarea readonly style="flex:1;min-height:200px;background:#F5F6F1;border:1px solid #DDE3DA;border-radius:10px;padding:12px;font-size:11px;font-family:monospace;white-space:pre-wrap;resize:none" id="diag-releve-texte"></textarea>' +
       '<div style="display:flex;gap:8px;margin-top:14px">' +
-        '<button onclick="document.getElementById(\'diag-releve-overlay\').remove()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Fermer</button>' +
-        '<button onclick="navigator.clipboard.writeText(document.getElementById(\'diag-releve-texte\').value).then(()=>showToast(\'✅ Copié !\',\'success\'))" style="flex:1.4;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copier</button>' +
+        '<button onclick="document.getElementById(\'diag-releve-overlay\').remove()" style="flex:1;padding:11px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Fermer</button>' +
+        '<button onclick="navigator.clipboard.writeText(document.getElementById(\'diag-releve-texte\').value).then(()=>showToast(\'✅ Copié !\',\'success\'))" style="flex:1.4;padding:11px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📋 Copier</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -2773,7 +2773,7 @@ function _afficherDiagnosticEchecLectureReleve() {
       document.body.appendChild(ov);
 
       function boite(bg, col, html) { return '<div style="background:' + bg + ';color:' + col + ';border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:10px;line-height:1.5">' + html + '</div>'; }
-      var inputCss = 'width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #E3DCCF;border-radius:8px;font-size:14px;background:#fff;font-family:inherit';
+      var inputCss = 'width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #DDE3DA;border-radius:8px;font-size:14px;background:#fff;font-family:inherit';
 
       function rendre() {
         var debit = 0, credit = 0, nb = 0;
@@ -2813,7 +2813,7 @@ function _afficherDiagnosticEchecLectureReleve() {
           var col = t.montant < 0 ? '#B3261E' : '#1E7B45';
           return '<label style="display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid #EFE9DF;font-size:12px;cursor:pointer;' + (coche[i] ? '' : 'opacity:.45') + '">' +
             '<input type="checkbox" data-i="' + i + '"' + (coche[i] ? ' checked' : '') + ' style="flex:none;width:18px;height:18px">' +
-            '<span style="flex:none;width:72px;color:#6B5F54">' + _esc(t.dateBrute) + '</span>' +
+            '<span style="flex:none;width:72px;color:#5B6B64">' + _esc(t.dateBrute) + '</span>' +
             '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + _esc(t.description) + (t.ajoute ? ' ✍️' : '') + '</span>' +
             '<b style="flex:none;color:' + col + '">' + _mad(t.montant) + '</b></label>';
         }).join('');
@@ -2830,14 +2830,14 @@ function _afficherDiagnosticEchecLectureReleve() {
             '<input id="rv-f-lib" placeholder="Libellé (ex. RET GAB)" style="' + inputCss + ';margin-bottom:8px">' +
             '<input id="rv-f-montant" placeholder="Montant (ex. 2000,00)" inputmode="decimal" value="' + (suggMontant === '' ? '' : String(suggMontant).replace('.', ',')) + '" style="' + inputCss + ';margin-bottom:8px">' +
             '<div id="rv-f-err" style="color:#B3261E;font-size:12px;margin-bottom:6px"></div>' +
-            '<div style="display:flex;gap:8px"><button id="rv-f-annuler" style="flex:1;padding:10px;border-radius:10px;border:1px solid #E3DCCF;background:#fff;font-size:13px">Annuler</button>' +
+            '<div style="display:flex;gap:8px"><button id="rv-f-annuler" style="flex:1;padding:10px;border-radius:10px;border:1px solid #DDE3DA;background:#fff;font-size:13px">Annuler</button>' +
             '<button id="rv-f-ok" style="flex:1.4;padding:10px;border-radius:10px;border:none;background:#2F7F82;color:#fff;font-size:13px;font-weight:700">Ajouter la ligne</button></div></div>'
           : '<button id="rv-ajout" style="width:100%;padding:11px;border-radius:10px;border:1px dashed #6FB3B5;background:#fff;color:#2F7F82;font-size:13px;font-weight:700;margin-bottom:12px">➕ Ajouter une opération manquante</button>';
 
         ov.innerHTML =
           '<div style="background:#FBF8F3;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden">' +
           '<div style="padding:16px 18px 8px"><div style="font-size:17px;font-weight:700;color:#2B2118">🔍 Vérifiez la lecture du relevé</div>' +
-          '<div style="font-size:12px;color:#6B5F54;margin-top:2px">Les en-têtes ont été ignorés : lecture de la 1ère à la dernière opération.</div></div>' +
+          '<div style="font-size:12px;color:#5B6B64;margin-top:2px">Les en-têtes ont été ignorés : lecture de la 1ère à la dernière opération.</div></div>' +
           '<div id="rv-corps" style="padding:0 18px;overflow:auto;flex:1">' +
           '<div style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.7;margin-bottom:10px">' +
           '<div>🏦 <b>Banque :</b> ' + _esc(resume.banque || '—') + '</div>' +
@@ -2848,10 +2848,10 @@ function _afficherDiagnosticEchecLectureReleve() {
           (resume.soldeFinal != null ? '<div>⬅️ <b>Solde final :</b> ' + _mad(resume.soldeFinal) + ' MAD</div>' : '') +
           '<div style="margin-top:4px"><b>' + nb + '</b> opérations — Débits <b style="color:#B3261E">' + _mad(-debit) + '</b> · Crédits <b style="color:#1E7B45">' + _mad(credit) + '</b></div></div>' +
           alerteTit + controle +
-          '<div style="font-size:11px;color:#9C9186;margin:4px 0">Décochez les lignes qui ne sont pas de vraies opérations.</div>' +
+          '<div style="font-size:11px;color:#8E9C95;margin:4px 0">Décochez les lignes qui ne sont pas de vraies opérations.</div>' +
           '<div style="background:#fff;border:1px solid #EFE9DF;border-radius:12px;padding:2px 8px;margin-bottom:12px">' + lignesHtml + '</div>' + form + '</div>' +
           '<div style="display:flex;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #EFE9DF;background:#FBF8F3">' +
-          '<button id="rv-non" style="flex:1;padding:13px;border-radius:12px;border:1px solid #E3DCCF;background:#fff;font-size:14px;font-weight:600;color:#6B5F54">✖ Ce n\'est pas bon</button>' +
+          '<button id="rv-non" style="flex:1;padding:13px;border-radius:12px;border:1px solid #DDE3DA;background:#fff;font-size:14px;font-weight:600;color:#5B6B64">✖ Ce n\'est pas bon</button>' +
           '<button id="rv-oui" style="flex:1.4;padding:13px;border-radius:12px;border:none;background:#2F7F82;color:#fff;font-size:14px;font-weight:700">✅ Je valide</button></div></div>';
 
         ov.querySelector('#rv-non').onclick = function () { fermer(null); };

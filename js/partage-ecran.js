@@ -67,8 +67,8 @@ function afficherPropositionAppel(ticketId, type, deQui) {
   zone.style.display = 'flex';
   zone.innerHTML =
     '<span style="flex:1;font-size:12px;color:#6A4E85">' + (deQui === 'agent' ? 'Le support' : 'Le client') + ' ' + libelle + '</span>' +
-    '<button onclick="accepterProposition(\'' + type + '\')" style="padding:6px 14px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Accepter</button>' +
-    '<span onclick="el(\'proposition-appel\').style.display=\'none\'" style="padding:6px 10px;color:#9C9186;font-size:11px;cursor:pointer">Ignorer</span>';
+    '<button onclick="accepterProposition(\'' + type + '\')" style="padding:6px 14px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Accepter</button>' +
+    '<span onclick="el(\'proposition-appel\').style.display=\'none\'" style="padding:6px 10px;color:#8E9C95;font-size:11px;cursor:pointer">Ignorer</span>';
 }
 
 function accepterProposition(type) {

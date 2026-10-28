@@ -37,7 +37,7 @@ function renderProduits() {
     const stockColor = rupture ? '#B23A2E' : enAlerte ? '#B8860B' : '#6E8F4E';
     return `
     <div class="card">
-      <div class="card-ico" style="background:#E9F4F3">${catIcons[p.categorie]||'📦'}</div>
+      <div class="card-ico" style="background:#E7F2EC">${catIcons[p.categorie]||'📦'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(p.nom)}</div>
         <div class="card-ref">${escapeHTML(p.unite||'u')} · ${escapeHTML(p.description||'')}</div>
@@ -47,9 +47,9 @@ function renderProduits() {
         <div class="card-amt">${fmt(p.prix_ht)} MAD HT</div>
         ${suiviStock ? `<div style="font-size:10px;color:${stockColor};font-weight:600">${p.stock} en stock</div>` : ''}
         <div style="display:flex;gap:4px;margin-top:2px">
-          <button onclick="modifierProduit(${p.id})" style="font-size:11px;background:#E9F4F3;color:#C9971F;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">✏️</button>
+          <button onclick="modifierProduit(${p.id})" style="font-size:11px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">✏️</button>
           ${suiviStock ? `<button onclick="ouvrirAjustementStock(${p.id})" style="font-size:11px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">⚖️${typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('stock') : ''}</button>
-          <button onclick="ouvrirHistoriqueStock(${p.id})" style="font-size:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">📦</button>` : ''}
+          <button onclick="ouvrirHistoriqueStock(${p.id})" style="font-size:11px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">📦</button>` : ''}
           <button onclick="archiverProduit(${p.id})" title="Archiver (garde l'historique, retire du catalogue actif)" style="font-size:11px;background:#F7EFDC;color:#B8860B;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">🗄️</button>
           <button onclick="supprimerProduit(${p.id})" style="font-size:11px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:4px;padding:2px 6px;cursor:pointer">🗑️</button>
         </div>
@@ -339,12 +339,12 @@ function afficherPickerClientsZelto() {
   const clientsBP = (STATE.clients || []).filter(c => c.reference_id);
   picker.style.display = 'block';
   if (!clientsBP.length) {
-    picker.innerHTML = '<div style="font-size:12px;color:#9C9186;padding:10px;text-align:center">Aucun client avec compte Tafir lié. Importez-le via son lien de profil dans la fiche client.</div>';
+    picker.innerHTML = '<div style="font-size:12px;color:#8E9C95;padding:10px;text-align:center">Aucun client avec compte Tafir lié. Importez-le via son lien de profil dans la fiche client.</div>';
     return;
   }
   picker.innerHTML = clientsBP.map(c =>
     '<div class="card" style="cursor:pointer" onclick="envoyerVersCompteZelto(' + valeurPourOnclick(c.reference_id) + ',' + valeurPourOnclick(c.nom||'') + ',' + valeurPourOnclick(c.email||'') + ')">' +
-      '<div class="card-ico" style="background:#FBF0DA">🅿️</div>' +
+      '<div class="card-ico" style="background:#E7F2EC">🅿️</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.email||'') + '</div></div>' +
     '</div>'
   ).join('');

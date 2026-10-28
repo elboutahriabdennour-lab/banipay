@@ -35,7 +35,7 @@ function renderProfil() {
   if (infosCard) infosCard.innerHTML =
     `<div class="p-card-title">Informations entreprise</div>` +
     fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('') +
-    `<div class="p-row"><span class="p-lbl">🎨 Couleur PDF</span><span class="p-val"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${p.couleur_accent||'#C9971F'};vertical-align:middle;margin-right:6px;border:1px solid #E3DCCF"></span>${p.couleur_accent||'#C9971F'}</span></div>`;
+    `<div class="p-row"><span class="p-lbl">🎨 Couleur PDF</span><span class="p-val"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${p.couleur_accent||'#1B5E4B'};vertical-align:middle;margin-right:6px;border:1px solid #DDE3DA"></span>${p.couleur_accent||'#1B5E4B'}</span></div>`;
 
   // NOUVEAU (retour utilisateur) : profil public — description et
   // réseaux sociaux, affichés dans une carte séparée si l'élément HTML
@@ -55,7 +55,7 @@ function renderProfil() {
     const rienAAfficher = !p.description && !reseaux && !infosPubliques.length;
     publicCard.innerHTML = rienAAfficher ? '' :
       `<div class="p-card-title">Profil public</div>` +
-      (p.description ? `<div style="font-size:12px;color:#2A2420;padding:8px 0;white-space:pre-wrap">${escapeHTML(p.description)}</div>` : '') +
+      (p.description ? `<div style="font-size:12px;color:#14241F;padding:8px 0;white-space:pre-wrap">${escapeHTML(p.description)}</div>` : '') +
       infosPubliques.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${escapeHTML(v)}</span></div>`).join('') +
       (reseaux ? `<div style="padding:10px 0;font-size:12px">${reseaux}</div>` : '');
   }
@@ -66,8 +66,8 @@ function renderProfil() {
   if (qrContainer) {
     const qrDataUrl = genererQrDataUrl(publicUrl, 120);
     qrContainer.innerHTML = qrDataUrl
-      ? '<img src="' + qrDataUrl + '" width="120" height="120" style="border-radius:8px;background:#F1EEE8">'
-      : '<div style="width:120px;height:120px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9C9186;text-align:center;padding:8px">QR indisponible — utilisez le lien ci-dessous</div>';
+      ? '<img src="' + qrDataUrl + '" width="120" height="120" style="border-radius:8px;background:#F5F6F1">'
+      : '<div style="width:120px;height:120px;border-radius:8px;background:#F5F6F1;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8E9C95;text-align:center;padding:8px">QR indisponible — utilisez le lien ci-dessous</div>';
   }
   if(el('pv-objectif')) el('pv-objectif').textContent = p.objectif_mensuel ? fmtInt(p.objectif_mensuel)+' MAD/mois' : 'Non défini';
 }
@@ -97,7 +97,7 @@ function goProfilEdit(show=true) {
     'pe-horaires':'horaires','pe-zone-intervention':'zone_intervention',
     'pe-moyens-paiement':'moyens_paiement',
   };
-  Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#C9971F':'');});
+  Object.entries(map).forEach(([id,key])=>{const e=el(id);if(e)e.value=p[key]||(key==='couleur_accent'?'#1B5E4B':'');});
   if (typeof initSignatureEntrepriseCanvas === 'function') {
     setTimeout(initSignatureEntrepriseCanvas, 50);
   }
@@ -214,15 +214,15 @@ function renderParrainage() {
   if (!zone) return;
   const n = (STATE.mesParrainages || []).length;
   zone.innerHTML =
-    '<div style="font-size:12px;color:#6B5F54;margin-bottom:12px">Partagez ce lien — chaque entreprise qui s\'inscrit grâce à vous apparaît ici.</div>' +
-    '<div style="background:#F1EEE8;border-radius:10px;padding:10px 12px;font-size:11px;color:#6B5F54;word-break:break-all;margin-bottom:10px">' + lienParrainage() + '</div>' +
+    '<div style="font-size:12px;color:#5B6B64;margin-bottom:12px">Partagez ce lien — chaque entreprise qui s\'inscrit grâce à vous apparaît ici.</div>' +
+    '<div style="background:#F5F6F1;border-radius:10px;padding:10px 12px;font-size:11px;color:#5B6B64;word-break:break-all;margin-bottom:10px">' + lienParrainage() + '</div>' +
     '<div style="display:flex;gap:8px;margin-bottom:16px">' +
-      '<button onclick="copierLienParrainage()" style="flex:1;padding:9px;background:#F1EEE8;color:#241F1B;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>' +
-      '<button onclick="partagerLienParrainage()" style="flex:1;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>' +
+      '<button onclick="copierLienParrainage()" style="flex:1;padding:9px;background:#F5F6F1;color:#0F1F1A;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>' +
+      '<button onclick="partagerLienParrainage()" style="flex:1;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>' +
     '</div>' +
-    '<div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:8px">' + n + ' entreprise' + (n>1?'s':'') + ' parrainée' + (n>1?'s':'') + '</div>' +
+    '<div style="font-size:13px;font-weight:700;color:#14241F;margin-bottom:8px">' + n + ' entreprise' + (n>1?'s':'') + ' parrainée' + (n>1?'s':'') + '</div>' +
     (STATE.mesParrainages || []).map(function(p) {
-      return '<div style="font-size:12px;color:#6B5F54;padding:6px 0;border-bottom:1px solid #EAE4DA">' + escapeHTML(p.filleul_email || 'Entreprise') + ' · ' + formatDate(p.created_at) + '</div>';
+      return '<div style="font-size:12px;color:#5B6B64;padding:6px 0;border-bottom:1px solid #EAE4DA">' + escapeHTML(p.filleul_email || 'Entreprise') + ' · ' + formatDate(p.created_at) + '</div>';
     }).join('');
 }
 async function uploadLogo(event) {
@@ -324,7 +324,7 @@ function renderBrouillons() {
         <div class="card-ref">${d.lignes?.length || 0} ligne(s) · Sauvegardé ${formatDate(d.savedAt)}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
-        <button onclick="restoreDraft('${d.id}')" style="background:#E9F4F3;color:#C9971F;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">Restaurer</button>
+        <button onclick="restoreDraft('${d.id}')" style="background:#E7F2EC;color:#1B5E4B;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">Restaurer</button>
         <button onclick="deleteDraft('${d.id}')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">Supprimer</button>
       </div>
     </div>`).join('');
@@ -561,9 +561,9 @@ function renderArchive() {
     return '<div class="card" style="margin:0 20px 10px">' +
       '<div style="display:flex;align-items:center;gap:12px">' +
         '<div class="archive-ouvrir" data-id="' + d.id + '" style="display:flex;align-items:center;gap:12px;flex:1;cursor:pointer">' +
-          '<div style="width:40px;height:40px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center;font-size:20px">' + (d.icon||'\u{1F4C4}') + '</div>' +
+          '<div style="width:40px;height:40px;border-radius:10px;background:#E7F2EC;display:flex;align-items:center;justify-content:center;font-size:20px">' + (d.icon||'\u{1F4C4}') + '</div>' +
           '<div style="flex:1"><div style="font-size:13px;font-weight:600">' + escapeHTML(d.nom) + '</div>' +
-          '<div style="font-size:11px;color:#9C9186">' + d.type + ' · ' + (d.date||'') + '</div></div>' +
+          '<div style="font-size:11px;color:#8E9C95">' + d.type + ' · ' + (d.date||'') + '</div></div>' +
         '</div>' +
         '<button data-id="' + d.id + '" class="archive-supprimer" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px">\u{1F5D1}\uFE0F</button>' +
       '</div>' +
@@ -599,11 +599,11 @@ function ouvrirDocumentArchive(id) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#000;display:flex;flex-direction:column';
 
   const barre = document.createElement('div');
-  barre.style.cssText = 'background:linear-gradient(135deg,#241F1B,#1F6F72);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0';
+  barre.style.cssText = 'background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:14px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0';
   barre.innerHTML =
     '<button id="apercu-archive-fermer" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Fermer</button>' +
     '<div style="flex:1;color:#fff;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHTML(d.nom || 'Document') + '</div>' +
-    '<button id="apercu-archive-telecharger" style="background:#C9971F;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⬇️ Télécharger</button>';
+    '<button id="apercu-archive-telecharger" style="background:#1B5E4B;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⬇️ Télécharger</button>';
 
   const zoneContenu = document.createElement('div');
   zoneContenu.style.cssText = 'flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:#000';
@@ -716,13 +716,13 @@ function renderReleves() {
         '<div style="width:44px;height:44px;border-radius:12px;background:#EEF3E4;display:flex;align-items:center;justify-content:center;font-size:22px">🏦</div>' +
         '<div style="flex:1">' +
           '<div style="font-size:13px;font-weight:700">' + (moisLabels[parseInt(r.mois)] || r.mois) + ' ' + r.annee + '</div>' +
-          '<div style="font-size:11px;color:#6B5F54">' + escapeHTML(r.banque || '') + '</div>' +
-          '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + (r.nom_fichier || '') + ' · ' + (r.taille || '') + '</div>' +
+          '<div style="font-size:11px;color:#5B6B64">' + escapeHTML(r.banque || '') + '</div>' +
+          '<div style="font-size:10px;color:#8E9C95;margin-top:2px">' + (r.nom_fichier || '') + ' · ' + (r.taille || '') + '</div>' +
         '</div>' +
         '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">' +
           '<span style="font-size:10px;padding:2px 8px;border-radius:6px;font-weight:600;background:' + (r.vu_par_comptable ? '#EEF3E4' : '#F7EFDC') + ';color:' + (r.vu_par_comptable ? '#6E8F4E' : '#B8860B') + '">' + (r.vu_par_comptable ? '✓ Vu' : '⏳ En attente') + '</span>' +
-          '<button onclick="event.stopPropagation();analyserReleve(\'' + r.id + '\')" style="background:#E9F4F3;color:#1F6F72;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit" title="Détecter les transactions et les rapprocher de vos factures">🔍 Analyser</button>' +
-          '<button onclick="telechargerReleveEntreprise(\'' + r.id + '\')" style="background:#F1EEE8;color:#6B5F54;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">📥</button>' +
+          '<button onclick="event.stopPropagation();analyserReleve(\'' + r.id + '\')" style="background:#E7F2EC;color:#1B5E4B;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit" title="Détecter les transactions et les rapprocher de vos factures">🔍 Analyser</button>' +
+          '<button onclick="telechargerReleveEntreprise(\'' + r.id + '\')" style="background:#F5F6F1;color:#5B6B64;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">📥</button>' +
           '<button onclick="supprimerReleve(\'' + r.id + '\')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🗑️</button>' +
         '</div>' +
       '</div>' +
@@ -787,12 +787,12 @@ async function inviterComptable() {
   const box = document.createElement('div');
   box.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;padding:24px;width:100%;box-sizing:border-box';
   box.innerHTML =
-    '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 20px"></div>' +
+    '<div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 20px"></div>' +
     '<div style="font-size:17px;font-weight:700;margin-bottom:6px">🤝 Inviter mon comptable</div>' +
-    '<div style="font-size:13px;color:#6B5F54;margin-bottom:16px">Saisissez l\'email de votre comptable. Il recevra une notification dans Tafir.</div>' +
+    '<div style="font-size:13px;color:#5B6B64;margin-bottom:16px">Saisissez l\'email de votre comptable. Il recevra une notification dans Tafir.</div>' +
     '<input id="inv-cpt-email-input" class="f-inp" type="email" placeholder="comptable@cabinet.ma" style="margin-bottom:12px">' +
-    '<button id="btn-send-inv-cpt" style="width:100%;padding:13px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✉️ Envoyer l\'invitation</button>' +
-    '<button id="btn-close-inv-cpt-modal" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
+    '<button id="btn-send-inv-cpt" style="width:100%;padding:13px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✉️ Envoyer l\'invitation</button>' +
+    '<button id="btn-close-inv-cpt-modal" style="width:100%;padding:11px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button>' +
     '<div id="inv-cpt-feedback" style="font-size:12px;text-align:center;margin-top:10px;min-height:16px"></div>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
@@ -809,7 +809,7 @@ async function inviterComptable() {
     const uid = STATE.entrepriseId || sb.user?.id;
     const emailEnt = sb.user?.email;
     const profil = STATE.profil || {};
-    feedback.style.color = '#1F6F72';
+    feedback.style.color = '#1B5E4B';
     feedback.textContent = '⏳ Envoi en cours...';
     try {
       // FIX (bug root cause #2, trouvé via diagnostic) : une contrainte
@@ -902,9 +902,9 @@ async function renderMonComptable() {
     const estComptable = rProfilCpt.ok && ((await rProfilCpt.json()) || []).length > 0;
     if (estComptable) {
       container.innerHTML =
-        '<div style="text-align:center;padding:20px;background:#F1EEE8;border-radius:14px">' +
+        '<div style="text-align:center;padding:20px;background:#F5F6F1;border-radius:14px">' +
           '<div style="font-size:32px;margin-bottom:10px">🧑‍💼</div>' +
-          '<div style="font-size:13px;color:#6B5F54">Vous êtes vous-même comptable — cette section ne s\'applique pas à votre propre profil.</div>' +
+          '<div style="font-size:13px;color:#5B6B64">Vous êtes vous-même comptable — cette section ne s\'applique pas à votre propre profil.</div>' +
         '</div>';
       return;
     }
@@ -917,10 +917,10 @@ async function renderMonComptable() {
     const invs = await resp.json() || [];
     if (!invs.length) {
       container.innerHTML =
-        '<div style="text-align:center;padding:20px;background:#F1EEE8;border-radius:14px">' +
+        '<div style="text-align:center;padding:20px;background:#F5F6F1;border-radius:14px">' +
           '<div style="font-size:32px;margin-bottom:10px">👤</div>' +
-          '<div style="font-size:14px;font-weight:600;color:#6B5F54;margin-bottom:12px">Aucun comptable lié</div>' +
-          '<button onclick="inviterComptable()" style="padding:11px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🤝 Inviter mon comptable' + (typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('comptable_lie') : '') + '</button>' +
+          '<div style="font-size:14px;font-weight:600;color:#5B6B64;margin-bottom:12px">Aucun comptable lié</div>' +
+          '<button onclick="inviterComptable()" style="padding:11px 24px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🤝 Inviter mon comptable' + (typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('comptable_lie') : '') + '</button>' +
         '</div>';
       return;
     }
@@ -937,7 +937,7 @@ async function renderMonComptable() {
       if (p && p.nom) nomAffiche = p.nom + (p.cabinet ? ' · ' + p.cabinet : '');
     } catch(eCpt) {}
     container.innerHTML =
-      '<div style="background:linear-gradient(135deg,#241F1B,#1F6F72);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px">' +
+      '<div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);border-radius:14px;padding:16px;color:#fff;margin-bottom:12px">' +
         '<div style="display:flex;align-items:center;gap:12px">' +
           '<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">' +
             (nomAffiche[0] || 'C').toUpperCase() +
@@ -950,7 +950,7 @@ async function renderMonComptable() {
         '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px">' +
-        '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer' + (typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('comptable_lie') : '') + '</button>' +
+        '<button onclick="inviterComptable()" style="flex:1;padding:10px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">➕ Changer' + (typeof htmlBadgeVerrou === 'function' ? htmlBadgeVerrou('comptable_lie') : '') + '</button>' +
         '<button onclick="revoquerComptable(\'' + inv.id + '\')" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🚫 Révoquer</button>' +
       '</div>';
   } catch(e) {

@@ -6,17 +6,17 @@
 <title>Tafir : devis et factures pour les entreprises marocaines</title>
 <meta name="description" content="Tafir simplifie les devis, les factures et les avoirs pour les entreprises marocaines, avec un accès direct pour votre comptable. Gratuit pour commencer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/icones.css?v=1">
 <style>
   :root{
-    --papier:#F1EEE8; --papier-carte:#FBF9F5; --encre:#241F1B; --encre-douce:#6B5F54;
-    --teal:#1F6F72; --teal-clair:#E9F4F3; --safran:#C9971F; --safran-clair:#FBF0DA;
-    --ligne:#E3DCCF;
+    --papier:#F5F6F1; --papier-carte:#FBF9F5; --encre:#0F1F1A; --encre-douce:#5B6B64;
+    --teal:#1B5E4B; --teal-clair:#E7F2EC; --safran:#1B5E4B; --safran-clair:#E7F2EC;
+    --ligne:#DDE3DA;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{background:var(--papier);color:var(--encre);font-family:'Karla',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body{background:var(--papier);color:var(--encre);font-family:'Inter',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
   a{color:inherit}
   img,svg{display:block}
@@ -29,7 +29,7 @@
   }
   .header-inner{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;max-width:1080px;margin:0 auto}
   .logo-arcs{display:flex;flex-direction:column;align-items:center;line-height:1;gap:1px}
-  .logo-arcs .logo-word{font-family:'Fraunces',serif;font-weight:700;font-size:19px;color:var(--encre);margin:1px 0}
+  .logo-arcs .logo-word{font-family:'Inter',serif;font-weight:700;font-size:19px;color:var(--encre);margin:1px 0}
   .logo-arcs .logo-word span{color:var(--safran)}
   .nav-links{display:flex;gap:28px;font-size:14px;font-weight:500}
   .nav-links a{text-decoration:none;color:var(--encre-douce);transition:color 0.15s}
@@ -46,14 +46,14 @@
   .hero-arc{position:absolute;top:0;left:50%;transform:translateX(-50%);width:1200px;max-width:none;opacity:0.9;pointer-events:none}
   .hero-content{position:relative;z-index:2;max-width:640px;margin:0 auto}
   .eyebrow{font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:var(--teal);font-weight:800;margin-bottom:18px}
-  .hero h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(30px,6vw,50px);line-height:1.12;margin-bottom:20px;color:var(--encre)}
+  .hero h1{font-family:'Inter',serif;font-weight:600;font-size:clamp(30px,6vw,50px);line-height:1.12;margin-bottom:20px;color:var(--encre)}
   .hero h1 em{font-style:italic;color:var(--safran)}
   .hero p{font-size:16px;color:var(--encre-douce);max-width:460px;margin:0 auto 32px}
   .hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
   .btn-primaire{
     background:var(--teal);color:#fff;border:none;padding:15px 30px;border-radius:28px;
     font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;
-    box-shadow:0 8px 24px rgba(31,111,114,0.28);transition:transform 0.15s;
+    box-shadow:0 8px 24px rgba(27,94,75,0.28);transition:transform 0.15s;
   }
   .btn-primaire:hover{transform:translateY(-2px)}
   .btn-secondaire{
@@ -69,7 +69,7 @@
   }
   .hero-mock-screen{background:var(--papier);border-radius:22px;padding:18px 16px;text-align:left}
   .mock-total-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--encre-douce)}
-  .mock-total-val{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:var(--encre);margin:2px 0 12px}
+  .mock-total-val{font-family:'Inter',serif;font-size:26px;font-weight:600;color:var(--encre);margin:2px 0 12px}
   .mock-row{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:10px;padding:9px 12px;margin-bottom:7px;font-size:11px}
   .mock-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px}
 
@@ -80,10 +80,10 @@
   .probleme-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;max-width:1080px;margin:36px auto 0}
   .probleme-item{text-align:center;padding:8px}
   .probleme-ico{font-size:30px;margin-bottom:12px}
-  .probleme-item h3{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:6px}
+  .probleme-item h3{font-family:'Inter',serif;font-size:16px;font-weight:600;margin-bottom:6px}
   .probleme-item p{font-size:13px;color:var(--encre-douce);line-height:1.6}
 
-  .section-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(24px,4vw,32px);text-align:center;margin-bottom:10px}
+  .section-title{font-family:'Inter',serif;font-weight:600;font-size:clamp(24px,4vw,32px);text-align:center;margin-bottom:10px}
   .section-sub{text-align:center;color:var(--encre-douce);font-size:14px;max-width:440px;margin:0 auto}
 
   /* ================= FEATURES ================= */
@@ -100,7 +100,7 @@
   .feature-card.ouverte .feature-detail{max-height:220px;margin-top:12px}
   .feature-detail ol{padding-left:18px;font-size:12.5px;color:var(--encre-douce);line-height:1.8}
   .feature-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px}
-  .feature-card h3{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:6px}
+  .feature-card h3{font-family:'Inter',serif;font-size:16px;font-weight:600;margin-bottom:6px}
   .feature-card p{font-size:13px;color:var(--encre-douce);line-height:1.6}
 
   /* ================= FORFAIT ================= */
@@ -115,11 +115,11 @@
   /* ================= FONDATEUR ================= */
   .fondateur{max-width:640px;margin:0 auto;text-align:center}
   .fondateur p{font-size:14px;line-height:1.75;color:var(--encre-douce);margin-bottom:16px}
-  .fondateur-signature{font-family:'Fraunces',serif;font-style:italic;color:var(--teal);font-size:15px;margin-top:20px}
+  .fondateur-signature{font-family:'Inter',serif;font-style:italic;color:var(--teal);font-size:15px;margin-top:20px}
 
   /* ================= FOOTER ================= */
   footer{padding:40px 24px;border-top:1px solid var(--ligne);text-align:center}
-  .footer-logo{font-family:'Fraunces',serif;font-weight:700;font-size:18px;margin-bottom:8px}
+  .footer-logo{font-family:'Inter',serif;font-weight:700;font-size:18px;margin-bottom:8px}
   .footer-logo span{color:var(--safran)}
   footer p{font-size:12px;color:var(--encre-douce)}
   .footer-links{display:flex;gap:20px;justify-content:center;margin:14px 0;font-size:12px}
@@ -140,7 +140,7 @@
      avant l'approbation. -->
 
 <!-- Données structurées Schema.org — aide Google à comprendre ce qu'est
-     Tafir (référencement). URL "https://tafir.ma" à REMPLACER par le vrai
+     Tafir (référencement). URL "https://tafir.fr" = adresse officielle ; au besoin remplacer par le vrai
      nom de domaine une fois choisi/migré. -->
 <script type="application/ld+json">
 {
@@ -150,7 +150,7 @@
   "description": "Tafir simplifie les devis, les factures et les avoirs pour les entreprises marocaines, avec un accès direct pour votre comptable. Gratuit pour commencer.",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
-  "url": "https://tafir.ma",
+  "url": "https://tafir.fr",
   "inLanguage": ["fr"],
   "offers": {
     "@type": "Offer",
@@ -167,7 +167,7 @@
   "publisher": {
     "@type": "Organization",
     "name": "Tafir",
-    "url": "https://tafir.ma"
+    "url": "https://tafir.fr"
   }
 }
 </script>
@@ -180,18 +180,18 @@
       <svg width="88" height="11" viewBox="20 18 260 30" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="gradSafranHeader" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#A67A16"/>
-            <stop offset="100%" stop-color="#E0AE5C"/>
+            <stop offset="0%" stop-color="#134436"/>
+            <stop offset="100%" stop-color="#C8E55A"/>
           </linearGradient>
         </defs>
         <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="url(#gradSafranHeader)" stroke-width="6" stroke-linecap="round"/>
-        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#C8E55A"/>
       </svg>
       <div class="logo-word">Ta<span>fir</span></div>
       <svg width="88" height="11" viewBox="20 132 260 30" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="gradZelligeHeader" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#154F52"/>
+            <stop offset="0%" stop-color="#134436"/>
             <stop offset="100%" stop-color="#7FB8BA"/>
           </linearGradient>
         </defs>
@@ -212,9 +212,9 @@
   <svg class="hero-arc" width="1200" height="140" viewBox="0 0 1200 140" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="gradHero" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color="#E9F4F3"/>
-        <stop offset="50%" stop-color="#FBF0DA"/>
-        <stop offset="100%" stop-color="#E9F4F3"/>
+        <stop offset="0%" stop-color="#E7F2EC"/>
+        <stop offset="50%" stop-color="#E7F2EC"/>
+        <stop offset="100%" stop-color="#E7F2EC"/>
       </linearGradient>
     </defs>
     <path d="M 60 100 Q 600 10 1140 100" fill="none" stroke="url(#gradHero)" stroke-width="90" stroke-linecap="round"/>
@@ -350,7 +350,7 @@
     <div class="feature-card" onclick="toggleFeature(this)">
       <div class="feature-card-top">
         <div>
-          <div class="feature-ico" style="background:#E9F4F3">📊</div>
+          <div class="feature-ico" style="background:#E7F2EC">📊</div>
           <h3>Exports et TVA</h3>
           <p>Des documents propres pour vos clients et des exports pour votre comptable.</p>
         </div>
@@ -419,7 +419,7 @@ function toggleFeature(carte) {
   <div class="logo-arcs" style="margin:0 auto 8px">
     <svg width="110" height="14" viewBox="20 18 260 30" xmlns="http://www.w3.org/2000/svg">
       <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="url(#gradSafranHeader)" stroke-width="6" stroke-linecap="round"/>
-      <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+      <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#C8E55A"/>
     </svg>
     <div class="logo-word" style="font-size:20px">Ta<span>fir</span></div>
     <svg width="110" height="14" viewBox="20 132 260 30" xmlns="http://www.w3.org/2000/svg">

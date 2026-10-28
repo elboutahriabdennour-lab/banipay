@@ -176,7 +176,7 @@ async function ouvrirHistoriqueSiAdmin() {
 async function renderJournalAudit() {
   const list = el('audit-list');
   if (!list) return;
-  list.innerHTML = '<div style="text-align:center;padding:30px;color:#9C9186">⏳ Chargement...</div>';
+  list.innerHTML = '<div style="text-align:center;padding:30px;color:#8E9C95">⏳ Chargement...</div>';
   try {
     const entrepriseId = STATE.entrepriseId || sb.user?.id;
     const logs = await sb.get('audit_log', 'entreprise_id=eq.' + entrepriseId + '&order=created_at.desc&limit=500');
@@ -227,11 +227,11 @@ function appliquerFiltresHistorique() {
   const typeLabels = { facture:'Facture', devis:'Devis', client:'Client', produit:'Article', achat:'Achat', abonnement:'Abonnement', equipe:'Équipe', annonce:'Annonce marché', rapprochement:'Rapprochement bancaire' };
   list.innerHTML = logs.map(function(l) {
     return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #EAE4DA;align-items:flex-start">' +
-      '<div style="width:32px;height:32px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
+      '<div style="width:32px;height:32px;border-radius:8px;background:#F5F6F1;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (actionIcons[l.action] || '📌') + '</div>' +
       '<div style="flex:1">' +
         '<div style="font-size:13px;font-weight:600">' + (typeLabels[l.type_doc] || l.type_doc) + ' — ' + (actionLabels[l.action] || l.action) + '</div>' +
-        (l.details ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + escapeHTML(l.details) + '</div>' : '') +
-        '<div style="font-size:11px;color:#9C9186;margin-top:3px">' + formatDateTime(l.created_at) + (l.acteur_email ? ' · ' + escapeHTML(l.acteur_email) : '') + '</div>' +
+        (l.details ? '<div style="font-size:12px;color:#5B6B64;margin-top:2px">' + escapeHTML(l.details) + '</div>' : '') +
+        '<div style="font-size:11px;color:#8E9C95;margin-top:3px">' + formatDateTime(l.created_at) + (l.acteur_email ? ' · ' + escapeHTML(l.acteur_email) : '') + '</div>' +
       '</div>' +
     '</div>';
   }).join('');

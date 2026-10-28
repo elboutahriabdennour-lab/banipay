@@ -12,34 +12,34 @@ function afficherOnboarding() {
     <div style="background:#fff;border-radius:20px 20px 0 0;padding:28px 24px 24px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto">
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:36px;margin-bottom:8px">👋</div>
-        <div style="font-size:18px;font-weight:700;font-family:'Fraunces',serif">Bienvenue sur Tafir !</div>
-        <div style="font-size:13px;color:#6B5F54;margin-top:4px">3 étapes pour démarrer — 5 minutes suffisent.</div>
+        <div style="font-size:18px;font-weight:700;font-family:'Inter',serif">Bienvenue sur Tafir !</div>
+        <div style="font-size:13px;color:#5B6B64;margin-top:4px">3 étapes pour démarrer — 5 minutes suffisent.</div>
       </div>
-      <div onclick="onboardingAction('client')" style="display:flex;align-items:center;gap:14px;padding:16px;background:#F1EEE8;border-radius:14px;margin-bottom:10px;cursor:pointer">
-        <div style="width:40px;height:40px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👥</div>
+      <div onclick="onboardingAction('client')" style="display:flex;align-items:center;gap:14px;padding:16px;background:#F5F6F1;border-radius:14px;margin-bottom:10px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:10px;background:#E7F2EC;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">👥</div>
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700">1. Ajouter ton premier client</div>
-          <div style="font-size:11px;color:#9C9186">Nom, téléphone — 30 secondes</div>
+          <div style="font-size:11px;color:#8E9C95">Nom, téléphone — 30 secondes</div>
         </div>
-        <div style="color:#9C9186">›</div>
+        <div style="color:#8E9C95">›</div>
       </div>
-      <div onclick="onboardingAction('facture')" style="display:flex;align-items:center;gap:14px;padding:16px;background:#F1EEE8;border-radius:14px;margin-bottom:10px;cursor:pointer">
-        <div style="width:40px;height:40px;border-radius:10px;background:#FBF0DA;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🧾</div>
+      <div onclick="onboardingAction('facture')" style="display:flex;align-items:center;gap:14px;padding:16px;background:#F5F6F1;border-radius:14px;margin-bottom:10px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:10px;background:#E7F2EC;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🧾</div>
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700">2. Créer ta première facture</div>
-          <div style="font-size:11px;color:#9C9186">Vois à quoi ressemble le résultat final</div>
+          <div style="font-size:11px;color:#8E9C95">Vois à quoi ressemble le résultat final</div>
         </div>
-        <div style="color:#9C9186">›</div>
+        <div style="color:#8E9C95">›</div>
       </div>
-      <div onclick="onboardingAction('comptable')" style="display:flex;align-items:center;gap:14px;padding:16px;background:#F1EEE8;border-radius:14px;margin-bottom:18px;cursor:pointer">
+      <div onclick="onboardingAction('comptable')" style="display:flex;align-items:center;gap:14px;padding:16px;background:#F5F6F1;border-radius:14px;margin-bottom:18px;cursor:pointer">
         <div style="width:40px;height:40px;border-radius:10px;background:#EDE6F0;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🤝</div>
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700">3. Inviter ton comptable</div>
-          <div style="font-size:11px;color:#9C9186">Optionnel — il aura son propre accès direct</div>
+          <div style="font-size:11px;color:#8E9C95">Optionnel — il aura son propre accès direct</div>
         </div>
-        <div style="color:#9C9186">›</div>
+        <div style="color:#8E9C95">›</div>
       </div>
-      <button onclick="fermerOnboarding()" style="width:100%;padding:12px;background:none;border:none;color:#9C9186;font-size:13px;cursor:pointer;font-family:inherit">Passer, j'explore seul</button>
+      <button onclick="fermerOnboarding()" style="width:100%;padding:12px;background:none;border:none;color:#8E9C95;font-size:13px;cursor:pointer;font-family:inherit">Passer, j'explore seul</button>
     </div>
   `;
   document.body.appendChild(overlay);

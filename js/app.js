@@ -60,12 +60,12 @@ async function loadAll() {
 }
 
 async function loadPortailClient(clientId) {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#6B5F54">⏳ Chargement...</div>';
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#5B6B64">⏳ Chargement...</div>';
   showToast('Portail client — fonctionnalité à venir');
 }
 
 async function loadPublicProfil(profilId) {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#6B5F54">⏳ Chargement...</div>';
+  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#5B6B64">⏳ Chargement...</div>';
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/profils_entreprise?id_unique=eq.${profilId}&select=*`,
       {headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
@@ -74,34 +74,34 @@ async function loadPublicProfil(profilId) {
     if (!p) { document.body.innerHTML='<div style="text-align:center;padding:60px 20px;font-family:Karla,sans-serif"><h2>Profil introuvable</h2></div>'; return; }
     document.body.innerHTML = `
       <div style="font-family:Karla,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:20px">
-        <div style="background:#1F6F72;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
+        <div style="background:#1B5E4B;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
           ${p.logo?`<img src="${p.logo}" style="max-width:80px;max-height:50px;object-fit:contain;margin-bottom:12px;filter:brightness(0) invert(1)"><br>`:''}
           <div style="font-size:24px;font-weight:700;color:#fff">${escapeHTML(p.raison||'—')}</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">${escapeHTML(p.secteur||'')} ${p.forme?'· '+escapeHTML(p.forme):''}</div>
         </div>
         <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-bottom:12px">
-          ${[['📍 Adresse',(p.adresse||'')+(p.ville?', '+p.ville:'')],['📞 Téléphone',p.tel],['✉️ Email',p.email],['🌐 Web',p.web]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:500">${escapeHTML(v)}</span></div>`).join('')}
+          ${[['📍 Adresse',(p.adresse||'')+(p.ville?', '+p.ville:'')],['📞 Téléphone',p.tel],['✉️ Email',p.email],['🌐 Web',p.web]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#8E9C95">${k}</span><span style="font-weight:500">${escapeHTML(v)}</span></div>`).join('')}
         </div>
         <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:10px">Identifiants légaux</div>
-          ${[['RC',p.rc],['IF',p.identifiant_fiscal],['ICE',p.ice],['Patente',p.patente],['CNSS',p.cnss]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">${k}</span><span style="font-weight:600;font-family:monospace">${escapeHTML(v)}</span></div>`).join('')}
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#8E9C95;margin-bottom:10px">Identifiants légaux</div>
+          ${[['RC',p.rc],['IF',p.identifiant_fiscal],['ICE',p.ice],['Patente',p.patente],['CNSS',p.cnss]].filter(([,v])=>v).map(([k,v])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#8E9C95">${k}</span><span style="font-weight:600;font-family:monospace">${escapeHTML(v)}</span></div>`).join('')}
         </div>
         ${p.banque||p.rib?`<div style="background:#EEF3E4;border-radius:12px;padding:16px;border:1px solid #DCE8C7">
           <div style="font-size:11px;font-weight:600;color:#6E8F4E;margin-bottom:8px">🏦 COORDONNÉES BANCAIRES</div>
           ${p.banque?`<div style="font-size:13px;margin-bottom:4px">${escapeHTML(p.banque)}</div>`:''}
           ${p.rib?`<div style="font-size:12px;font-family:monospace;color:#064E3B">${escapeHTML(p.rib)}</div>`:''}
         </div>`:''}
-        <button id="btn-ouvrir-demande-devis" style="width:100%;margin-top:16px;padding:14px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>
+        <button id="btn-ouvrir-demande-devis" style="width:100%;margin-top:16px;padding:14px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>
         <div id="zone-demande-devis" style="display:none;background:#fff;border-radius:12px;padding:16px;border:1px solid #EAE4DA;margin-top:12px">
           <div style="font-size:13px;font-weight:700;margin-bottom:10px">Votre demande</div>
-          <input id="dd-nom" placeholder="Votre nom" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
-          <input id="dd-tel" placeholder="Téléphone" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
-          <input id="dd-email" placeholder="Email (optionnel)" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
-          <textarea id="dd-description" placeholder="Décrivez ce dont vous avez besoin..." rows="4" style="width:100%;padding:10px;border:1.5px solid #E3DCCF;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:10px;box-sizing:border-box;resize:none"></textarea>
+          <input id="dd-nom" placeholder="Votre nom" style="width:100%;padding:10px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
+          <input id="dd-tel" placeholder="Téléphone" style="width:100%;padding:10px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
+          <input id="dd-email" placeholder="Email (optionnel)" style="width:100%;padding:10px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:8px;box-sizing:border-box">
+          <textarea id="dd-description" placeholder="Décrivez ce dont vous avez besoin..." rows="4" style="width:100%;padding:10px;border:1.5px solid #DDE3DA;border-radius:8px;font-size:13px;font-family:inherit;margin-bottom:10px;box-sizing:border-box;resize:none"></textarea>
           <button id="btn-envoyer-demande-devis" style="width:100%;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Envoyer la demande</button>
           <div id="dd-feedback" style="font-size:12px;text-align:center;margin-top:8px;min-height:16px"></div>
         </div>
-        <div style="text-align:center;margin-top:20px;font-size:11px;color:#9C9186">Profil partagé via <strong>Tafir</strong></div>
+        <div style="text-align:center;margin-top:20px;font-size:11px;color:#8E9C95">Profil partagé via <strong>Tafir</strong></div>
       </div>`;
     document.getElementById('btn-ouvrir-demande-devis').onclick = function() {
       document.getElementById('zone-demande-devis').style.display = 'block';
@@ -112,7 +112,7 @@ async function loadPublicProfil(profilId) {
       const description = document.getElementById('dd-description').value.trim();
       const feedback = document.getElementById('dd-feedback');
       if (!nom || !description) { feedback.style.color = '#B23A2E'; feedback.textContent = 'Nom et description obligatoires'; return; }
-      feedback.style.color = '#6B5F54';
+      feedback.style.color = '#5B6B64';
       feedback.textContent = '⏳ Envoi...';
       try {
         const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/creer_demande_devis', {
@@ -150,26 +150,26 @@ async function afficherPageInvitation(email, entrepriseId) {
   } catch(e) {}
 
   document.body.innerHTML =
-    '<div style="font-family:Karla,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#2A2420,#1F6F72);display:flex;align-items:center;justify-content:center;padding:20px">' +
+    '<div style="font-family:Karla,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#14241F,#1B5E4B);display:flex;align-items:center;justify-content:center;padding:20px">' +
     '<div style="background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:400px;text-align:center">' +
       '<div style="font-size:48px;margin-bottom:12px">🔐</div>' +
-      '<div style="font-size:22px;font-weight:800;color:#2A2420;margin-bottom:4px">Ta<span style="color:#C9971F">fir</span></div>' +
-      '<div style="font-size:14px;color:#6B5F54;margin-bottom:24px">Invitation accès comptable</div>' +
-      '<div style="background:#E9F4F3;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
-        '<div style="font-size:12px;color:#9C9186;margin-bottom:4px">Entreprise</div>' +
-        '<div style="font-size:16px;font-weight:700;color:#2A2420">' + escapeHTML(profil.raison || 'Entreprise') + '</div>' +
-        (profil.secteur ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + profil.secteur + '</div>' : '') +
+      '<div style="font-size:22px;font-weight:800;color:#14241F;margin-bottom:4px">Ta<span style="color:#1B5E4B">fir</span></div>' +
+      '<div style="font-size:14px;color:#5B6B64;margin-bottom:24px">Invitation accès comptable</div>' +
+      '<div style="background:#E7F2EC;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
+        '<div style="font-size:12px;color:#8E9C95;margin-bottom:4px">Entreprise</div>' +
+        '<div style="font-size:16px;font-weight:700;color:#14241F">' + escapeHTML(profil.raison || 'Entreprise') + '</div>' +
+        (profil.secteur ? '<div style="font-size:12px;color:#5B6B64;margin-top:2px">' + profil.secteur + '</div>' : '') +
       '</div>' +
-      '<div style="font-size:13px;color:#6B5F54;margin-bottom:24px">' +
+      '<div style="font-size:13px;color:#5B6B64;margin-bottom:24px">' +
         'Vous avez été invité(e) à accéder aux données comptables de cette entreprise en lecture seule.' +
       '</div>' +
       '<button id="btn-accept-inv" style="width:100%;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit">' +
         '\u2705 Accepter' +
       '</button>' +
-      '<button id="btn-refuse-inv" style="width:100%;padding:14px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
+      '<button id="btn-refuse-inv" style="width:100%;padding:14px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
         'Refuser' +
       '</button>' +
-      '<div style="margin-top:20px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>' +
+      '<div style="margin-top:20px;font-size:11px;color:#8E9C95">Propulsé par <strong style="color:#1B5E4B">Tafir</strong></div>' +
     '</div></div>';
   setTimeout(function() {
     const btnA = document.getElementById('btn-accept-inv');
@@ -191,8 +191,8 @@ async function accepterInvitationEmail(emailEnc, entrepriseId) {
       '<div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px">' +
         '<div style="font-size:64px;margin-bottom:16px">✅</div>' +
         '<h2 style="color:#6E8F4E;margin-bottom:8px">Invitation acceptée !</h2>' +
-        '<p style="color:#6B5F54;margin-bottom:24px">Connectez-vous à Tafir pour accéder aux données.</p>' +
-        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#C9971F;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir Tafir</a>' +
+        '<p style="color:#5B6B64;margin-bottom:24px">Connectez-vous à Tafir pour accéder aux données.</p>' +
+        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#1B5E4B;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir Tafir</a>' +
       '</div>';
   } catch(e) {
     document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#B23A2E">Erreur: ' + e.message + '</div>';
@@ -227,7 +227,7 @@ async function afficherBonCommandePublic(bcId, token) {
     const data = r.ok ? (await r.json()) : [];
     const bc = data && data[0];
     if (!bc) {
-      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Bon de commande introuvable</h2></div>';
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#5B6B64"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Bon de commande introuvable</h2></div>';
       return;
     }
 
@@ -259,7 +259,7 @@ async function afficherBonCommandePublic(bcId, token) {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const btnBar = document.createElement('div');
-        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #E3DCCF;flex-shrink:0';
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:8px;border-top:2px solid #DDE3DA;flex-shrink:0';
         btnBar.innerHTML =
           '<button id="btn-bc-confirme" style="flex:1;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ Confirmer</button>' +
           '<button id="btn-bc-refuse" style="flex:1;padding:12px;background:#8E2E24;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">❌ Refuser</button>';
@@ -285,8 +285,8 @@ async function repondreBonCommandePublic(bcId, reponse, bc, token) {
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
           <div style="font-size:48px;margin-bottom:16px">⚠️</div>
           <h2 style="color:#B23A2E;margin-bottom:8px">Votre réponse n'a pas pu être enregistrée</h2>
-          <p style="color:#6B5F54;font-size:13px;margin-bottom:20px">Merci de réessayer, ou de contacter directement l'entreprise si le problème persiste.</p>
-          <button onclick="window.location.reload()" style="padding:12px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Réessayer</button>
+          <p style="color:#5B6B64;font-size:13px;margin-bottom:20px">Merci de réessayer, ou de contacter directement l'entreprise si le problème persiste.</p>
+          <button onclick="window.location.reload()" style="padding:12px 24px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Réessayer</button>
         </div>
       `;
       return;
@@ -295,12 +295,12 @@ async function repondreBonCommandePublic(bcId, reponse, bc, token) {
     document.body.innerHTML = `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
         <div style="font-size:64px;margin-bottom:16px">${icon}</div>
-        <h2 style="color:#2A2420;margin-bottom:8px">Bon de commande ${reponse === 'confirme' ? 'confirmé' : 'refusé'} !</h2>
+        <h2 style="color:#14241F;margin-bottom:8px">Bon de commande ${reponse === 'confirme' ? 'confirmé' : 'refusé'} !</h2>
         <div style="background:${reponse === 'confirme' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${bc.ref}</strong></div>
+          <div style="font-size:13px;color:#5B6B64">Référence : <strong>${bc.ref}</strong></div>
         </div>
-        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>
-        <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect-bc">4</span>s...</div>
+        <div style="margin-top:24px;font-size:11px;color:#8E9C95">Propulsé par <strong style="color:#1B5E4B">Tafir</strong></div>
+        <div style="margin-top:16px;font-size:11px;color:#8E9C95">Redirection dans <span id="compte-redirect-bc">4</span>s...</div>
       </div>
     `;
     let s = 4;
@@ -328,7 +328,7 @@ async function afficherBonLivraisonPublic(blId, token) {
     const data = r.ok ? (await r.json()) : [];
     const bl = data && data[0];
     if (!bl) {
-      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Bon de livraison introuvable</h2></div>';
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#5B6B64"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Bon de livraison introuvable</h2></div>';
       return;
     }
     const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + bl.user_id + '&select=*', {
@@ -405,13 +405,13 @@ async function afficherEcranAccesReserve(docId, type) {
   document.body.innerHTML = `
     <div style="font-family:Arial,sans-serif;max-width:440px;margin:60px auto;padding:24px;text-align:center">
       <div style="font-size:44px;margin-bottom:16px">🔒</div>
-      <h2 style="color:#2A2420;margin-bottom:10px">Accès réservé</h2>
-      <p style="color:#6B5F54;font-size:14px;line-height:1.6;margin-bottom:24px">
+      <h2 style="color:#14241F;margin-bottom:10px">Accès réservé</h2>
+      <p style="color:#5B6B64;font-size:14px;line-height:1.6;margin-bottom:24px">
         Ce${type === 'facture' ? 'tte facture est réservée' : ' devis est réservé'} au compte Tafir du destinataire prévu par ${escapeHTML(emetteur.raison || "l'entreprise émettrice")}.
         Si vous pensez qu'il vous est destiné, connectez-vous avec le bon compte, ou contactez directement l'émetteur.
       </p>
       ${lienWhatsapp ? `<a href="${lienWhatsapp}" target="_blank" style="display:inline-block;padding:12px 24px;background:#25D366;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;margin-bottom:12px">💬 Contacter par WhatsApp</a><br>` : ''}
-      <a href="${window.location.origin}${window.location.pathname}" style="display:inline-block;margin-top:8px;color:#1F6F72;font-size:13px;text-decoration:underline">Se connecter avec un autre compte</a>
+      <a href="${window.location.origin}${window.location.pathname}" style="display:inline-block;margin-top:8px;color:#1B5E4B;font-size:13px;text-decoration:underline">Se connecter avec un autre compte</a>
     </div>
   `;
 }
@@ -438,7 +438,7 @@ async function afficherDocumentPublic(docId, token) {
     }
 
     if (!doc) {
-      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#6B5F54"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Document introuvable</h2></div>';
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#5B6B64"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Document introuvable</h2></div>';
       return;
     }
 
@@ -488,7 +488,7 @@ async function afficherDocumentPublic(docId, token) {
     genDocPDF({
       type: isDevis ? 'DEVIS' : 'FACTURE',
       ref: doc.ref,
-      color: isDevis ? '#B8860B' : '#C9971F',
+      color: isDevis ? '#B8860B' : '#1B5E4B',
       emetteur: profil,
       destinataire: { nom: doc.client, chantier: doc.chantier },
       date: doc.date_emission,
@@ -545,7 +545,7 @@ async function afficherDocumentPublic(docId, token) {
           const screen = document.getElementById('pdf-fullscreen');
           if (!screen) return;
           const info = document.createElement('div');
-          info.style.cssText = 'background:#F7EFDC;padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#B8860B;border-top:1px solid #E3DCCF;flex-shrink:0';
+          info.style.cssText = 'background:#F7EFDC;padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#B8860B;border-top:1px solid #DDE3DA;flex-shrink:0';
           info.textContent = '⏳ Vous avez mis ce document en attente — vous pouvez accepter ou refuser à tout moment';
           screen.appendChild(info);
         }, 480);
@@ -554,7 +554,7 @@ async function afficherDocumentPublic(docId, token) {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const btnBar = document.createElement('div');
-        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:6px;border-top:2px solid #E3DCCF;flex-shrink:0';
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:6px;border-top:2px solid #DDE3DA;flex-shrink:0';
         const bAcc = document.createElement('button');
         bAcc.textContent = '✅ Accepter';
         bAcc.style.cssText = 'flex:1;padding:12px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
@@ -581,7 +581,7 @@ async function afficherDocumentPublic(docId, token) {
           if (!screen2 || typeof ouvrirModalSignature !== 'function') return;
           const lienSignature = document.createElement('div');
           lienSignature.style.cssText = 'background:#fff;padding:0 16px 12px;text-align:center;flex-shrink:0';
-          lienSignature.innerHTML = '<span style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">✍️ Accepter avec signature électronique</span>';
+          lienSignature.innerHTML = '<span style="font-size:11px;color:#1B5E4B;text-decoration:underline;cursor:pointer">✍️ Accepter avec signature électronique</span>';
           lienSignature.querySelector('span').onclick = function() { ouvrirModalSignature(docId, typeDoc, token); };
           screen2.appendChild(lienSignature);
         }, 500);
@@ -593,7 +593,7 @@ async function afficherDocumentPublic(docId, token) {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const info = document.createElement('div');
-        info.style.cssText = 'background:' + (statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1') + ';padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:' + (statutActuel === valeurAcceptee ? '#6E8F4E' : '#8E2E24') + ';border-top:1px solid #E3DCCF;flex-shrink:0';
+        info.style.cssText = 'background:' + (statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1') + ';padding:12px 16px;text-align:center;font-size:13px;font-weight:600;color:' + (statutActuel === valeurAcceptee ? '#6E8F4E' : '#8E2E24') + ';border-top:1px solid #DDE3DA;flex-shrink:0';
         info.textContent = statutActuel === valeurAcceptee
           ? ('✅ ' + (isDevis ? 'Ce devis a été accepté' : 'Cette facture a été acceptée'))
           : ('❌ ' + (isDevis ? 'Ce devis a été refusé' : 'Cette facture a été refusée'));
@@ -846,13 +846,13 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
       '<div style="background:#fff;border-radius:20px;padding:28px;max-width:380px;width:100%;text-align:center">' +
         '<div style="font-size:48px;margin-bottom:16px">🤝</div>' +
         '<div style="font-size:18px;font-weight:700;margin-bottom:8px">Invitation comptable</div>' +
-        '<div style="font-size:14px;color:#6B5F54;margin-bottom:6px">' + escapeHTML(decodeURIComponent(nomCpt || emailCpt)) + '</div>' +
-        '<div style="font-size:13px;color:#6B5F54;margin-bottom:20px">vous invite à partager vos documents Tafir</div>' +
-        '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#1F6F72">' +
+        '<div style="font-size:14px;color:#5B6B64;margin-bottom:6px">' + escapeHTML(decodeURIComponent(nomCpt || emailCpt)) + '</div>' +
+        '<div style="font-size:13px;color:#5B6B64;margin-bottom:20px">vous invite à partager vos documents Tafir</div>' +
+        '<div style="background:#E7F2EC;border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#1B5E4B">' +
           'Le comptable pourra consulter vos factures, devis et documents en lecture seule.' +
         '</div>' +
         '<button id="btn-accepter-inv-cpt" style="width:100%;padding:13px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px">✅ Accepter</button>' +
-        '<button class="btn-close-inv" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Refuser</button>' +
+        '<button class="btn-close-inv" style="width:100%;padding:11px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">Refuser</button>' +
       '</div>';
 
     document.body.appendChild(overlay);

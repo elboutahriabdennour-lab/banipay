@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1F6F72">
+<meta name="theme-color" content="#1B5E4B">
 <meta name="description" content="Tafir — Gestion de factures et devis pour PME marocaines">
 <title>Tafir — Gestion Factures &amp; Devis</title>
 <link rel="manifest" href="/manifest.json">
@@ -16,14 +16,14 @@
 <meta property="og:site_name" content="Tafir">
 <meta property="og:title" content="Tafir — Factures, devis et gestion pour PME">
 <meta property="og:description" content="Créez vos factures et devis, suivez vos paiements et collaborez avec votre comptable. Conçu pour les PME marocaines.">
-<meta property="og:image" content="https://banipay-three.vercel.app/og-image.png">
+<meta property="og:image" content="https://tafir.fr/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:url" content="https://banipay-three.vercel.app/app.html">
+<meta property="og:url" content="https://tafir.fr/app.html">
 <meta property="og:locale" content="fr_MA">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Tafir — Factures, devis et gestion pour PME">
-<meta name="twitter:image" content="https://banipay-three.vercel.app/og-image.png">
+<meta name="twitter:image" content="https://tafir.fr/og-image.png">
 <link rel="stylesheet" href="css/style.css?v=1786737877">
 <link rel="stylesheet" href="css/icones.css?v=1">
 <link rel="stylesheet" href="css/refonte.css?v=1">
@@ -74,7 +74,7 @@
     <div class="qa-item" onclick="renderHubVentes();goScreen('hub-ventes',null)"><div class="qa-ico" style="background:#EEF3E4">💰</div><div class="qa-lbl">Ventes</div></div>
     <!-- FIX (audit) : "Récurrent" (facturation récurrente) est un outil
          de vente, pas de suivi d'équipe — déplacé depuis "Suivi & équipe". -->
-    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#FBF0DA">🔁</div><div class="qa-lbl">Récurrent</div></div>
+    <div class="qa-item" onclick="if(typeof loadAbonnements==='function'){loadAbonnements();goScreen('abonnements',null);}else{goScreen('abonnements',null);}"><div class="qa-ico" style="background:#E7F2EC">🔁</div><div class="qa-lbl">Récurrent</div></div>
     <!-- AJOUT (audit) : "Contrats" n'était accessible que depuis Profil,
          un clic de plus qu'un outil comparable comme TVA ou Récurrent. -->
     <div class="qa-item" onclick="window._retourContrats='dashboard';renderModelesContrats();goScreen('contrats',null)"><div class="qa-ico" style="background:#F7EFDC">📄</div><div class="qa-lbl">Contrats</div></div>
@@ -89,7 +89,7 @@
     <!-- FIX (audit) : "Archive" (coffre-fort de documents : statuts, RIB,
          CNSS...) n'a rien à voir avec le réseau Tafir — déplacé depuis
          "Réseau Tafir". -->
-    <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#FBF0DA">📁</div><div class="qa-lbl">Archive</div></div>
+    <div class="qa-item" onclick="window._retourArchive='dashboard';loadArchive();goScreen('archive',null)"><div class="qa-ico" style="background:#E7F2EC">📁</div><div class="qa-lbl">Archive</div></div>
   </div>
 
   <!-- AJOUT (grand nettoyage — simplifier le dashboard) : 15 icônes de
@@ -107,13 +107,13 @@
       document.getElementById('qa-reseau-zelto').style.display = masque ? 'grid' : 'none';
       document.getElementById('groupe-label-reseau').style.display = masque ? 'block' : 'none';
       document.getElementById('lbl-plus-outils').textContent = masque ? '▲ Masquer' : '▼ Autres outils';
-    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer;padding:8px 16px;border-radius:20px;background:#E9F4F3;display:inline-block"><span id="lbl-plus-outils">▼ Autres outils</span></span>
+    " style="font-size:12px;color:#1B5E4B;font-weight:600;cursor:pointer;padding:8px 16px;border-radius:20px;background:#E7F2EC;display:inline-block"><span id="lbl-plus-outils">▼ Autres outils</span></span>
   </div>
 
   <div class="groupe-label" id="groupe-label-suivi" style="display:none">Suivi &amp; équipe</div>
   <div class="quick-actions" id="qa-suivi-equipe" style="display:none">
-    <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E9F4F3">📊</div><div class="qa-lbl">Stats</div></div>
-    <div class="qa-item" onclick="window._retourEmployes='dashboard';if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}"><div class="qa-ico" style="background:#E9F4F3">👥</div><div class="qa-lbl">Personnel<span id="verrou-rh-dashboard"></span></div></div>
+    <div class="qa-item" onclick="goScreen('stats')"><div class="qa-ico" style="background:#E7F2EC">📊</div><div class="qa-lbl">Stats</div></div>
+    <div class="qa-item" onclick="window._retourEmployes='dashboard';if(verifierAccesFeature('rh','Registre du personnel')){loadEmployes();goScreen('employes',null);}"><div class="qa-ico" style="background:#E7F2EC">👥</div><div class="qa-lbl">Personnel<span id="verrou-rh-dashboard"></span></div></div>
     <div class="qa-item" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><div class="qa-ico" style="background:#EEF3E4">🏦</div><div class="qa-lbl">Relevés</div></div>
   </div>
 
@@ -173,7 +173,7 @@
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-messages" style="background:#F1EEE8">
+<div class="screen" id="screen-messages" style="background:#F5F6F1">
   <div class="topbar">
     <button class="back-btn" onclick="goScreen('dashboard',null)">←</button>
     <div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div>
@@ -187,25 +187,25 @@
   </div>
   <div id="conv-list"></div>
   <div style="padding:12px 20px">
-    <button onclick="messagerAvecComptable()" style="width:100%;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💬 Contacter mon comptable</button>
+    <button onclick="messagerAvecComptable()" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💬 Contacter mon comptable</button>
   </div>
   <div class="pb"></div>
 </div>
 
 <!-- ===== CHAT (conversation) ===== -->
-<div class="screen" id="screen-chat" style="background:#F1EEE8;flex-direction:column">
-  <div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+<div class="screen" id="screen-chat" style="background:#F5F6F1;flex-direction:column">
+  <div style="background:linear-gradient(135deg,#0F1F1A,#134436);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
     <button onclick="desaronnerRealtime();goScreen('messages',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
     <div id="chat-nom" style="font-size:15px;font-weight:700;color:#fff;flex:1">Conversation</div>
     <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700" id="chat-avatar">?</div>
   </div>
   <div id="messages-container" style="padding:16px 0;padding-bottom:100px;min-height:400px"></div>
-  <div id="chat-input-zone" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E3DCCF;padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:100">
-    <label style="width:40px;height:40px;border-radius:50%;background:#FBF0DA;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px">
+  <div id="chat-input-zone" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #DDE3DA;padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:100">
+    <label style="width:40px;height:40px;border-radius:50%;background:#E7F2EC;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:18px">
       📎<input type="file" accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="attacherFichierMsg(event)">
     </label>
-    <input id="msg-input" style="flex:1;padding:10px 14px;border:1.5px solid #E3DCCF;border-radius:24px;font-size:14px;font-family:inherit;outline:none" placeholder="Votre message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMessage();}">
-    <button onclick="envoyerMessage()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#C9971F,#A67A16);color:#fff;border:none;font-size:18px;cursor:pointer;flex-shrink:0">➤</button>
+    <input id="msg-input" style="flex:1;padding:10px 14px;border:1.5px solid #DDE3DA;border-radius:24px;font-size:14px;font-family:inherit;outline:none" placeholder="Votre message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMessage();}">
+    <button onclick="envoyerMessage()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#1B5E4B,#134436);color:#fff;border:none;font-size:18px;cursor:pointer;flex-shrink:0">➤</button>
   </div>
   <div style="height:80px"></div>
 </div>
@@ -311,7 +311,7 @@
 <!-- NOUVEAU CONTRAT -->
 <div class="screen" id="screen-nouveau-contrat">
   <div class="form-header"><div class="back-btn" onclick="goScreen('contrats',null)">←</div><div class="form-title" id="nc-titre">Contrat</div></div>
-  <div id="nc-alerte" style="margin:0 20px 16px;background:#FBF0DA;border-left:3px solid #C9971F;padding:10px 14px;font-size:12px;color:#7A5D14;border-radius:0 8px 8px 0"></div>
+  <div id="nc-alerte" style="margin:0 20px 16px;background:#E7F2EC;border-left:3px solid #1B5E4B;padding:10px 14px;font-size:12px;color:#7A5D14;border-radius:0 8px 8px 0"></div>
   <div class="form-section">
     <label class="f-lbl">Client / partenaire (optionnel)</label>
     <select id="nc-client" class="f-inp" onchange="el('nc-client-nom-libre').style.display=this.value?'none':'block'" style="margin-bottom:6px"></select>
@@ -333,7 +333,7 @@
       <button class="ftab" onclick="filtrerMarcheType('offre',this)">🛠️ Offres</button>
       <button class="ftab" onclick="filtrerMarcheType('demande',this)">🔍 Demandes</button>
     </div>
-    <div style="text-align:right"><span onclick="loadMesAnnonces();goScreen('mes-annonces',null)" style="font-size:12px;color:#1F6F72;text-decoration:underline;cursor:pointer">Mes annonces publiées</span></div>
+    <div style="text-align:right"><span onclick="loadMesAnnonces();goScreen('mes-annonces',null)" style="font-size:12px;color:#1B5E4B;text-decoration:underline;cursor:pointer">Mes annonces publiées</span></div>
   </div>
   <div id="marche-list"></div><div class="pb"></div>
 </div>
@@ -359,7 +359,7 @@
   </div>
   <div class="form-section">
     <label class="f-lbl">Photo (optionnelle)</label>
-    <label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">
+    <label style="display:block;background:#F5F6F1;border:2px dashed #DDE3DA;border-radius:10px;padding:14px;text-align:center;cursor:pointer;font-size:13px;color:#5B6B64">
       📷 Ajouter une photo
       <input type="file" id="na-photo" accept="image/*" style="display:none" onchange="previewPhotoAnnonce(event)">
     </label>
@@ -371,7 +371,7 @@
       <div><label class="f-lbl">Ville</label><input id="na-ville" class="f-inp" placeholder="Ex: Meknès"></div>
     </div>
   </div>
-  <div class="note" style="margin:0 20px 16px;font-size:11px;color:#9C9186">Votre nom d'entreprise et vos coordonnées (si visibles dans l'annuaire) seront communiqués aux personnes qui ouvrent votre annonce.</div>
+  <div class="note" style="margin:0 20px 16px;font-size:11px;color:#8E9C95">Votre nom d'entreprise et vos coordonnées (si visibles dans l'annuaire) seront communiqués aux personnes qui ouvrent votre annonce.</div>
   <div class="send-row" style="grid-template-columns:1fr">
     <button class="s-btn blue" onclick="sauvegarderAnnonce()">📢 Publier l'annonce</button>
   </div>
@@ -403,8 +403,8 @@
 <!-- ABONNEMENTS (facturation récurrente) -->
 <div class="screen" id="screen-abonnements">
   <div class="topbar"><button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div></div>
-  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#1F6F72;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
-  <div style="padding:0 20px 12px;font-size:12px;color:#6B5F54">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
+  <div class="sec-header" style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px"><div class="sec-title">🔁 Facturation récurrente</div><button onclick="goScreen('nouvel-abonnement',null)" style="background:#1B5E4B;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">+ Nouveau</button></div>
+  <div style="padding:0 20px 12px;font-size:12px;color:#5B6B64">Les factures sont générées automatiquement à votre prochaine connexion, à partir de la date prévue.</div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="abonnements-recherche" placeholder="🔍 Rechercher par client..." oninput="renderAbonnements()"></div>
   <div style="padding:0 20px 8px">
     <select id="abonnements-tri" class="f-inp" onchange="renderAbonnements()" style="font-size:12px">
@@ -426,7 +426,7 @@
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="ab-client" class="f-inp" placeholder="Nom du client" list="client-datalist-ab" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('ab-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('ab-client')" style="flex-shrink:0;padding:0 14px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
     <datalist id="client-datalist-ab"></datalist></div>
   <!-- REFONTE (demande utilisateur — organiser comme l'accueil) : Chantier
@@ -438,11 +438,11 @@
       const masque = document.getElementById('ab-options-avancees').style.display === 'none';
       document.getElementById('ab-options-avancees').style.display = masque ? 'block' : 'none';
       document.getElementById('ab-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (chantier, date de fin...)';
-    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer"><span id="ab-lbl-options">▼ Options avancées (chantier, date de fin...)</span></span>
+    " style="font-size:12px;color:#1B5E4B;font-weight:600;cursor:pointer"><span id="ab-lbl-options">▼ Options avancées (chantier, date de fin...)</span></span>
   </div>
   <div id="ab-options-avancees" style="display:none">
     <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="ab-chantier" class="f-inp" placeholder="Optionnel"></div>
-    <div class="form-section"><label class="f-lbl">Date de fin du contrat (optionnelle)</label><input id="ab-date-fin" class="f-inp" type="date"><div style="font-size:11px;color:#9C9186;margin-top:4px">Laissez vide pour une récurrence sans limite de durée. Une alerte vous préviendra 30 jours avant l'échéance.</div></div>
+    <div class="form-section"><label class="f-lbl">Date de fin du contrat (optionnelle)</label><input id="ab-date-fin" class="f-inp" type="date"><div style="font-size:11px;color:#8E9C95;margin-top:4px">Laissez vide pour une récurrence sans limite de durée. Une alerte vous préviendra 30 jours avant l'échéance.</div></div>
   </div>
   <div class="form-section">
     <div class="f-row">
@@ -548,11 +548,11 @@
     <div id="zone-video-partage" style="display:none;background:#000;padding:8px">
       <video id="video-partage-ecran" autoplay playsinline style="width:100%;border-radius:8px;display:block"></video>
     </div>
-    <div id="partage-ecran-statut" style="font-size:11px;color:#9C9186;text-align:center;padding:4px"></div>
+    <div id="partage-ecran-statut" style="font-size:11px;color:#8E9C95;text-align:center;padding:4px"></div>
     <div id="chat-ticket-messages" style="flex:1;overflow-y:auto;padding:16px 20px"></div>
-    <div style="display:flex;gap:8px;padding:12px 20px;border-top:1px solid #E3DCCF;background:#fff">
+    <div style="display:flex;gap:8px;padding:12px 20px;border-top:1px solid #DDE3DA;background:#fff">
       <input id="chat-ticket-input" class="f-inp" placeholder="Votre message..." style="flex:1" onkeypress="if(event.key==='Enter')envoyerMessageTicket()">
-      <button onclick="envoyerMessageTicket()" style="padding:0 16px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:inherit">➤</button>
+      <button onclick="envoyerMessageTicket()" style="padding:0 16px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:inherit">➤</button>
     </div>
   </div>
 
@@ -576,7 +576,7 @@
       <div class="sec-label" style="padding:0 0 12px">🆘 Support</div>
 
       <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button onclick="contacterSupportEmail()" style="flex:1;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Email</button>
+        <button onclick="contacterSupportEmail()" style="flex:1;padding:12px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Email</button>
         <button onclick="contacterSupportWhatsApp()" style="flex:1;padding:12px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📱 WhatsApp</button>
       </div>
 
@@ -585,18 +585,18 @@
         <div style="padding:14px 16px">
           <input id="sup-sujet" class="f-inp" placeholder="Sujet" style="margin-bottom:10px">
           <textarea id="sup-message" class="f-inp" rows="4" placeholder="Décrivez votre problème ou question..." style="margin-bottom:10px"></textarea>
-          <button onclick="envoyerTicketSupport()" style="width:100%;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Envoyer</button>
-          <div style="text-align:center;margin-top:10px"><span onclick="chargerMesTicketsSupport();goScreen('mes-tickets-support',null)" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">🎫 Voir mes tickets et discuter avec le support</span></div>
+          <button onclick="envoyerTicketSupport()" style="width:100%;padding:11px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Envoyer</button>
+          <div style="text-align:center;margin-top:10px"><span onclick="chargerMesTicketsSupport();goScreen('mes-tickets-support',null)" style="font-size:11px;color:#1B5E4B;text-decoration:underline;cursor:pointer">🎫 Voir mes tickets et discuter avec le support</span></div>
         </div>
       </div>
 
       <div class="p-card">
         <div class="p-card-title">💬 Assistant Tafir</div>
-        <div style="font-size:10px;color:#9C9186;padding:0 16px 10px">Répond aux questions fréquentes — pas une IA, juste des réponses toutes prêtes. Contactez le support ci-dessus pour un vrai humain.</div>
+        <div style="font-size:10px;color:#8E9C95;padding:0 16px 10px">Répond aux questions fréquentes — pas une IA, juste des réponses toutes prêtes. Contactez le support ci-dessus pour un vrai humain.</div>
         <div id="chatbot-messages" style="padding:10px 16px;max-height:280px;overflow-y:auto"></div>
         <div style="display:flex;gap:8px;padding:10px 16px 16px">
           <input id="chatbot-input" class="f-inp" placeholder="Posez votre question..." style="flex:1" onkeydown="if(event.key==='Enter'){envoyerMessageChatbot();}">
-          <button onclick="envoyerMessageChatbot()" style="padding:0 16px;background:#C9971F;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:inherit">➤</button>
+          <button onclick="envoyerMessageChatbot()" style="padding:0 16px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:16px;cursor:pointer;font-family:inherit">➤</button>
         </div>
       </div>
     </div>
@@ -610,16 +610,16 @@
     </div>
     <div style="padding:20px">
       <div style="text-align:center;margin-bottom:20px">
-        <div style="font-size:32px;font-weight:900;color:#2A2420">Ta<span style="color:#C9971F">fir</span></div>
+        <div style="font-size:32px;font-weight:900;color:#14241F">Ta<span style="color:#1B5E4B">fir</span></div>
       </div>
       <div class="p-card">
-        <div style="padding:16px;font-size:13px;line-height:1.7;color:#2A2420">
+        <div style="padding:16px;font-size:13px;line-height:1.7;color:#14241F">
           <p style="margin-bottom:12px">Tafir est né d'un constat simple : trop de PME et TPE marocaines gèrent encore leurs factures, devis et TVA sur papier ou dans des tableurs, avec le temps perdu et les erreurs que ça entraîne.</p>
           <p style="margin-bottom:12px">Notre objectif est de rendre la facturation, la gestion des achats et le suivi comptable accessibles à toute entreprise marocaine, quelle que soit sa taille — sans jargon inutile, avec des outils pensés pour un usage quotidien réel : sur le terrain, au bureau, ou entre deux rendez-vous.</p>
           <p>Tafir évolue en continu, avec un objectif clair : préparer les entreprises marocaines à la facturation électronique obligatoire, tout en simplifiant leur gestion de tous les jours.</p>
         </div>
       </div>
-      <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:16px">⚠️ Texte générique à personnaliser selon votre histoire réelle.</div>
+      <div style="font-size:10px;color:#8E9C95;text-align:center;margin-top:16px">⚠️ Texte générique à personnaliser selon votre histoire réelle.</div>
     </div>
     <div class="pb"></div>
   </div>
@@ -644,9 +644,9 @@
     <div style="padding:16px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">🛠️ Espace support</div>
       <div style="display:flex;gap:6px;margin-bottom:14px">
-        <button class="support-tab" data-onglet="tickets" onclick="switchOngletSupport('tickets')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#1F6F72;color:#fff">🎫 Tickets</button>
-        <button class="support-tab" data-onglet="stats" onclick="switchOngletSupport('stats')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 Stats</button>
-        <button class="support-tab" data-onglet="agents" onclick="switchOngletSupport('agents')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#6B5F54">👥 Agents</button>
+        <button class="support-tab" data-onglet="tickets" onclick="switchOngletSupport('tickets')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#1B5E4B;color:#fff">🎫 Tickets</button>
+        <button class="support-tab" data-onglet="stats" onclick="switchOngletSupport('stats')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#5B6B64">📊 Stats</button>
+        <button class="support-tab" data-onglet="agents" onclick="switchOngletSupport('agents')" style="flex:1;padding:9px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#EAE4DA;color:#5B6B64">👥 Agents</button>
       </div>
     </div>
 
@@ -679,7 +679,7 @@
     </div>
     <div style="padding:16px 20px">
       <div class="sec-label" style="padding:0 0 12px">📝 Devis reçus acceptés</div>
-      <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Devis d'autres entreprises Tafir que vous avez acceptés — convertissez-les en bon de commande si ce n'est pas déjà fait.</div>
+      <div style="font-size:11px;color:#5B6B64;padding-bottom:12px">Devis d'autres entreprises Tafir que vous avez acceptés — convertissez-les en bon de commande si ce n'est pas déjà fait.</div>
       <div id="devis-recus-resume"></div>
       <input class="f-inp" id="devis-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderDevisRecusAcceptes()" style="margin-bottom:8px">
       <select id="devis-recus-tri" class="f-inp" onchange="renderDevisRecusAcceptes()" style="margin-bottom:12px;font-size:12px"><option value="defaut">À convertir d'abord</option><option value="ref-asc">🔤 Référence — A à Z</option></select>
@@ -700,7 +700,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted)">Fournisseurs (<span id="fournisseurs-count">0</span>)</div>
       <div style="display:flex;gap:10px;align-items:center">
-        <span onclick="exporterFournisseursCSV()" style="font-size:11px;font-weight:500;color:#6B5F54;cursor:pointer">📥 Export CSV</span>
+        <span onclick="exporterFournisseursCSV()" style="font-size:11px;font-weight:500;color:#5B6B64;cursor:pointer">📥 Export CSV</span>
         <div onclick="ouvrirNouveauFournisseur()" style="font-size:12px;font-weight:500;color:#B23A2E;cursor:pointer">+ Ajouter</div>
       </div>
     </div>
@@ -742,7 +742,7 @@
 
   <!-- FOURNISSEUR : FICHE -->
   <div class="screen" id="screen-fournisseur-detail">
-    <div style="background:linear-gradient(135deg,#241F1B,#8E2E24);padding:20px">
+    <div style="background:linear-gradient(135deg,#0F1F1A,#8E2E24);padding:20px">
       <div style="display:flex;align-items:center;gap:10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px" onclick="goScreen('fournisseurs',null)">← Retour</div>
       <div style="font-size:22px;font-weight:700;color:#fff" id="fd-nom"></div>
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px" id="fd-meta"></div>
@@ -751,14 +751,14 @@
     <div style="padding:16px">
       <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid #EAE4DA" id="fd-infos"></div>
       <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button id="fd-btn-appel" style="flex:1;display:none;padding:10px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📞 Appeler</button>
-        <button id="fd-btn-whatsapp" style="flex:1;display:none;padding:10px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💬 WhatsApp</button>
-        <button id="fd-btn-email" style="flex:1;display:none;padding:10px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Email</button>
+        <button id="fd-btn-appel" style="flex:1;display:none;padding:10px;background:#fff;color:#0F1F1A;border:1px solid #DDE3DA;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📞 Appeler</button>
+        <button id="fd-btn-whatsapp" style="flex:1;display:none;padding:10px;background:#fff;color:#0F1F1A;border:1px solid #DDE3DA;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💬 WhatsApp</button>
+        <button id="fd-btn-email" style="flex:1;display:none;padding:10px;background:#fff;color:#0F1F1A;border:1px solid #DDE3DA;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Email</button>
       </div>
-      <button onclick="demanderDevisAuFournisseurFiche()" style="width:100%;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">📝 Demander un devis</button>
+      <button onclick="demanderDevisAuFournisseurFiche()" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">📝 Demander un devis</button>
       <button onclick="nouvelAchatPourFournisseurFiche()" style="width:100%;padding:12px;background:linear-gradient(135deg,#B23A2E,#8E2E24);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px">🛒 Nouvel achat chez ce fournisseur</button>
       <div style="display:flex;gap:8px">
-        <button onclick="modifierFournisseurFiche()" style="flex:1;padding:11px;background:#fff;color:#241F1B;border:1px solid #E3DCCF;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✏️ Modifier</button>
+        <button onclick="modifierFournisseurFiche()" style="flex:1;padding:11px;background:#fff;color:#0F1F1A;border:1px solid #DDE3DA;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✏️ Modifier</button>
         <button onclick="supprimerFournisseurFiche()" style="flex:1;padding:11px;background:#fff;color:#B23A2E;border:1px solid #F0C9C4;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🗑️ Supprimer</button>
       </div>
     </div>
@@ -782,7 +782,7 @@
     <div class="form-section"><label class="f-lbl">Téléphone (si pas sur Tafir, pour WhatsApp)</label><input id="ddf-fournisseur-tel" class="f-inp" type="tel" placeholder="+212 6XX XX XX XX"></div>
     <div class="form-section"><label class="f-lbl">Ce dont vous avez besoin *</label><textarea id="ddf-description" class="f-inp" rows="5" placeholder="Décrivez les articles ou prestations souhaités, quantités, délais..."></textarea></div>
     <div style="display:flex;gap:8px;padding:0 20px 14px">
-      <button onclick="discuterAvecFournisseur()" style="flex:1;padding:10px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💬 Discuter</button>
+      <button onclick="discuterAvecFournisseur()" style="flex:1;padding:10px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💬 Discuter</button>
       <button onclick="proposerRendezVousFournisseur()" style="flex:1;padding:10px;background:#EEF3E4;color:#6E8F4E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📅 Rendez-vous</button>
     </div>
     <div class="send-row" style="grid-template-columns:1fr">
@@ -827,7 +827,7 @@
   <div class="topbar"><button class="back-btn" onclick="goScreen('hub-achats',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"><span style="font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 10px;background:rgba(255,255,255,0.1);border-radius:16px;margin-right:6px" onclick="goScreen('bons-commande-list',null)">📋 BC</span></div></div>
   <div style="display:flex;gap:8px;padding:12px 20px 4px">
     <button onclick="loadFournisseurs();goScreen('fournisseurs',null)" style="flex:1;padding:10px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🏭 Mes fournisseurs</button>
-    <button onclick="ouvrirDemandeDevisFournisseur()" style="flex:1;padding:10px;background:#FBF0DA;color:#A67A16;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>
+    <button onclick="ouvrirDemandeDevisFournisseur()" style="flex:1;padding:10px;background:#E7F2EC;color:#134436;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>
   </div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Factures d'achat</div><div class="hero-amount" id="achats-total">0 MAD</div><div class="hero-sub-txt">Dépenses & fournisseurs</div></div>
   <div style="padding:0 20px 10px"><input class="f-inp" id="achats-recherche" placeholder="🔍 Rechercher par fournisseur ou référence..." oninput="renderAchats()"></div>
@@ -893,7 +893,7 @@
     " style="font-size:12px;color:#B23A2E;font-weight:600;cursor:pointer"><span id="achat-lbl-options">▼ Options avancées (chantier, échéance, catégorie...)</span></span>
   </div>
   <div id="achat-options-avancees" style="display:none">
-    <div class="form-section"><div class="form-label">Chantier / Projet (optionnel)</div><input class="form-input" id="achat-chantier" placeholder="Ex: Villa Casablanca"><div style="font-size:10px;color:#9C9186;margin-top:4px">Renseignez le même nom que sur la facture liée pour suivre sa rentabilité</div></div>
+    <div class="form-section"><div class="form-label">Chantier / Projet (optionnel)</div><input class="form-input" id="achat-chantier" placeholder="Ex: Villa Casablanca"><div style="font-size:10px;color:#8E9C95;margin-top:4px">Renseignez le même nom que sur la facture liée pour suivre sa rentabilité</div></div>
     <div style="padding:0 20px"><div class="form-label">Échéance</div><input class="form-input" id="achat-echeance" type="date"></div>
     <div class="form-section" style="margin-top:14px"><div class="form-label">Catégorie</div><select class="form-input" id="achat-categorie"><option value="materiel">Matériel</option><option value="services">Services</option><option value="fournitures">Fournitures</option><option value="transport">Transport</option><option value="autre">Autre</option></select></div>
     <div class="form-section"><div class="form-label">Note</div><textarea class="form-input" id="achat-note" rows="2" placeholder="Notes..."></textarea></div>
@@ -908,15 +908,15 @@
       <button class="add-ligne" style="flex:1" onclick="openAddLigneAchat()">＋ Ligne manuelle</button>
       <button class="add-ligne" style="flex:1;color:#55702E;border-color:#55702E" onclick="ouvrirCatalogueAchat()">📦 Depuis le catalogue</button>
     </div>
-    <div style="font-size:11px;color:#9C9186;margin-top:6px">Une ligne liée au catalogue alimente automatiquement le stock à l'enregistrement.</div>
+    <div style="font-size:11px;color:#8E9C95;margin-top:6px">Une ligne liée au catalogue alimente automatiquement le stock à l'enregistrement.</div>
   </div>
-  <div style="margin:0 20px 14px;background:#F1EEE8;border-radius:12px;padding:12px">
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:4px"><span>TVA</span><span id="achat-tva-display">0,00 MAD</span></div>
+  <div style="margin:0 20px 14px;background:#F5F6F1;border-radius:12px;padding:12px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#5B6B64;margin-bottom:4px"><span>HT</span><span id="achat-ht-display">0,00 MAD</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#5B6B64;margin-bottom:4px"><span>TVA</span><span id="achat-tva-display">0,00 MAD</span></div>
     <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700"><span>TTC</span><span id="achat-ttc-display">0,00 MAD</span></div>
   </div>
   <div class="form-section"><div class="form-label">Statut</div><select class="form-input" id="achat-statut"><option value="attente">En attente</option><option value="payee">Payée</option></select></div>
-  <div style="margin:0 20px 14px"><div class="form-label">Photo de la facture</div><label style="display:block;background:#F1EEE8;border:2px dashed #E3DCCF;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#6B5F54">📷 Prendre en photo<input type="file" id="achat-pj" accept="image/*" capture="environment" style="display:none" onchange="previewAchatPJ(event)"></label><label style="display:block;margin-top:6px;text-align:center;font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Choisir depuis la galerie / un PDF<input type="file" id="achat-pj-galerie" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div style="text-align:center;margin-top:6px" id="verrou-ocr-achats"></div><div id="achat-pj-preview" style="margin-top:8px"></div></div>
+  <div style="margin:0 20px 14px"><div class="form-label">Photo de la facture</div><label style="display:block;background:#F5F6F1;border:2px dashed #DDE3DA;border-radius:10px;padding:16px;text-align:center;cursor:pointer;font-size:13px;color:#5B6B64">📷 Prendre en photo<input type="file" id="achat-pj" accept="image/*" capture="environment" style="display:none" onchange="previewAchatPJ(event)"></label><label style="display:block;margin-top:6px;text-align:center;font-size:11px;color:#8E9C95;text-decoration:underline;cursor:pointer">Choisir depuis la galerie / un PDF<input type="file" id="achat-pj-galerie" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="previewAchatPJ(event)"></label><div style="text-align:center;margin-top:6px" id="verrou-ocr-achats"></div><div id="achat-pj-preview" style="margin-top:8px"></div></div>
   <input type="hidden" id="achat-fournisseur-id" value=""><input type="hidden" id="achat-fournisseur-banipay" value="0">
   <div style="padding:0 20px 20px"><button class="a-btn" onclick="sauvegarderAchat()" style="background:linear-gradient(135deg,#B23A2E,#8E2E24);color:#fff">💾 Enregistrer</button></div>
   <div class="pb"></div>
@@ -933,7 +933,7 @@
     <label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="f-client" class="f-inp" placeholder="Nom du client" list="client-datalist" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('f-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('f-client')" style="flex-shrink:0;padding:0 14px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
     <datalist id="client-datalist"></datalist>
   </div>
@@ -952,7 +952,7 @@
       const masque = document.getElementById('f-options-avancees').style.display === 'none';
       document.getElementById('f-options-avancees').style.display = masque ? 'block' : 'none';
       document.getElementById('f-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (chantier, échéance, note...)';
-    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer"><span id="f-lbl-options">▼ Options avancées (chantier, échéance, note...)</span></span>
+    " style="font-size:12px;color:#1B5E4B;font-weight:600;cursor:pointer"><span id="f-lbl-options">▼ Options avancées (chantier, échéance, note...)</span></span>
   </div>
   <div id="f-options-avancees" style="display:none">
     <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="f-chantier" class="f-inp" placeholder="Ex: Rénovation bureau"></div>
@@ -975,9 +975,9 @@
        déjà le multi-devise sur les totaux et les lignes, sans aucun
        bouton pour la choisir — restait bloqué sur MAD dans tous les cas. -->
   <div style="display:flex;gap:8px;padding:0 20px 10px">
-    <button type="button" class="devise-btn-f active" data-devise="MAD" onclick="setDeviseF('MAD',this)" style="flex:1;padding:9px;border-radius:10px;border:1px solid #E3DCCF;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">MAD</button>
-    <button type="button" class="devise-btn-f" data-devise="EUR" onclick="setDeviseF('EUR',this)" style="flex:1;padding:9px;border-radius:10px;border:1px solid #E3DCCF;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">EUR</button>
-    <button type="button" class="devise-btn-f" data-devise="USD" onclick="setDeviseF('USD',this)" style="flex:1;padding:9px;border-radius:10px;border:1px solid #E3DCCF;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">USD</button>
+    <button type="button" class="devise-btn-f active" data-devise="MAD" onclick="setDeviseF('MAD',this)" style="flex:1;padding:9px;border-radius:10px;border:1px solid #DDE3DA;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">MAD</button>
+    <button type="button" class="devise-btn-f" data-devise="EUR" onclick="setDeviseF('EUR',this)" style="flex:1;padding:9px;border-radius:10px;border:1px solid #DDE3DA;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">EUR</button>
+    <button type="button" class="devise-btn-f" data-devise="USD" onclick="setDeviseF('USD',this)" style="flex:1;padding:9px;border-radius:10px;border:1px solid #DDE3DA;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">USD</button>
   </div>
   <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="total-ht">0 MAD</span></div>
     <div class="tr-row"><span class="tr-lbl">TVA</span><span class="tr-val" id="total-tva">0 MAD</span></div>
@@ -1028,12 +1028,12 @@
       <div class="d-card-title">Prestations</div>
       <div id="detail-lignes"></div>
     </div>
-    <div id="detail-chantier" style="display:none;padding:8px 16px;font-size:12px;color:#6B5F54;background:#F1EEE8;border-radius:8px;margin-bottom:8px"></div>
+    <div id="detail-chantier" style="display:none;padding:8px 16px;font-size:12px;color:#5B6B64;background:#F5F6F1;border-radius:8px;margin-bottom:8px"></div>
     <div id="detail-paiement-prog" style="display:none;background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:12px;border:1px solid #EAE4DA">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#5B6B64;margin-bottom:6px">
         <span>Progression paiement</span><span id="detail-prog-pct">0%</span>
       </div>
-      <div style="height:8px;background:#E3DCCF;border-radius:4px;overflow:hidden">
+      <div style="height:8px;background:#DDE3DA;border-radius:4px;overflow:hidden">
         <div id="detail-prog-bar" style="height:100%;background:#6E8F4E;border-radius:4px;width:0%"></div>
       </div>
     </div>
@@ -1091,7 +1091,7 @@
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="d-client" class="f-inp" placeholder="Nom du client" list="client-datalist-devis" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('d-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('d-client')" style="flex-shrink:0;padding:0 14px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
     <datalist id="client-datalist-devis"></datalist></div>
   <div class="form-section">
@@ -1108,7 +1108,7 @@
       const masque = document.getElementById('d-options-avancees').style.display === 'none';
       document.getElementById('d-options-avancees').style.display = masque ? 'block' : 'none';
       document.getElementById('d-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (chantier, validité, notes...)';
-    " style="font-size:12px;color:#1F6F72;font-weight:600;cursor:pointer"><span id="d-lbl-options">▼ Options avancées (chantier, validité, notes...)</span></span>
+    " style="font-size:12px;color:#1B5E4B;font-weight:600;cursor:pointer"><span id="d-lbl-options">▼ Options avancées (chantier, validité, notes...)</span></span>
   </div>
   <div id="d-options-avancees" style="display:none">
     <div class="form-section"><label class="f-lbl">Chantier / Projet</label><input id="d-chantier" class="f-inp" placeholder="Ex: Villa Casablanca"></div>
@@ -1166,7 +1166,7 @@
   <div class="form-section"><label class="f-lbl">Client</label>
     <div style="display:flex;gap:8px">
       <input id="av-client" class="f-inp" placeholder="Nom du client" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('av-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('av-client')" style="flex-shrink:0;padding:0 14px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
   </div>
   <div class="form-section">
@@ -1218,7 +1218,7 @@
       <span onclick="exporterProduitsCSV()" style="font-size:11px;font-weight:600;color:#fff;cursor:pointer;background:rgba(255,255,255,0.15);padding:5px 10px;border-radius:14px">📥 Export CSV</span>
     </div>
   </div>
-  <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#9C9186;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
+  <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#8E9C95;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
   <div style="padding:10px 20px 0"><input class="f-inp" id="search-produit-inp" placeholder="🔍 Rechercher un article..." oninput="renderProduits()"></div>
   <div style="padding:8px 20px 0">
     <select class="f-inp" id="produits-tri" onchange="renderProduits()">
@@ -1340,16 +1340,16 @@
   </div>
   <!-- QR -->
   <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #EAE4DA;text-align:center">
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:12px">QR Code & Lien public</div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#8E9C95;margin-bottom:12px">QR Code & Lien public</div>
     <div id="qr-canvas-container" style="display:flex;justify-content:center;margin:0 auto 10px"></div>
     <!-- FIX: cet élément était auparavant absent du HTML alors que renderProfil()
          essayait déjà de le remplir (setEl('pv-lien', ...)) — le lien affiché
          sous le QR ne correspondait donc jamais au vrai lien public encodé
          dans le QR code. -->
-    <div id="pv-lien" style="font-size:11px;color:#C9971F;margin-bottom:10px;word-break:break-all;background:#F1EEE8;padding:8px;border-radius:8px">—</div>
+    <div id="pv-lien" style="font-size:11px;color:#1B5E4B;margin-bottom:10px;word-break:break-all;background:#F5F6F1;padding:8px;border-radius:8px">—</div>
     <div style="display:flex;gap:8px;justify-content:center">
-      <button onclick="copierLienProfil()" style="background:#E9F4F3;color:#C9971F;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
-      <button onclick="partagerProfil()" style="background:#C9971F;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+      <button onclick="copierLienProfil()" style="background:#E7F2EC;color:#1B5E4B;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfil()" style="background:#1B5E4B;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     </div>
   </div>
   <div style="padding:0 16px" id="profil-view">
@@ -1362,7 +1362,7 @@
          tout, donc rien ne s'affichait jamais, même une fois les champs
          ci-dessus renseignés. -->
     <div class="p-card" id="pv-public-card" style="margin-top:10px"></div>
-    <div id="pv-objectif" style="display:none;background:#E9F4F3;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#A67A16"></div>
+    <div id="pv-objectif" style="display:none;background:#E7F2EC;border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;color:#134436"></div>
     <!-- NOUVEAU (retour utilisateur) : même refonte que l'accueil —
          action principale mise en avant, reste regroupé par catégorie
          plutôt qu'une longue liste plate identique. -->
@@ -1374,37 +1374,37 @@
     </div>
 
     <div class="groupe-label">Mon entreprise</div>
-    <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#9C9186">📝 Brouillons</button>
-    <button class="p-btn" onclick="window._retourContrats='profil';renderModelesContrats();goScreen('contrats',null)" style="color:#1F6F72">📄 Modèles de contrats</button>
+    <button class="p-btn" onclick="renderBrouillons();goScreen('brouillons',null)" style="color:#8E9C95">📝 Brouillons</button>
+    <button class="p-btn" onclick="window._retourContrats='profil';renderModelesContrats();goScreen('contrats',null)" style="color:#1B5E4B">📄 Modèles de contrats</button>
 
     <!-- Section Mon Comptable -->
-    <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
-      <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">Mon comptable</div>
+    <div style="margin:8px 20px 0;background:#fff;border-radius:14px;border:1px solid #DDE3DA;overflow:hidden">
+      <div style="padding:12px 16px;background:#F5F6F1;border-bottom:1px solid #DDE3DA;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5B6B64">Mon comptable</div>
       <div id="mon-comptable-section" style="padding:14px 16px">Chargement...</div>
     </div>
 
     <div class="groupe-label">Réseau Tafir</div>
     <!-- Section Parrainage (chantier ajouté) -->
-    <div style="margin:0 20px 10px;background:#fff;border-radius:14px;border:1px solid #E3DCCF;overflow:hidden">
-      <div style="padding:12px 16px;background:#F1EEE8;border-bottom:1px solid #E3DCCF;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B5F54">🤝 Parrainer une entreprise</div>
+    <div style="margin:0 20px 10px;background:#fff;border-radius:14px;border:1px solid #DDE3DA;overflow:hidden">
+      <div style="padding:12px 16px;background:#F5F6F1;border-bottom:1px solid #DDE3DA;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#5B6B64">🤝 Parrainer une entreprise</div>
       <div id="parrainage-content" style="padding:14px 16px">Chargement...</div>
     </div>
 
     <div class="groupe-label">Mon compte</div>
-    <button class="p-btn" onclick="ouvrirHistoriqueSiAdmin()" style="color:#6B5F54">📋 Historique</button>
-    <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#6B5F54">⚙️ Paramètres</button>
-    <button class="p-btn" onclick="goScreen('mon-forfait',null)" style="color:#C9971F">📦 Mon forfait</button>
+    <button class="p-btn" onclick="ouvrirHistoriqueSiAdmin()" style="color:#5B6B64">📋 Historique</button>
+    <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#5B6B64">⚙️ Paramètres</button>
+    <button class="p-btn" onclick="goScreen('mon-forfait',null)" style="color:#1B5E4B">📦 Mon forfait</button>
 
     <div class="groupe-label">Aide</div>
-    <button class="p-btn" onclick="window._retourSupport='profil';window._retourQuiSommesNous='profil';goScreen('support',null)" style="color:#1F6F72">🆘 Support</button>
-    <button class="p-btn" onclick="window._retourQuiSommesNous='profil';goScreen('qui-sommes-nous',null)" style="color:#9C9186">ℹ️ Qui sommes-nous</button>
+    <button class="p-btn" onclick="window._retourSupport='profil';window._retourQuiSommesNous='profil';goScreen('support',null)" style="color:#1B5E4B">🆘 Support</button>
+    <button class="p-btn" onclick="window._retourQuiSommesNous='profil';goScreen('qui-sommes-nous',null)" style="color:#8E9C95">ℹ️ Qui sommes-nous</button>
 
     <div class="pb"></div>
     <a class="p-btn" href="legal.html" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none">📄 Mentions légales · CGU · Confidentialité</a>
     <button class="p-btn danger" onclick="doLogout()">⏏️ Se déconnecter</button>
   </div>
   <div id="profil-edit" style="display:none;padding:0 16px">
-    <div style="font-size:13px;color:#6B5F54;margin:16px 0">Ces informations apparaissent sur vos factures PDF</div>
+    <div style="font-size:13px;color:#5B6B64;margin:16px 0">Ces informations apparaissent sur vos factures PDF</div>
     <label class="f-lbl">Raison sociale *</label><input id="pe-raison" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">Secteur</label>
     <select id="pe-secteur" class="f-inp" style="margin-bottom:10px">
@@ -1426,11 +1426,11 @@
     <label class="f-lbl">Email</label><input id="pe-email" class="f-inp" type="email" style="margin-bottom:10px">
     <label class="f-lbl">Site web</label><input id="pe-web" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">RC</label><input id="pe-rc" class="f-inp" inputmode="numeric" pattern="[0-9]*" placeholder="Numérique, ex: 123456" style="margin-bottom:2px">
-    <div style="font-size:10px;color:#9C9186;margin-bottom:10px">Numéro du registre de commerce (chiffres uniquement) — l'auto-entrepreneur n'en a pas, laissez vide.</div>
+    <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Numéro du registre de commerce (chiffres uniquement) — l'auto-entrepreneur n'en a pas, laissez vide.</div>
     <label class="f-lbl">Identifiant Fiscal (IF)</label><input id="pe-if" class="f-inp" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Ex: 12345678" style="margin-bottom:2px">
-    <div style="font-size:10px;color:#9C9186;margin-bottom:10px">Attribué par la DGI, chiffres uniquement.</div>
+    <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Attribué par la DGI, chiffres uniquement.</div>
     <label class="f-lbl">ICE</label><input id="pe-ice" class="f-inp" inputmode="numeric" pattern="[0-9]{15}" maxlength="15" placeholder="15 chiffres exactement" style="margin-bottom:2px">
-    <div style="font-size:10px;color:#9C9186;margin-bottom:10px">Exactement 15 chiffres — c'est le format imposé par la DGI, sans exception.</div>
+    <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Exactement 15 chiffres — c'est le format imposé par la DGI, sans exception.</div>
     <label class="f-lbl">Patente</label><input id="pe-patente" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">CNSS</label><input id="pe-cnss" class="f-inp" style="margin-bottom:10px">
     <label class="f-lbl">Banque</label><input id="pe-banque" class="f-inp" style="margin-bottom:10px">
@@ -1440,13 +1440,13 @@
          sauvegardés par goProfilEdit()/saveProfil() — le formulaire lui-
          même n'existait tout simplement pas, donc rien ne pouvait
          jamais être saisi ni affiché. -->
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin:14px 0 8px">Informations complémentaires</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8E9C95;margin:14px 0 8px">Informations complémentaires</div>
     <label class="f-lbl">Objectif de chiffre d'affaires mensuel (MAD)</label><input id="pe-objectif" class="f-inp" type="number" style="margin-bottom:10px">
     <label class="f-lbl">Format de numérotation</label><input id="pe-numerotation" class="f-inp" placeholder="Ex: FAC-{annee}-{numero}" style="margin-bottom:10px">
     <label class="f-lbl">Capital social (MAD)</label><input id="pe-capital-social" class="f-inp" type="number" style="margin-bottom:10px">
     <label class="f-lbl">Date de création de l'entreprise</label><input id="pe-date-creation" class="f-inp" type="date" style="margin-bottom:10px">
     <label class="f-lbl">Régime fiscal</label><input id="pe-regime-fiscal" class="f-inp" placeholder="Ex: Réel simplifié" style="margin-bottom:10px">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin:14px 0 8px">Profil public (Annuaire Tafir)</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8E9C95;margin:14px 0 8px">Profil public (Annuaire Tafir)</div>
     <label class="f-lbl">Description de l'entreprise</label><textarea id="pe-description" class="f-inp" rows="3" placeholder="Décrivez votre activité..." style="margin-bottom:10px"></textarea>
     <label class="f-lbl">Horaires d'ouverture</label><input id="pe-horaires" class="f-inp" placeholder="Ex: Lun-Ven 9h-18h" style="margin-bottom:10px">
     <label class="f-lbl">Zone d'intervention</label><input id="pe-zone-intervention" class="f-inp" placeholder="Ex: Casablanca et environs" style="margin-bottom:10px">
@@ -1456,8 +1456,8 @@
     <label class="f-lbl">LinkedIn</label><input id="pe-linkedin" class="f-inp" placeholder="https://linkedin.com/..." style="margin-bottom:10px">
     <label class="f-lbl">🎨 Couleur d'accent des PDF (factures)</label>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">
-      <input id="pe-couleur" type="color" value="#C9971F" style="width:52px;height:40px;border:1.5px solid #E3DCCF;border-radius:10px;padding:2px;cursor:pointer">
-      <div style="font-size:11px;color:#9C9186">S'applique aux factures uniquement — devis/avoirs gardent leur code couleur habituel</div>
+      <input id="pe-couleur" type="color" value="#1B5E4B" style="width:52px;height:40px;border:1.5px solid #DDE3DA;border-radius:10px;padding:2px;cursor:pointer">
+      <div style="font-size:11px;color:#8E9C95">S'applique aux factures uniquement — devis/avoirs gardent leur code couleur habituel</div>
     </div>
     <div style="margin-bottom:12px">
       <div class="f-lbl">Logo entreprise</div>
@@ -1468,8 +1468,8 @@
     </div>
     <div style="margin-bottom:12px">
       <div class="f-lbl">✍️ Ma signature / cachet</div>
-      <div style="font-size:11px;color:#9C9186;margin-bottom:8px">S'appose automatiquement sur vos documents, à côté de la signature du client une fois le document accepté</div>
-      <canvas id="pe-sig-canvas" style="width:100%;height:120px;background:#F1EEE8;border:1.5px dashed #CDBEA0;border-radius:10px;touch-action:none;display:block;margin-bottom:8px"></canvas>
+      <div style="font-size:11px;color:#8E9C95;margin-bottom:8px">S'appose automatiquement sur vos documents, à côté de la signature du client une fois le document accepté</div>
+      <canvas id="pe-sig-canvas" style="width:100%;height:120px;background:#F5F6F1;border:1.5px dashed #BFCBBF;border-radius:10px;touch-action:none;display:block;margin-bottom:8px"></canvas>
       <div style="display:flex;gap:8px">
         <button onclick="typeof effacerSignatureEntreprise==='function' && effacerSignatureEntreprise()" class="s-btn gray" style="flex:1">🔄 Effacer</button>
         <label class="s-btn gray" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">📷 Importer un cachet
@@ -1491,13 +1491,13 @@
   <div class="sec-label">Statistiques</div>
   <!-- FUSION (retour utilisateur) : 3 onglets au lieu de 2 écrans séparés -->
   <div style="padding:0 20px 14px;display:flex;gap:6px">
-    <button id="stats-onglet-ensemble" onclick="switchStatsOnglet('ensemble')" style="flex:1;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Vue d'ensemble</button>
-    <button id="stats-onglet-detail" onclick="switchStatsOnglet('detail')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Détail</button>
-    <button id="stats-onglet-prevision" onclick="switchStatsOnglet('prevision')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Prévision</button>
+    <button id="stats-onglet-ensemble" onclick="switchStatsOnglet('ensemble')" style="flex:1;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Vue d'ensemble</button>
+    <button id="stats-onglet-detail" onclick="switchStatsOnglet('detail')" style="flex:1;padding:10px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Détail</button>
+    <button id="stats-onglet-prevision" onclick="switchStatsOnglet('prevision')" style="flex:1;padding:10px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Prévision</button>
     <!-- AJOUT (chantier repris — écran Analyse) : 4e onglet, sélecteur de
          type de données (Factures/Devis/Achats/Stock) plutôt que
          d'éparpiller ça entre plusieurs écrans. -->
-    <button id="stats-onglet-analyse" onclick="switchStatsOnglet('analyse')" style="flex:1;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔬 Analyse</button>
+    <button id="stats-onglet-analyse" onclick="switchStatsOnglet('analyse')" style="flex:1;padding:10px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🔬 Analyse</button>
   </div>
   <!-- NOUVEAU (retour utilisateur) : filtre de période -->
   <div id="stats-periode-tabs" style="display:flex;gap:6px;padding:0 20px 14px;overflow-x:auto">
@@ -1510,7 +1510,7 @@
   <!-- NOUVEAU : sélecteur de dates, visible seulement en mode "Personnalisée" -->
   <div id="stats-dates-perso" style="display:none;padding:0 20px 14px;gap:8px;align-items:center">
     <input type="date" id="stats-date-debut" class="f-inp" style="flex:1" onchange="appliquerDatesPersonnalisees()">
-    <span style="font-size:12px;color:#9C9186">au</span>
+    <span style="font-size:12px;color:#8E9C95">au</span>
     <input type="date" id="stats-date-fin" class="f-inp" style="flex:1" onchange="appliquerDatesPersonnalisees()">
   </div>
   <!-- FIX (retour utilisateur — style à améliorer, trop chargé) : les
@@ -1520,7 +1520,7 @@
        bancaire — les onglets de période (les plus utilisés au quotidien)
        restent seuls visibles par défaut. -->
   <div style="padding:0 20px 10px">
-    <span onclick="document.getElementById('stats-filtres-avances').style.display = document.getElementById('stats-filtres-avances').style.display === 'none' ? 'block' : 'none'" style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer;font-weight:600">🔧 Filtres avancés (statut, catégorie, montant)</span>
+    <span onclick="document.getElementById('stats-filtres-avances').style.display = document.getElementById('stats-filtres-avances').style.display === 'none' ? 'block' : 'none'" style="font-size:11px;color:#1B5E4B;text-decoration:underline;cursor:pointer;font-weight:600">🔧 Filtres avancés (statut, catégorie, montant)</span>
   </div>
   <div id="stats-filtres-avances" style="display:none">
     <div style="padding:0 20px 10px;display:flex;gap:8px;flex-wrap:wrap">
@@ -1549,7 +1549,7 @@
     </div>
     <div style="padding:0 20px 10px;display:flex;gap:8px;align-items:center">
       <input type="number" id="stats-montant-min" class="f-inp" placeholder="Montant min" style="flex:1" onchange="appliquerFiltreMontantStats()">
-      <span style="font-size:12px;color:#9C9186">à</span>
+      <span style="font-size:12px;color:#8E9C95">à</span>
       <input type="number" id="stats-montant-max" class="f-inp" placeholder="Montant max" style="flex:1" onchange="appliquerFiltreMontantStats()">
     </div>
   </div>
@@ -1577,7 +1577,7 @@
     <div class="sec-label" style="margin-top:8px">📊 Rentabilité par chantier / projet</div>
     <div style="padding:0 20px 20px" id="rapport-marge-chantiers-content"></div>
     <div style="padding:0 20px 20px">
-      <button onclick="goScreen('carnet-chantier',null);setTimeout(initCarnetChantier,50)" style="width:100%;padding:12px;background:#fff;border:1.5px solid #E3DCCF;color:#241F1B;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Ouvrir le carnet de chantier / projet</button>
+      <button onclick="goScreen('carnet-chantier',null);setTimeout(initCarnetChantier,50)" style="width:100%;padding:12px;background:#fff;border:1.5px solid #DDE3DA;color:#0F1F1A;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Ouvrir le carnet de chantier / projet</button>
     </div>
   </div>
 
@@ -1610,18 +1610,18 @@
       <svg width="145" height="17" viewBox="20 18 260 30">
         <defs>
           <linearGradient id="gradSafranAuthTop" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#A67A16"/>
-            <stop offset="100%" stop-color="#E0AE5C"/>
+            <stop offset="0%" stop-color="#134436"/>
+            <stop offset="100%" stop-color="#C8E55A"/>
           </linearGradient>
         </defs>
         <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="url(#gradSafranAuthTop)" stroke-width="6" stroke-linecap="round"/>
-        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#C8E55A"/>
       </svg>
       <h1 style="margin:2px 0" data-brand>Ta<span>fir</span></h1>
       <svg width="145" height="17" viewBox="20 132 260 30">
         <defs>
           <linearGradient id="gradZelligeAuthBottom" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#154F52"/>
+            <stop offset="0%" stop-color="#134436"/>
             <stop offset="100%" stop-color="#7FB8BA"/>
           </linearGradient>
         </defs>
@@ -1637,11 +1637,11 @@
         <label class="a-lbl">Mot de passe</label>
         <div style="position:relative">
           <input id="login-password" class="a-inp" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9C9186;padding:0" id="eye-login">👁️</button>
+          <button type="button" onclick="togglePwd('login-password','eye-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#8E9C95;padding:0" id="eye-login">👁️</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin:10px 0">
           <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer" onchange="toggleRememberMe()">
-          <label for="remember-me" style="font-size:13px;color:#6B5F54;cursor:pointer">Se souvenir de moi</label>
+          <label for="remember-me" style="font-size:13px;color:#5B6B64;cursor:pointer">Se souvenir de moi</label>
         </div>
         <div id="login-err" class="a-err"></div>
         <button class="a-btn a-btn-blue" onclick="doLogin()">Se connecter</button>
@@ -1650,30 +1650,30 @@
         <div class="a-link" style="font-size:11px;margin-top:6px"><a href="legal.html#mentions" target="_blank" rel="noopener">Mentions légales</a> · <a href="legal.html#cgu" target="_blank" rel="noopener">CGU</a> · <a href="legal.html#confidentialite" target="_blank" rel="noopener">Confidentialité</a></div>
       </div>
       <div id="aw-signup" style="display:none">
-        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#9C9186;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#8E9C95;font-size:13px;margin-bottom:16px" onclick="switchTab('login')">← Retour</div>
         <div class="auth-title">Créer un compte</div>
 
         <!-- ÉTAPE 1: Choisir le type de compte EN PREMIER -->
         <div style="margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9C9186;margin-bottom:10px;text-align:center">Je suis...</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8E9C95;margin-bottom:10px;text-align:center">Je suis...</div>
           <div style="display:flex;gap:8px">
-            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #C9971F;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#FBF0DA">
+            <div id="role-entreprise" onclick="selectRole('entreprise')" style="flex:1;border:2px solid #1B5E4B;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#E7F2EC">
               <div style="font-size:28px;margin-bottom:6px">🏢</div>
-              <div style="font-size:13px;font-weight:700;color:#C9971F">Entreprise</div>
-              <div style="font-size:10px;color:#6B5F54;margin-top:3px">Gérer mes factures</div>
+              <div style="font-size:13px;font-weight:700;color:#1B5E4B">Entreprise</div>
+              <div style="font-size:10px;color:#5B6B64;margin-top:3px">Gérer mes factures</div>
             </div>
-            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #E3DCCF;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F1EEE8">
+            <div id="role-comptable" onclick="selectRole('comptable')" style="flex:1;border:2px solid #DDE3DA;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;background:#F5F6F1">
               <div style="font-size:28px;margin-bottom:6px">📊</div>
-              <div style="font-size:13px;font-weight:700;color:#6B5F54">Comptable</div>
-              <div style="font-size:10px;color:#6B5F54;margin-top:3px">Gérer mes clients</div>
+              <div style="font-size:13px;font-weight:700;color:#5B6B64">Comptable</div>
+              <div style="font-size:10px;color:#5B6B64;margin-top:3px">Gérer mes clients</div>
             </div>
           </div>
           <input type="hidden" id="signup-role" value="entreprise">
         </div>
 
         <!-- Champ cabinet (comptable uniquement) -->
-        <div id="signup-comptable-fields" style="display:none;background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:12px">
-          <label class="a-lbl" style="color:#C9971F">Cabinet comptable</label>
+        <div id="signup-comptable-fields" style="display:none;background:#E7F2EC;border-radius:12px;padding:12px;margin-bottom:12px">
+          <label class="a-lbl" style="color:#1B5E4B">Cabinet comptable</label>
           <input id="signup-cabinet" class="a-inp" placeholder="Nom du cabinet (optionnel)">
         </div>
 
@@ -1683,7 +1683,7 @@
         <label class="a-lbl">Mot de passe</label>
         <div style="position:relative">
           <input id="signup-password" class="a-inp" type="password" placeholder="8 car. min" oninput="checkPwdStrength()" autocomplete="new-password" style="padding-right:44px">
-          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#9C9186;padding:0" id="eye-signup">👁️</button>
+          <button type="button" onclick="togglePwd('signup-password','eye-signup')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#8E9C95;padding:0" id="eye-signup">👁️</button>
         </div>
         <div class="pwd-bar"><div id="pwd-bar" class="pwd-fill"></div></div>
         <div id="pwd-hint" class="pwd-hint"></div>
@@ -1700,7 +1700,7 @@
                style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0" aria-hidden="true">
         <div style="display:flex;align-items:flex-start;gap:8px;margin:12px 0 4px">
           <input type="checkbox" id="signup-cgu" style="width:18px;height:18px;margin-top:2px;flex:none;cursor:pointer">
-          <label for="signup-cgu" style="font-size:12px;color:#6B5F54;line-height:1.5;cursor:pointer">J'accepte les <a href="legal.html#cgu" target="_blank" rel="noopener" style="color:#2F7F82;font-weight:600">conditions d'utilisation</a> et la <a href="legal.html#confidentialite" target="_blank" rel="noopener" style="color:#2F7F82;font-weight:600">politique de confidentialité</a>.</label>
+          <label for="signup-cgu" style="font-size:12px;color:#5B6B64;line-height:1.5;cursor:pointer">J'accepte les <a href="legal.html#cgu" target="_blank" rel="noopener" style="color:#2F7F82;font-weight:600">conditions d'utilisation</a> et la <a href="legal.html#confidentialite" target="_blank" rel="noopener" style="color:#2F7F82;font-weight:600">politique de confidentialité</a>.</label>
         </div>
         <button class="a-btn a-btn-blue" onclick="doSignup()" style="margin-top:8px">Créer mon compte</button>
         <div class="a-link">Déjà inscrit ? <a onclick="switchTab('login')">Se connecter</a></div>
@@ -1709,15 +1709,15 @@
         <div style="text-align:center;margin-bottom:20px">
           <div style="font-size:48px;margin-bottom:12px">&#128231;</div>
           <div class="auth-title" style="margin-bottom:8px">V&#233;rifiez votre email</div>
-          <div style="font-size:13px;color:#6B5F54;line-height:1.5">Lien envoy&#233; &#224;</div>
-          <div style="font-size:14px;font-weight:600;color:#C9971F;margin:8px 0;word-break:break-all" id="confirm-email-display">&#8212;</div>
-          <div style="font-size:12px;color:#9C9186">Cliquez le lien pour activer votre compte</div>
+          <div style="font-size:13px;color:#5B6B64;line-height:1.5">Lien envoy&#233; &#224;</div>
+          <div style="font-size:14px;font-weight:600;color:#1B5E4B;margin:8px 0;word-break:break-all" id="confirm-email-display">&#8212;</div>
+          <div style="font-size:12px;color:#8E9C95">Cliquez le lien pour activer votre compte</div>
         </div>
         <div style="background:#F7EFDC;border-left:3px solid #B8860B;border-radius:8px;padding:12px;font-size:12px;color:#7A5A0E;margin-bottom:16px">
           &#9888; V&#233;rifiez vos <strong>spams</strong> si vous ne trouvez pas l'email.
         </div>
         <button class="a-btn a-btn-blue" onclick="renvoyerConfirmation()">&#128228; Renvoyer l'email</button>
-        <button onclick="switchTab('login')" class="a-btn" style="background:#EAE4DA;color:#6B5F54;margin-top:8px">&#8592; Retour</button>
+        <button onclick="switchTab('login')" class="a-btn" style="background:#EAE4DA;color:#5B6B64;margin-top:8px">&#8592; Retour</button>
       </div>
     </div>
     <div class="a-footer">Données sécurisées · Tafir v2.0</div>
@@ -1729,12 +1729,12 @@
   <div class="auth-wrap">
     <div class="auth-logo">
       <svg width="145" height="17" viewBox="20 18 260 30">
-        <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="#C9971F" stroke-width="6" stroke-linecap="round"/>
-        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#E0AE5C"/>
+        <path d="M 30 34 Q 150 20 270 34" fill="none" stroke="#1B5E4B" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 270 34 L 249 25 L 255 36 L 249 47 Z" fill="#C8E55A"/>
       </svg>
       <h1 style="margin:2px 0" data-brand>Ta<span>fir</span></h1>
       <svg width="145" height="17" viewBox="20 132 260 30">
-        <path d="M 270 146 Q 150 160 30 146" fill="none" stroke="#1F6F72" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 270 146 Q 150 160 30 146" fill="none" stroke="#1B5E4B" stroke-width="6" stroke-linecap="round"/>
         <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
       </svg>
     </div>
@@ -1742,7 +1742,7 @@
       <!-- Étape 1 : saisie du numéro -->
       <div id="verif-tel-etape-numero">
         <div class="auth-title">Vérifiez votre téléphone</div>
-        <div style="font-size:13px;color:#6B5F54;margin-bottom:16px;text-align:center">Une seule fois — pour pouvoir récupérer votre compte même si vous perdez l'accès à votre email.</div>
+        <div style="font-size:13px;color:#5B6B64;margin-bottom:16px;text-align:center">Une seule fois — pour pouvoir récupérer votre compte même si vous perdez l'accès à votre email.</div>
         <label class="a-lbl">Numéro de téléphone</label>
         <input id="verif-tel-numero" class="a-inp" type="tel" placeholder="+212 6XX XX XX XX" autocomplete="tel">
         <button class="a-btn a-btn-blue" onclick="envoyerCodeVerificationTelephone()">Recevoir le code par SMS</button>
@@ -1750,7 +1750,7 @@
       <!-- Étape 2 : saisie du code reçu (cachée au départ) -->
       <div id="verif-tel-etape-code" style="display:none">
         <div class="auth-title">Entrez le code reçu</div>
-        <div style="font-size:13px;color:#6B5F54;margin-bottom:16px;text-align:center">Un SMS avec un code à 6 chiffres vient d'être envoyé.</div>
+        <div style="font-size:13px;color:#5B6B64;margin-bottom:16px;text-align:center">Un SMS avec un code à 6 chiffres vient d'être envoyé.</div>
         <label class="a-lbl">Code de vérification</label>
         <input id="verif-tel-code" class="a-inp" type="text" inputmode="numeric" maxlength="6" placeholder="123456" style="letter-spacing:8px;font-size:22px;text-align:center">
         <button class="a-btn a-btn-green" onclick="confirmerCodeVerificationTelephone()">Confirmer</button>
@@ -1772,7 +1772,7 @@
     </div>
     <div class="auth-card">
       <div class="auth-title">Choisissez votre mot de passe</div>
-      <div style="font-size:12px;color:#6B5F54;margin-bottom:16px">Dernière étape avant d'accéder à votre compte.</div>
+      <div style="font-size:12px;color:#5B6B64;margin-bottom:16px">Dernière étape avant d'accéder à votre compte.</div>
       <label class="a-lbl">Nouveau mot de passe</label>
       <input id="def-mdp-nouveau" class="a-inp" type="password" placeholder="8 car. min, 1 majuscule, 1 chiffre">
       <label class="a-lbl">Confirmer</label>
@@ -1790,7 +1790,7 @@
     <button class="back-btn" onclick="goScreen('detail',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div>
   </div>
   <div class="sec-label">Historique des paiements</div>
-  <div style="padding:0 20px 10px;font-size:13px;color:#6B5F54" id="hp-facture-info"></div>
+  <div style="padding:0 20px 10px;font-size:13px;color:#5B6B64" id="hp-facture-info"></div>
   <div class="card-list" id="hp-liste"></div>
   <div style="padding:16px 20px">
     <button class="s-btn blue full" onclick="ouvrirPaiementPartiel(STATE.currentFacture?.id)">&#10133; Ajouter un paiement</button>
@@ -1920,7 +1920,7 @@
           <option value="fr">Français</option>
           <option value="ar">العربية (Arabe)</option>
         </select>
-        <div style="font-size:10px;color:#9C9186">⚠️ L'interface reste en français pour l'instant — seul le sens de lecture (droite à gauche) s'adapte. La traduction complète arrive dans une prochaine mise à jour.</div>
+        <div style="font-size:10px;color:#8E9C95">⚠️ L'interface reste en français pour l'instant — seul le sens de lecture (droite à gauche) s'adapte. La traduction complète arrive dans une prochaine mise à jour.</div>
       </div>
     </div>
     <!-- Numerotation -->
@@ -1933,7 +1933,7 @@
         <input id="param-prefix-dev" class="f-inp" placeholder="DEV" style="margin-bottom:10px">
         <label class="f-lbl">Num&#233;ro de d&#233;part</label>
         <input id="param-num-start" class="f-inp" type="number" placeholder="1" style="margin-bottom:10px">
-        <div style="font-size:12px;color:#9C9186;margin-bottom:10px">
+        <div style="font-size:12px;color:#8E9C95;margin-bottom:10px">
           Exemple : <strong id="param-preview">FAC-2026-0001</strong>
         </div>
       </div>
@@ -1992,26 +1992,26 @@
           <option value="FIFO">FIFO — Premier entré, premier sorti</option>
           <option value="LIFO">LIFO — Dernier entré, premier sorti</option>
         </select>
-        <div style="font-size:11px;color:#9C9186;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
+        <div style="font-size:11px;color:#8E9C95;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
       </div>
     </div>
     <!-- Annuaire public -->
     <div class="p-card" style="margin-bottom:14px">
       <div class="p-card-title">🏢 Annuaire public</div>
       <div style="padding:14px 16px">
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;color:#6B5F54">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;color:#5B6B64">
           <input type="checkbox" id="param-annuaire-contact-visible" style="width:16px;height:16px">
           Afficher mon téléphone et email dans l'annuaire public Tafir
         </label>
-        <div style="font-size:10px;color:#9C9186">Si désactivé, seuls votre nom et secteur restent visibles dans l'annuaire.</div>
+        <div style="font-size:10px;color:#8E9C95">Si désactivé, seuls votre nom et secteur restent visibles dans l'annuaire.</div>
       </div>
     </div>
     <!-- Préparation DGI -->
     <div class="p-card" style="margin-bottom:14px">
       <div class="p-card-title">🧬 Préparation à la facturation électronique</div>
       <div style="padding:14px 16px">
-        <div id="dgi-readiness-status" style="font-size:12px;color:#6B5F54;margin-bottom:10px">Vérification...</div>
-        <div style="font-size:11px;color:#9C9186;margin-bottom:10px">Une réforme est annoncée par la DGI (direction générale des impôts), sans date ni seuils officiellement publiés à ce jour. Export de préparation disponible dès maintenant (format UBL 2.1) — à ajuster dès la publication des spécifications définitives.</div>
+        <div id="dgi-readiness-status" style="font-size:12px;color:#5B6B64;margin-bottom:10px">Vérification...</div>
+        <div style="font-size:11px;color:#8E9C95;margin-bottom:10px">Une réforme est annoncée par la DGI (direction générale des impôts), sans date ni seuils officiellement publiés à ce jour. Export de préparation disponible dès maintenant (format UBL 2.1) — à ajuster dès la publication des spécifications définitives.</div>
         <button onclick="document.getElementById('pe-raison')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('pe-raison')?.focus()" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
       </div>
     </div>
@@ -2019,7 +2019,7 @@
     <div class="p-card" style="margin-bottom:14px;display:none">
       <div class="p-card-title">👥 Équipe</div>
       <div style="padding:14px 16px">
-        <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des membres et leur attribuer un rôle, mais les écrans de l'app (factures, achats...) ne leur montrent pas encore vos données — cette partie arrive dans une prochaine mise à jour.</div>
+        <div style="font-size:10px;color:#8E9C95;background:#F5F6F1;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des membres et leur attribuer un rôle, mais les écrans de l'app (factures, achats...) ne leur montrent pas encore vos données — cette partie arrive dans une prochaine mise à jour.</div>
         <div id="mes-invitations-equipe"></div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
           <input id="equipe-email" class="f-inp" placeholder="Email du membre" style="flex:1">
@@ -2029,7 +2029,7 @@
             <option value="admin">Admin</option>
           </select>
         </div>
-        <button onclick="inviterMembreEquipe()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter<span id="verrou-equipe-inviter"></span></button>
+        <button onclick="inviterMembreEquipe()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter<span id="verrou-equipe-inviter"></span></button>
         <div id="equipe-liste"></div>
       </div>
     </div>
@@ -2037,7 +2037,7 @@
     <div class="p-card" style="margin-bottom:14px">
       <div class="p-card-title">⏰ Relances automatiques</div>
       <div style="padding:14px 16px">
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#6B5F54">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#5B6B64">
           <input type="checkbox" id="param-relance-activee" style="width:16px;height:16px">
           Activer les relances automatiques<span id="verrou-relances-auto"></span>
         </label>
@@ -2049,22 +2049,22 @@
         <textarea id="param-relance-msg-jour" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
         <label class="f-lbl">Message — après échéance (retard)</label>
         <textarea id="param-relance-msg-retard" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
-        <div style="font-size:10px;color:#9C9186;margin-bottom:10px">Variables disponibles : {client}, {ref}, {montant}, {echeance}</div>
-        <button onclick="sauvegarderParametresRelance()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
+        <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Variables disponibles : {client}, {ref}, {montant}, {echeance}</div>
+        <button onclick="sauvegarderParametresRelance()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
       </div>
     </div>
     <!-- Relances achats (chantier ajouté) -->
     <div class="p-card" style="margin-bottom:14px">
       <div class="p-card-title">🛒 Rappels de paiement fournisseur</div>
       <div style="padding:14px 16px">
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#6B5F54">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#5B6B64">
           <input type="checkbox" id="param-relance-achats-activee" style="width:16px;height:16px">
           Activer les rappels de paiement fournisseur
         </label>
         <label class="f-lbl">Rappeler combien de jours avant l'échéance ?</label>
         <input id="param-relance-achats-jours" class="f-inp" type="number" min="1" max="30" value="3" style="margin-bottom:10px">
-        <div style="font-size:10px;color:#9C9186;margin-bottom:10px">Contrairement aux relances clients, ce sont de simples rappels pour vous-même — rien n'est envoyé automatiquement à vos fournisseurs.</div>
-        <button onclick="sauvegarderParametresRelanceAchats()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
+        <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Contrairement aux relances clients, ce sont de simples rappels pour vous-même — rien n'est envoyé automatiquement à vos fournisseurs.</div>
+        <button onclick="sauvegarderParametresRelanceAchats()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
       </div>
     </div>
     <!-- Documents BC/BL -->
@@ -2102,9 +2102,9 @@
     <button class="back-btn" onclick="goScreen('detail')">&#8592;</button>
     <div class="form-title">Acomptes</div>
   </div>
-  <div style="padding:16px 20px;background:#E9F4F3;border-bottom:1px solid #CFE3E2">
-    <div style="font-size:13px;color:#A67A16;font-weight:600" id="ac-facture-ref">Facture</div>
-    <div style="font-size:12px;color:#6B5F54;margin-top:2px">Total : <strong id="ac-total">0 MAD</strong> | Payé : <strong id="ac-paye" style="color:#6E8F4E">0 MAD</strong> | Restant : <strong id="ac-restant" style="color:#B23A2E">0 MAD</strong></div>
+  <div style="padding:16px 20px;background:#E7F2EC;border-bottom:1px solid #CFE3E2">
+    <div style="font-size:13px;color:#134436;font-weight:600" id="ac-facture-ref">Facture</div>
+    <div style="font-size:12px;color:#5B6B64;margin-top:2px">Total : <strong id="ac-total">0 MAD</strong> | Payé : <strong id="ac-paye" style="color:#6E8F4E">0 MAD</strong> | Restant : <strong id="ac-restant" style="color:#B23A2E">0 MAD</strong></div>
   </div>
   <div class="sec-label">Historique des versements</div>
   <div class="card-list" id="ac-liste"></div>
@@ -2344,9 +2344,9 @@
     <div class="modal-handle"></div>
     <div class="modal-title" id="me-titre">Envoyer le document</div>
     <button class="m-btn" style="background:#25D366;margin-bottom:8px" onclick="envoyerVia('whatsapp')">💬 WhatsApp</button>
-    <button class="m-btn" style="background:#1F6F72;margin-bottom:8px" onclick="envoyerVia('email')">✉️ Email</button>
-    <button class="m-btn" style="background:#6B5F54;margin-bottom:8px" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
-    <button class="m-btn" style="background:#C9971F;margin-bottom:8px" onclick="envoyerVia('banipay')">📲 Envoyer via Tafir</button>
+    <button class="m-btn" style="background:#1B5E4B;margin-bottom:8px" onclick="envoyerVia('email')">✉️ Email</button>
+    <button class="m-btn" style="background:#5B6B64;margin-bottom:8px" onclick="envoyerVia('lien')">🔗 Copier le lien</button>
+    <button class="m-btn" style="background:#1B5E4B;margin-bottom:8px" onclick="envoyerVia('banipay')">📲 Envoyer via Tafir</button>
     <div id="me-banipay-picker" style="display:none;margin-top:8px;max-height:40vh;overflow-y:auto"></div>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
@@ -2360,7 +2360,7 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="as-titre">Ajuster le stock</div>
-    <div style="font-size:12px;color:#6B5F54;margin-bottom:14px">Stock actuel : <strong id="as-stock-actuel"></strong></div>
+    <div style="font-size:12px;color:#5B6B64;margin-bottom:14px">Stock actuel : <strong id="as-stock-actuel"></strong></div>
     <label class="a-lbl">Type de mouvement</label>
     <select class="m-inp" id="as-type" onchange="afficherChampCoutSiEntree()">
       <option value="entree">➕ Entrée de stock</option>
@@ -2433,7 +2433,7 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">💰 Enregistrer un paiement</div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B5F54;margin-bottom:14px;background:#F1EEE8;border-radius:10px;padding:10px 12px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#5B6B64;margin-bottom:14px;background:#F5F6F1;border-radius:10px;padding:10px 12px">
       <div>Total : <strong id="pp-total"></strong></div>
       <div>Reçu : <strong id="pp-recu"></strong></div>
       <div>Restant : <strong id="pp-restant"></strong></div>
@@ -2451,7 +2451,7 @@
       <option value="autre">Autre</option>
     </select>
     <div style="display:flex;gap:8px">
-      <button onclick="closeAllModals()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>
+      <button onclick="closeAllModals()" style="flex:1;padding:11px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>
       <button onclick="confirmerPaiement()" style="flex:1.4;padding:11px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ Enregistrer</button>
     </div>
   </div>
@@ -2464,17 +2464,17 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">✍️ Votre signature</div>
-    <div style="font-size:12px;color:#6B5F54;margin-bottom:12px">Dessinez votre signature ci-dessous avec le doigt ou la souris, puis validez pour accepter ce document.</div>
-    <canvas id="sig-canvas" style="width:100%;height:160px;background:#F1EEE8;border:1px solid #E3DCCF;border-radius:12px;touch-action:none"></canvas>
+    <div style="font-size:12px;color:#5B6B64;margin-bottom:12px">Dessinez votre signature ci-dessous avec le doigt ou la souris, puis validez pour accepter ce document.</div>
+    <canvas id="sig-canvas" style="width:100%;height:160px;background:#F5F6F1;border:1px solid #DDE3DA;border-radius:12px;touch-action:none"></canvas>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="effacerSignature()" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Effacer</button>
-      <button onclick="el('modal-signature')?.classList.remove('active')" style="flex:1;padding:11px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>
+      <button onclick="effacerSignature()" style="flex:1;padding:11px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Effacer</button>
+      <button onclick="el('modal-signature')?.classList.remove('active')" style="flex:1;padding:11px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>
       <button onclick="confirmerSignatureEtAccepter()" style="flex:1.4;padding:11px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ Valider et accepter</button>
     </div>
     <!-- AJOUT (fonction déjà codée, jamais affichée) : accepterSansSignature()
          existait pour laisser un choix à qui ne souhaite pas signer. -->
     <div style="text-align:center;margin-top:10px">
-      <span onclick="accepterSansSignature()" style="font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Accepter sans signer</span>
+      <span onclick="accepterSansSignature()" style="font-size:11px;color:#8E9C95;text-decoration:underline;cursor:pointer">Accepter sans signer</span>
     </div>
   </div>
 </div>
@@ -2490,7 +2490,7 @@
   </div>
     <div style="padding:0 20px 12px;position:relative">
       <input class="form-input" id="search-client-inp" placeholder="🔍 Rechercher un client (ou coller un lien/code)..." oninput="rechercherClientOuLien();document.getElementById('search-client-clear').style.display=this.value?'block':'none'" style="margin-top:12px">
-      <span id="search-client-clear" onclick="document.getElementById('search-client-inp').value='';renderClients();this.style.display='none'" style="display:none;position:absolute;right:32px;top:22px;color:#9C9186;cursor:pointer;font-size:16px;padding:4px">✕</span>
+      <span id="search-client-clear" onclick="document.getElementById('search-client-inp').value='';renderClients();this.style.display='none'" style="display:none;position:absolute;right:32px;top:22px;color:#8E9C95;cursor:pointer;font-size:16px;padding:4px">✕</span>
     </div>
     <div style="padding:0 20px 10px">
       <select id="clients-tri" class="form-input" onchange="renderClients()" style="font-size:12px">
@@ -2501,7 +2501,7 @@
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 20px 10px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted)">Clients (<span id="clients-count">0</span>)</div>
       <div style="display:flex;gap:10px;align-items:center">
-        <span onclick="exporterClientsCSV()" style="font-size:11px;font-weight:500;color:#6B5F54;cursor:pointer">📥 Export CSV</span>
+        <span onclick="exporterClientsCSV()" style="font-size:11px;font-weight:500;color:#5B6B64;cursor:pointer">📥 Export CSV</span>
         <div onclick="goScreen('nouveau-client',null)" style="font-size:12px;font-weight:500;color:var(--orange);cursor:pointer">+ Ajouter</div>
       </div>
     </div>
@@ -2528,7 +2528,7 @@
         const masque = document.getElementById('cl-options-avancees').style.display === 'none';
         document.getElementById('cl-options-avancees').style.display = masque ? 'block' : 'none';
         document.getElementById('cl-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (adresse, ICE, conditions...)';
-      " style="font-size:12px;color:#C9971F;font-weight:600;cursor:pointer"><span id="cl-lbl-options">▼ Options avancées (adresse, ICE, conditions...)</span></span>
+      " style="font-size:12px;color:#1B5E4B;font-weight:600;cursor:pointer"><span id="cl-lbl-options">▼ Options avancées (adresse, ICE, conditions...)</span></span>
     </div>
     <div id="cl-options-avancees" style="display:none">
       <div class="form-section"><div class="form-label">Adresse</div><input class="form-input" id="cl-adresse" placeholder="Ex: 12 Rue Hassan II, Casablanca"></div>
@@ -2551,7 +2551,7 @@
 
   <!-- DETAIL CLIENT -->
   <div class="screen" id="screen-detail-client">
-    <div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:20px">
+    <div style="background:linear-gradient(135deg,#0F1F1A,#134436);padding:20px">
       <div style="display:flex;align-items:center;gap:10px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px" onclick="goScreen('clients',null)">← Retour</div>
       <div style="font-size:22px;font-weight:700;color:#fff" id="dc-nom"></div>
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px" id="dc-meta"></div>
@@ -2559,12 +2559,12 @@
     <div style="padding:16px">
       <div style="background:#fff;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1px solid #EAE4DA" id="dc-infos"></div>
       <!-- Lien Tafir du client -->
-      <div id="dc-lien-section" style="display:none;background:#FBF0DA;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #E8D9AE">
-        <div style="font-size:11px;font-weight:700;color:#C9971F;margin-bottom:6px">🔗 Profil Tafir</div>
-        <div id="dc-lien-banipay" style="font-size:11px;color:#C9971F;word-break:break-all;margin-bottom:8px"></div>
+      <div id="dc-lien-section" style="display:none;background:#E7F2EC;border-radius:12px;padding:12px 14px;margin-bottom:14px;border:1px solid #E8D9AE">
+        <div style="font-size:11px;font-weight:700;color:#1B5E4B;margin-bottom:6px">🔗 Profil Tafir</div>
+        <div id="dc-lien-banipay" style="font-size:11px;color:#1B5E4B;word-break:break-all;margin-bottom:8px"></div>
         <div style="display:flex;gap:8px">
-          <button id="dc-btn-copier-lien" style="flex:1;padding:7px;background:#fff;color:#C9971F;border:1px solid #E8D9AE;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
-          <button id="dc-btn-partager-lien" style="flex:1;padding:7px;background:#C9971F;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+          <button id="dc-btn-copier-lien" style="flex:1;padding:7px;background:#fff;color:#1B5E4B;border:1px solid #E8D9AE;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+          <button id="dc-btn-partager-lien" style="flex:1;padding:7px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
         </div>
       </div>
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin-bottom:10px">Factures</div>
@@ -2573,9 +2573,9 @@
       <div id="dc-devis"></div>
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-muted);margin:16px 0 10px">Paiements reçus</div>
       <div id="dc-paiements"></div>
-      <button onclick="ouvrirMsgClient()" style="display:flex;align-items:center;gap:12px;background:#FBF0DA;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #E8D9AE;font-size:14px;font-weight:600;color:#C9971F;font-family:inherit;width:100%;margin-bottom:8px;margin-top:16px">💬 Envoyer un message</button>
-    <button onclick="goScreen('nouvelle',null);setTimeout(()=>{const el=document.getElementById('f-client');if(el)el.value=window._clientNom||'';},100)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#C9971F;font-family:inherit;width:100%;text-align:left;margin-top:12px">
-        <div style="width:36px;height:36px;border-radius:10px;background:#E9F4F3;display:flex;align-items:center;justify-content:center">➕</div>Nouvelle facture pour ce client
+      <button onclick="ouvrirMsgClient()" style="display:flex;align-items:center;gap:12px;background:#E7F2EC;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #E8D9AE;font-size:14px;font-weight:600;color:#1B5E4B;font-family:inherit;width:100%;margin-bottom:8px;margin-top:16px">💬 Envoyer un message</button>
+    <button onclick="goScreen('nouvelle',null);setTimeout(()=>{const el=document.getElementById('f-client');if(el)el.value=window._clientNom||'';},100)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#1B5E4B;font-family:inherit;width:100%;text-align:left;margin-top:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:#E7F2EC;display:flex;align-items:center;justify-content:center">➕</div>Nouvelle facture pour ce client
       </button>
       <button onclick="supprimerClient(window._currentClientId)" style="display:flex;align-items:center;gap:12px;background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;border:1px solid #EAE4DA;font-size:14px;font-weight:500;color:#B23A2E;font-family:inherit;width:100%;text-align:left;margin-top:8px">
         <div style="width:36px;height:36px;border-radius:10px;background:#F5E4E1;display:flex;align-items:center;justify-content:center">🗑️</div>Supprimer le client
@@ -2591,11 +2591,11 @@
       <div style="font-size:13px;color:var(--ink-muted);padding:12px 0 16px">Récapitulatif mensuel pour votre déclaration TVA</div>
       <div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #EAE4DA">
         <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#2A2420"><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th><th style="padding:10px 12px;font-size:11px;color:#9CBB7A;text-align:right">TVA 20%</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th></tr></thead>
+          <thead><tr style="background:#14241F"><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:left">Mois</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">HT</th><th style="padding:10px 12px;font-size:11px;color:#9CBB7A;text-align:right">TVA 20%</th><th style="padding:10px 12px;font-size:11px;color:#fff;text-align:right">TTC</th></tr></thead>
           <tbody id="tva-body"></tbody>
         </table>
       </div>
-      <button onclick="goScreen('position-financiere',null)" style="width:100%;margin-top:14px;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💼 Voir ma position financière</button>
+      <button onclick="goScreen('position-financiere',null)" style="width:100%;margin-top:14px;padding:12px;background:#0F1F1A;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💼 Voir ma position financière</button>
       <!-- AJOUT (nouveau chantier) : trésorerie prévisionnelle -->
     </div>
     <div class="pb"></div>
@@ -2635,7 +2635,7 @@
     </div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">👥 Registre du personnel</div>
-      <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:12px">⚠️ Registre simple pour votre suivi — ce n'est pas un système de paie (pas de bulletin conforme, pas de calcul CNSS/AMO/IR).</div>
+      <div style="font-size:10px;color:#8E9C95;background:#F5F6F1;border-radius:8px;padding:8px;margin-bottom:12px">⚠️ Registre simple pour votre suivi — ce n'est pas un système de paie (pas de bulletin conforme, pas de calcul CNSS/AMO/IR).</div>
       <div id="employes-resume"></div>
       <input class="f-inp" id="employes-recherche" placeholder="🔍 Rechercher par nom ou poste..." oninput="renderEmployes()" style="margin-bottom:8px">
       <select class="f-inp" id="employes-tri" onchange="renderEmployes()" style="margin-bottom:12px">
@@ -2665,7 +2665,7 @@
         const masque = document.getElementById('emp-options-avancees').style.display === 'none';
         document.getElementById('emp-options-avancees').style.display = masque ? 'block' : 'none';
         document.getElementById('emp-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (identité, contact, jours de travail...)';
-      " style="font-size:12px;color:#E9F4F3;background:#1F6F72;padding:6px 10px;border-radius:16px;font-weight:600;cursor:pointer;display:inline-block"><span id="emp-lbl-options">▼ Options avancées (identité, contact, jours de travail...)</span></span>
+      " style="font-size:12px;color:#E7F2EC;background:#1B5E4B;padding:6px 10px;border-radius:16px;font-weight:600;cursor:pointer;display:inline-block"><span id="emp-lbl-options">▼ Options avancées (identité, contact, jours de travail...)</span></span>
     </div>
     <div id="emp-options-avancees" style="display:none">
       <!-- NOUVEAU (retour utilisateur) : identité et informations
@@ -2708,7 +2708,7 @@
     <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourBcRecus||'hub-ventes',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📋 Bons de commande reçus</div>
-      <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Bons de commande envoyés par vos clients suite à l'acceptation d'un devis — convertissez-les en facture d'un clic.</div>
+      <div style="font-size:11px;color:#5B6B64;padding-bottom:12px">Bons de commande envoyés par vos clients suite à l'acceptation d'un devis — convertissez-les en facture d'un clic.</div>
       <input class="f-inp" id="bc-recus-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderBCRecus()" style="margin-bottom:8px">
       <select id="bc-recus-tri" class="f-inp" onchange="renderBCRecus()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Ordre d'arrivée</option><option value="statut-asc">🏷️ Par statut</option></select>
       <div id="bc-recus-liste"></div>
@@ -2721,7 +2721,7 @@
     <div class="topbar"><button class="back-btn" onclick="goScreen(window._retourFacturesRecues||'hub-achats',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📥 Factures reçues</div>
-      <div style="font-size:11px;color:#6B5F54;padding-bottom:12px">Factures envoyées par vos fournisseurs qui utilisent aussi Tafir — importez-les dans vos achats d'un clic, sans ressaisie.</div>
+      <div style="font-size:11px;color:#5B6B64;padding-bottom:12px">Factures envoyées par vos fournisseurs qui utilisent aussi Tafir — importez-les dans vos achats d'un clic, sans ressaisie.</div>
       <input class="f-inp" id="factures-recues-recherche" placeholder="🔍 Rechercher par référence..." oninput="renderFacturesRecues()" style="margin-bottom:8px">
       <select id="factures-recues-tri" class="f-inp" onchange="renderFacturesRecues()" style="margin-bottom:12px;font-size:12px"><option value="defaut">Ordre d'arrivée</option><option value="montant-desc">💰 Montant décroissant</option></select>
       <div id="factures-recues-liste"></div>
@@ -2744,7 +2744,7 @@
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">📷 Carnet de chantier / projet</div>
       <select id="carnet-chantier-select" class="f-inp" onchange="changerChantierCarnet()" style="margin-bottom:14px"></select>
-      <button onclick="ouvrirAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px">📸 Ajouter une photo</button>
+      <button onclick="ouvrirAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px">📸 Ajouter une photo</button>
       <input type="file" id="carnet-photo-input" accept="image/*" capture="environment" style="display:none" onchange="traiterNouvellePhotoChantier(event)">
       <div id="carnet-chantier-liste"></div>
     </div>
@@ -2757,8 +2757,8 @@
       <img id="carnet-photo-apercu" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:220px;object-fit:cover">
       <label class="f-lbl">Note (optionnelle)</label>
       <textarea id="carnet-note-input" class="f-inp" rows="3" placeholder="Ex: Coulage de la dalle terminé"></textarea>
-      <button onclick="confirmerAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px">Enregistrer dans le carnet</button>
-      <button onclick="closeAllModals()" style="width:100%;padding:11px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:8px">Annuler</button>
+      <button onclick="confirmerAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px">Enregistrer dans le carnet</button>
+      <button onclick="closeAllModals()" style="width:100%;padding:11px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:8px">Annuler</button>
     </div>
   </div>
 
@@ -2773,7 +2773,7 @@
     <div class="topbar"><button class="back-btn" onclick="goScreen('position-financiere',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div></div>
     <div style="padding:12px 20px 0">
       <div class="sec-label" style="padding:0 0 12px">🔗 Rapprochement paiements</div>
-      <div style="font-size:12px;color:#6B5F54;padding-bottom:12px">Cochez les factures que vous avez vérifiées sur votre relevé bancaire.</div>
+      <div style="font-size:12px;color:#5B6B64;padding-bottom:12px">Cochez les factures que vous avez vérifiées sur votre relevé bancaire.</div>
       <div id="rapprochement-content"></div>
     </div>
     <div class="pb"></div>
@@ -2854,7 +2854,7 @@
     <div class="form-section"><label class="f-lbl">Description de la demande (optionnel)</label><textarea id="bc-note" class="f-inp" rows="3" placeholder="Décrivez ce que vous voulez commander, des instructions de livraison, ou toute précision utile pour le fournisseur..."></textarea></div>
   </div>
   <div style="padding:0 20px 8px"><button onclick="goScreen('bons-commande-list',null)" style="width:100%;padding:8px;background:none;color:#7C5CA6;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📋 Voir mes bons de commande</button></div>
-  <div style="padding:0 20px 8px"><button onclick="ouvrirDemandeDevisFournisseur()" style="width:100%;padding:8px;background:none;color:#A67A16;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📝 Demander d'abord un devis à ce fournisseur</button></div>
+  <div style="padding:0 20px 8px"><button onclick="ouvrirDemandeDevisFournisseur()" style="width:100%;padding:8px;background:none;color:#134436;border:none;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:underline">📝 Demander d'abord un devis à ce fournisseur</button></div>
   <div class="send-row">
     <button class="s-btn blue" onclick="sauvegarderBonCommande()">&#128190; Enregistrer + PDF</button>
     <button class="s-btn gray" onclick="goScreen('dashboard')">&#10005; Annuler</button>
@@ -2892,7 +2892,7 @@
   <div class="form-section"><label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">
       <input id="bl-client" class="f-inp" placeholder="Nom du client" list="client-datalist" style="flex:1">
-      <button type="button" onclick="ouvrirPickerClients('bl-client')" style="flex-shrink:0;padding:0 14px;background:#E9F4F3;color:#C9971F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
+      <button type="button" onclick="ouvrirPickerClients('bl-client')" style="flex-shrink:0;padding:0 14px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">👥</button>
     </div>
   </div>
   <div class="form-section">
@@ -2982,8 +2982,8 @@
       <div><label class="f-lbl">Au</label><input type="date" id="historique-date-fin" class="f-inp" onchange="appliquerFiltresHistorique()"></div>
     </div>
     <div style="display:flex;gap:8px">
-      <button onclick="reinitialiserFiltresHistorique()" style="flex:1;padding:9px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Tout effacer</button>
-      <button onclick="exporterHistoriqueCSV()" style="flex:1;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📥 Exporter CSV</button>
+      <button onclick="reinitialiserFiltresHistorique()" style="flex:1;padding:9px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Tout effacer</button>
+      <button onclick="exporterHistoriqueCSV()" style="flex:1;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📥 Exporter CSV</button>
     </div>
   </div>
   <div style="padding:0 20px" id="audit-list"></div>
@@ -2991,12 +2991,12 @@
 </div>
 
 <!-- ===== DASHBOARD COMPTABLE FULL ===== -->
-<div class="screen" id="screen-comptable" style="background:#F1EEE8;flex-direction:column">
+<div class="screen" id="screen-comptable" style="background:#F5F6F1;flex-direction:column">
   <!-- Header violet -->
-  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:16px 20px 12px;flex-shrink:0">
+  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:16px 20px 12px;flex-shrink:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <!-- Logo -->
-      <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Ta<span style="color:#E0AE5C">fir</span></div>
+      <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Ta<span style="color:#C8E55A">fir</span></div>
       <!-- Droite: actions -->
       <div style="display:flex;align-items:center;gap:6px">
         <!-- Messages -->
@@ -3029,7 +3029,7 @@
     </div>
     <!-- Navigation onglets -->
     <div id="cpt-tabs" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">
-      <button class="cpt-tab" id="cpt-nav-dashboard" onclick="switchCptNav('dashboard')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.9);color:#1F6F72">📊 Vue globale</button>
+      <button class="cpt-tab" id="cpt-nav-dashboard" onclick="switchCptNav('dashboard')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.9);color:#1B5E4B">📊 Vue globale</button>
       <button class="cpt-tab" id="cpt-nav-entreprises" onclick="switchCptNav('entreprises')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">🏢 Entreprises</button>
       <button class="cpt-tab" id="cpt-nav-traiter" onclick="switchCptNav('traiter')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📥 À traiter</button>
       <button class="cpt-tab" id="cpt-nav-historique" onclick="switchCptNav('historique')" style="padding:6px 14px;border:none;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)">📋 Historique</button>
@@ -3042,8 +3042,8 @@
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-cpt-entreprise" style="background:#F1EEE8">
-  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+<div class="screen" id="screen-cpt-entreprise" style="background:#F5F6F1">
+  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
     <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
     <img id="cpt-ent-logo" style="display:none;width:32px;height:32px;border-radius:8px;object-fit:cover;background:#fff;flex-shrink:0">
     <div style="flex:1;cursor:pointer" onclick="toggleEntrepriseDropdownCpt(event)">
@@ -3055,30 +3055,30 @@
   <div id="cpt-ent-kpis"></div>
   <!-- Onglets -->
   <div style="display:flex;gap:6px;padding:10px 16px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto;position:sticky;top:52px;z-index:9">
-    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#1F6F72;color:#fff">🧾 Factures</button>
-    <button id="cpt-tab-achats" onclick="cptEntTab('achats')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🛒 Achats</button>
-    <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📊 TVA</button>
-    <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">🏦 Relevés</button>
+    <button id="cpt-tab-factures" onclick="cptEntTab('factures')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#1B5E4B;color:#fff">🧾 Factures</button>
+    <button id="cpt-tab-achats" onclick="cptEntTab('achats')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#5B6B64">🛒 Achats</button>
+    <button id="cpt-tab-avoirs" onclick="cptEntTab('avoirs')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#5B6B64">📊 TVA</button>
+    <button id="cpt-tab-releves" onclick="cptEntTab('releves')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#5B6B64">🏦 Relevés</button>
     <!-- AJOUT (simplification — 8 onglets sur une seule rangée, trop
          chargé) : les 4 les plus utilisés au quotidien (contrôle
          factures/achats, TVA, rapprochement) restent visibles ; les 4
          autres, consultés moins souvent, se replient derrière ce
          bouton. -->
-    <button id="cpt-tab-plus" onclick="cptEntTogglePlus()" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F1EEE8;color:#1F6F72">▾ Plus</button>
+    <button id="cpt-tab-plus" onclick="cptEntTogglePlus()" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#F5F6F1;color:#1B5E4B">▾ Plus</button>
   </div>
   <div id="cpt-tabs-plus-rangee" style="display:none;gap:6px;padding:0 16px 10px;background:#fff;border-bottom:1px solid #EAE4DA;overflow-x:auto;flex-wrap:wrap">
-    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📝 Devis</button>
-    <button id="cpt-tab-documents" onclick="cptEntTab('documents')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📄 Docs</button>
-    <button id="cpt-tab-extraction" onclick="cptEntTab('extraction')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">📤 Extraction</button>
-    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#6B5F54">ℹ️ Infos</button>
+    <button id="cpt-tab-devis" onclick="cptEntTab('devis')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#5B6B64">📝 Devis</button>
+    <button id="cpt-tab-documents" onclick="cptEntTab('documents')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#5B6B64">📄 Docs</button>
+    <button id="cpt-tab-extraction" onclick="cptEntTab('extraction')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#5B6B64">📤 Extraction</button>
+    <button id="cpt-tab-infos" onclick="cptEntTab('infos')" style="padding:7px 16px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;background:#EAE4DA;color:#5B6B64">ℹ️ Infos</button>
   </div>
   <div id="cpt-ent-content"></div>
   <div class="pb"></div>
 </div>
 
-<div class="screen" id="screen-comptable-profil" style="background:#F1EEE8">
+<div class="screen" id="screen-comptable-profil" style="background:#F5F6F1">
   <!-- Header -->
-  <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);padding:0 0 30px">
+  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:0 0 30px">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px">
       <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
       <div style="font-size:14px;font-weight:700;color:#fff">Mon profil</div>
@@ -3095,34 +3095,34 @@
 
   <!-- QR Code + Lien -->
   <div style="margin:-20px 20px 16px;background:#fff;border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
-    <div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Mon lien profil</div>
+    <div style="font-size:12px;font-weight:700;color:#1B5E4B;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Mon lien profil</div>
     <div id="cpt-qr-container" style="display:flex;justify-content:center;margin-bottom:14px"></div>
-    <div id="cpt-lien-display" style="font-size:11px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px;word-break:break-all;margin-bottom:12px"></div>
+    <div id="cpt-lien-display" style="font-size:11px;color:#5B6B64;background:#F5F6F1;padding:8px;border-radius:8px;word-break:break-all;margin-bottom:12px"></div>
     <div style="display:flex;gap:8px">
-      <button onclick="copierLienComptable()" style="flex:1;padding:10px;background:#FBF0DA;color:#1F6F72;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
-      <button onclick="partagerProfilComptable()" style="flex:1;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
+      <button onclick="copierLienComptable()" style="flex:1;padding:10px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
+      <button onclick="partagerProfilComptable()" style="flex:1;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📤 Partager</button>
     </div>
   </div>
 
   <!-- Inviter une entreprise -->
-  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
-    <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:12px">📧 Inviter une entreprise</div>
-    <div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Saisissez l'email de l'entreprise — elle recevra un lien pour accepter l'accès</div>
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #DDE3DA">
+    <div style="font-size:13px;font-weight:700;color:#14241F;margin-bottom:12px">📧 Inviter une entreprise</div>
+    <div style="font-size:12px;color:#5B6B64;margin-bottom:10px">Saisissez l'email de l'entreprise — elle recevra un lien pour accepter l'accès</div>
     <input id="cpt-invite-email" class="f-inp" type="email" placeholder="email@entreprise.ma" style="margin-bottom:10px">
     <button onclick="envoyerInvitationDepuisProfil()" style="width:100%;padding:11px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✉️ Envoyer l'invitation</button>
   </div>
 
   <!-- Mes infos -->
-  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
-    <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:12px">⚙️ Mes informations</div>
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #DDE3DA">
+    <div style="font-size:13px;font-weight:700;color:#14241F;margin-bottom:12px">⚙️ Mes informations</div>
     <div id="cpt-profil-infos"></div>
-    <button onclick="ouvrirEditionComptable()" style="width:100%;margin-top:12px;padding:10px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">✏️ Modifier</button>
+    <button onclick="ouvrirEditionComptable()" style="width:100%;margin-top:12px;padding:10px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">✏️ Modifier</button>
   </div>
 
   <!-- Équipe du cabinet (fondation multi-utilisateurs) -->
-  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">
-    <div style="font-size:13px;font-weight:700;color:#2A2420;margin-bottom:8px">👥 Équipe du cabinet</div>
-    <div style="font-size:10px;color:#9C9186;background:#F1EEE8;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des collaborateurs avec un rôle, mais ils ne voient pas encore le portefeuille d'entreprises du cabinet avec leur propre compte — cette partie arrive dans une prochaine mise à jour.</div>
+  <div style="margin:0 20px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #DDE3DA">
+    <div style="font-size:13px;font-weight:700;color:#14241F;margin-bottom:8px">👥 Équipe du cabinet</div>
+    <div style="font-size:10px;color:#8E9C95;background:#F5F6F1;border-radius:8px;padding:8px;margin-bottom:10px">⚠️ Fonction en construction : vous pouvez inviter des collaborateurs avec un rôle, mais ils ne voient pas encore le portefeuille d'entreprises du cabinet avec leur propre compte — cette partie arrive dans une prochaine mise à jour.</div>
     <div id="mes-invitations-cabinet"></div>
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <input id="equipe-cabinet-email" class="f-inp" placeholder="Email du collaborateur" style="flex:1">
@@ -3132,26 +3132,26 @@
         <option value="titulaire">Titulaire</option>
       </select>
     </div>
-    <button onclick="inviterMembreCabinet()" style="width:100%;padding:10px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter</button>
+    <button onclick="inviterMembreCabinet()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px">➕ Inviter</button>
     <div id="equipe-cabinet-liste"></div>
     <!-- AJOUT (chantier — attribution d'entreprises par collaborateur) -->
-    <button onclick="renderAttributionsCabinet();goScreen('attributions-cabinet',null)" style="width:100%;margin-top:10px;padding:10px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🗂️ Attribuer des entreprises aux collaborateurs</button>
+    <button onclick="renderAttributionsCabinet();goScreen('attributions-cabinet',null)" style="width:100%;margin-top:10px;padding:10px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🗂️ Attribuer des entreprises aux collaborateurs</button>
   </div>
 
   <!-- Actions -->
   <div style="margin:0 20px 20px;display:flex;flex-direction:column;gap:8px">
-    <button onclick="window._retourSupport='comptable-profil';window._retourQuiSommesNous='comptable-profil';goScreen('support',null)" style="width:100%;padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🆘 Support</button>
-    <button onclick="window._retourQuiSommesNous='comptable-profil';goScreen('qui-sommes-nous',null)" style="width:100%;padding:12px;background:#F1EEE8;color:#6B5F54;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">ℹ️ Qui sommes-nous</button>
+    <button onclick="window._retourSupport='comptable-profil';window._retourQuiSommesNous='comptable-profil';goScreen('support',null)" style="width:100%;padding:12px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🆘 Support</button>
+    <button onclick="window._retourQuiSommesNous='comptable-profil';goScreen('qui-sommes-nous',null)" style="width:100%;padding:12px;background:#F5F6F1;color:#5B6B64;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">ℹ️ Qui sommes-nous</button>
     <button onclick="quitterComptable()" style="width:100%;padding:12px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">⏏️ Se déconnecter</button>
   </div>
   <div class="pb"></div>
 </div>
 
 <!-- AJOUT (chantier — attribution d'entreprises par collaborateur) -->
-<div class="screen" id="screen-attributions-cabinet" style="background:#F1EEE8">
+<div class="screen" id="screen-attributions-cabinet" style="background:#F5F6F1">
   <div class="topbar"><button class="back-btn" onclick="goScreen('comptable-profil',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div></div>
   <div class="hero" style="padding-bottom:16px"><div class="hero-lbl">Attribution des entreprises</div><div class="hero-sub-txt">Qui voit quoi dans votre cabinet</div></div>
-  <div style="padding:0 20px 10px;font-size:11px;color:#6B5F54">Cochez les entreprises que chaque collaborateur peut consulter. Un collaborateur sans aucune case cochée voit encore tout le portefeuille par défaut — cochez au moins une entreprise pour activer la restriction.</div>
+  <div style="padding:0 20px 10px;font-size:11px;color:#5B6B64">Cochez les entreprises que chaque collaborateur peut consulter. Un collaborateur sans aucune case cochée voit encore tout le portefeuille par défaut — cochez au moins une entreprise pour activer la restriction.</div>
   <div style="padding:0 20px" id="attributions-cabinet-content"></div>
   <div class="pb"></div>
 </div>

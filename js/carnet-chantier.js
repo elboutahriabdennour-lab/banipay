@@ -40,7 +40,7 @@ async function chargerPhotosChantier() {
     zone.innerHTML = '<div class="empty"><div class="empty-ico">🏗️</div><div class="empty-title">Choisissez un chantier</div><div>Sélectionnez un chantier ci-dessus pour voir ou ajouter des photos</div></div>';
     return;
   }
-  zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
+  zone.innerHTML = '<div style="text-align:center;padding:20px;color:#8E9C95">⏳ Chargement...</div>';
   try {
     STATE.photosChantierActuel = (await sb.get('photos_chantier', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&chantier=eq.' + encodeURIComponent(STATE._chantierSelectionne) + '&order=date_prise.desc')) || [];
   } catch(e) {
@@ -58,14 +58,14 @@ function renderPhotosChantier() {
     return;
   }
   zone.innerHTML = photos.map(function(p) {
-    return '<div style="background:#fff;border-radius:14px;overflow:hidden;margin-bottom:14px;border:1px solid #E3DCCF">' +
+    return '<div style="background:#fff;border-radius:14px;overflow:hidden;margin-bottom:14px;border:1px solid #DDE3DA">' +
       '<img src="' + p.photo + '" style="width:100%;max-height:280px;object-fit:cover;display:block">' +
       '<div style="padding:12px 14px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-          '<span style="font-size:11px;font-weight:700;color:#6B5F54">' + formatDate(p.date_prise) + '</span>' +
+          '<span style="font-size:11px;font-weight:700;color:#5B6B64">' + formatDate(p.date_prise) + '</span>' +
           '<button onclick="supprimerPhotoChantier(\'' + p.id + '\')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer">🗑️</button>' +
         '</div>' +
-        (p.note ? '<div style="font-size:12px;color:#2A2420">' + escapeHTML(p.note) + '</div>' : '') +
+        (p.note ? '<div style="font-size:12px;color:#14241F">' + escapeHTML(p.note) + '</div>' : '') +
       '</div>' +
     '</div>';
   }).join('');

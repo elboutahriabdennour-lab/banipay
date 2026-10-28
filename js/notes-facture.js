@@ -10,7 +10,7 @@ async function ouvrirNotesFacture(factureId) {
   const zone = document.getElementById('notes-facture-zone');
   if (!zone) return;
   zone.style.display = 'block';
-  zone.innerHTML = '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">⏳ Chargement...</div>';
+  zone.innerHTML = '<div style="text-align:center;padding:16px;color:#8E9C95;font-size:12px">⏳ Chargement...</div>';
   await chargerNotesFacture();
 }
 async function chargerNotesFacture() {
@@ -38,16 +38,16 @@ function renderNotesFacture() {
   // devis (client_id) plus tôt ce soir.
   const monId = sb.user?.id;
   zone.innerHTML =
-    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-top:14px">' +
+    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA;margin-top:14px">' +
       '<div style="font-size:12px;font-weight:700;margin-bottom:10px">💬 Notes' + (notes.length ? ' (' + notes.length + ')' : '') + '</div>' +
       '<div style="max-height:240px;overflow-y:auto;margin-bottom:10px">' +
         (!notes.length
-          ? '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucune note pour l\'instant</div>'
+          ? '<div style="text-align:center;padding:16px;color:#8E9C95;font-size:12px">Aucune note pour l\'instant</div>'
           : notes.map(function(n) {
               const estMoi = n.auteur_id === monId;
               const nomAffiche = estMoi ? 'Vous' : (n.auteur_nom || (n.auteur_role === 'comptable' ? 'Comptable' : 'Entreprise'));
               return '<div style="display:flex;justify-content:' + (estMoi ? 'flex-end' : 'flex-start') + ';margin-bottom:8px">' +
-                '<div style="max-width:80%;background:' + (estMoi ? '#1F6F72' : '#F1EEE8') + ';color:' + (estMoi ? '#fff' : '#2A2420') + ';padding:8px 12px;border-radius:12px;font-size:12px">' +
+                '<div style="max-width:80%;background:' + (estMoi ? '#1B5E4B' : '#F5F6F1') + ';color:' + (estMoi ? '#fff' : '#14241F') + ';padding:8px 12px;border-radius:12px;font-size:12px">' +
                   '<div style="font-size:9px;opacity:0.7;margin-bottom:2px">' + escapeHTML(nomAffiche) + '</div>' +
                   escapeHTML(n.contenu||'') +
                 '</div></div>';
@@ -56,7 +56,7 @@ function renderNotesFacture() {
       '</div>' +
       '<div style="display:flex;gap:8px">' +
         '<input id="nouvelle-note-facture" class="f-inp" placeholder="Écrire une note..." style="flex:1;font-size:12px" onkeypress="if(event.key===\'Enter\')envoyerNoteFacture()">' +
-        '<button onclick="envoyerNoteFacture()" style="padding:0 14px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit">➤</button>' +
+        '<button onclick="envoyerNoteFacture()" style="padding:0 14px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit">➤</button>' +
       '</div>' +
     '</div>';
 }

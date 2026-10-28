@@ -55,7 +55,7 @@ async function lireFactureParOCR(imageDataUrl) {
     // n'est appliqué silencieusement) — seulement si le champ est vide.
     if (suggestions.fournisseur && el('achat-fournisseur') && !el('achat-fournisseur').value) {
       el('achat-fournisseur').value = suggestions.fournisseur;
-      el('achat-fournisseur').style.background = '#FBF0DA';
+      el('achat-fournisseur').style.background = '#E7F2EC';
     }
     if (suggestions.date && el('achat-date') && !el('achat-date').value) {
       el('achat-date').value = suggestions.date;
@@ -140,7 +140,7 @@ async function lireFacturePDF(pdfDataUrl) {
     }
     if (suggestions.fournisseur && el('achat-fournisseur') && !el('achat-fournisseur').value) {
       el('achat-fournisseur').value = suggestions.fournisseur;
-      el('achat-fournisseur').style.background = '#FBF0DA';
+      el('achat-fournisseur').style.background = '#E7F2EC';
     }
     if (suggestions.date && el('achat-date') && !el('achat-date').value) {
       el('achat-date').value = suggestions.date;

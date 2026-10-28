@@ -49,16 +49,16 @@ function _rafraichirBarreSelection() {
   if (!barre) {
     barre = document.createElement('div');
     barre.id = 'selection-action-bar';
-    barre.style.cssText = 'position:fixed;left:0;right:0;bottom:0;background:#241F1B;padding:12px 16px;display:flex;gap:8px;align-items:center;z-index:9998;box-shadow:0 -4px 20px rgba(0,0,0,0.2)';
+    barre.style.cssText = 'position:fixed;left:0;right:0;bottom:0;background:#0F1F1A;padding:12px 16px;display:flex;gap:8px;align-items:center;z-index:9998;box-shadow:0 -4px 20px rgba(0,0,0,0.2)';
     document.body.appendChild(barre);
   }
   const n = STATE.selectionIds.length;
   barre.innerHTML =
     '<span style="color:#fff;font-size:12px;font-weight:600;flex-shrink:0">' + n + ' sélectionné(s)</span>' +
     '<button onclick="supprimerSelection()" style="flex:1;padding:9px;background:#B23A2E;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" ' + (n?'':'disabled') + '>🗑️ Supprimer</button>' +
-    '<button onclick="partagerSelection()" style="flex:1;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" ' + (n?'':'disabled') + '>📤 Partager</button>' +
+    '<button onclick="partagerSelection()" style="flex:1;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" ' + (n?'':'disabled') + '>📤 Partager</button>' +
     '<button onclick="envoyerSelectionGroupee()" style="flex:1;padding:9px;background:#6E8F4E;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" ' + (n?'':'disabled') + '>✉️ Envoyer</button>' +
-    '<button onclick="toggleSelectionMode(\'' + STATE.selectionMode + '\')" style="padding:9px 12px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>';
+    '<button onclick="toggleSelectionMode(\'' + STATE.selectionMode + '\')" style="padding:9px 12px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>';
 }
 
 async function supprimerSelection() {

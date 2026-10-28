@@ -85,20 +85,20 @@ function renderAbonnements() {
     return;
   }
   const freqLabels = { mensuel: 'Mensuel', trimestriel: 'Trimestriel', annuel: 'Annuel' };
-  const statutColors = { actif: '#6E8F4E', suspendu: '#B8860B', annule: '#9C9186' };
+  const statutColors = { actif: '#6E8F4E', suspendu: '#B8860B', annule: '#8E9C95' };
   const statutLabels = { actif: '● Actif', suspendu: '⏸ Suspendu', annule: '✕ Annulé' };
   list.innerHTML = abs.map(function(a) {
     const lignes = typeof a.lignes === 'string' ? JSON.parse(a.lignes || '[]') : (a.lignes || []);
     const total = lignes.reduce(function(s, l) { return s + (Number(l.qte)||0) * (Number(l.pu)||0); }, 0) * 1.2;
     return '<div class="card" onclick="openDetailAbonnement(' + a.id + ')">' +
-      '<div class="card-ico" style="background:#FBF0DA">🔁</div>' +
+      '<div class="card-ico" style="background:#E7F2EC">🔁</div>' +
       '<div class="card-body">' +
         '<div class="card-name">' + escapeHTML(a.client) + '</div>' +
         '<div class="card-ref">' + (freqLabels[a.frequence]||a.frequence) + ' · Prochaine: ' + formatDate(a.prochaine_date) + '</div>' +
       '</div>' +
       '<div class="card-end">' +
         '<div class="card-amt">' + fmt(total) + ' ' + (a.devise||'MAD') + '</div>' +
-        '<div style="font-size:10px;font-weight:600;color:' + (statutColors[a.statut]||'#6B5F54') + '">' + (statutLabels[a.statut]||a.statut) + '</div>' +
+        '<div style="font-size:10px;font-weight:600;color:' + (statutColors[a.statut]||'#5B6B64') + '">' + (statutLabels[a.statut]||a.statut) + '</div>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -224,7 +224,7 @@ function renderDetailAbonnement() {
       const joursRestants = Math.ceil((new Date(a.date_fin) - new Date()) / (1000*60*60*24));
       const urgent = joursRestants <= 30;
       dabEcheance.style.display = 'block';
-      dabEcheance.innerHTML = '<div style="background:' + (urgent ? '#F7EFDC' : '#F1EEE8') + ';border-radius:10px;padding:10px 14px;margin:0 20px 14px;font-size:12px;color:' + (urgent ? '#B8860B' : '#6B5F54') + ';font-weight:' + (urgent ? '700' : '400') + '">📅 Contrat jusqu\'au ' + formatDate(a.date_fin) + (urgent ? ' — ' + (joursRestants <= 0 ? 'terminé' : joursRestants + ' jour(s) restant(s)') : '') + '</div>';
+      dabEcheance.innerHTML = '<div style="background:' + (urgent ? '#F7EFDC' : '#F5F6F1') + ';border-radius:10px;padding:10px 14px;margin:0 20px 14px;font-size:12px;color:' + (urgent ? '#B8860B' : '#5B6B64') + ';font-weight:' + (urgent ? '700' : '400') + '">📅 Contrat jusqu\'au ' + formatDate(a.date_fin) + (urgent ? ' — ' + (joursRestants <= 0 ? 'terminé' : joursRestants + ' jour(s) restant(s)') : '') + '</div>';
     } else {
       dabEcheance.style.display = 'none';
     }
@@ -232,21 +232,21 @@ function renderDetailAbonnement() {
 
   const lignesEl = el('dab-lignes');
   if (lignesEl) lignesEl.innerHTML = lignes.map(function(l) {
-    return '<div class="d-ligne"><div><div style="font-size:13px;font-weight:500">' + l.desc + '</div><div style="font-size:11px;color:#9C9186">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div><div style="font-size:13px;font-weight:600">' + fmt(l.qte*l.pu) + ' MAD</div></div>';
+    return '<div class="d-ligne"><div><div style="font-size:13px;font-weight:500">' + l.desc + '</div><div style="font-size:11px;color:#8E9C95">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div><div style="font-size:13px;font-weight:600">' + fmt(l.qte*l.pu) + ' MAD</div></div>';
   }).join('');
 
   const actEl = el('dab-actions');
   if (!actEl) return;
   const actions = [];
   const statutLabels = { actif: '● Actif', suspendu: '⏸ Suspendu', annule: '✕ Annulé' };
-  const statutColors = { actif: '#6E8F4E', suspendu: '#B8860B', annule: '#9C9186' };
+  const statutColors = { actif: '#6E8F4E', suspendu: '#B8860B', annule: '#8E9C95' };
   actions.push('<div style="background:' + statutColors[a.statut] + '20;border-left:3px solid ' + statutColors[a.statut] + ';border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:' + statutColors[a.statut] + ';margin-bottom:4px">' + (statutLabels[a.statut]||a.statut) + '</div>');
 
   if (a.statut === 'actif') {
-    actions.push('<button class="action-item" onclick="genererFactureImmediate(' + a.id + ')"><div class="action-ico" style="background:#E9F4F3">⚡</div>Générer une facture maintenant</button>');
+    actions.push('<button class="action-item" onclick="genererFactureImmediate(' + a.id + ')"><div class="action-ico" style="background:#E7F2EC">⚡</div>Générer une facture maintenant</button>');
     // NOUVEAU (suivi de contrats) : seulement si une date de fin existe.
     if (a.date_fin) {
-      actions.push('<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="renouvelerContrat(' + a.id + ')"><div class="action-ico" style="background:#E9F4F3">🔄</div>Renouveler le contrat</button>');
+      actions.push('<button class="action-item" style="color:#1B5E4B;border-left-color:#1B5E4B" onclick="renouvelerContrat(' + a.id + ')"><div class="action-ico" style="background:#E7F2EC">🔄</div>Renouveler le contrat</button>');
     }
     actions.push('<button class="action-item" style="color:#B8860B;border-left-color:#B8860B" onclick="changerStatutAbonnement(' + a.id + ',\'suspendu\')"><div class="action-ico" style="background:#F7EFDC">⏸</div>Suspendre</button>');
   } else if (a.statut === 'suspendu') {

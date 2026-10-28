@@ -34,9 +34,9 @@ function renderMesInvitationsEquipe() {
   const invitations = STATE.mesInvitationsEquipe || [];
   if (!invitations.length) { zone.innerHTML = ''; return; }
   zone.innerHTML = invitations.map(function(inv) {
-    return '<div style="background:#FBF0DA;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E8D9AE">' +
-      '<div style="font-size:12px;font-weight:700;color:#A67A16;margin-bottom:8px">🤝 Invitation en attente — rôle : ' + escapeHTML(inv.role||'') + '</div>' +
-      '<button onclick="accepterMonInvitationEquipe(' + inv.id + ')" style="width:100%;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter et rejoindre l\'équipe</button>' +
+    return '<div style="background:#E7F2EC;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E8D9AE">' +
+      '<div style="font-size:12px;font-weight:700;color:#134436;margin-bottom:8px">🤝 Invitation en attente — rôle : ' + escapeHTML(inv.role||'') + '</div>' +
+      '<button onclick="accepterMonInvitationEquipe(' + inv.id + ')" style="width:100%;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter et rejoindre l\'équipe</button>' +
     '</div>';
   }).join('');
 }
@@ -75,11 +75,11 @@ function renderEquipe() {
   const labelsStatut = { invite: '⏳ Invité', actif: '✅ Actif', revoque: '🚫 Révoqué' };
 
   container.innerHTML = !membres.length
-    ? '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Aucun membre invité pour le moment</div>'
+    ? '<div style="text-align:center;padding:20px;color:#8E9C95;font-size:12px">Aucun membre invité pour le moment</div>'
     : membres.map(function(m) {
-        return '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid #E3DCCF;display:flex;justify-content:space-between;align-items:center">' +
+        return '<div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid #DDE3DA;display:flex;justify-content:space-between;align-items:center">' +
           '<div><div style="font-size:12px;font-weight:700">' + escapeHTML(m.email) + '</div>' +
-          '<div style="font-size:10px;color:#9C9186">' + (labelsRole[m.role]||m.role) + ' · ' + (labelsStatut[m.statut]||m.statut) + '</div></div>' +
+          '<div style="font-size:10px;color:#8E9C95">' + (labelsRole[m.role]||m.role) + ' · ' + (labelsStatut[m.statut]||m.statut) + '</div></div>' +
           '<button onclick="revoquerMembreEquipe(' + m.id + ')" style="background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit">Retirer</button>' +
         '</div>';
       }).join('');

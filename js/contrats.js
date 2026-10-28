@@ -242,15 +242,15 @@ function genererDocumentContrat() {
   const aujourdhui = formatDate(today());
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-    body{font-family:Georgia,serif;color:#241F1B;line-height:1.6;padding:40px;max-width:800px;margin:0 auto}
+    body{font-family:Georgia,serif;color:#0F1F1A;line-height:1.6;padding:40px;max-width:800px;margin:0 auto}
     h1{font-size:20px;text-align:center;margin-bottom:24px}
-    h2{font-size:15px;color:#1F6F72;margin-top:20px}
+    h2{font-size:15px;color:#1B5E4B;margin-top:20px}
     .parties{display:flex;gap:20px;margin:20px 0;font-size:13px}
-    .partie{flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:12px}
-    .alerte{background:#FBF0DA;border-left:3px solid #C9971F;padding:10px 14px;font-size:12px;margin-bottom:24px}
+    .partie{flex:1;border:1px solid #DDE3DA;border-radius:8px;padding:12px}
+    .alerte{background:#E7F2EC;border-left:3px solid #1B5E4B;padding:10px 14px;font-size:12px;margin-bottom:24px}
     .signatures{display:flex;justify-content:space-between;margin-top:60px}
     .signature{width:45%;text-align:center;font-size:12px}
-    .ligne-sign{border-top:1px solid #241F1B;margin-top:50px;padding-top:6px}
+    .ligne-sign{border-top:1px solid #0F1F1A;margin-top:50px;padding-top:6px}
     p{font-size:13px}
   </style></head><body>
     <div class="alerte">${el('nc-alerte')?.textContent || ''}</div>

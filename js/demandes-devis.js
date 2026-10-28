@@ -9,7 +9,7 @@ STATE.demandesDevis = STATE.demandesDevis || [];
 
 async function loadDemandesDevis() {
   const zone = el('demandes-devis-liste');
-  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
+  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#8E9C95">⏳ Chargement...</div>';
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_demandes_devis_recues', {
       method: 'POST',
@@ -39,27 +39,27 @@ function renderDemandesDevis() {
 
   const resume = el('demandes-devis-resume');
   if (resume) resume.innerHTML = nouvelles
-    ? '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#A67A16">📥 ' + nouvelles + ' nouvelle(s) demande(s) de devis</span></div>'
+    ? '<div style="background:#E7F2EC;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#134436">📥 ' + nouvelles + ' nouvelle(s) demande(s) de devis</span></div>'
     : '';
 
   zone.innerHTML = !liste.length
     ? '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucune demande de devis') + '</div>' + (q ? '' : '<div>Les demandes envoyées par vos clients apparaîtront ici</div>') + '</div>'
     : liste.map(function(d) {
         const statutLabel = { nouvelle: '🆕 Nouvelle', traitee: '✅ Traitée', ignoree: '✕ Ignorée' };
-        const statutColor = { nouvelle: '#B8860B', traitee: '#6E8F4E', ignoree: '#9C9186' };
-        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +
+        const statutColor = { nouvelle: '#B8860B', traitee: '#6E8F4E', ignoree: '#8E9C95' };
+        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #DDE3DA">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
             '<div><div style="font-size:13px;font-weight:700">' + escapeHTML(d.client_nom || 'Client') + '</div>' +
-            '<div style="font-size:11px;color:#9C9186">' + formatDateTime(d.created_at) + '</div></div>' +
-            '<span style="font-size:10px;font-weight:700;color:' + (statutColor[d.statut]||'#9C9186') + '">' + (statutLabel[d.statut]||d.statut) + '</span>' +
+            '<div style="font-size:11px;color:#8E9C95">' + formatDateTime(d.created_at) + '</div></div>' +
+            '<span style="font-size:10px;font-weight:700;color:' + (statutColor[d.statut]||'#8E9C95') + '">' + (statutLabel[d.statut]||d.statut) + '</span>' +
           '</div>' +
-          '<div style="font-size:12px;color:#2A2420;margin-bottom:10px;white-space:pre-wrap">' + escapeHTML(d.description || '') + '</div>' +
-          (d.client_tel ? '<div style="font-size:11px;color:#6B5F54;margin-bottom:2px">📞 ' + escapeHTML(d.client_tel) + '</div>' : '') +
-          (d.client_email ? '<div style="font-size:11px;color:#6B5F54;margin-bottom:10px">✉️ ' + escapeHTML(d.client_email) + '</div>' : '<div style="margin-bottom:10px"></div>') +
+          '<div style="font-size:12px;color:#14241F;margin-bottom:10px;white-space:pre-wrap">' + escapeHTML(d.description || '') + '</div>' +
+          (d.client_tel ? '<div style="font-size:11px;color:#5B6B64;margin-bottom:2px">📞 ' + escapeHTML(d.client_tel) + '</div>' : '') +
+          (d.client_email ? '<div style="font-size:11px;color:#5B6B64;margin-bottom:10px">✉️ ' + escapeHTML(d.client_email) + '</div>' : '<div style="margin-bottom:10px"></div>') +
           (d.statut === 'nouvelle'
             ? '<div style="display:flex;gap:6px">' +
-                '<button onclick="convertirDemandeEnDevis(' + d.id + ')" style="flex:1;padding:9px;background:#C9971F;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Créer le devis</button>' +
-                '<button onclick="marquerDemandeDevisIgnoree(' + d.id + ')" style="padding:9px 12px;background:#F1EEE8;color:#9C9186;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>' +
+                '<button onclick="convertirDemandeEnDevis(' + d.id + ')" style="flex:1;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Créer le devis</button>' +
+                '<button onclick="marquerDemandeDevisIgnoree(' + d.id + ')" style="padding:9px 12px;background:#F5F6F1;color:#8E9C95;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>' +
               '</div>'
             : '') +
         '</div>';

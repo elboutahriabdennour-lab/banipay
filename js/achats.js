@@ -70,12 +70,12 @@ function renderAchats() {
       (typeof checkboxSelection === 'function' ? checkboxSelection('achats', a.id) : '') +
       '<div class="card-ico" style="background:#F5E4E1;font-size:20px">' + (catIcons[a.categorie] || '📄') + '</div>' +
       '<div class="card-body">' +
-        '<div class="card-name">' + escapeHTML(a.fournisseur || '—') + (a.fournisseur_banipay ? ' <span style="font-size:9px;background:#E9F4F3;color:#1F6F72;padding:1px 5px;border-radius:4px;font-weight:600">BP</span>' : (a.origine === 'auto_acceptation' ? ' <span style="font-size:9px;background:#EEF3E4;color:#55702E;padding:1px 5px;border-radius:4px;font-weight:600">AUTO</span>' : '')) + '</div>' +
+        '<div class="card-name">' + escapeHTML(a.fournisseur || '—') + (a.fournisseur_banipay ? ' <span style="font-size:9px;background:#E7F2EC;color:#1B5E4B;padding:1px 5px;border-radius:4px;font-weight:600">BP</span>' : (a.origine === 'auto_acceptation' ? ' <span style="font-size:9px;background:#EEF3E4;color:#55702E;padding:1px 5px;border-radius:4px;font-weight:600">AUTO</span>' : '')) + '</div>' +
         '<div class="card-ref">' + escapeHTML(a.ref_fournisseur || '') + ' · ' + (a.date_achat || '') + '</div>' +
       '</div>' +
       '<div class="card-end">' +
         '<div class="card-amount" style="color:#B23A2E">' + fmt(a.ttc || 0) + '</div>' +
-        '<div style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#6B5F54') + ';font-weight:600;margin-top:4px">' + (statutLabel[a.statut] || a.statut || '') + '</div>' +
+        '<div style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + (statutBg[a.statut] || '#EAE4DA') + ';color:' + (statutColor[a.statut] || '#5B6B64') + ';font-weight:600;margin-top:4px">' + (statutLabel[a.statut] || a.statut || '') + '</div>' +
         (function() {
           // AJOUT (demande utilisateur) : même bouton de rapprochement
           // que côté comptable, pour que l'entreprise puisse rapprocher
@@ -87,8 +87,8 @@ function renderAchats() {
           const aDesLiens = (a.transactions_bancaires_liees||[]).length > 0;
           const estTotal = a.statut === 'payee';
           const libelle = estTotal ? 'Rapprochée' : (aDesLiens ? 'Partiel' : 'Rapprocher');
-          const couleurFond = estTotal ? '#1F6F72' : (aDesLiens ? '#FBF0DA' : '#E9F4F3');
-          const couleurTexte = estTotal ? '#fff' : (aDesLiens ? '#96751B' : '#1F6F72');
+          const couleurFond = estTotal ? '#1B5E4B' : (aDesLiens ? '#E7F2EC' : '#E7F2EC');
+          const couleurTexte = estTotal ? '#fff' : (aDesLiens ? '#96751B' : '#1B5E4B');
           return '<button onclick="event.stopPropagation();ouvrirRapprochementDepuisFacture(' + a.id + ',\'achat\')" title="Rapprocher avec une transaction bancaire" style="font-size:9px;color:' + couleurTexte + ';background:' + couleurFond + ';border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-top:3px;font-family:inherit;font-weight:600">🏦 ' + libelle + '</button>';
         })() +
       '</div>' +
@@ -423,8 +423,8 @@ function previewAchatPJ(event) {
     const isImage = file.type.startsWith('image/');
     const boutonRetirer = '<button type="button" onclick="retirerPhotoAchat()" style="margin-top:6px;width:100%;padding:8px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer cette pièce jointe</button>';
     preview.innerHTML = (isImage
-      ? '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #E3DCCF">'
-      : '<div style="background:#F1EEE8;border-radius:10px;padding:10px;font-size:12px;color:#6B5F54;border:1px solid #E3DCCF">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>')
+      ? '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #DDE3DA">'
+      : '<div style="background:#F5F6F1;border-radius:10px;padding:10px;font-size:12px;color:#5B6B64;border:1px solid #DDE3DA">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>')
       + boutonRetirer;
     STATE._achatPJData = e.target.result;
     STATE._achatPJNom = file.name;
@@ -523,7 +523,7 @@ async function voirFactureOrigineAchat(factureId) {
     const emetteur = await _fetchProfilPublic(f.user_id);
     const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
     genDocPDF({
-      type: 'FACTURE', ref: f.ref, color: emetteur.couleur_accent || '#C9971F',
+      type: 'FACTURE', ref: f.ref, color: emetteur.couleur_accent || '#1B5E4B',
       emetteur: emetteur,
       destinataire: { nom: f.client, chantier: f.chantier },
       date: f.date_emission, echeance: f.echeance,
@@ -548,7 +548,7 @@ function ouvrirDetailAchat(id) {
 
   const overlay = document.createElement('div');
   overlay.id = 'achat-detail-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F1EEE8;overflow-y:auto;font-family:inherit';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F5F6F1;overflow-y:auto;font-family:inherit';
 
   overlay.innerHTML =
     '<div style="background:linear-gradient(135deg,#B23A2E,#8E2E24);padding:14px 20px;display:flex;align-items:center;gap:12px">' +
@@ -558,29 +558,29 @@ function ouvrirDetailAchat(id) {
       (a.fournisseur_banipay ? '<span style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:600">Tafir</span>' : '') +
     '</div>' +
 
-    '<div style="margin:16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">' +
+    '<div style="margin:16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #DDE3DA">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:12px">' +
-        '<div><div style="font-size:11px;color:#9C9186">Date</div><div style="font-size:13px;font-weight:600">' + (a.date_achat || '—') + '</div></div>' +
-        '<div style="text-align:right"><div style="font-size:11px;color:#9C9186">Total TTC</div><div style="font-size:18px;font-weight:800;color:#B23A2E">' + fmt(a.ttc || 0) + ' MAD</div></div>' +
+        '<div><div style="font-size:11px;color:#8E9C95">Date</div><div style="font-size:13px;font-weight:600">' + (a.date_achat || '—') + '</div></div>' +
+        '<div style="text-align:right"><div style="font-size:11px;color:#8E9C95">Total TTC</div><div style="font-size:18px;font-weight:800;color:#B23A2E">' + fmt(a.ttc || 0) + ' MAD</div></div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">' +
-        '<div style="background:#F1EEE8;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#9C9186">HT</div><div style="font-size:12px;font-weight:700">' + fmt(a.ht || 0) + '</div></div>' +
+        '<div style="background:#F5F6F1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#8E9C95">HT</div><div style="font-size:12px;font-weight:700">' + fmt(a.ht || 0) + '</div></div>' +
         '<div style="background:#EDE6F0;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:#7C5CA6">TVA ' + (a.tva_taux || 20) + '%</div><div style="font-size:12px;font-weight:700;color:#7C5CA6">' + fmt(a.tva || 0) + '</div></div>' +
         '<div style="background:' + (a.statut === 'payee' ? '#EEF3E4' : '#F7EFDC') + ';border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:' + (a.statut === 'payee' ? '#55702E' : '#B8860B') + '">' + (a.statut === 'payee' ? 'Payée' : 'En attente') + '</div></div>' +
       '</div>' +
-      '<div style="font-size:12px;color:#6B5F54">Catégorie: ' + (catLabels[a.categorie] || a.categorie || '—') + '</div>' +
-      (a.note ? '<div style="margin-top:8px;font-size:12px;color:#6B5F54;background:#F1EEE8;padding:8px;border-radius:8px">📝 ' + escapeHTML(a.note) + '</div>' : '') +
+      '<div style="font-size:12px;color:#5B6B64">Catégorie: ' + (catLabels[a.categorie] || a.categorie || '—') + '</div>' +
+      (a.note ? '<div style="margin-top:8px;font-size:12px;color:#5B6B64;background:#F5F6F1;padding:8px;border-radius:8px">📝 ' + escapeHTML(a.note) + '</div>' : '') +
     '</div>' +
 
     ((function() {
       const lignes = typeof a.lignes === 'string' ? JSON.parse(a.lignes || '[]') : (a.lignes || []);
       if (!lignes.length) return '';
-      return '<div style="margin:0 16px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">' +
-        '<div style="font-size:12px;font-weight:700;color:#2A2420;margin-bottom:10px">Détail des articles/prestations</div>' +
+      return '<div style="margin:0 16px 16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #DDE3DA">' +
+        '<div style="font-size:12px;font-weight:700;color:#14241F;margin-bottom:10px">Détail des articles/prestations</div>' +
         lignes.map(function(l) {
-          return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1EEE8">' +
+          return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F5F6F1">' +
             '<div><div style="font-size:12px;font-weight:600">' + escapeHTML(l.desc||'') + (l.produit_id ? ' <span style="color:#55702E;font-size:10px">📦 stock</span>' : '') + '</div>' +
-            '<div style="font-size:11px;color:#9C9186">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div>' +
+            '<div style="font-size:11px;color:#8E9C95">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div>' +
             '<div style="font-size:12px;font-weight:700">' + fmt((Number(l.qte)||0)*(Number(l.pu)||0)) + ' MAD</div>' +
           '</div>';
         }).join('') +
@@ -589,49 +589,49 @@ function ouvrirDetailAchat(id) {
 
     (a.facture_source_id ?
       '<div style="margin:0 16px 16px">' +
-        '<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;margin-bottom:6px">🔗 Documents liés</div>' +
-        '<div onclick="voirFactureOrigineAchat(\'' + a.facture_source_id + '\')" style="cursor:pointer;background:#fff;border:1px solid #E3DCCF;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">' +
+        '<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;margin-bottom:6px">🔗 Documents liés</div>' +
+        '<div onclick="voirFactureOrigineAchat(\'' + a.facture_source_id + '\')" style="cursor:pointer;background:#fff;border:1px solid #DDE3DA;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px">' +
           '<span style="font-size:18px">🧾</span>' +
-          '<div style="flex:1"><div style="font-size:11px;color:#9C9186">Facture d\'origine</div><div style="font-size:13px;font-weight:600">Voir le document</div></div>' +
-          '<span style="color:#9C9186">→</span>' +
+          '<div style="flex:1"><div style="font-size:11px;color:#8E9C95">Facture d\'origine</div><div style="font-size:13px;font-weight:600">Voir le document</div></div>' +
+          '<span style="color:#8E9C95">→</span>' +
         '</div>' +
       '</div>' : '') +
 
     (a.fournisseur_banipay && a.fournisseur_id ?
-      '<div style="margin:0 16px 16px;background:#E9F4F3;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
-        '<div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:8px">🔗 Fournisseur sur Tafir</div>' +
+      '<div style="margin:0 16px 16px;background:#E7F2EC;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
+        '<div style="font-size:12px;font-weight:700;color:#1B5E4B;margin-bottom:8px">🔗 Fournisseur sur Tafir</div>' +
         '<div style="font-size:13px;font-weight:600">' + escapeHTML(a.fournisseur || '') + '</div>' +
-        '<div style="font-size:11px;color:#6B5F54;margin-top:4px">Appuyez pour voir la fiche</div>' +
+        '<div style="font-size:11px;color:#5B6B64;margin-top:4px">Appuyez pour voir la fiche</div>' +
       '</div>' : '') +
 
     (a.pj_data ?
       '<div style="margin:0 16px 16px">' +
-        '<div style="font-size:12px;font-weight:700;color:#2A2420;margin-bottom:8px">📎 Pièce jointe</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#14241F;margin-bottom:8px">📎 Pièce jointe</div>' +
         (a.pj_data.startsWith('data:image') ?
-          '<img src="' + a.pj_data + '" style="max-width:100%;border-radius:12px;border:1px solid #E3DCCF">' :
-          '<div style="background:#F1EEE8;padding:12px;border-radius:10px;font-size:12px;color:#6B5F54">📄 ' + (a.pj_nom || 'Fichier') + '</div>') +
+          '<img src="' + a.pj_data + '" style="max-width:100%;border-radius:12px;border:1px solid #DDE3DA">' :
+          '<div style="background:#F5F6F1;padding:12px;border-radius:10px;font-size:12px;color:#5B6B64">📄 ' + (a.pj_nom || 'Fichier') + '</div>') +
       '</div>' : '') +
 
     // NOUVEAU (retour utilisateur) : historique des transactions
     // bancaires déjà rapprochées avec cet achat, comme sur les factures.
     ((a.transactions_bancaires_liees || []).length ?
       '<div style="margin:0 16px 16px">' +
-        '<div style="font-size:12px;font-weight:700;color:#2A2420;margin-bottom:8px">🏦 Rapprochements bancaires (' + a.transactions_bancaires_liees.length + ')</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#14241F;margin-bottom:8px">🏦 Rapprochements bancaires (' + a.transactions_bancaires_liees.length + ')</div>' +
         a.transactions_bancaires_liees.map(function(ref) {
           const parts = String(ref).split('|');
           return '<div style="background:#F5E4E1;border-radius:10px;padding:8px 12px;margin-bottom:6px;font-size:12px">' +
-            '<div style="display:flex;justify-content:space-between"><span style="color:#6B5F54">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#8E2E24">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
-            (parts[2] ? '<div style="font-size:11px;color:#9C9186;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
+            '<div style="display:flex;justify-content:space-between"><span style="color:#5B6B64">' + escapeHTML(parts[0]||'') + '</span><span style="font-weight:700;color:#8E2E24">' + fmt(Math.abs(parseFloat(parts[1])||0)) + ' MAD</span></div>' +
+            (parts[2] ? '<div style="font-size:11px;color:#8E9C95;margin-top:2px">' + escapeHTML(parts[2]) + '</div>' : '') +
           '</div>';
         }).join('') +
       '</div>' : '') +
 
     '<div style="padding:0 16px 8px">' +
-      '<button onclick="typeof ouvrirRapprochementDepuisFacture===\'function\' && ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" style="width:100%;padding:11px;background:none;color:#1F6F72;border:1px dashed #1F6F72;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher avec un relevé bancaire</button>' +
+      '<button onclick="typeof ouvrirRapprochementDepuisFacture===\'function\' && ouvrirRapprochementDepuisFacture(\'' + a.id + '\',\'achat\')" style="width:100%;padding:11px;background:none;color:#1B5E4B;border:1px dashed #1B5E4B;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🏦 Rapprocher avec un relevé bancaire</button>' +
     '</div>' +
 
     '<div style="padding:0 16px 20px;display:flex;gap:8px">' +
-      '<button onclick="marquerAchatPaye(\'' + a.id + '\')" style="flex:1;padding:12px;background:' + (a.statut === 'payee' ? '#EAE4DA' : '#55702E') + ';color:' + (a.statut === 'payee' ? '#6B5F54' : '#fff') + ';border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">' + (a.statut === 'payee' ? '✓ Payée' : '✅ Marquer payée') + '</button>' +
+      '<button onclick="marquerAchatPaye(\'' + a.id + '\')" style="flex:1;padding:12px;background:' + (a.statut === 'payee' ? '#EAE4DA' : '#55702E') + ';color:' + (a.statut === 'payee' ? '#5B6B64' : '#fff') + ';border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">' + (a.statut === 'payee' ? '✓ Payée' : '✅ Marquer payée') + '</button>' +
       '<button onclick="supprimerAchat(\'' + a.id + '\')" style="padding:12px 16px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">🗑️</button>' +
     '</div>';
 
@@ -647,28 +647,28 @@ async function voirFicheFournisseur(fournisseurId) {
     overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;overflow-y:auto;font-family:inherit';
 
     overlay.innerHTML =
-      '<div style="background:#2A2420;padding:14px 20px;display:flex;align-items:center;gap:12px">' +
+      '<div style="background:#14241F;padding:14px 20px;display:flex;align-items:center;gap:12px">' +
         '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
         '<div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(p.raison || '') + '</div>' +
-        '<span style="margin-left:auto;background:#1F6F72;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">Tafir</span>' +
+        '<span style="margin-left:auto;background:#1B5E4B;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">Tafir</span>' +
       '</div>' +
 
       '<div style="padding:16px">' +
         (p.logo ? '<div style="text-align:center;margin-bottom:16px"><img src="' + p.logo + '" style="max-width:120px;max-height:60px;object-fit:contain"></div>' : '') +
 
-        '<div style="background:#F1EEE8;border-radius:16px;padding:16px;margin-bottom:12px">' +
+        '<div style="background:#F5F6F1;border-radius:16px;padding:16px;margin-bottom:12px">' +
           [['🏢 Raison sociale', p.raison], ['⚙️ Secteur', p.secteur], ['📍 Adresse', p.adresse ? p.adresse + (p.ville ? ', ' + p.ville : '') : null],
            ['📞 Tél', p.tel], ['✉️ Email', p.email], ['🔢 ICE', p.ice], ['📋 RC', p.rc], ['💼 IF', p.identifiant_fiscal]]
           .filter(function(x) { return x[1]; })
           .map(function(x) {
-            return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #E3DCCF;font-size:12px">' +
-              '<span style="color:#6B5F54">' + x[0] + '</span>' +
+            return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #DDE3DA;font-size:12px">' +
+              '<span style="color:#5B6B64">' + x[0] + '</span>' +
               '<span style="font-weight:600;text-align:right;max-width:60%">' + escapeHTML(String(x[1])) + '</span>' +
             '</div>';
           }).join('') +
         '</div>' +
 
-        '<button onclick="window.open(\'' + window.location.origin + window.location.pathname + '?profil=' + (p.id_unique || '') + '\',\'_blank\')" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Voir profil public</button>' +
+        '<button onclick="window.open(\'' + window.location.origin + window.location.pathname + '?profil=' + (p.id_unique || '') + '\',\'_blank\')" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Voir profil public</button>' +
       '</div>';
 
     document.body.appendChild(overlay);

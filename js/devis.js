@@ -26,7 +26,7 @@ function renderDevisList() {
     return;
   }
   const icons = { envoye:'📤', accepte:'✅', refuse:'❌', converti:'🧾', expire:'⏰' };
-  const bgs   = { envoye:'#F7EFDC', accepte:'#EEF3E4', refuse:'#F5E4E1', converti:'#E9F4F3', expire:'#EAE4DA' };
+  const bgs   = { envoye:'#F7EFDC', accepte:'#EEF3E4', refuse:'#F5E4E1', converti:'#E7F2EC', expire:'#EAE4DA' };
   list.innerHTML = data.map(d => {
     const enSelection = typeof estEnSelection === 'function' && estEnSelection('devis');
     return `
@@ -215,7 +215,7 @@ function renderDetailDevis() {
   const lignesDevis = typeof d.lignes === 'string' ? JSON.parse(d.lignes || '[]') : (d.lignes || []);
   if (lignesEl) lignesEl.innerHTML = lignesDevis.map(l=>`
     <div class="d-ligne">
-      <div><div style="font-size:13px;font-weight:500">${l.desc}</div><div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div></div>
+      <div><div style="font-size:13px;font-weight:500">${l.desc}</div><div style="font-size:11px;color:#8E9C95">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div></div>
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
     </div>`).join('');
   const totEl = el('dv-totals');
@@ -227,9 +227,9 @@ function renderDetailDevis() {
   if (!actEl) return;
   const actions = [];
 
-  const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#9C9186', en_attente:'#B8860B' };
+  const statutColors = { envoye:'#B8860B', accepte:'#6E8F4E', refuse:'#8E2E24', expire:'#8E9C95', en_attente:'#B8860B' };
   const statutLabels = { envoye:'📤 Envoyé', accepte:'✅ Accepté', refuse:'❌ Refusé', expire:'⏰ Expiré', en_attente:'⏳ En attente (client)' };
-  actions.push(`<div style="background:${statutColors[d.statut]||'#6B5F54'}20;border-left:3px solid ${statutColors[d.statut]||'#6B5F54'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#6B5F54'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
+  actions.push(`<div style="background:${statutColors[d.statut]||'#5B6B64'}20;border-left:3px solid ${statutColors[d.statut]||'#5B6B64'};border-radius:0 8px 8px 0;padding:8px 12px;font-size:12px;font-weight:600;color:${statutColors[d.statut]||'#5B6B64'};margin-bottom:4px">${statutLabels[d.statut]||d.statut}</div>`);
 
   if (d.statut === 'envoye' || d.statut === 'en_attente') {
     actions.push(`<div style="display:flex;gap:8px;margin-bottom:4px">
@@ -238,14 +238,14 @@ function renderDetailDevis() {
     </div>`);
   }
 
-  actions.push(`<button class="action-item" style="color:#1F6F72;border-left-color:#1F6F72" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#FBF0DA">📨</div>Envoyer</button>`);
+  actions.push(`<button class="action-item" style="color:#1B5E4B;border-left-color:#1B5E4B" onclick="ouvrirModalEnvoi('devis',${d.id})"><div class="action-ico" style="background:#E7F2EC">📨</div>Envoyer</button>`);
 
   if (d.statut === 'envoye') {
     actions.push(`<button class="action-item success" onclick="changerStatutDevis(${d.id},'accepte')"><div class="action-ico" style="background:#EEF3E4">✅</div>Marquer accepté</button>`);
     actions.push(`<button class="action-item danger" onclick="changerStatutDevis(${d.id},'refuse')"><div class="action-ico" style="background:#F5E4E1">❌</div>Marquer refusé</button>`);
   }
   if (d.statut === 'accepte') {
-    actions.push(`<button class="action-item" style="color:#C9971F;border-left-color:#C9971F" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#E9F4F3">🧾</div>Convertir en facture</button>`);
+    actions.push(`<button class="action-item" style="color:#1B5E4B;border-left-color:#1B5E4B" onclick="convertirEnFacture(${d.id})"><div class="action-ico" style="background:#E7F2EC">🧾</div>Convertir en facture</button>`);
   }
 
   actions.push(`<button class="action-item" onclick="exportDevisPDF(${d.id})"><div class="action-ico" style="background:#F7EFDC">📄</div>Voir PDF</button>`);
@@ -446,7 +446,7 @@ function afficherFournisseursHistoriqueBC(filtreTexte) {
   if (!list) return;
   list.innerHTML = (filtres.length ? filtres.map(function(n) {
     return '<div class="card" onclick="choisirFournisseurBC(' + valeurPourOnclick(n) + ',null)"><div class="card-ico" style="background:#EDE6F0">🏢</div><div class="card-body"><div class="card-name">' + escapeHTML(n) + '</div><div class="card-ref">Déjà utilisé</div></div></div>';
-  }).join('') : '<div style="text-align:center;padding:16px;color:#9C9186;font-size:12px">Aucun fournisseur dans l\'historique</div>');
+  }).join('') : '<div style="text-align:center;padding:16px;color:#8E9C95;font-size:12px">Aucun fournisseur dans l\'historique</div>');
 }
 
 let _timeoutRechercheFournisseurBC = null;
@@ -464,9 +464,9 @@ function rechercherFournisseurBC() {
       const list = el('fournisseur-bc-picker-list');
       if (!list) return;
       if (resultats.length) {
-        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Tafir</div>' +
+        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:8px 4px 4px">Sur Tafir</div>' +
           resultats.map(function(p) {
-            return '<div class="card" onclick="choisirFournisseurBC(' + valeurPourOnclick(p.raison||'') + ',' + valeurPourOnclick(p.id) + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
+            return '<div class="card" onclick="choisirFournisseurBC(' + valeurPourOnclick(p.raison||'') + ',' + valeurPourOnclick(p.id) + ')"><div class="card-ico" style="background:#E7F2EC">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
           }).join('');
       }
     } catch(e) {}
@@ -711,15 +711,15 @@ function renderFacturesRecues() {
     return;
   }
   container.innerHTML = factures.map(function(f) {
-    return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #E3DCCF">' +
+    return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #DDE3DA">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
         '<span style="font-weight:700;font-size:13px">' + escapeHTML(f.ref || '') + '</span>' +
         '<span style="font-weight:700">' + fmt(f.ttc) + ' MAD</span>' +
       '</div>' +
-      '<div style="font-size:12px;color:#6B5F54;margin-bottom:8px">' + escapeHTML(f.date_emission || '') + '</div>' +
+      '<div style="font-size:12px;color:#5B6B64;margin-bottom:8px">' + escapeHTML(f.date_emission || '') + '</div>' +
       (f.achat_genere_id
         ? '<div style="font-size:11px;color:#6E8F4E;font-weight:600">✅ Déjà importée dans vos achats</div>'
-        : '<button onclick="convertirFactureEnAchat(\'' + f.id + '\')" style="width:100%;padding:9px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📥 Importer dans mes achats</button>') +
+        : '<button onclick="convertirFactureEnAchat(\'' + f.id + '\')" style="width:100%;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📥 Importer dans mes achats</button>') +
     '</div>';
   }).join('');
 }
@@ -802,15 +802,15 @@ function renderBCRecus() {
     : bcs.map(function(bc) {
         const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes||[])).reduce(function(s,l){return s+(l.qte||1)*(l.pu||0);},0);
         const dejaConverti = bc.facture_generee_id ? true : false;
-        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +
+        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #DDE3DA">' +
           '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
-            '<div><div style="font-size:13px;font-weight:700">' + (bc.ref||'') + '</div><div style="font-size:11px;color:#9C9186">' + (bc.date_commande||'') + ' · ' + (statutLabel[bc.statut]||bc.statut) + '</div></div>' +
+            '<div><div style="font-size:13px;font-weight:700">' + (bc.ref||'') + '</div><div style="font-size:11px;color:#8E9C95">' + (bc.date_commande||'') + ' · ' + (statutLabel[bc.statut]||bc.statut) + '</div></div>' +
             '<div style="font-size:13px;font-weight:800">' + fmt(ht*1.2) + ' MAD</div>' +
           '</div>' +
-          (bc.note ? '<div style="font-size:11px;color:#6B5F54;margin-top:6px;background:#F1EEE8;padding:6px 8px;border-radius:6px">' + escapeHTML(bc.note) + '</div>' : '') +
+          (bc.note ? '<div style="font-size:11px;color:#5B6B64;margin-top:6px;background:#F5F6F1;padding:6px 8px;border-radius:6px">' + escapeHTML(bc.note) + '</div>' : '') +
           (dejaConverti
             ? '<div style="margin-top:8px;font-size:11px;color:#6E8F4E;font-weight:600">✅ Déjà converti en facture</div>'
-            : '<button onclick="convertirBCEnFacture(' + bc.id + ')" style="width:100%;margin-top:8px;padding:9px;background:#C9971F;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Convertir en facture</button>') +
+            : '<button onclick="convertirBCEnFacture(' + bc.id + ')" style="width:100%;margin-top:8px;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Convertir en facture</button>') +
         '</div>';
       }).join('');
 }
@@ -887,7 +887,7 @@ function renderBonsCommandeListe() {
     return;
   }
   const statutLabel = { brouillon: 'Brouillon', envoye: 'Envoyé', confirme: '✅ Confirmé', refuse: '❌ Refusé' };
-  const statutColor = { brouillon: '#9C9186', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
+  const statutColor = { brouillon: '#8E9C95', envoye: '#B8860B', confirme: '#6E8F4E', refuse: '#B23A2E' };
   list.innerHTML = bcs.map(function(bc) {
     const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes || [])).reduce(function(s, l) { return s + (l.qte||1)*(l.pu||0); }, 0);
     const enSelection = typeof estEnSelection === 'function' && estEnSelection('bc');
@@ -895,7 +895,7 @@ function renderBonsCommandeListe() {
       (typeof checkboxSelection === 'function' ? checkboxSelection('bc', bc.id) : '') +
       '<div class="card-ico" style="background:#EDE6F0">📋</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div>' +
-        '<span style="font-size:9px;font-weight:600;color:' + (statutColor[bc.statut]||'#9C9186') + '">' + (statutLabel[bc.statut]||bc.statut) + '</span>' +
+        '<span style="font-size:9px;font-weight:600;color:' + (statutColor[bc.statut]||'#8E9C95') + '">' + (statutLabel[bc.statut]||bc.statut) + '</span>' +
       '</div>' +
       '<div class="card-end"><div class="card-amount">' + fmt(ht*1.2) + ' MAD</div>' +
         (!enSelection ? '<div style="display:flex;gap:4px;margin-top:6px">' +
@@ -1228,9 +1228,9 @@ function renderAvoirList() {
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:13px;font-weight:700;color:#8E2E24">↩️ ${escapeHTML(a.ref||'')}</div>
-          <div style="font-size:12px;color:#2A2420;margin-top:2px">${escapeHTML(a.client||'')}</div>
-          <div style="font-size:11px;color:#6B5F54;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
-          ${a.facture_origine_ref?`<div style="font-size:10px;color:#9C9186">Facture: ${a.facture_origine_ref}</div>`:''}
+          <div style="font-size:12px;color:#14241F;margin-top:2px">${escapeHTML(a.client||'')}</div>
+          <div style="font-size:11px;color:#5B6B64;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
+          ${a.facture_origine_ref?`<div style="font-size:10px;color:#8E9C95">Facture: ${a.facture_origine_ref}</div>`:''}
         </div>
         <div style="text-align:right">
           <div style="font-size:14px;font-weight:700;color:#8E2E24">-${fmt(a.ttc||0)} MAD</div>
@@ -1297,8 +1297,8 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
   document.body.innerHTML = `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
       <div style="font-size:48px;margin-bottom:16px">${iconAction}</div>
-      <h2 style="color:#2A2420;margin-bottom:8px">${libelleAction} ${isFacture ? 'de la facture' : 'du devis'}</h2>
-      <p style="color:#6B5F54;margin-bottom:24px">Chargement...</p>
+      <h2 style="color:#14241F;margin-bottom:8px">${libelleAction} ${isFacture ? 'de la facture' : 'du devis'}</h2>
+      <p style="color:#5B6B64;margin-bottom:24px">Chargement...</p>
     </div>
   `;
 
@@ -1318,13 +1318,13 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
       document.body.innerHTML = `
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
           <div style="font-size:64px;margin-bottom:16px">${statutActuel === valeurAcceptee ? '✅' : '❌'}</div>
-          <h2 style="color:#2A2420;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
+          <h2 style="color:#14241F;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
           <div style="background:${statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-            <div style="font-size:13px;color:#6B5F54">Référence : <strong>${escapeHTML(d.ref)}</strong></div>
-            <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${escapeHTML(d.client)}</strong></div>
+            <div style="font-size:13px;color:#5B6B64">Référence : <strong>${escapeHTML(d.ref)}</strong></div>
+            <div style="font-size:13px;color:#5B6B64;margin-top:4px">Client : <strong>${escapeHTML(d.client)}</strong></div>
           </div>
-          <p style="color:#6B5F54;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
-          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>
+          <p style="color:#5B6B64;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
+          <div style="margin-top:24px;font-size:11px;color:#8E9C95">Propulsé par <strong style="color:#1B5E4B">Tafir</strong></div>
         </div>
       `;
       return;
@@ -1343,8 +1343,8 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
         <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
           <div style="font-size:48px;margin-bottom:16px">⚠️</div>
           <h2 style="color:#B23A2E;margin-bottom:8px">Votre réponse n'a pas pu être enregistrée</h2>
-          <p style="color:#6B5F54;font-size:13px;margin-bottom:20px">Une erreur s'est produite. Merci de réessayer dans un instant, ou de contacter directement l'entreprise si le problème persiste.</p>
-          <button onclick="window.location.reload()" style="padding:12px 24px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Réessayer</button>
+          <p style="color:#5B6B64;font-size:13px;margin-bottom:20px">Une erreur s'est produite. Merci de réessayer dans un instant, ou de contacter directement l'entreprise si le problème persiste.</p>
+          <button onclick="window.location.reload()" style="padding:12px 24px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Réessayer</button>
         </div>
       `;
       return;
@@ -1373,16 +1373,16 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
     document.body.innerHTML = `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:40px auto;padding:24px;text-align:center">
         <div style="font-size:64px;margin-bottom:16px">${iconAction}</div>
-        <h2 style="color:#2A2420;margin-bottom:8px">${titreFinal}</h2>
+        <h2 style="color:#14241F;margin-bottom:8px">${titreFinal}</h2>
         <div style="background:${bg};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${escapeHTML(d.ref)}</strong></div>
-          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${escapeHTML(d.client)}</strong></div>
-          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
+          <div style="font-size:13px;color:#5B6B64">Référence : <strong>${escapeHTML(d.ref)}</strong></div>
+          <div style="font-size:13px;color:#5B6B64;margin-top:4px">Client : <strong>${escapeHTML(d.client)}</strong></div>
+          <div style="font-size:13px;color:#5B6B64;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
         </div>
-        <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>
+        <p style="color:#5B6B64;font-size:13px">${messageFinal}</p>
         ${(action === 'accepter' && !isFacture && sb.user?.id) ? '<button id="btn-convertir-bc-manuel" style="width:100%;padding:12px;background:#7C5CA6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px">📋 Convertir en bon de commande</button>' : ''}
-        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>
-        <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect">4</span>s...</div>
+        <div style="margin-top:24px;font-size:11px;color:#8E9C95">Propulsé par <strong style="color:#1B5E4B">Tafir</strong></div>
+        <div style="margin-top:16px;font-size:11px;color:#8E9C95">Redirection dans <span id="compte-redirect">4</span>s...</div>
       </div>
     `;
     const btnBCManuel = document.getElementById('btn-convertir-bc-manuel');

@@ -27,7 +27,7 @@ function renderPositionFinanciere() {
   const nbAchatsImpayes = achats.filter(function(a) { return a.statut !== 'payee'; }).length;
 
   container.innerHTML =
-    '<div style="background:linear-gradient(160deg,#241F1B,#154F52);border-radius:16px;padding:20px;margin-bottom:16px">' +
+    '<div style="background:linear-gradient(160deg,#0F1F1A,#134436);border-radius:16px;padding:20px;margin-bottom:16px">' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px">Solde net estimé</div>' +
       '<div style="font-size:30px;font-weight:800;color:' + (soldeNet >= 0 ? '#9CBB7A' : '#D98177') + '">' + fmt(soldeNet) + ' MAD</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px">À recevoir + valeur du stock − à payer</div>' +
@@ -47,14 +47,14 @@ function renderPositionFinanciere() {
     '</div>' +
 
     (suiviStock ?
-      '<div style="background:#FBF0DA;border-radius:12px;padding:14px;margin-bottom:16px">' +
-        '<div style="font-size:11px;font-weight:600;color:#A67A16">📦 Valeur du stock</div>' +
-        '<div style="font-size:18px;font-weight:800;color:#A67A16">' + fmt(valeurStock) + ' MAD</div>' +
+      '<div style="background:#E7F2EC;border-radius:12px;padding:14px;margin-bottom:16px">' +
+        '<div style="font-size:11px;font-weight:600;color:#134436">📦 Valeur du stock</div>' +
+        '<div style="font-size:18px;font-weight:800;color:#134436">' + fmt(valeurStock) + ' MAD</div>' +
       '</div>' : '') +
 
-    '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans Tafir — ne remplace pas un état de trésorerie comptable complet.</div>' +
-    '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>' +
-    '<button onclick="goScreen(\'rapprochement\',null)" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Rapprocher mes paiements</button>';
+    '<div style="font-size:11px;color:#8E9C95;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans Tafir — ne remplace pas un état de trésorerie comptable complet.</div>' +
+    '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#0F1F1A;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>' +
+    '<button onclick="goScreen(\'rapprochement\',null)" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Rapprocher mes paiements</button>';
 }
 
 // ============================================================
@@ -90,16 +90,16 @@ function renderRapprochement() {
       ['tous', 'a_faire', 'fait'].map(function(f) {
         const label = f === 'tous' ? 'Toutes' : f === 'a_faire' ? 'À faire' : 'Faites';
         const actif = filtre === f;
-        return '<button onclick="STATE._filtreRapprochement=\'' + f + '\';renderRapprochement()" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (actif ? '#1F6F72' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#6B5F54') + '">' + label + '</button>';
+        return '<button onclick="STATE._filtreRapprochement=\'' + f + '\';renderRapprochement()" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:' + (actif ? '#1B5E4B' : '#EAE4DA') + ';color:' + (actif ? '#fff' : '#5B6B64') + '">' + label + '</button>';
       }).join('') +
     '</div>' +
     filtrees.map(function(f) {
       const recu = Number(f.montant_recu || 0);
-      return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF;display:flex;align-items:center;gap:12px">' +
-        '<button onclick="toggleRapprochementFacture(' + f.id + ')" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (f.rapproche ? '#6E8F4E' : '#E3DCCF') + ';background:' + (f.rapproche ? '#EEF3E4' : '#fff') + ';font-size:16px;cursor:pointer;flex-shrink:0;font-family:inherit">' + (f.rapproche ? '✓' : '') + '</button>' +
+      return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #DDE3DA;display:flex;align-items:center;gap:12px">' +
+        '<button onclick="toggleRapprochementFacture(' + f.id + ')" style="width:32px;height:32px;border-radius:8px;border:2px solid ' + (f.rapproche ? '#6E8F4E' : '#DDE3DA') + ';background:' + (f.rapproche ? '#EEF3E4' : '#fff') + ';font-size:16px;cursor:pointer;flex-shrink:0;font-family:inherit">' + (f.rapproche ? '✓' : '') + '</button>' +
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:13px;font-weight:700">' + escapeHTML(f.client||'') + '</div>' +
-          '<div style="font-size:11px;color:#9C9186">' + (f.ref||'') + ' · ' + (f.date_emission||'') + '</div>' +
+          '<div style="font-size:11px;color:#8E9C95">' + (f.ref||'') + ' · ' + (f.date_emission||'') + '</div>' +
         '</div>' +
         '<div style="text-align:right;flex-shrink:0">' +
           '<div style="font-size:13px;font-weight:700">' + fmt(f.ttc||0) + ' MAD</div>' +
@@ -324,7 +324,7 @@ function renderRapportMargeChantiers() {
         '<div style="font-size:14px;font-weight:700">' + escapeHTML(c.nom) + '</div>' +
         '<div style="font-size:14px;font-weight:800;color:' + (positif ? '#6E8F4E' : '#B23A2E') + '">' + (positif ? '+' : '') + fmt(c.marge) + ' MAD</div>' +
       '</div>' +
-      '<div style="display:flex;justify-content:space-between;font-size:11px;color:#6B5F54">' +
+      '<div style="display:flex;justify-content:space-between;font-size:11px;color:#5B6B64">' +
         '<span>💰 Revenus : ' + fmt(c.revenus) + ' MAD (' + c.nbFactures + ' facture(s))</span>' +
         '<span>🛒 Dépenses : ' + fmt(c.depenses) + ' MAD (' + c.nbAchats + ' achat(s))</span>' +
       '</div>' +

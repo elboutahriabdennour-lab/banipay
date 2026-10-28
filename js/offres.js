@@ -97,7 +97,7 @@ function aAccesFeature(code) {
 function htmlBadgeVerrou(code) {
   if (STATE.mesFeatures === undefined) return '';
   if (aAccesFeature(code)) return '';
-  return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;background:#F1EEE8;color:#9C9186;padding:2px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">🔒 Pro</span>';
+  return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;background:#F5F6F1;color:#8E9C95;padding:2px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">🔒 Pro</span>';
 }
 // Applique le cadenas visuel directement sur des éléments DOM déjà en
 // place dans la page statique (contrairement à htmlBadgeVerrou, qui sert
@@ -121,7 +121,7 @@ function appliquerVerrousVisuels() {
   if (zoneOcr) {
     zoneOcr.innerHTML = aAccesFeature('ocr_achats')
       ? ''
-      : '<span style="font-size:10px;color:#9C9186">🔒 La lecture automatique du montant/fournisseur nécessite le forfait Pro</span>';
+      : '<span style="font-size:10px;color:#8E9C95">🔒 La lecture automatique du montant/fournisseur nécessite le forfait Pro</span>';
   }
 }
 // Version "verrou visible" — à utiliser UNIQUEMENT pour les
@@ -162,7 +162,7 @@ function verifierLimiteProduits() {
 // ============================================================
 async function chargerMonForfait() {
   const zone = el('mon-forfait-content');
-  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
+  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#8E9C95">⏳ Chargement...</div>';
   await chargerMesFeatures();
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/offres?select=*,offre_features(features(*))&order=ordre.asc', {
@@ -186,13 +186,13 @@ function renderMonForfait() {
     const features = (o.offre_features || []).map(function(x) { return x.features; }).filter(Boolean);
     // DEMANDE : plus aucun prix de forfait affiché nulle part dans l'app —
     // seuls le nom et les fonctionnalités incluses restent visibles.
-    return '<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:2px solid ' + (estActuelle ? '#C9971F' : '#E3DCCF') + ';position:relative">' +
-      (estActuelle ? '<div style="position:absolute;top:-10px;right:14px;background:#C9971F;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px">VOTRE FORFAIT</div>' : '') +
-      '<div style="font-size:15px;font-weight:800;color:#2A2420;margin-bottom:10px">' + escapeHTML(o.nom) + '</div>' +
+    return '<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:2px solid ' + (estActuelle ? '#1B5E4B' : '#DDE3DA') + ';position:relative">' +
+      (estActuelle ? '<div style="position:absolute;top:-10px;right:14px;background:#1B5E4B;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px">VOTRE FORFAIT</div>' : '') +
+      '<div style="font-size:15px;font-weight:800;color:#14241F;margin-bottom:10px">' + escapeHTML(o.nom) + '</div>' +
       (features.length
-        ? features.map(function(f) { return '<div style="font-size:12px;color:#6B5F54;padding:3px 0">✅ ' + escapeHTML(f.nom) + '</div>'; }).join('')
-        : (o.type === 'sur_mesure' ? '<div style="font-size:12px;color:#6B5F54">Fonctionnalités choisies avec vous, à la carte</div>' : '')) +
-      (o.type === 'sur_mesure' ? '<button onclick="ouvrirDemandeFonctionnalites()" style="width:100%;margin-top:12px;padding:10px;background:#241F1B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis pour des fonctionnalités sur mesure</button>' : '') +
+        ? features.map(function(f) { return '<div style="font-size:12px;color:#5B6B64;padding:3px 0">✅ ' + escapeHTML(f.nom) + '</div>'; }).join('')
+        : (o.type === 'sur_mesure' ? '<div style="font-size:12px;color:#5B6B64">Fonctionnalités choisies avec vous, à la carte</div>' : '')) +
+      (o.type === 'sur_mesure' ? '<button onclick="ouvrirDemandeFonctionnalites()" style="width:100%;margin-top:12px;padding:10px;background:#0F1F1A;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis pour des fonctionnalités sur mesure</button>' : '') +
     '</div>';
   }).join('');
   // Fonctionnalités ajoutées à la carte (au-dessus du forfait de base),

@@ -44,10 +44,10 @@ function renderFournisseurs() {
     const nb = (STATE.achats || []).filter(function (a) { return a.fournisseur === f.nom; }).length;
     return '<div class="card" onclick="ouvrirFicheFournisseur(' + valeurPourOnclick(f.id) + ')">' +
       '<div class="card-ico" style="background:#F5E4E1;font-weight:700;color:#B23A2E;font-size:18px">' + escapeHTML((f.nom || '?').charAt(0).toUpperCase()) + '</div>' +
-      '<div class="card-body"><div class="card-name">' + escapeHTML(f.nom || '') + (f.zelto_id ? ' <span style="font-size:9px;background:#E9F4F3;color:#1F6F72;padding:2px 6px;border-radius:6px;font-weight:700">Tafir</span>' : '') + '</div>' +
+      '<div class="card-body"><div class="card-name">' + escapeHTML(f.nom || '') + (f.zelto_id ? ' <span style="font-size:9px;background:#E7F2EC;color:#1B5E4B;padding:2px 6px;border-radius:6px;font-weight:700">Tafir</span>' : '') + '</div>' +
       '<div class="card-ref">' + escapeHTML([f.ville, f.tel, f.email].filter(Boolean).join(' · ')) + '</div></div>' +
       '<div class="card-end"><div style="font-size:12px;color:#B23A2E;font-weight:600">' + (typeof fmtInt === 'function' ? fmtInt(total) : Math.round(total)) + ' MAD</div>' +
-      '<div style="font-size:10px;color:#9C9186">' + nb + ' achat' + (nb > 1 ? 's' : '') + '</div></div></div>';
+      '<div style="font-size:10px;color:#8E9C95">' + nb + ' achat' + (nb > 1 ? 's' : '') + '</div></div></div>';
   }).join('');
 }
 
@@ -129,8 +129,8 @@ function ouvrirFicheFournisseur(id) {
     .filter(function (l) { return l[1]; });
   if (el('fd-infos')) {
     el('fd-infos').innerHTML = lignes.length ? lignes.map(function (l) {
-      return '<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#9C9186">' + l[0] + '</span><span style="font-weight:600;text-align:right;word-break:break-word">' + escapeHTML(l[1]) + '</span></div>';
-    }).join('') : '<div style="padding:14px;color:#9C9186;font-size:13px">Aucune information complémentaire. Utilise « Modifier » pour en ajouter.</div>';
+      return '<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid #EAE4DA;font-size:13px"><span style="color:#8E9C95">' + l[0] + '</span><span style="font-weight:600;text-align:right;word-break:break-word">' + escapeHTML(l[1]) + '</span></div>';
+    }).join('') : '<div style="padding:14px;color:#8E9C95;font-size:13px">Aucune information complémentaire. Utilise « Modifier » pour en ajouter.</div>';
   }
   const achats = (STATE.achats || []).filter(function (a) { return a.fournisseur === f.nom; });
   const total = achats.reduce(function (s, a) { return s + Number(a.ttc || 0); }, 0);

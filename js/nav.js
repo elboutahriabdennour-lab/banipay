@@ -144,14 +144,14 @@ async function chargerInvitationsComptableEnAttente() {
 
 function htmlInvitationsCpt(invitationsCpt) {
   if (!invitationsCpt.length) return '';
-  return '<div style="padding:10px 20px 4px;font-size:11px;font-weight:700;color:#1F6F72;text-transform:uppercase">Invitations en attente</div>' +
+  return '<div style="padding:10px 20px 4px;font-size:11px;font-weight:700;color:#1B5E4B;text-transform:uppercase">Invitations en attente</div>' +
     invitationsCpt.map(function(inv) {
-      return '<div style="margin:8px 20px;background:#FBF0DA;border-radius:14px;padding:16px;border:1px solid #E8D9AE">' +
+      return '<div style="margin:8px 20px;background:#E7F2EC;border-radius:14px;padding:16px;border:1px solid #E8D9AE">' +
         '<div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">' +
           '<div style="font-size:24px">📊</div>' +
           '<div>' +
             '<div style="font-size:13px;font-weight:700">' + escapeHTML(inv.comptable_email||'') + '</div>' +
-            '<div style="font-size:11px;color:#1F6F72">Souhaite accéder à vos documents</div>' +
+            '<div style="font-size:11px;color:#1B5E4B">Souhaite accéder à vos documents</div>' +
           '</div>' +
         '</div>' +
         '<div style="display:flex;gap:8px">' +
@@ -187,7 +187,7 @@ function htmlListeNotifications(allNotifs) {
     let separateur = '';
     if (estLue && !separateurAjoute) {
       separateurAjoute = true;
-      separateur = '<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase">Historique</div>';
+      separateur = '<div style="padding:8px 16px 4px;font-size:10px;font-weight:700;color:#8E9C95;text-transform:uppercase">Historique</div>';
     }
     const typeReel = n.raw && n.raw.type;
     const isDoc = typeReel === 'facture_recue' || typeReel === 'devis_recu';
@@ -207,21 +207,21 @@ function htmlListeNotifications(allNotifs) {
     return separateur + '<div class="notif-item' + (estLue ? '' : ' notif-unread') +
       (isDoc ? ' notif-doc-view' : '') + (isReponse ? ' notif-reponse-view' : '') + (isDemande ? ' notif-demande-view' : '') + (isInvitationCpt ? ' notif-invitation-cpt-view' : '') +
       '" ' + (estCliquable ? 'data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" data-nid="' + (n.id||'') + '" style="cursor:pointer"' : '') + '>' +
-      (!estLue ? '<div style="width:9px;height:9px;border-radius:50%;background:#1F6F72;flex-shrink:0;margin-top:6px"></div>' : '<div style="width:9px;flex-shrink:0"></div>') +
+      (!estLue ? '<div style="width:9px;height:9px;border-radius:50%;background:#1B5E4B;flex-shrink:0;margin-top:6px"></div>' : '<div style="width:9px;flex-shrink:0"></div>') +
       '<div class="notif-ico">' + (typeIco[typeReel] || n.icon || '🔔') + '</div>' +
       '<div class="notif-body"><div class="notif-title">' + escapeHTML(n.title||'') + '</div>' +
       '<div class="notif-msg">' + escapeHTML(n.body||'') + '</div>' +
-      (n.raw && n.raw.created_at ? '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + tempsRelatif(n.raw.created_at) + '</div>' : '') +
-      (isDoc ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir le document</div><div style="display:flex;gap:6px;margin-top:8px">' +
+      (n.raw && n.raw.created_at ? '<div style="font-size:10px;color:#8E9C95;margin-top:2px">' + tempsRelatif(n.raw.created_at) + '</div>' : '') +
+      (isDoc ? '<div style="font-size:10px;color:#8E9C95;margin-top:4px">👆 Toucher pour voir le document</div><div style="display:flex;gap:6px;margin-top:8px">' +
         '<button class="btn-doc-accept" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#6E8F4E;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">✅ Accepter</button>' +
         '<button class="btn-doc-attente" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F7EFDC;color:#B8860B;border:none;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">⏳ Attente</button>' +
         '<button class="btn-doc-refuse" data-nid="' + (n.id||'') + '" data-type="' + (meta.doc_type||'') + '" data-docid="' + (meta.doc_id||'') + '" style="flex:1;padding:6px 2px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">❌ Refuser</button>' +
       '</div>' : '') +
-      (isReponse && meta.action === 'accepter' && meta.doc_type === 'devis' ? '<button class="btn-convertir-facture" data-docid="' + (meta.doc_id||'') + '" style="margin-top:8px;width:100%;padding:7px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Convertir en facture</button>' : '') +
-      (isDemande ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour voir la demande complète et y répondre</div>' : '') +
-      (isInvitationCpt ? '<div style="font-size:10px;color:#9C9186;margin-top:4px">👆 Toucher pour accepter ou refuser</div>' : '') +
-      (n._relanceFactureId ? '<button class="btn-envoyer-relance" data-facture-id="' + n._relanceFactureId + '" data-type-relance="' + n._relanceType + '" style="margin-top:8px;width:100%;padding:6px;background:#1F6F72;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📤 Envoyer la relance</button>' : '') +
-      (n._relanceAchatId ? '<button class="btn-vu-relance-achat" data-achat-id="' + n._relanceAchatId + '" data-type-relance="' + n._relanceAchatType + '" style="margin-top:8px;width:100%;padding:6px;background:#6B5F54;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">👍 Vu, ne plus rappeler aujourd\'hui</button>' : '') +
+      (isReponse && meta.action === 'accepter' && meta.doc_type === 'devis' ? '<button class="btn-convertir-facture" data-docid="' + (meta.doc_id||'') + '" style="margin-top:8px;width:100%;padding:7px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Convertir en facture</button>' : '') +
+      (isDemande ? '<div style="font-size:10px;color:#8E9C95;margin-top:4px">👆 Toucher pour voir la demande complète et y répondre</div>' : '') +
+      (isInvitationCpt ? '<div style="font-size:10px;color:#8E9C95;margin-top:4px">👆 Toucher pour accepter ou refuser</div>' : '') +
+      (n._relanceFactureId ? '<button class="btn-envoyer-relance" data-facture-id="' + n._relanceFactureId + '" data-type-relance="' + n._relanceType + '" style="margin-top:8px;width:100%;padding:6px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📤 Envoyer la relance</button>' : '') +
+      (n._relanceAchatId ? '<button class="btn-vu-relance-achat" data-achat-id="' + n._relanceAchatId + '" data-type-relance="' + n._relanceAchatType + '" style="margin-top:8px;width:100%;padding:6px;background:#5B6B64;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">👍 Vu, ne plus rappeler aujourd\'hui</button>' : '') +
       '</div></div>';
   }).join('');
 }
@@ -450,15 +450,15 @@ async function toggleNotifDropdown(event) {
 
   const panel = document.createElement('div');
   panel.id = 'notif-dropdown';
-  panel.style.cssText = 'position:fixed;top:60px;right:12px;left:12px;max-width:400px;margin-left:auto;background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(42,36,32,0.25);z-index:9999;max-height:70vh;overflow-y:auto;border:1px solid #E3DCCF';
+  panel.style.cssText = 'position:fixed;top:60px;right:12px;left:12px;max-width:400px;margin-left:auto;background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(42,36,32,0.25);z-index:9999;max-height:70vh;overflow-y:auto;border:1px solid #DDE3DA';
 
   const contenu = htmlInvitationsCpt(invitationsCpt) + htmlListeNotifications(allNotifs);
   panel.innerHTML =
-    '<div style="padding:14px 16px;border-bottom:1px solid #E3DCCF;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;border-radius:16px 16px 0 0">' +
-      '<div style="font-family:\'Baloo 2\',sans-serif;font-size:15px;font-weight:700;color:#2A2420">🔔 Notifications</div>' +
+    '<div style="padding:14px 16px;border-bottom:1px solid #DDE3DA;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;border-radius:16px 16px 0 0">' +
+      '<div style="font-family:\'Baloo 2\',sans-serif;font-size:15px;font-weight:700;color:#14241F">🔔 Notifications</div>' +
       '<div style="display:flex;gap:8px;align-items:center">' +
-        '<button onclick="marquerToutesNotificationsLues()" style="background:none;color:#1F6F72;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Tout marquer comme lu</button>' +
-        '<button onclick="fermerNotifDropdown()" style="background:#EAE4DA;color:#6B5F54;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;font-family:inherit">✕</button>' +
+        '<button onclick="marquerToutesNotificationsLues()" style="background:none;color:#1B5E4B;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Tout marquer comme lu</button>' +
+        '<button onclick="fermerNotifDropdown()" style="background:#EAE4DA;color:#5B6B64;border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;font-family:inherit">✕</button>' +
       '</div>' +
     '</div>' +
     (allNotifs.length || invitationsCpt.length ? contenu : '<div class="empty"><div class="empty-ico">🔔</div><div class="empty-title">Aucune notification</div></div>');
@@ -514,7 +514,7 @@ async function voirDocumentDepuisNotification(type, docId) {
     genDocPDF({
       type: isDevis ? 'DEVIS' : 'FACTURE',
       ref: doc.ref,
-      color: isDevis ? '#B8860B' : (emetteur.couleur_accent || '#C9971F'),
+      color: isDevis ? '#B8860B' : (emetteur.couleur_accent || '#1B5E4B'),
       emetteur: emetteur,
       destinataire: { nom: doc.client, chantier: doc.chantier },
       date: doc.date_emission,
@@ -542,7 +542,7 @@ async function voirDocumentDepuisNotification(type, docId) {
         const screen = document.getElementById('pdf-fullscreen');
         if (!screen) return;
         const btnBar = document.createElement('div');
-        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:6px;border-top:2px solid #E3DCCF;flex-shrink:0';
+        btnBar.style.cssText = 'background:#fff;padding:12px 16px;display:flex;gap:6px;border-top:2px solid #DDE3DA;flex-shrink:0';
         const bAcc = document.createElement('button');
         bAcc.textContent = '✅ Accepter';
         bAcc.style.cssText = 'flex:1;padding:12px 4px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
@@ -567,7 +567,7 @@ async function voirDocumentDepuisNotification(type, docId) {
           if (!screen2 || typeof ouvrirModalSignature !== 'function') return;
           const lienSignature = document.createElement('div');
           lienSignature.style.cssText = 'background:#fff;padding:0 16px 12px;text-align:center;flex-shrink:0';
-          lienSignature.innerHTML = '<span style="font-size:11px;color:#1F6F72;text-decoration:underline;cursor:pointer">✍️ Accepter avec signature électronique</span>';
+          lienSignature.innerHTML = '<span style="font-size:11px;color:#1B5E4B;text-decoration:underline;cursor:pointer">✍️ Accepter avec signature électronique</span>';
           lienSignature.querySelector('span').onclick = function() { ouvrirModalSignature(docId, type, doc.token_public); };
           screen2.appendChild(lienSignature);
         }, 400);
@@ -740,7 +740,7 @@ function initRecherche() {
   const input = el('search-global');
   if (input) input.value = '';
   const results = el('search-results');
-  if (results) results.innerHTML = '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Tapez pour rechercher parmi vos factures, devis, clients et achats</div>';
+  if (results) results.innerHTML = '<div style="text-align:center;padding:30px;color:#8E9C95;font-size:12px">Tapez pour rechercher parmi vos factures, devis, clients et achats</div>';
   setTimeout(function() { input?.focus(); }, 150);
 }
 
@@ -749,7 +749,7 @@ function rechercheGlobale() {
   const results = el('search-results');
   if (!results) return;
   if (q.length < 2) {
-    results.innerHTML = '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Tapez au moins 2 caractères</div>';
+    results.innerHTML = '<div style="text-align:center;padding:30px;color:#8E9C95;font-size:12px">Tapez au moins 2 caractères</div>';
     return;
   }
 
@@ -759,9 +759,9 @@ function rechercheGlobale() {
     return (f.ref||'').toLowerCase().includes(q) || (f.client||'').toLowerCase().includes(q);
   }).slice(0, 8);
   if (facturesTrouvees.length) {
-    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">🧾 Factures</div>' +
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:10px 0 6px">🧾 Factures</div>' +
       facturesTrouvees.map(function(f) {
-        return '<div class="card" onclick="openDetail(' + f.id + ')"><div class="card-ico" style="background:#FBF0DA">🧾</div><div class="card-body"><div class="card-name">' + escapeHTML(f.client||'') + '</div><div class="card-ref">' + (f.ref||'') + '</div></div><div class="card-end"><div class="card-amount">' + fmt(f.ttc||0) + ' MAD</div></div></div>';
+        return '<div class="card" onclick="openDetail(' + f.id + ')"><div class="card-ico" style="background:#E7F2EC">🧾</div><div class="card-body"><div class="card-name">' + escapeHTML(f.client||'') + '</div><div class="card-ref">' + (f.ref||'') + '</div></div><div class="card-end"><div class="card-amount">' + fmt(f.ttc||0) + ' MAD</div></div></div>';
       }).join(''));
   }
 
@@ -769,7 +769,7 @@ function rechercheGlobale() {
     return (d.ref||'').toLowerCase().includes(q) || (d.client||'').toLowerCase().includes(q);
   }).slice(0, 8);
   if (devisTrouves.length) {
-    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📝 Devis</div>' +
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:10px 0 6px">📝 Devis</div>' +
       devisTrouves.map(function(d) {
         return '<div class="card" onclick="openDetailDevis(' + d.id + ')"><div class="card-ico" style="background:#F7EFDC">📝</div><div class="card-body"><div class="card-name">' + escapeHTML(d.client||'') + '</div><div class="card-ref">' + (d.ref||'') + '</div></div><div class="card-end"><div class="card-amount">' + fmt(d.ttc||0) + ' MAD</div></div></div>';
       }).join(''));
@@ -779,9 +779,9 @@ function rechercheGlobale() {
     return (c.nom||'').toLowerCase().includes(q) || (c.tel||'').includes(q);
   }).slice(0, 8);
   if (clientsTrouves.length) {
-    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">👤 Clients</div>' +
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:10px 0 6px">👤 Clients</div>' +
       clientsTrouves.map(function(c) {
-        return '<div class="card" onclick="ouvrirModifClient(' + c.id + ')"><div class="card-ico" style="background:#E9F4F3">👤</div><div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.tel||'') + '</div></div></div>';
+        return '<div class="card" onclick="ouvrirModifClient(' + c.id + ')"><div class="card-ico" style="background:#E7F2EC">👤</div><div class="card-body"><div class="card-name">' + escapeHTML(c.nom||'') + '</div><div class="card-ref">' + (c.tel||'') + '</div></div></div>';
       }).join(''));
   }
 
@@ -789,7 +789,7 @@ function rechercheGlobale() {
     return (a.fournisseur||'').toLowerCase().includes(q) || (a.ref_fournisseur||'').toLowerCase().includes(q);
   }).slice(0, 8);
   if (achatsTrouves.length) {
-    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">🛒 Achats</div>' +
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:10px 0 6px">🛒 Achats</div>' +
       achatsTrouves.map(function(a) {
         return '<div class="card" onclick="ouvrirDetailAchat(' + a.id + ')"><div class="card-ico" style="background:#F5E4E1">🛒</div><div class="card-body"><div class="card-name">' + escapeHTML(a.fournisseur||'') + '</div><div class="card-ref">' + (a.ref_fournisseur||'') + '</div></div><div class="card-end"><div class="card-amount">' + fmt(a.ttc||0) + ' MAD</div></div></div>';
       }).join(''));
@@ -801,9 +801,9 @@ function rechercheGlobale() {
     return (p.nom||'').toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q);
   }).slice(0, 8);
   if (produitsTrouves.length) {
-    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📦 Produits & services</div>' +
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:10px 0 6px">📦 Produits & services</div>' +
       produitsTrouves.map(function(p) {
-        return '<div class="card" onclick="goScreen(\'produits\',null)"><div class="card-ico" style="background:#E9F4F3">📦</div><div class="card-body"><div class="card-name">' + escapeHTML(p.nom||'') + '</div><div class="card-ref">' + (p.prix != null ? fmt(p.prix) + ' MAD' : '') + '</div></div></div>';
+        return '<div class="card" onclick="goScreen(\'produits\',null)"><div class="card-ico" style="background:#E7F2EC">📦</div><div class="card-body"><div class="card-name">' + escapeHTML(p.nom||'') + '</div><div class="card-ref">' + (p.prix != null ? fmt(p.prix) + ' MAD' : '') + '</div></div></div>';
       }).join(''));
   }
 
@@ -811,7 +811,7 @@ function rechercheGlobale() {
     return (bc.ref||'').toLowerCase().includes(q) || (bc.fournisseur||'').toLowerCase().includes(q);
   }).slice(0, 8);
   if (bcTrouves.length) {
-    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📋 Bons de commande</div>' +
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:10px 0 6px">📋 Bons de commande</div>' +
       bcTrouves.map(function(bc) {
         return '<div class="card" onclick="goScreen(\'bons-commande-list\',null)"><div class="card-ico" style="background:#EDE6F0">📋</div><div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + '</div></div></div>';
       }).join(''));
@@ -821,11 +821,11 @@ function rechercheGlobale() {
     return (bl.ref||'').toLowerCase().includes(q) || (bl.client||'').toLowerCase().includes(q);
   }).slice(0, 8);
   if (blTrouves.length) {
-    blocs.push('<div style="font-size:11px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:10px 0 6px">📦 Bons de livraison</div>' +
+    blocs.push('<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;padding:10px 0 6px">📦 Bons de livraison</div>' +
       blTrouves.map(function(bl) {
-        return '<div class="card" onclick="goScreen(\'bons-livraison-list\',null)"><div class="card-ico" style="background:#E9F4F3">📦</div><div class="card-body"><div class="card-name">' + escapeHTML(bl.client||'') + '</div><div class="card-ref">' + (bl.ref||'') + '</div></div></div>';
+        return '<div class="card" onclick="goScreen(\'bons-livraison-list\',null)"><div class="card-ico" style="background:#E7F2EC">📦</div><div class="card-body"><div class="card-name">' + escapeHTML(bl.client||'') + '</div><div class="card-ref">' + (bl.ref||'') + '</div></div></div>';
       }).join(''));
   }
 
-  results.innerHTML = blocs.length ? blocs.join('') : '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Aucun résultat pour "' + escapeHTML(q) + '"</div>';
+  results.innerHTML = blocs.length ? blocs.join('') : '<div style="text-align:center;padding:30px;color:#8E9C95;font-size:12px">Aucun résultat pour "' + escapeHTML(q) + '"</div>';
 }

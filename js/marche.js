@@ -43,7 +43,7 @@ function renderMarche() {
       '</div>' +
       (a.photo ? '<img src="' + a.photo + '" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px">' : '') +
       '<div style="font-size:14px;font-weight:700;margin-bottom:4px">' + escapeHTML(a.titre || '') + '</div>' +
-      '<div style="font-size:12px;color:#6B5F54">' + [a.secteur, a.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
+      '<div style="font-size:12px;color:#5B6B64">' + [a.secteur, a.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
       (a.date_limite ? '<div style="font-size:11px;color:#B8860B;margin-top:4px">📅 Avant le ' + formatDate(a.date_limite) + '</div>' : '') +
     '</div>';
   }).join('');
@@ -63,11 +63,11 @@ function ouvrirAnnonceMarche(id) {
       '</div>' +
       (a.photo ? '<img src="' + a.photo + '" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin:12px 0">' : '') +
       '<div style="font-size:17px;font-weight:700;margin:10px 0 6px">' + escapeHTML(a.titre || '') + '</div>' +
-      '<div style="font-size:12px;color:#9C9186;margin-bottom:6px">' + [a.secteur, a.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
+      '<div style="font-size:12px;color:#8E9C95;margin-bottom:6px">' + [a.secteur, a.ville].filter(Boolean).map(escapeHTML).join(' · ') + '</div>' +
       (a.date_limite ? '<div style="font-size:12px;color:#B8860B;margin-bottom:14px">📅 Avant le ' + formatDate(a.date_limite) + '</div>' : '') +
-      (a.description ? '<div style="font-size:13px;color:#2A2420;margin-bottom:18px;white-space:pre-wrap">' + escapeHTML(a.description) + '</div>' : '') +
-      '<div id="marche-contact-zone" style="font-size:12px;color:#9C9186;margin-bottom:10px">Chargement du contact...</div>' +
-      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:10px;background:#F1EEE8;border:none;border-radius:10px;color:#6B5F54;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
+      (a.description ? '<div style="font-size:13px;color:#14241F;margin-bottom:18px;white-space:pre-wrap">' + escapeHTML(a.description) + '</div>' : '') +
+      '<div id="marche-contact-zone" style="font-size:12px;color:#8E9C95;margin-bottom:10px">Chargement du contact...</div>' +
+      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:10px;background:#F5F6F1;border:none;border-radius:10px;color:#5B6B64;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -83,16 +83,16 @@ function ouvrirAnnonceMarche(id) {
     if (!zone) return;
     const visible = p.annuaire_contact_visible !== false;
     if (!visible || (!p.tel && !p.email)) {
-      zone.innerHTML = '<div style="text-align:center;color:#9C9186">Contact non communiqué publiquement</div>';
+      zone.innerHTML = '<div style="text-align:center;color:#8E9C95">Contact non communiqué publiquement</div>';
       return;
     }
     zone.innerHTML =
-      '<div style="font-size:12px;color:#6B5F54;margin-bottom:8px">Publié par ' + escapeHTML(p.raison || 'une entreprise Tafir') + '</div>' +
+      '<div style="font-size:12px;color:#5B6B64;margin-bottom:8px">Publié par ' + escapeHTML(p.raison || 'une entreprise Tafir') + '</div>' +
       (p.tel ? '<a href="https://wa.me/' + p.tel.replace(/[^0-9]/g,'') + '" target="_blank" style="display:block;padding:11px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px;text-align:center">💬 Contacter par WhatsApp</a>' : '') +
-      (p.email ? '<a href="mailto:' + p.email + '" style="display:block;padding:11px;background:#F1EEE8;color:#2A2420;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px;text-align:center">✉️ ' + escapeHTML(p.email) + '</a>' : '');
+      (p.email ? '<a href="mailto:' + p.email + '" style="display:block;padding:11px;background:#F5F6F1;color:#14241F;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px;text-align:center">✉️ ' + escapeHTML(p.email) + '</a>' : '');
   }).catch(function() {
     const zone = document.getElementById('marche-contact-zone');
-    if (zone) zone.innerHTML = '<div style="text-align:center;color:#9C9186">Contact indisponible</div>';
+    if (zone) zone.innerHTML = '<div style="text-align:center;color:#8E9C95">Contact indisponible</div>';
   });
 }
 
@@ -118,7 +118,7 @@ function previewPhotoAnnonce(event) {
   reader.onload = function(e) {
     STATE._photoAnnonceData = e.target.result;
     const preview = el('na-photo-preview');
-    if (preview) preview.innerHTML = '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #E3DCCF">' +
+    if (preview) preview.innerHTML = '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #DDE3DA">' +
       '<button type="button" onclick="retirerPhotoAnnonce()" style="width:100%;margin-top:6px;padding:8px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer la photo</button>';
   };
   reader.readAsDataURL(file);
@@ -175,9 +175,9 @@ function renderMesAnnonces() {
   }
   const statutLabels = { active: '🟢 Active', pourvue: '✅ Pourvue', expiree: '⚪ Expirée' };
   list.innerHTML = data.map(function(a) {
-    return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #E3DCCF">' +
+    return '<div style="background:#fff;border-radius:12px;padding:14px;margin:0 20px 10px;border:1px solid #DDE3DA">' +
       '<div style="font-size:13px;font-weight:700;margin-bottom:4px">' + escapeHTML(a.titre || '') + '</div>' +
-      '<div style="font-size:11px;color:#6B5F54;margin-bottom:10px">' + (statutLabels[a.statut] || a.statut) + '</div>' +
+      '<div style="font-size:11px;color:#5B6B64;margin-bottom:10px">' + (statutLabels[a.statut] || a.statut) + '</div>' +
       (a.statut === 'active' ? '<div style="display:flex;gap:6px">' +
         '<button onclick="changerStatutAnnonce(\'' + a.id + '\',\'pourvue\')" style="flex:1;padding:8px;background:#EEF3E4;color:#55702E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✅ Marquer pourvue</button>' +
         '<button onclick="supprimerAnnonce(\'' + a.id + '\')" style="flex:1;padding:8px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🗑️ Supprimer</button>' +

@@ -183,9 +183,9 @@ function renderFiltresActifsStats() {
   if (!chips.length) { zone.innerHTML = ''; return; }
   zone.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">' +
     chips.map(function(c) {
-      return '<span style="background:#E9F4F3;color:#1F6F72;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px">' + escapeHTML(c.label) + '<span onclick="' + c.fn + '()" style="cursor:pointer;font-weight:800">✕</span></span>';
+      return '<span style="background:#E7F2EC;color:#1B5E4B;border-radius:20px;padding:5px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px">' + escapeHTML(c.label) + '<span onclick="' + c.fn + '()" style="cursor:pointer;font-weight:800">✕</span></span>';
     }).join('') +
-    '<span onclick="effacerFiltresStats()" style="font-size:11px;color:#9C9186;text-decoration:underline;cursor:pointer">Tout effacer</span>' +
+    '<span onclick="effacerFiltresStats()" style="font-size:11px;color:#8E9C95;text-decoration:underline;cursor:pointer">Tout effacer</span>' +
   '</div>';
 }
 function changerPeriodeStats(periode, btn) {
@@ -206,8 +206,8 @@ function switchStatsOnglet(onglet) {
     const bouton = el('stats-onglet-' + o);
     const zone = el('stats-panneau-' + o);
     if (bouton) {
-      bouton.style.background = (o === onglet) ? '#1F6F72' : '#F1EEE8';
-      bouton.style.color = (o === onglet) ? '#fff' : '#6B5F54';
+      bouton.style.background = (o === onglet) ? '#1B5E4B' : '#F5F6F1';
+      bouton.style.color = (o === onglet) ? '#fff' : '#5B6B64';
     }
     if (zone) zone.style.display = (o === onglet) ? 'block' : 'none';
   });
@@ -240,7 +240,7 @@ async function renderAnalyseAvancee() {
   if (!zone) return;
 
   if (type === 'stock') {
-    zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186;font-size:12px">Chargement...</div>';
+    zone.innerHTML = '<div style="text-align:center;padding:20px;color:#8E9C95;font-size:12px">Chargement...</div>';
     try {
       const mouvements = (await sb.get('mouvements_stock', 'user_id=eq.' + (STATE.entrepriseId || sb.user.id) + '&order=created_at.desc&limit=200')) || [];
       _renderAnalyseStock(mouvements, zone);
@@ -275,34 +275,34 @@ async function renderAnalyseAvancee() {
   const total = filtres.reduce(function(s, i) { return s + (Number(i.ttc) || 0); }, 0);
 
   zone.innerHTML =
-    '<div style="background:#fff;border-radius:14px;padding:16px;border:1px solid #E3DCCF;margin-bottom:14px;text-align:center">' +
-      '<div style="font-size:11px;color:#9C9186">Total — ' + filtres.length + ' élément(s)</div>' +
-      '<div style="font-size:24px;font-weight:800;color:#1F6F72">' + fmt(total) + ' MAD</div>' +
+    '<div style="background:#fff;border-radius:14px;padding:16px;border:1px solid #DDE3DA;margin-bottom:14px;text-align:center">' +
+      '<div style="font-size:11px;color:#8E9C95">Total — ' + filtres.length + ' élément(s)</div>' +
+      '<div style="font-size:24px;font-weight:800;color:#1B5E4B">' + fmt(total) + ' MAD</div>' +
     '</div>' +
-    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-bottom:14px">' +
+    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA;margin-bottom:14px">' +
       '<div style="font-size:13px;font-weight:700;margin-bottom:14px">📈 Évolution mensuelle</div>' +
       (moisTries.length
         ? '<div style="display:flex;align-items:flex-end;gap:6px;height:100px">' +
           moisTries.map(function(m) {
             const h = Math.max(4, Math.round(parMois[m] / maxMois * 100));
             return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">' +
-              '<div style="width:100%;background:#1F6F72;border-radius:4px 4px 0 0;height:' + h + 'px" title="' + fmt(parMois[m]) + ' MAD"></div>' +
-              '<div style="font-size:8px;color:#9C9186">' + m.slice(5) + '</div>' +
+              '<div style="width:100%;background:#1B5E4B;border-radius:4px 4px 0 0;height:' + h + 'px" title="' + fmt(parMois[m]) + ' MAD"></div>' +
+              '<div style="font-size:8px;color:#8E9C95">' + m.slice(5) + '</div>' +
             '</div>';
           }).join('') + '</div>'
-        : '<div style="text-align:center;color:#9C9186;font-size:12px;padding:20px">Aucune donnée sur cette période</div>') +
+        : '<div style="text-align:center;color:#8E9C95;font-size:12px;padding:20px">Aucune donnée sur cette période</div>') +
     '</div>' +
-    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">' +
       '<div style="font-size:13px;font-weight:700;margin-bottom:14px">🏆 Répartition par ' + libelleNom + '</div>' +
       (topNoms.length
         ? topNoms.map(function(paire) {
             const nom = paire[0], montant = paire[1];
             return '<div style="margin-bottom:10px">' +
               '<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px">' + escapeHTML(nom) + '</span><span style="font-size:12px;font-weight:700">' + fmt(montant) + ' MAD</span></div>' +
-              '<div style="height:5px;background:#F1EEE8;border-radius:3px"><div style="height:100%;background:#6E8F4E;border-radius:3px;width:' + Math.round(montant / maxNom * 100) + '%"></div></div>' +
+              '<div style="height:5px;background:#F5F6F1;border-radius:3px"><div style="height:100%;background:#6E8F4E;border-radius:3px;width:' + Math.round(montant / maxNom * 100) + '%"></div></div>' +
             '</div>';
           }).join('')
-        : '<div style="text-align:center;color:#9C9186;font-size:12px">Aucune donnée</div>') +
+        : '<div style="text-align:center;color:#8E9C95;font-size:12px">Aucune donnée</div>') +
     '</div>';
 }
 
@@ -317,11 +317,11 @@ function _renderAnalyseStock(mouvements, zone) {
       '<div style="background:#F5E4E1;border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:#B23A2E">' + sorties + '</div><div style="font-size:10px;color:#B23A2E">Sorties</div></div>' +
       '<div style="background:#F7EFDC;border-radius:12px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:#B8860B">' + corrections + '</div><div style="font-size:10px;color:#B8860B">Corrections</div></div>' +
     '</div>' +
-    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
+    '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">' +
       '<div style="font-size:13px;font-weight:700;margin-bottom:10px">Derniers mouvements</div>' +
       mouvements.slice(0, 20).map(function(m) {
         const icone = m.type === 'entree' ? '➕' : m.type === 'sortie' ? '➖' : '✏️';
-        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F1EEE8;font-size:12px">' +
+        return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F5F6F1;font-size:12px">' +
           '<span>' + icone + ' ' + escapeHTML(m.motif || m.type || '') + '</span><span style="font-weight:600">' + (m.quantite || 0) + '</span>' +
         '</div>';
       }).join('') +
@@ -364,7 +364,7 @@ function _renderOngletEnsemble() {
 
   const grid = el('stats-grid');
   if (grid) grid.innerHTML = `
-    <div style="background:linear-gradient(135deg,#241F1B,#1F6F72);border-radius:18px;padding:18px;grid-column:span 2;box-shadow:0 4px 16px rgba(31,111,114,0.18)">
+    <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);border-radius:18px;padding:18px;grid-column:span 2;box-shadow:0 4px 16px rgba(27,94,75,0.18)">
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px 12px">
         <div style="text-align:center">
           <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.55);margin-bottom:6px">CA Total</div>
@@ -419,26 +419,26 @@ function _renderOngletEnsemble() {
     const area = path+' L'+pts[pts.length-1].x.toFixed(1)+','+(H-PY)+' L'+PX+','+(H-PY)+' Z';
     const caMois = months[months.length-1].ca;
     monthly.innerHTML = `
-      <div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">
+      <div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="font-size:13px;font-weight:700;color:#241F1B">📈 CA mensuel</div>
-          <div style="font-size:11px;color:#6B5F54">Ce mois : <strong style="color:#C9971F">${fmt(caMois)} MAD</strong></div>
+          <div style="font-size:13px;font-weight:700;color:#0F1F1A">📈 CA mensuel</div>
+          <div style="font-size:11px;color:#5B6B64">Ce mois : <strong style="color:#1B5E4B">${fmt(caMois)} MAD</strong></div>
         </div>
         <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible">
           <defs>
             <linearGradient id="gStatsFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#C9971F" stop-opacity="0.18"/>
-              <stop offset="100%" stop-color="#C9971F" stop-opacity="0"/>
+              <stop offset="0%" stop-color="#1B5E4B" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#1B5E4B" stop-opacity="0"/>
             </linearGradient>
           </defs>
           <path d="${area}" fill="url(#gStatsFill)"/>
-          <path d="${path}" fill="none" stroke="#C9971F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="${path}" fill="none" stroke="#1B5E4B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="${pathP}" fill="none" stroke="#6E8F4E" stroke-width="1.5" stroke-dasharray="4,3" stroke-linecap="round"/>
-          ${pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.6" fill="#C9971F" stroke="#fff" stroke-width="1.3"/>`).join('')}
-          ${pts.filter((_,i)=>i%2===0||i===pts.length-1).map(p=>`<text x="${p.x.toFixed(1)}" y="${H}" text-anchor="middle" font-size="8" fill="#9C9186">${p.m.label}</text>`).join('')}
+          ${pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.6" fill="#1B5E4B" stroke="#fff" stroke-width="1.3"/>`).join('')}
+          ${pts.filter((_,i)=>i%2===0||i===pts.length-1).map(p=>`<text x="${p.x.toFixed(1)}" y="${H}" text-anchor="middle" font-size="8" fill="#8E9C95">${p.m.label}</text>`).join('')}
         </svg>
         <div style="display:flex;gap:16px;margin-top:6px;font-size:10px">
-          <span style="color:#C9971F">— CA facturé</span>
+          <span style="color:#1B5E4B">— CA facturé</span>
           <span style="color:#6E8F4E">- - Encaissé</span>
         </div>
       </div>`;
@@ -451,25 +451,25 @@ function _renderOngletEnsemble() {
     const retard = f.filter(x=>x.statut==='retard').length;
     const total2 = Math.max(f.length, 1);
     repEl.innerHTML = `
-      <div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-top:10px">
-        <div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:12px">📊 Répartition des statuts</div>
+      <div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA;margin-top:10px">
+        <div style="font-size:13px;font-weight:700;color:#0F1F1A;margin-bottom:12px">📊 Répartition des statuts</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
           <div style="text-align:center;background:#EEF3E4;border-radius:10px;padding:10px">
             <div style="font-size:20px;font-weight:800;color:#55702E">${payees}</div>
             <div style="font-size:10px;color:#55702E;margin-top:2px">Payées</div>
           </div>
-          <div style="text-align:center;background:#FBF0DA;border-radius:10px;padding:10px">
-            <div style="font-size:20px;font-weight:800;color:#A67A16">${attente}</div>
-            <div style="font-size:10px;color:#A67A16;margin-top:2px">En attente</div>
+          <div style="text-align:center;background:#E7F2EC;border-radius:10px;padding:10px">
+            <div style="font-size:20px;font-weight:800;color:#134436">${attente}</div>
+            <div style="font-size:10px;color:#134436;margin-top:2px">En attente</div>
           </div>
           <div style="text-align:center;background:#F5E4E1;border-radius:10px;padding:10px">
             <div style="font-size:20px;font-weight:800;color:#8E2E24">${retard}</div>
             <div style="font-size:10px;color:#8E2E24;margin-top:2px">En retard</div>
           </div>
         </div>
-        <div style="height:8px;background:#F1EEE8;border-radius:4px;overflow:hidden;display:flex">
+        <div style="height:8px;background:#F5F6F1;border-radius:4px;overflow:hidden;display:flex">
           <div style="background:#6E8F4E;width:${Math.round(payees/total2*100)}%"></div>
-          <div style="background:#C9971F;width:${Math.round(attente/total2*100)}%"></div>
+          <div style="background:#1B5E4B;width:${Math.round(attente/total2*100)}%"></div>
           <div style="background:#B23A2E;width:${Math.round(retard/total2*100)}%"></div>
         </div>
       </div>`;
@@ -495,13 +495,13 @@ function _renderOngletDetail() {
   });
   const topClients = Object.values(clientMap).sort((a,b)=>b.ca-a.ca).slice(0,5);
   const maxClient = topClients[0]?.ca || 1;
-  const couleursAccent = ['#1F6F72','#6E8F4E','#C9971F','#7C5CA6','#B23A2E'];
+  const couleursAccent = ['#1B5E4B','#6E8F4E','#1B5E4B','#7C5CA6','#B23A2E'];
 
   const topEl = el('sa-top-clients');
   if (topEl) {
     topEl.innerHTML = `
-      <div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">
-        <div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:14px">🏆 Top clients</div>
+      <div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">
+        <div style="font-size:13px;font-weight:700;color:#0F1F1A;margin-bottom:14px">🏆 Top clients</div>
         ${topClients.length ? topClients.map((c,i)=>`
           <div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParClientStats(${valeurPourOnclick(c.nom)})">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -509,14 +509,14 @@ function _renderOngletDetail() {
                 <div style="width:22px;height:22px;border-radius:50%;background:${couleursAccent[i]};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">${i+1}</div>
                 <span style="font-size:12px;font-weight:600;${STATE.statsFiltreClient===c.nom?'text-decoration:underline':''}">${escapeHTML(c.nom)}</span>
               </div>
-              <span style="font-size:12px;font-weight:700;color:#241F1B">${fmt(c.ca)} MAD</span>
+              <span style="font-size:12px;font-weight:700;color:#0F1F1A">${fmt(c.ca)} MAD</span>
             </div>
-            <div style="height:5px;background:#F1EEE8;border-radius:3px">
+            <div style="height:5px;background:#F5F6F1;border-radius:3px">
               <div style="height:100%;background:${couleursAccent[i]};border-radius:3px;width:${Math.round(c.ca/maxClient*100)}%"></div>
             </div>
-            <div style="font-size:10px;color:#9C9186;margin-top:2px">${c.count} facture(s) · toucher pour filtrer</div>
+            <div style="font-size:10px;color:#8E9C95;margin-top:2px">${c.count} facture(s) · toucher pour filtrer</div>
           </div>
-        `).join('') : '<div style="text-align:center;padding:14px;color:#9C9186;font-size:12px">Aucune donnée</div>'}
+        `).join('') : '<div style="text-align:center;padding:14px;color:#8E9C95;font-size:12px">Aucune donnée</div>'}
       </div>`;
   }
 
@@ -535,16 +535,16 @@ function _renderOngletDetail() {
   const maxProduit = topProduits[0]?.montant || 1;
   const produitEl = el('sa-top-produits');
   if (produitEl) {
-    produitEl.innerHTML = topProduits.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-top:10px">' +
-      '<div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:14px">📦 Top produits / prestations</div>' +
+    produitEl.innerHTML = topProduits.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA;margin-top:10px">' +
+      '<div style="font-size:13px;font-weight:700;color:#0F1F1A;margin-bottom:14px">📦 Top produits / prestations</div>' +
       topProduits.map(function(p, i) {
         return '<div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParProduitStats(' + valeurPourOnclick(p.nom) + ')">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
             '<span style="font-size:12px;font-weight:600;' + (STATE.statsFiltreProduit===p.nom?'text-decoration:underline':'') + '">' + escapeHTML(p.nom) + '</span>' +
-            '<span style="font-size:12px;font-weight:700;color:#241F1B">' + fmt(p.montant) + ' MAD</span>' +
+            '<span style="font-size:12px;font-weight:700;color:#0F1F1A">' + fmt(p.montant) + ' MAD</span>' +
           '</div>' +
-          '<div style="height:5px;background:#F1EEE8;border-radius:3px"><div style="height:100%;background:' + couleursAccent[i] + ';border-radius:3px;width:' + Math.round(p.montant/maxProduit*100) + '%"></div></div>' +
-          '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + p.qte + ' unité(s) vendue(s)</div>' +
+          '<div style="height:5px;background:#F5F6F1;border-radius:3px"><div style="height:100%;background:' + couleursAccent[i] + ';border-radius:3px;width:' + Math.round(p.montant/maxProduit*100) + '%"></div></div>' +
+          '<div style="font-size:10px;color:#8E9C95;margin-top:2px">' + p.qte + ' unité(s) vendue(s)</div>' +
         '</div>';
       }).join('') + '</div>' : '';
   }
@@ -565,16 +565,16 @@ function _renderOngletDetail() {
   const maxFournisseur = topFournisseurs[0]?.montant || 1;
   const fournisseurEl = el('sa-top-fournisseurs');
   if (fournisseurEl) {
-    fournisseurEl.innerHTML = topFournisseurs.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF">' +
-      '<div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:14px">🏢 Top fournisseurs (achats)</div>' +
+    fournisseurEl.innerHTML = topFournisseurs.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA">' +
+      '<div style="font-size:13px;font-weight:700;color:#0F1F1A;margin-bottom:14px">🏢 Top fournisseurs (achats)</div>' +
       topFournisseurs.map(function(fo, i) {
         return '<div style="margin-bottom:12px;cursor:pointer" onclick="filtrerParFournisseurStats(' + valeurPourOnclick(fo.nom) + ')">' +
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
             '<span style="font-size:12px;font-weight:600;' + (STATE.statsFiltreFournisseur===fo.nom?'text-decoration:underline':'') + '">' + escapeHTML(fo.nom) + '</span>' +
             '<span style="font-size:12px;font-weight:700;color:#B23A2E">' + fmt(fo.montant) + ' MAD</span>' +
           '</div>' +
-          '<div style="height:5px;background:#F1EEE8;border-radius:3px"><div style="height:100%;background:#B23A2E;border-radius:3px;width:' + Math.round(fo.montant/maxFournisseur*100) + '%"></div></div>' +
-          '<div style="font-size:10px;color:#9C9186;margin-top:2px">' + fo.count + ' achat(s) · toucher pour filtrer</div>' +
+          '<div style="height:5px;background:#F5F6F1;border-radius:3px"><div style="height:100%;background:#B23A2E;border-radius:3px;width:' + Math.round(fo.montant/maxFournisseur*100) + '%"></div></div>' +
+          '<div style="font-size:10px;color:#8E9C95;margin-top:2px">' + fo.count + ' achat(s) · toucher pour filtrer</div>' +
         '</div>';
       }).join('') + '</div>' : '';
   }
@@ -591,8 +591,8 @@ function _renderOngletDetail() {
   const modes = Object.keys(modeMap).sort(function(a,b){return modeMap[b]-modeMap[a];});
   const modeEl = el('sa-modes-paiement');
   if (modeEl) {
-    modeEl.innerHTML = modes.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #E3DCCF;margin-top:10px">' +
-      '<div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:14px">💰 Modes de paiement</div>' +
+    modeEl.innerHTML = modes.length ? '<div style="background:#fff;border-radius:14px;padding:14px;border:1px solid #DDE3DA;margin-top:10px">' +
+      '<div style="font-size:13px;font-weight:700;color:#0F1F1A;margin-bottom:14px">💰 Modes de paiement</div>' +
       modes.map(function(mode) {
         const montant = modeMap[mode];
         const pct = totalPaiements > 0 ? Math.round(montant/totalPaiements*100) : 0;
@@ -601,7 +601,7 @@ function _renderOngletDetail() {
             '<span style="font-size:12px;font-weight:600">' + (modeLabels[mode] || escapeHTML(mode)) + '</span>' +
             '<span style="font-size:12px;font-weight:700">' + fmt(montant) + ' MAD (' + pct + '%)</span>' +
           '</div>' +
-          '<div style="height:6px;background:#F1EEE8;border-radius:3px"><div style="height:100%;background:#1F6F72;border-radius:3px;width:' + pct + '%"></div></div>' +
+          '<div style="height:6px;background:#F5F6F1;border-radius:3px"><div style="height:100%;background:#1B5E4B;border-radius:3px;width:' + pct + '%"></div></div>' +
         '</div>';
       }).join('') + '</div>' : '';
   }
@@ -654,23 +654,23 @@ function _renderOngletPrevision() {
         '<div style="font-size:19px;font-weight:800;color:#fff">' + fmt(margeTotale) + ' MAD</div>' +
         '<div style="font-size:9px;color:rgba(255,255,255,0.65)">Sur ' + ventesAvecMarge + ' ligne(s) liée(s) au catalogue</div>' +
       '</div>' +
-      '<div style="background:linear-gradient(135deg,#154F52,#1F6F72);border-radius:14px;padding:14px">' +
+      '<div style="background:linear-gradient(135deg,#134436,#1B5E4B);border-radius:14px;padding:14px">' +
         '<div style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:600">🧾 CA total (payé)</div>' +
         '<div style="font-size:19px;font-weight:800;color:#fff">' + fmt(factures.reduce(function(s,f){return s+(f.ttc||0);},0)) + ' MAD</div>' +
       '</div>' +
     '</div>' +
-    '<div style="font-size:13px;font-weight:700;color:#241F1B;margin-bottom:8px">🔮 Prévision de trésorerie (3 prochains mois)</div>' +
-    '<div style="background:#fff;border-radius:14px;border:1px solid #E3DCCF;margin-bottom:8px">' +
+    '<div style="font-size:13px;font-weight:700;color:#0F1F1A;margin-bottom:8px">🔮 Prévision de trésorerie (3 prochains mois)</div>' +
+    '<div style="background:#fff;border-radius:14px;border:1px solid #DDE3DA;margin-bottom:8px">' +
       previsions.map(function(pr, i) {
         const nomMois = nomsMois[parseInt(pr.mois.split('-')[1]) - 1] + ' ' + pr.mois.split('-')[0];
-        return '<div style="padding:12px 14px;' + (i<previsions.length-1?'border-bottom:1px solid #F1EEE8':'') + '">' +
+        return '<div style="padding:12px 14px;' + (i<previsions.length-1?'border-bottom:1px solid #F5F6F1':'') + '">' +
           '<div style="display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:600">' + nomMois + '</span>' +
           '<span style="font-size:13px;font-weight:800;color:' + (pr.net>=0?'#55702E':'#B23A2E') + '">' + fmt(pr.net) + ' MAD</span></div>' +
-          '<div style="font-size:10px;color:#9C9186">À recevoir : ' + fmt(pr.aRecevoir) + ' · À payer : ' + fmt(pr.aPayer) + '</div>' +
+          '<div style="font-size:10px;color:#8E9C95">À recevoir : ' + fmt(pr.aRecevoir) + ' · À payer : ' + fmt(pr.aPayer) + '</div>' +
         '</div>';
       }).join('') +
     '</div>' +
-    '<div style="font-size:10px;color:#9C9186;text-align:center;padding:6px">Estimation basée sur les échéances déjà enregistrées — ne remplace pas une vraie prévision de trésorerie professionnelle.</div>';
+    '<div style="font-size:10px;color:#8E9C95;text-align:center;padding:6px">Estimation basée sur les échéances déjà enregistrées — ne remplace pas une vraie prévision de trésorerie professionnelle.</div>';
 }
 
 // ============================================================
@@ -692,15 +692,15 @@ function renderSearchResults(q) {
   let html = '';
   if (rF.length) {
     html += `<div class="sec-label" style="padding:16px 0 8px">Factures (${rF.length})</div>`;
-    html += rF.map(f => `<div class="card" onclick="openDetail(${f.id})"><div class="card-ico" style="background:#E9F4F3">📄</div><div class="card-body"><div class="card-name">${escapeHTML(f.client)}</div><div class="card-ref">${f.ref}</div></div><div class="card-amt">${fmt(f.ttc)} MAD</div></div>`).join('');
+    html += rF.map(f => `<div class="card" onclick="openDetail(${f.id})"><div class="card-ico" style="background:#E7F2EC">📄</div><div class="card-body"><div class="card-name">${escapeHTML(f.client)}</div><div class="card-ref">${f.ref}</div></div><div class="card-amt">${fmt(f.ttc)} MAD</div></div>`).join('');
   }
   if (rC.length) {
     html += `<div class="sec-label" style="padding:16px 0 8px">Clients (${rC.length})</div>`;
-    html += rC.map(c => `<div class="card" onclick="openDetailClient(${c.id})"><div class="card-ico" style="background:#E9F4F3;font-weight:700;color:#1F6F72;font-size:18px">${escapeHTML(c.nom).charAt(0).toUpperCase()}</div><div class="card-body"><div class="card-name">${escapeHTML(c.nom)}</div><div class="card-ref">${c.tel||c.email||''}</div></div></div>`).join('');
+    html += rC.map(c => `<div class="card" onclick="openDetailClient(${c.id})"><div class="card-ico" style="background:#E7F2EC;font-weight:700;color:#1B5E4B;font-size:18px">${escapeHTML(c.nom).charAt(0).toUpperCase()}</div><div class="card-body"><div class="card-name">${escapeHTML(c.nom)}</div><div class="card-ref">${c.tel||c.email||''}</div></div></div>`).join('');
   }
   if (rD.length) {
     html += `<div class="sec-label" style="padding:16px 0 8px">Devis (${rD.length})</div>`;
-    html += rD.map(d => `<div class="card" onclick="openDetailDevis(${d.id})"><div class="card-ico" style="background:#FBF0DA">📝</div><div class="card-body"><div class="card-name">${escapeHTML(d.client)}</div><div class="card-ref">${d.ref}</div></div><div class="card-amt">${fmt(d.ttc)} MAD</div></div>`).join('');
+    html += rD.map(d => `<div class="card" onclick="openDetailDevis(${d.id})"><div class="card-ico" style="background:#E7F2EC">📝</div><div class="card-body"><div class="card-name">${escapeHTML(d.client)}</div><div class="card-ref">${d.ref}</div></div><div class="card-amt">${fmt(d.ttc)} MAD</div></div>`).join('');
   }
   res.innerHTML = html;
 }
@@ -777,13 +777,13 @@ function filtrerAnnuaire() {
   list.innerHTML = data.map(e => `
     <div class="card" style="margin:0 20px 10px;cursor:pointer" onclick="${e._type === 'comptable' ? `voirProfilComptablePublic(${valeurPourOnclick(e.email||'')},${valeurPourOnclick(e.raison||'')},${valeurPourOnclick(e.tel||'')})` : `ouvrirActionsEntreprise(${valeurPourOnclick(e.id_unique||'')},${valeurPourOnclick(e.id||'')},${valeurPourOnclick(e.raison||'')},${valeurPourOnclick(e.tel||'')},${valeurPourOnclick(e.email||'')})`}">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:44px;height:44px;border-radius:12px;background:#E9F4F3;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
+        <div style="width:44px;height:44px;border-radius:12px;background:#E7F2EC;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${secteurEmoji[e.secteur]||'🏢'}</div>
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px">${escapeHTML(e.raison||'')}${estProfilComplet(e) ? '<span title="Profil complet" style="font-size:11px;background:#EEF3E4;color:#55702E;padding:1px 6px;border-radius:8px;font-weight:700">✓ Profil complet</span>' : ''}</div>
-          <div style="font-size:11px;color:#6B5F54;margin-top:2px">${e._type === 'comptable' ? '🧮 Cabinet comptable' + (e._nomPerso ? ' · ' + escapeHTML(e._nomPerso) : '') : escapeHTML(e.secteur||'') + (e.ville?' · 📍'+escapeHTML(e.ville):'')}</div>
-          ${e.tel?`<div style="font-size:11px;color:#9C9186">📞 ${escapeHTML(e.tel)}</div>`:''}
+          <div style="font-size:11px;color:#5B6B64;margin-top:2px">${e._type === 'comptable' ? '🧮 Cabinet comptable' + (e._nomPerso ? ' · ' + escapeHTML(e._nomPerso) : '') : escapeHTML(e.secteur||'') + (e.ville?' · 📍'+escapeHTML(e.ville):'')}</div>
+          ${e.tel?`<div style="font-size:11px;color:#8E9C95">📞 ${escapeHTML(e.tel)}</div>`:''}
         </div>
-        <div style="font-size:18px;color:#9C9186">›</div>
+        <div style="font-size:18px;color:#8E9C95">›</div>
       </div>
     </div>
   `).join('');
@@ -800,10 +800,10 @@ function voirProfilComptablePublic(email, raison, tel) {
     '<div style="background:#fff;border-radius:18px;padding:24px;max-width:320px;width:100%;text-align:center">' +
       '<div style="font-size:36px;margin-bottom:10px">🧮</div>' +
       '<div style="font-size:16px;font-weight:700;margin-bottom:4px">' + escapeHTML(raison) + '</div>' +
-      '<div style="font-size:12px;color:#9C9186;margin-bottom:18px">Cabinet comptable</div>' +
+      '<div style="font-size:12px;color:#8E9C95;margin-bottom:18px">Cabinet comptable</div>' +
       (tel ? '<a href="https://wa.me/' + tel.replace(/[^0-9]/g,'') + '" target="_blank" style="display:block;padding:12px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px">💬 Contacter par WhatsApp</a>' : '') +
-      (email ? '<a href="mailto:' + email + '" style="display:block;padding:12px;background:#F1EEE8;color:#2A2420;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px">✉️ ' + escapeHTML(email) + '</a>' : '') +
-      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:10px;background:none;border:none;color:#9C9186;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
+      (email ? '<a href="mailto:' + email + '" style="display:block;padding:12px;background:#F5F6F1;color:#14241F;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px">✉️ ' + escapeHTML(email) + '</a>' : '') +
+      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="width:100%;padding:10px;background:none;border:none;color:#8E9C95;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -813,20 +813,20 @@ function ouvrirActionsEntreprise(idUnique, id, raison, tel, email) {
   const qrDataUrl = genererQrDataUrl(url, 180);
   const qrHtml = qrDataUrl
     ? '<img src="' + qrDataUrl + '" style="width:140px;height:140px;margin-bottom:16px" alt="QR code">'
-    : '<div style="width:140px;height:140px;margin:0 auto 16px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9C9186;text-align:center;padding:8px">QR indisponible</div>';
+    : '<div style="width:140px;height:140px;margin:0 auto 16px;border-radius:8px;background:#F5F6F1;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8E9C95;text-align:center;padding:8px">QR indisponible</div>';
 
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';
   overlay.innerHTML =
     '<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px;max-width:420px;width:100%;text-align:center">' +
-      '<div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 16px"></div>' +
+      '<div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 16px"></div>' +
       '<div style="font-size:16px;font-weight:700;margin-bottom:16px">' + escapeHTML(raison) + '</div>' +
       qrHtml +
       '<div style="display:flex;flex-direction:column;gap:8px">' +
-        (id ? '<button class="btn-annuaire-discuter" style="padding:12px;background:#E9F4F3;color:#1F6F72;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💬 Discuter</button>' : '') +
-        '<button class="btn-annuaire-devis" style="padding:12px;background:#FBF0DA;color:#A67A16;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>' +
-        '<button class="btn-annuaire-voir-profil" style="padding:12px;background:#F1EEE8;color:#2A2420;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📄 Voir le profil complet</button>' +
-        '<button class="btn-annuaire-fermer" style="padding:11px;background:none;color:#9C9186;border:none;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
+        (id ? '<button class="btn-annuaire-discuter" style="padding:12px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💬 Discuter</button>' : '') +
+        '<button class="btn-annuaire-devis" style="padding:12px;background:#E7F2EC;color:#134436;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📝 Demander un devis</button>' +
+        '<button class="btn-annuaire-voir-profil" style="padding:12px;background:#F5F6F1;color:#14241F;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📄 Voir le profil complet</button>' +
+        '<button class="btn-annuaire-fermer" style="padding:11px;background:none;color:#8E9C95;border:none;font-size:13px;cursor:pointer;font-family:inherit">Fermer</button>' +
       '</div>' +
     '</div>';
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });

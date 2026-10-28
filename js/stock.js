@@ -200,14 +200,14 @@ async function ouvrirHistoriqueStock(produitId) {
 
   const overlay = document.createElement('div');
   overlay.id = 'historique-stock-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F1EEE8;overflow-y:auto;font-family:inherit';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#F5F6F1;overflow-y:auto;font-family:inherit';
   overlay.innerHTML =
-    '<div style="background:linear-gradient(135deg,#241F1B,#A67A16);padding:14px 20px;display:flex;align-items:center;gap:12px">' +
+    '<div style="background:linear-gradient(135deg,#0F1F1A,#134436);padding:14px 20px;display:flex;align-items:center;gap:12px">' +
       '<button class="close-hist-stock" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
       '<div><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(p.nom) + '</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.5)">Stock actuel : ' + (p.stock !== null && p.stock !== undefined ? p.stock : '—') + ' ' + (p.unite||'u') + (p.cout_moyen ? ' · Coût moyen : ' + fmt(p.cout_moyen) + ' MAD' : '') + '</div></div>' +
     '</div>' +
-    '<div id="historique-stock-list" style="padding:16px 20px"><div style="text-align:center;color:#9C9186;padding:30px">⏳ Chargement...</div></div>';
+    '<div id="historique-stock-list" style="padding:16px 20px"><div style="text-align:center;color:#8E9C95;padding:30px">⏳ Chargement...</div></div>';
 
   document.body.appendChild(overlay);
   overlay.querySelector('.close-hist-stock').onclick = function() { overlay.remove(); };
@@ -224,11 +224,11 @@ async function ouvrirHistoriqueStock(produitId) {
     const typeLabels = { entree: 'Entrée', sortie: 'Sortie', ajustement: 'Ajustement' };
     list.innerHTML = mouvements.map(function(m) {
       return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #EAE4DA;align-items:flex-start">' +
-        '<div style="width:32px;height:32px;border-radius:8px;background:#F1EEE8;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (typeIcons[m.type]||'📌') + '</div>' +
+        '<div style="width:32px;height:32px;border-radius:8px;background:#F5F6F1;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">' + (typeIcons[m.type]||'📌') + '</div>' +
         '<div style="flex:1">' +
-          '<div style="font-size:13px;font-weight:600;color:' + (typeColors[m.type]||'#2A2420') + '">' + (typeLabels[m.type]||m.type) + ' — ' + m.quantite + ' ' + (p.unite||'u') + (m.cout_unitaire ? ' · ' + fmt(m.cout_unitaire) + ' MAD/u' : '') + '</div>' +
-          (m.motif ? '<div style="font-size:12px;color:#6B5F54;margin-top:2px">' + escapeHTML(m.motif) + (m.reference ? ' · ' + escapeHTML(m.reference) : '') + '</div>' : '') +
-          '<div style="font-size:11px;color:#9C9186;margin-top:3px">' + formatDateTime(m.created_at) + '</div>' +
+          '<div style="font-size:13px;font-weight:600;color:' + (typeColors[m.type]||'#14241F') + '">' + (typeLabels[m.type]||m.type) + ' — ' + m.quantite + ' ' + (p.unite||'u') + (m.cout_unitaire ? ' · ' + fmt(m.cout_unitaire) + ' MAD/u' : '') + '</div>' +
+          (m.motif ? '<div style="font-size:12px;color:#5B6B64;margin-top:2px">' + escapeHTML(m.motif) + (m.reference ? ' · ' + escapeHTML(m.reference) : '') + '</div>' : '') +
+          '<div style="font-size:11px;color:#8E9C95;margin-top:3px">' + formatDateTime(m.created_at) + '</div>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -270,22 +270,22 @@ function renderRapportStock() {
   const valeurTotale = calculerValeurStockTotale();
 
   container.innerHTML =
-    '<div style="background:#FBF0DA;border-radius:12px;padding:12px 16px;margin-bottom:12px">' +
-      '<div style="font-size:11px;color:#A67A16;font-weight:600">Méthode active : ' + methodeLabel + '</div>' +
-      '<div style="font-size:20px;font-weight:800;color:#A67A16;margin-top:4px">' + fmt(valeurTotale) + ' MAD</div>' +
-      '<div style="font-size:10px;color:#A67A16">Valeur totale du stock (modifiable dans Paramètres)</div>' +
+    '<div style="background:#E7F2EC;border-radius:12px;padding:12px 16px;margin-bottom:12px">' +
+      '<div style="font-size:11px;color:#134436;font-weight:600">Méthode active : ' + methodeLabel + '</div>' +
+      '<div style="font-size:20px;font-weight:800;color:#134436;margin-top:4px">' + fmt(valeurTotale) + ' MAD</div>' +
+      '<div style="font-size:10px;color:#134436">Valeur totale du stock (modifiable dans Paramètres)</div>' +
     '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 60px 70px 80px;padding:8px 4px;font-size:9px;font-weight:700;text-transform:uppercase;color:#9C9186;border-bottom:1px solid #E3DCCF">' +
+    '<div style="display:grid;grid-template-columns:1fr 60px 70px 80px;padding:8px 4px;font-size:9px;font-weight:700;text-transform:uppercase;color:#8E9C95;border-bottom:1px solid #DDE3DA">' +
       '<div>Article</div><div style="text-align:right">Stock</div><div style="text-align:right">Coût moy.</div><div style="text-align:right">Valeur</div>' +
     '</div>' +
     produits.map(function(p) {
       const cout = Number(p.cout_moyen) || 0;
       const valeur = (Number(p.stock)||0) * cout;
       const bas = p.seuil_alerte != null && Number(p.stock) <= Number(p.seuil_alerte);
-      return '<div style="display:grid;grid-template-columns:1fr 60px 70px 80px;padding:10px 4px;border-bottom:1px solid #F1EEE8;align-items:center">' +
+      return '<div style="display:grid;grid-template-columns:1fr 60px 70px 80px;padding:10px 4px;border-bottom:1px solid #F5F6F1;align-items:center">' +
         '<div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHTML(p.nom) + (bas ? ' ⚠️' : '') + '</div>' +
         '<div style="font-size:12px;text-align:right;' + (bas ? 'color:#B23A2E;font-weight:700' : '') + '">' + p.stock + '</div>' +
-        '<div style="font-size:11px;text-align:right;color:#6B5F54">' + fmt(cout) + '</div>' +
+        '<div style="font-size:11px;text-align:right;color:#5B6B64">' + fmt(cout) + '</div>' +
         '<div style="font-size:12px;text-align:right;font-weight:700">' + fmt(valeur) + '</div>' +
       '</div>';
     }).join('');

@@ -61,8 +61,8 @@ function installerBoutonGoogle() {
   if (!cible) return;
   var bloc = document.createElement('div');
   bloc.id = 'btn-google';
-  bloc.innerHTML = '<div style="text-align:center;font-size:12px;color:#9C9186;margin:12px 0 8px">ou</div>' +
-    '<button type="button" class="a-btn" style="background:#fff;color:#2A2420;border:1.5px solid #E3DCCF" onclick="connexionGoogle()">Continuer avec Google</button>';
+  bloc.innerHTML = '<div style="text-align:center;font-size:12px;color:#8E9C95;margin:12px 0 8px">ou</div>' +
+    '<button type="button" class="a-btn" style="background:#fff;color:#14241F;border:1.5px solid #DDE3DA" onclick="connexionGoogle()">Continuer avec Google</button>';
   cible.insertAdjacentElement('afterend', bloc);
   var nom = navigateurIntegre();
   if (nom) {

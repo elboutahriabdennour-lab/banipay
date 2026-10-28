@@ -56,12 +56,12 @@ function renderMessagesTicket() {
   // casser si get_messages_ticket ne renvoie pas encore ce champ.
   const monId = sb.user?.id;
   zone.innerHTML = !msgs.length
-    ? '<div style="text-align:center;padding:30px;color:#9C9186;font-size:12px">Aucun message pour l\'instant</div>'
+    ? '<div style="text-align:center;padding:30px;color:#8E9C95;font-size:12px">Aucun message pour l\'instant</div>'
     : msgs.map(function(m) {
         const estMoi = ('auteur_id' in m) ? (m.auteur_id === monId) : (m.auteur === monLabel);
         const nomAffiche = estMoi ? 'Vous' : (m.auteur_nom || (m.auteur === 'agent' ? 'Support' : 'Client'));
         return '<div style="display:flex;justify-content:' + (estMoi ? 'flex-end' : 'flex-start') + ';margin-bottom:8px">' +
-          '<div style="max-width:75%;background:' + (estMoi ? '#1F6F72' : '#F1EEE8') + ';color:' + (estMoi ? '#fff' : '#2A2420') + ';padding:8px 12px;border-radius:14px;font-size:13px">' +
+          '<div style="max-width:75%;background:' + (estMoi ? '#1B5E4B' : '#F5F6F1') + ';color:' + (estMoi ? '#fff' : '#14241F') + ';padding:8px 12px;border-radius:14px;font-size:13px">' +
             '<div style="font-size:10px;opacity:0.7;margin-bottom:2px">' + escapeHTML(nomAffiche) + '</div>' +
             escapeHTML(m.contenu||'') +
           '</div></div>';
@@ -106,12 +106,12 @@ function renderMesTicketsSupport() {
   zone.innerHTML = !tickets.length
     ? '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket envoyé</div></div>'
     : tickets.map(function(t) {
-        return '<div onclick="ouvrirChatTicket(' + t.id + ',' + valeurPourOnclick(t.sujet||'') + ')" style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF;cursor:pointer">' +
+        return '<div onclick="ouvrirChatTicket(' + t.id + ',' + valeurPourOnclick(t.sujet||'') + ')" style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #DDE3DA;cursor:pointer">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
             '<div style="font-size:13px;font-weight:700">' + escapeHTML(t.sujet||'') + '</div>' +
-            '<span style="font-size:10px;font-weight:600;color:#1F6F72">' + (statutLabel[t.statut]||t.statut) + '</span>' +
+            '<span style="font-size:10px;font-weight:600;color:#1B5E4B">' + (statutLabel[t.statut]||t.statut) + '</span>' +
           '</div>' +
-          '<div style="font-size:11px;color:#9C9186">' + formatDateTime(t.created_at) + ' · 👆 Toucher pour discuter</div>' +
+          '<div style="font-size:11px;color:#8E9C95">' + formatDateTime(t.created_at) + ' · 👆 Toucher pour discuter</div>' +
         '</div>';
       }).join('');
 }

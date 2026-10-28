@@ -15,7 +15,7 @@ async function chargerDevisRecusAcceptes() {
   if (!email) return;
 
   const zone = el('devis-recus-liste');
-  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#9C9186">⏳ Chargement...</div>';
+  if (zone) zone.innerHTML = '<div style="text-align:center;padding:20px;color:#8E9C95">⏳ Chargement...</div>';
 
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_notifications', {
@@ -67,17 +67,17 @@ function renderDevisRecusAcceptes() {
 
   const resume = el('devis-recus-resume');
   if (resume) resume.innerHTML = aConvertir
-    ? '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#A67A16">📝 ' + aConvertir + ' devis accepté(s) pas encore converti(s) en BC</span></div>'
+    ? '<div style="background:#E7F2EC;border-radius:12px;padding:12px;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#134436">📝 ' + aConvertir + ' devis accepté(s) pas encore converti(s) en BC</span></div>'
     : '';
 
   zone.innerHTML = !liste.length
     ? '<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun devis reçu accepté') + '</div>' + (q ? '' : '<div>Les devis que vous acceptez depuis d\'autres entreprises Tafir apparaîtront ici</div>') + '</div>'
     : liste.map(function(x) {
         const d = x.devis;
-        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +
+        return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #DDE3DA">' +
           '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
             '<div><div style="font-size:13px;font-weight:700">' + escapeHTML(d.ref||'') + '</div>' +
-            '<div style="font-size:11px;color:#9C9186">' + escapeHTML(x.emetteurRaison || d.client || '') + ' · ' + (d.date_emission||'') + '</div></div>' +
+            '<div style="font-size:11px;color:#8E9C95">' + escapeHTML(x.emetteurRaison || d.client || '') + ' · ' + (d.date_emission||'') + '</div></div>' +
             '<div style="font-size:13px;font-weight:800">' + fmt(d.ttc||0) + ' MAD</div>' +
           '</div>' +
           (x.dejaConverti

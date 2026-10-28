@@ -34,17 +34,17 @@ function renderEmployes() {
   if (resume) {
     resume.innerHTML =
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">' +
-        '<div style="background:#E9F4F3;border-radius:12px;padding:12px"><div style="font-size:11px;color:#1F6F72;font-weight:600">👥 Effectif actif</div><div style="font-size:18px;font-weight:800;color:#1F6F72">' + actifs.length + '</div></div>' +
-        '<div style="background:#FBF0DA;border-radius:12px;padding:12px"><div style="font-size:11px;color:#A67A16;font-weight:600">💰 Masse salariale/mois</div><div style="font-size:18px;font-weight:800;color:#A67A16">' + fmt(masseSalariale) + ' MAD</div></div>' +
+        '<div style="background:#E7F2EC;border-radius:12px;padding:12px"><div style="font-size:11px;color:#1B5E4B;font-weight:600">👥 Effectif actif</div><div style="font-size:18px;font-weight:800;color:#1B5E4B">' + actifs.length + '</div></div>' +
+        '<div style="background:#E7F2EC;border-radius:12px;padding:12px"><div style="font-size:11px;color:#134436;font-weight:600">💰 Masse salariale/mois</div><div style="font-size:18px;font-weight:800;color:#134436">' + fmt(masseSalariale) + ' MAD</div></div>' +
       '</div>';
   }
   container.innerHTML = !employesAffiches.length
     ? '<div class="empty"><div class="empty-ico">👥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun employé enregistré') + '</div></div>'
     : employesAffiches.map(function(e) {
-        const statutColor = e.statut === 'actif' ? '#6E8F4E' : '#9C9186';
+        const statutColor = e.statut === 'actif' ? '#6E8F4E' : '#8E9C95';
         const statutLabel = e.statut === 'actif' ? 'Actif' : 'Inactif';
         return '<div class="card" onclick="ouvrirFicheEmploye(' + e.id + ')">' +
-          '<div class="card-ico" style="background:#E9F4F3">🧑‍💼</div>' +
+          '<div class="card-ico" style="background:#E7F2EC">🧑‍💼</div>' +
           '<div class="card-body"><div class="card-name">' + escapeHTML(e.nom||'') + '</div>' +
           '<div class="card-ref">' + escapeHTML(e.poste||'') + (e.date_entree ? ' · depuis ' + e.date_entree : '') + '</div>' +
           '<span style="font-size:9px;font-weight:600;color:' + statutColor + '">' + statutLabel + '</span></div>' +

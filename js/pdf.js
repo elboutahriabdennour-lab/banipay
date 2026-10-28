@@ -27,7 +27,7 @@ function optionsPDFFacture(f) {
   const lignes = lignesEnTableau(f.lignes);
   const docUrl = window.location.origin + window.location.pathname + '?doc=' + f.id + '&t=' + (f.token_public||'');
   return {
-    type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#C9971F',
+    type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#1B5E4B',
     emetteur: profil,
     destinataire:(function() {
       const clientTrouve = (STATE.clients || []).find(function(c) { return c.nom === f.client; });
@@ -55,7 +55,7 @@ function previewPDF() {
   if(!client){showToast('Remplissez le formulaire','error');return;}
   const _tp=calculerTotauxLignes(STATE.lignesF);
   genDocPDF({
-    type:'FACTURE', ref:el('f-ref')?.value, color: (STATE.profil||{}).couleur_accent || '#C9971F',
+    type:'FACTURE', ref:el('f-ref')?.value, color: (STATE.profil||{}).couleur_accent || '#1B5E4B',
     emetteur: STATE.profil||{},
     destinataire:{nom:client,chantier:el('f-chantier')?.value},
     date:el('f-date')?.value,
@@ -107,7 +107,7 @@ function construireHTMLDoc(opts) {
   const signatureEmetteur = opts.signatureEmetteur || (p && p.signature_entreprise) || null;
   const signatureClient = opts.signatureClient || null;
   const isAvoir=type==='AVOIR', isDevis=type==='DEVIS'||type==='DEV', isBC=type==='BC', isBL=type==='BL';
-  const colorHeader = isAvoir?'#8E2E24':isDevis?'#B8860B':isBC?'#7C5CA6':isBL?'#6E8F4E':(color||'#C9971F');
+  const colorHeader = isAvoir?'#8E2E24':isDevis?'#B8860B':isBC?'#7C5CA6':isBL?'#6E8F4E':(color||'#1B5E4B');
   const paye = Number(montant_recu)||0;
   const restant = Math.max(0, ttc - paye);
   const langue = _langPDF();
@@ -119,7 +119,7 @@ function construireHTMLDoc(opts) {
   const qrUrl = docUrl ? _qrLocal(docUrl) : '';
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
-    return `<tr style="background:${i%2===0?'#F1EEE8':'#fff'}">
+    return `<tr style="background:${i%2===0?'#F5F6F1':'#fff'}">
       <td style="padding:7px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
       <td style="padding:5px 8px;text-align:center;font-size:10px">${escapeHTML(String(l.qte||1))} ${escapeHTML(String(l.unite||''))}</td>
       ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px">${Number(l.tva) >= 0 ? Number(l.tva) : 20} %</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
@@ -127,60 +127,60 @@ function construireHTMLDoc(opts) {
   }).join('');
   const _tx = calculerTotauxLignes(lignes);
   const rowsTVA = (_tx.parTaux.length && Math.abs(_tx.tva - Number(tva || 0)) <= 0.02)
-    ? _tx.parTaux.map(function (x) { return '<div class="tot-row" style="background:#F7EFDC"><span>' + t.tva + ' ' + x.taux + ' %' + (x.taux === 0 ? (langue === 'ar' ? ' (معفى)' : ' (exonéré)') : '') + '</span><span style="font-weight:600;color:#2A2420">' + fmt(x.tva) + ' ' + devise + '</span></div>'; }).join('')
-    : '<div class="tot-row" style="background:#F7EFDC"><span>' + t.tva + '</span><span style="font-weight:600;color:#2A2420">' + fmt(tva) + ' ' + devise + '</span></div>';
+    ? _tx.parTaux.map(function (x) { return '<div class="tot-row" style="background:#F7EFDC"><span>' + t.tva + ' ' + x.taux + ' %' + (x.taux === 0 ? (langue === 'ar' ? ' (معفى)' : ' (exonéré)') : '') + '</span><span style="font-weight:600;color:#14241F">' + fmt(x.tva) + ' ' + devise + '</span></div>'; }).join('')
+    : '<div class="tot-row" style="background:#F7EFDC"><span>' + t.tva + '</span><span style="font-weight:600;color:#14241F">' + fmt(tva) + ' ' + devise + '</span></div>';
   const html = `<!DOCTYPE html><html lang="${langue}" dir="${estRTL ? 'rtl' : 'ltr'}"><head><meta charset="UTF-8">
 <title>${escapeHTML(typeAffiche)} ${escapeHTML(ref)}<\/title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Karla',Arial,sans-serif;color:#2A2420;font-size:11px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm;display:flex;flex-direction:column}
+body{font-family:'Inter',Arial,sans-serif;color:#14241F;font-size:11px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm;display:flex;flex-direction:column}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact;width:210mm;margin:0}
   .no-print{display:none}
   @page{margin:0;size:A4 portrait}
 }
 @media screen{body{box-shadow:0 0 20px rgba(0,0,0,0.1);margin:20px auto}}
-.header{background:#2A2420;padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start}
+.header{background:#14241F;padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start}
 .h-logo{max-width:80px;max-height:40px;object-fit:contain;margin-bottom:5px;display:block}
-.h-company{font-family:'Baloo 2',Arial,sans-serif;font-size:15px;font-weight:700;color:#fff}
+.h-company{font-family:'Inter',Arial,sans-serif;font-size:15px;font-weight:700;color:#fff}
 .h-right{text-align:right}
 .h-doc-label{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;background:${colorHeader};padding:3px 10px;border-radius:4px;display:inline-block;margin-bottom:6px}
 .h-ref{font-size:11px;font-weight:700;color:#fff}
 .h-meta{font-size:10px;color:rgba(255,255,255,0.55);margin-top:3px;line-height:1.7}
 .stripe{background:${colorHeader};height:3px}
 .blocs{display:flex;gap:8px;padding:8px 24px}
-.bloc{flex:1;border-radius:6px;overflow:hidden;border:1px solid #E3DCCF}
+.bloc{flex:1;border-radius:6px;overflow:hidden;border:1px solid #DDE3DA}
 .bloc-hd{padding:5px 8px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:${colorHeader};color:#fff}
 .bloc-bd{padding:7px 8px;background:#fff}
 .bloc-bd .main{font-size:11px;font-weight:700;margin-bottom:1px}
-.bloc-bd .line{font-size:9px;color:#6B5F54;margin-top:1px}
+.bloc-bd .line{font-size:9px;color:#5B6B64;margin-top:1px}
 .table-section{padding:0 24px}
 table{width:100%;border-collapse:collapse}
-thead tr{background:#2A2420}
+thead tr{background:#14241F}
 thead th{padding:5px 8px;font-size:9px;font-weight:700;color:#fff;text-align:left}
 thead th:nth-child(2){text-align:center}
 thead th:nth-child(3),thead th:nth-child(4),thead th:nth-child(5){text-align:right}
 tbody td{border-bottom:1px solid #EAE4DA}
 .totaux{padding:6px 24px;display:flex;justify-content:flex-end}
-.totaux-box{width:250px;border:1px solid #E3DCCF;border-radius:6px;overflow:hidden}
-.tot-row{display:flex;justify-content:space-between;padding:6px 8px;font-size:10px;border-bottom:1px solid #EAE4DA;color:#6B5F54}
-.tot-main{display:flex;justify-content:space-between;padding:7px 8px;background:#2A2420}
+.totaux-box{width:250px;border:1px solid #DDE3DA;border-radius:6px;overflow:hidden}
+.tot-row{display:flex;justify-content:space-between;padding:6px 8px;font-size:10px;border-bottom:1px solid #EAE4DA;color:#5B6B64}
+.tot-main{display:flex;justify-content:space-between;padding:7px 8px;background:#14241F}
 .tot-main-lbl{font-size:11px;font-weight:700;color:#fff}
 .tot-main-val{font-size:12px;font-weight:700;color:${colorHeader}}
-.arrete{padding:2px 24px 6px;font-size:10px;color:#6B5F54;font-style:italic}
+.arrete{padding:2px 24px 6px;font-size:10px;color:#5B6B64;font-style:italic}
 .bank-box{margin:5px 24px;background:#EEF3E4;border-radius:6px;padding:7px 10px;font-size:9px;color:#6E8F4E;border:1px solid #C9D9AE}
-.refs-box{margin:4px 24px;background:#E9F4F3;border-radius:6px;padding:5px 10px;font-size:9px;color:#A67A16;display:flex;gap:16px}
+.refs-box{margin:4px 24px;background:#E7F2EC;border-radius:6px;padding:5px 10px;font-size:9px;color:#134436;display:flex;gap:16px}
 .sig-zone{display:flex;gap:8px;padding:5px 24px;margin-bottom:5px}
-.sig-item{flex:1;border:1px dashed #CDBEA0;border-radius:6px;padding:10px;min-height:60px}
-.sig-lbl{font-size:8px;font-weight:600;color:#9C9186;text-transform:uppercase;margin-bottom:2px}
-.footer{display:flex;justify-content:space-between;align-items:center;padding:6px 24px;margin-top:auto;border-top:1px solid #E3DCCF}
-.footer-brand{font-family:'Baloo 2',Arial,sans-serif;font-size:9px;font-weight:700;color:#1F6F72}
-.footer-brand span{color:#C9971F}
-.footer-center{font-size:7px;color:#9C9186;text-align:center;flex:1;padding:0 8px;line-height:1.5}
+.sig-item{flex:1;border:1px dashed #BFCBBF;border-radius:6px;padding:10px;min-height:60px}
+.sig-lbl{font-size:8px;font-weight:600;color:#8E9C95;text-transform:uppercase;margin-bottom:2px}
+.footer{display:flex;justify-content:space-between;align-items:center;padding:6px 24px;margin-top:auto;border-top:1px solid #DDE3DA}
+.footer-brand{font-family:'Inter',Arial,sans-serif;font-size:9px;font-weight:700;color:#1B5E4B}
+.footer-brand span{color:#1B5E4B}
+.footer-center{font-size:7px;color:#8E9C95;text-align:center;flex:1;padding:0 8px;line-height:1.5}
 .footer-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.footer-page{font-size:8px;color:#9C9186}
+.footer-page{font-size:8px;color:#8E9C95}
 <\/style><\/head><body>
 <div style="display:flex;flex-direction:column;flex:1">
 <div class="header">
@@ -246,7 +246,7 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
 </div>
 ${showPrices?`
 <div class="totaux"><div class="totaux-box">
-  <div class="tot-row"><span>${t.sousTotalHt}</span><span style="font-weight:600;color:#2A2420">${fmt(ht)} ${devise}</span></div>
+  <div class="tot-row"><span>${t.sousTotalHt}</span><span style="font-weight:600;color:#14241F">${fmt(ht)} ${devise}</span></div>
   ${rowsTVA}
   ${paye>0?`<div class="tot-row" style="background:#EEF3E4"><span>${t.dejaRecu}</span><span style="font-weight:600;color:#6E8F4E">- ${fmt(paye)} ${devise}</span></div>`:''}
   <div class="tot-main"><span class="tot-main-lbl">${t.totalTtc}</span><span class="tot-main-val">${fmt(ttc)} ${devise}</span></div>
@@ -260,7 +260,7 @@ ${motif?`<div style="margin:6px 28px;background:#F5E4E1;border-left:3px solid #B
 ${(p.banque||p.rib)?`<div class="bank-box">
   ${t.coordBancaires} — ${escapeHTML(p.banque||'')}${p.rib?' · RIB/IBAN : <strong>'+escapeHTML(p.rib)+'</strong>':''}
   ${p.conditions?'<br>⏱️ '+t.conditions+' : '+escapeHTML(p.conditions):''}
-</div>`:`${p.conditions?`<div class="bank-box" style="background:#E9F4F3;border-color:#CFE3E2;color:#A67A16">⏱️ ${t.conditionsPaiement} : ${escapeHTML(p.conditions)}</div>`:''}`}
+</div>`:`${p.conditions?`<div class="bank-box" style="background:#E7F2EC;border-color:#CFE3E2;color:#134436">⏱️ ${t.conditionsPaiement} : ${escapeHTML(p.conditions)}</div>`:''}`}
 <div style="flex:1;min-height:20px"></div>
 <div class="sig-zone">
   <div class="sig-item"><div class="sig-lbl">${t.cachetSignature}</div>${signatureEmetteur?`<img src="${signatureEmetteur}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
@@ -279,7 +279,7 @@ ${(p.banque||p.rib)?`<div class="bank-box">
       ${badge_tva?'<span style="background:#7C5CA6;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px">T</span>':''}
     </div>`:''}
     ${qrUrl?`<img src="${qrUrl}" style="width:40px;height:40px;display:block;margin-bottom:2px">`:''}
-    ${docUrl?`<div style="font-size:7px;color:#9C9186;max-width:80px;word-break:break-all">${docUrl.replace('https://','')}</div>`:''}
+    ${docUrl?`<div style="font-size:7px;color:#8E9C95;max-width:80px;word-break:break-all">${docUrl.replace('https://','')}</div>`:''}
     <div class="footer-page">Page 1/1</div>
   </div>
 </div>
@@ -297,7 +297,7 @@ function ouvrirPDFViewer(htmlContent, ref) {
   screen.id = 'pdf-fullscreen';
   screen.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column';
   const bar = document.createElement('div');
-  bar.style.cssText = 'background:#1F6F72;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0';
+  bar.style.cssText = 'background:#1B5E4B;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0';
   const btnBack = document.createElement('button');
   btnBack.textContent = '← Retour';
   btnBack.style.cssText = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
