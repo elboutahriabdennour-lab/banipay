@@ -2,7 +2,7 @@
 // ============================================================
 // À ne pas confondre avec devis-recus.js (des devis qu'ON a reçus d'une
 // autre entreprise, à convertir en bon de commande). Ici, c'est
-// l'inverse : un client (avec ou sans compte Zelto, via
+// l'inverse : un client (avec ou sans compte Tafir, via
 // demande-devis-fournisseur.js ou le profil public) NOUS demande un
 // devis, et on doit pouvoir le transformer en vrai devis à lui envoyer.
 STATE.demandesDevis = STATE.demandesDevis || [];

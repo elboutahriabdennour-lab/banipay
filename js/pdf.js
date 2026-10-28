@@ -268,7 +268,7 @@ ${(p.banque||p.rib)?`<div class="bank-box">
 </div>
 <div style="flex:1"></div>
 <div class="footer">
-  <div class="footer-brand">Zel<span>to</span></div>
+  <div class="footer-brand">Ta<span>fir</span></div>
   <div class="footer-center">
     ${[p.rc?'RC: '+escapeHTML(p.rc):'', p.identifiant_fiscal?'IF: '+escapeHTML(p.identifiant_fiscal):'', p.ice?'ICE: '+escapeHTML(p.ice):'', p.patente?'Pat: '+escapeHTML(p.patente):'', p.tel?'Tél. : '+escapeHTML(p.tel):'', p.email?'E-mail : '+escapeHTML(p.email):''].filter(Boolean).join(' · ')}
     ${p.adresse?'<br>'+escapeHTML(p.adresse||'')+(p.ville?', '+escapeHTML(p.ville):''):''}

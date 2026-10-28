@@ -10,13 +10,13 @@ const SUPPORT_EMAIL = 'elboutahriabdennour@gmail.com';
 const SUPPORT_TEL = '+212643655520';
 
 function contacterSupportEmail() {
-  const sujet = encodeURIComponent('Support Zelto');
+  const sujet = encodeURIComponent('Support Tafir');
   const corps = encodeURIComponent('Bonjour,\n\nDécrivez votre problème ici...\n\nCompte : ' + (sb.user?.email || ''));
   window.location.href = 'mailto:' + SUPPORT_EMAIL + '?subject=' + sujet + '&body=' + corps;
 }
 
 function contacterSupportWhatsApp() {
-  const msg = encodeURIComponent('Bonjour, j\'ai besoin d\'aide sur Zelto (compte: ' + (sb.user?.email || '') + ')');
+  const msg = encodeURIComponent('Bonjour, j\'ai besoin d\'aide sur Tafir (compte: ' + (sb.user?.email || '') + ')');
   window.open('https://wa.me/' + SUPPORT_TEL.replace(/[^0-9]/g,'') + '?text=' + msg, '_blank');
 }
 
@@ -46,7 +46,7 @@ async function envoyerTicketSupport() {
 
 async function ouvrirEspaceSupport() {
   if (!sb.user?.id) {
-    showToast('Connectez-vous d\'abord avec votre compte Zelto', 'error');
+    showToast('Connectez-vous d\'abord avec votre compte Tafir', 'error');
     return;
   }
   showToast('⏳ Vérification des droits...');
@@ -326,7 +326,7 @@ const FAQ_ZELTO = [
   { mots: ['gratuit', 'prix', 'abonnement', 'payant'], reponse: 'Contactez-nous par email ou WhatsApp pour connaître les conditions d\'utilisation actuelles.' },
   { mots: ['supprimer', 'compte', 'désinscrire'], reponse: 'Profil → Paramètres → Sécurité → "Supprimer mon compte". Cette action est irréversible.' },
   { mots: ['mot de passe', 'password'], reponse: 'Profil → Paramètres → Sécurité → "Changer le mot de passe". Si vous êtes déconnecté, utilisez "Mot de passe oublié" sur l\'écran de connexion.' },
-  { mots: ['client', 'ajouter un client'], reponse: 'Écran Clients → "+ Ajouter" — manuellement, via un lien Zelto, ou en import CSV.' },
+  { mots: ['client', 'ajouter un client'], reponse: 'Écran Clients → "+ Ajouter" — manuellement, via un lien Tafir, ou en import CSV.' },
   { mots: ['stock'], reponse: 'Activez le suivi de stock sur un article (Catalogue → modifier l\'article) pour voir sa quantité et recevoir une alerte si elle est basse.' },
   { mots: ['bon de commande', 'bc'], reponse: 'Paramètres → "Bons de commande" ou directement depuis Achats. Vous pouvez aussi en recevoir automatiquement quand un client accepte un devis.' },
 ];
@@ -366,6 +366,6 @@ function initChatbot() {
   const zone = el('chatbot-messages');
   if (zone && !zone.dataset.init) {
     zone.dataset.init = '1';
-    ajouterMessageChatbot('👋 Bonjour ! Posez-moi une question sur Zelto (facture, devis, TVA, comptable...). Si je ne sais pas répondre, contactez le support directement au-dessus.', false);
+    ajouterMessageChatbot('👋 Bonjour ! Posez-moi une question sur Tafir (facture, devis, TVA, comptable...). Si je ne sais pas répondre, contactez le support directement au-dessus.', false);
   }
 }

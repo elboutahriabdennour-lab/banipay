@@ -98,7 +98,7 @@ function renderAchats() {
 
 async function importerFournisseurZelto() {
   const lien = (el('achat-fournisseur-lien')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Tafir', 'error'); return; }
 
   showToast('\u23f3 Chargement...');
 
@@ -296,7 +296,7 @@ async function traiterLienScanne(texte) {
     await importerFournisseurZelto();
     goScreen('nouvelle-achat');
   } else {
-    showToast('QR code non reconnu par Zelto', 'error');
+    showToast('QR code non reconnu par Tafir', 'error');
   }
 }
 
@@ -315,7 +315,7 @@ async function enregistrerAchatDepuisFactureAcceptee(factureId) {
     const achat = {
       user_id: uid,
       cree_par: sb.user?.id,
-      fournisseur: emetteur.raison || 'Fournisseur Zelto',
+      fournisseur: emetteur.raison || 'Fournisseur Tafir',
       fournisseur_id: f.user_id,
       fournisseur_banipay: true,
       ref_fournisseur: f.ref || '',
@@ -555,7 +555,7 @@ function ouvrirDetailAchat(id) {
       '<button onclick="document.getElementById(\'achat-detail-overlay\').remove()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
       '<div><div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(a.fournisseur || '') + '</div>' +
       '<div style="font-size:11px;color:rgba(255,255,255,0.6)">' + (a.ref_fournisseur || '') + '</div></div>' +
-      (a.fournisseur_banipay ? '<span style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:600">Zelto</span>' : '') +
+      (a.fournisseur_banipay ? '<span style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:600">Tafir</span>' : '') +
     '</div>' +
 
     '<div style="margin:16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E3DCCF">' +
@@ -599,7 +599,7 @@ function ouvrirDetailAchat(id) {
 
     (a.fournisseur_banipay && a.fournisseur_id ?
       '<div style="margin:0 16px 16px;background:#E9F4F3;border-radius:16px;padding:16px;border:1px solid #CFE3E2;cursor:pointer" onclick="voirFicheFournisseur(\'' + (a.fournisseur_id || '') + '\')">' +
-        '<div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:8px">🔗 Fournisseur sur Zelto</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#1F6F72;margin-bottom:8px">🔗 Fournisseur sur Tafir</div>' +
         '<div style="font-size:13px;font-weight:600">' + escapeHTML(a.fournisseur || '') + '</div>' +
         '<div style="font-size:11px;color:#6B5F54;margin-top:4px">Appuyez pour voir la fiche</div>' +
       '</div>' : '') +
@@ -650,7 +650,7 @@ async function voirFicheFournisseur(fournisseurId) {
       '<div style="background:#2A2420;padding:14px 20px;display:flex;align-items:center;gap:12px">' +
         '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>' +
         '<div style="font-size:14px;font-weight:700;color:#fff">' + escapeHTML(p.raison || '') + '</div>' +
-        '<span style="margin-left:auto;background:#1F6F72;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">Zelto</span>' +
+        '<span style="margin-left:auto;background:#1F6F72;color:#fff;font-size:10px;padding:3px 8px;border-radius:6px;font-weight:600">Tafir</span>' +
       '</div>' +
 
       '<div style="padding:16px">' +

@@ -468,7 +468,7 @@ async function _continuerApresAuthentification(email, errEl, remember) {
       if (typeof loadAbonnements === 'function') await _essai(loadAbonnements, 'loadAbonnements');
       if (typeof verifierAbonnements === 'function') await _essai(verifierAbonnements, 'verifierAbonnements');
       // Crée un profil entreprise minimal si absent, pour apparaître
-      // immédiatement dans l'annuaire Zelto sans avoir à remplir le profil
+      // immédiatement dans l'annuaire Tafir sans avoir à remplir le profil
       await _essai(assurerProfilEntrepriseMinimal, 'assurerProfilEntrepriseMinimal');
 
       // Traiter invitation en attente
@@ -693,7 +693,7 @@ async function synchroniserProfilComptable() {
 }
 
 // S'assure qu'une entreprise a au moins un profil minimal (raison sociale)
-// dès la première connexion, pour apparaître dans l'annuaire Zelto sans
+// dès la première connexion, pour apparaître dans l'annuaire Tafir sans
 // attendre que l'utilisateur remplisse son profil manuellement.
 async function assurerProfilEntrepriseMinimal() {
   if (STATE.profil && STATE.profil.raison) return; // déjà rempli

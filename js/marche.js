@@ -87,7 +87,7 @@ function ouvrirAnnonceMarche(id) {
       return;
     }
     zone.innerHTML =
-      '<div style="font-size:12px;color:#6B5F54;margin-bottom:8px">Publié par ' + escapeHTML(p.raison || 'une entreprise Zelto') + '</div>' +
+      '<div style="font-size:12px;color:#6B5F54;margin-bottom:8px">Publié par ' + escapeHTML(p.raison || 'une entreprise Tafir') + '</div>' +
       (p.tel ? '<a href="https://wa.me/' + p.tel.replace(/[^0-9]/g,'') + '" target="_blank" style="display:block;padding:11px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px;text-align:center">💬 Contacter par WhatsApp</a>' : '') +
       (p.email ? '<a href="mailto:' + p.email + '" style="display:block;padding:11px;background:#F1EEE8;color:#2A2420;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;margin-bottom:8px;text-align:center">✉️ ' + escapeHTML(p.email) + '</a>' : '');
   }).catch(function() {

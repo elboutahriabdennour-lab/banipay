@@ -276,7 +276,7 @@ async function gererClicNotification(e) {
             user_id: (STATE.entrepriseId || sb.user?.id),
             nom: inv.comptable_email.split('@')[0],
             email: inv.comptable_email,
-            note: 'Mon comptable Zelto',
+            note: 'Mon comptable Tafir',
             type: 'comptable_banipay'
           })
         });

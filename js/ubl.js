@@ -34,7 +34,7 @@ function genererXMLUBLFacture(facture, profilEmetteur, clientInfo) {
   </cac:InvoiceLine>`;
   }).join('');
   return `<?xml version="1.0" encoding="UTF-8"?>
-<!-- Généré par Zelto — préparation UBL 2.1, format international OASIS.
+<!-- Généré par Tafir — préparation UBL 2.1, format international OASIS.
      Profil marocain DGI/xHub non encore publié au moment de la génération :
      ce fichier n'est PAS garanti conforme tant que la DGI n'a pas publié
      ses spécifications définitives. Voir commentaire en tête de ubl.js. -->

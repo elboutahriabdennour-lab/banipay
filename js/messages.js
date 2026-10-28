@@ -489,7 +489,7 @@ async function demarrerConversation(entrepriseId, entrepriseEmail, comptableEmai
   // est forcément mon comptable", et écrasait alors entId/entEmail avec
   // MA PROPRE identité — y compris quand on discute avec une AUTRE
   // entreprise (bouton "Discuter" de l'annuaire, ou avec un client
-  // Zelto). Résultat : la conversation se créait avec mon propre id des
+  // Tafir). Résultat : la conversation se créait avec mon propre id des
   // deux côtés, l'autre entreprise n'y étant jamais réellement
   // rattachée — elle ne la voyait donc jamais dans ses messages.
   // On se base maintenant sur un signal fiable, peu importe le rôle :

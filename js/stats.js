@@ -8,7 +8,7 @@
 // entre les trois. La couleur a aussi été reprise : les deux écrans
 // utilisaient un jeu de couleurs générique (bleu/vert vif/ambre) sans
 // rapport avec la vraie palette de l'app — remplacé ici par les
-// couleurs Zelto (zellige, safran, sauge, brique).
+// couleurs Tafir (zellige, safran, sauge, brique).
 // ============================================================
 STATE.statsPeriode = STATE.statsPeriode || 'tout';
 STATE.statsFiltreClient = STATE.statsFiltreClient || null;
@@ -867,7 +867,7 @@ function exporterCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'zelto_factures_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.download = 'tafir_factures_' + new Date().toISOString().split('T')[0] + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 3000);
   showToast('✅ Export CSV téléchargé !', 'success');
@@ -886,7 +886,7 @@ function exporterCSVDevis() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'zelto_devis_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.download = 'tafir_devis_' + new Date().toISOString().split('T')[0] + '.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 3000);
   showToast('✅ Export devis CSV !', 'success');

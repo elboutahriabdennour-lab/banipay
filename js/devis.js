@@ -464,7 +464,7 @@ function rechercherFournisseurBC() {
       const list = el('fournisseur-bc-picker-list');
       if (!list) return;
       if (resultats.length) {
-        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
+        list.innerHTML += '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Tafir</div>' +
           resultats.map(function(p) {
             return '<div class="card" onclick="choisirFournisseurBC(' + valeurPourOnclick(p.raison||'') + ',' + valeurPourOnclick(p.id) + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
           }).join('');
@@ -488,7 +488,7 @@ function choisirFournisseurBC(nom, id) {
 
 async function importerFournisseurBCDepuisLien() {
   const lien = (el('bc-fournisseur-lien')?.value || '').trim();
-  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Tafir', 'error'); return; }
   try {
     const url = new URL(lien.startsWith('http') ? lien : 'https://x.com?' + lien);
     const profilId = url.searchParams.get('profil') || url.searchParams.get('portail');
@@ -620,7 +620,7 @@ async function enregistrerBCDepuisDevisAccepte(devisId) {
     const bc = {
       user_id: uid,
       ref: getRef('BC', STATE.bonsCommande || []),
-      fournisseur: emetteur.raison || 'Fournisseur Zelto',
+      fournisseur: emetteur.raison || 'Fournisseur Tafir',
       fournisseur_id: d.user_id,
       date_commande: today(),
       livraison_prevue: null,
@@ -707,7 +707,7 @@ function renderFacturesRecues() {
   const tri = el('factures-recues-tri')?.value || 'defaut';
   if (tri === 'montant-desc') factures = factures.slice().sort(function(a, b) { return (Number(b.ttc)||0) - (Number(a.ttc)||0); });
   if (!factures.length) {
-    container.innerHTML = '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucune facture reçue') + '</div>' + (q ? '' : '<div>Les factures que vous envoient vos fournisseurs Zelto apparaîtront ici</div>') + '</div>';
+    container.innerHTML = '<div class="empty"><div class="empty-ico">📥</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucune facture reçue') + '</div>' + (q ? '' : '<div>Les factures que vous envoient vos fournisseurs Tafir apparaîtront ici</div>') + '</div>';
     return;
   }
   container.innerHTML = factures.map(function(f) {
@@ -737,7 +737,7 @@ async function convertirFactureEnAchat(factureId) {
     const achat = {
       user_id: (STATE.entrepriseId || sb.user.id),
       cree_par: sb.user.id,
-      fournisseur: fournisseurProfil.raison || 'Fournisseur Zelto',
+      fournisseur: fournisseurProfil.raison || 'Fournisseur Tafir',
       fournisseur_id: facture.user_id || null,
       fournisseur_banipay: true,
       ref_fournisseur: facture.ref || '',
@@ -830,7 +830,7 @@ async function convertirBCEnFacture(bcId) {
       user_id: (STATE.entrepriseId || sb.user.id),
       cree_par: sb.user.id,
       ref: getRef('FAC', STATE.factures || []),
-      client: client.raison || 'Client Zelto',
+      client: client.raison || 'Client Tafir',
       date_emission: today(),
       paiement: 'virement',
       statut: 'envoyee',
@@ -1324,7 +1324,7 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
             <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${escapeHTML(d.client)}</strong></div>
           </div>
           <p style="color:#6B5F54;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
-          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
+          <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>
         </div>
       `;
       return;
@@ -1381,7 +1381,7 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
         </div>
         <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>
         ${(action === 'accepter' && !isFacture && sb.user?.id) ? '<button id="btn-convertir-bc-manuel" style="width:100%;padding:12px;background:#7C5CA6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px">📋 Convertir en bon de commande</button>' : ''}
-        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
+        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>
         <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect">4</span>s...</div>
       </div>
     `;

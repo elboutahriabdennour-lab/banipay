@@ -52,7 +52,7 @@ function renderPositionFinanciere() {
         '<div style="font-size:18px;font-weight:800;color:#A67A16">' + fmt(valeurStock) + ' MAD</div>' +
       '</div>' : '') +
 
-    '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans Zelto — ne remplace pas un état de trésorerie comptable complet.</div>' +
+    '<div style="font-size:11px;color:#9C9186;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans Tafir — ne remplace pas un état de trésorerie comptable complet.</div>' +
     '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#241F1B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>' +
     '<button onclick="goScreen(\'rapprochement\',null)" style="width:100%;padding:12px;background:#1F6F72;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Rapprocher mes paiements</button>';
 }

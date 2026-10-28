@@ -12,7 +12,7 @@ function afficherOnboarding() {
     <div style="background:#fff;border-radius:20px 20px 0 0;padding:28px 24px 24px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto">
       <div style="text-align:center;margin-bottom:20px">
         <div style="font-size:36px;margin-bottom:8px">👋</div>
-        <div style="font-size:18px;font-weight:700;font-family:'Fraunces',serif">Bienvenue sur Zelto !</div>
+        <div style="font-size:18px;font-weight:700;font-family:'Fraunces',serif">Bienvenue sur Tafir !</div>
         <div style="font-size:13px;color:#6B5F54;margin-top:4px">3 étapes pour démarrer — 5 minutes suffisent.</div>
       </div>
       <div onclick="onboardingAction('client')" style="display:flex;align-items:center;gap:14px;padding:16px;background:#F1EEE8;border-radius:14px;margin-bottom:10px;cursor:pointer">

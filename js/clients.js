@@ -10,11 +10,11 @@ function ouvrirScannerQR() {
   box.innerHTML = `
     <div style="width:40px;height:4px;background:#E3DCCF;border-radius:2px;margin:0 auto 20px"></div>
     <div style="font-size:16px;font-weight:700;color:#2A2420;margin-bottom:6px">➕ Ajouter un client</div>
-    <div style="font-size:12px;color:#6B5F54;margin-bottom:20px">Importez un client via son lien Zelto, un QR code ou manuellement</div>
+    <div style="font-size:12px;color:#6B5F54;margin-bottom:20px">Importez un client via son lien Tafir, un QR code ou manuellement</div>
 
     <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">🔗 Via lien Zelto</div>
-      <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #E3DCCF;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil Zelto...">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">🔗 Via lien Tafir</div>
+      <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #E3DCCF;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil Tafir...">
       <button onclick="importerClientDepuisLien()" style="width:100%;margin-top:10px;padding:12px;background:#C9971F;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Importer</button>
     </div>
 
@@ -24,7 +24,7 @@ function ouvrirScannerQR() {
         📷 Ouvrir la caméra
         <input type="file" accept="image/*" capture="environment" style="display:none" onchange="importerClientDepuisQRImage(event)">
       </label>
-      <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:6px">Prend une photo du QR code profil Zelto</div>
+      <div style="font-size:10px;color:#9C9186;text-align:center;margin-top:6px">Prend une photo du QR code profil Tafir</div>
     </div>
 
     <div style="background:#F1EEE8;border-radius:14px;padding:16px;margin-bottom:12px">
@@ -52,7 +52,7 @@ function ouvrirScannerQR() {
 async function importerClientDepuisLien() {
   const input = el('qr-link-input');
   const lien = input?.value.trim();
-  if (!lien) { showToast('Collez un lien Zelto', 'error'); return; }
+  if (!lien) { showToast('Collez un lien Tafir', 'error'); return; }
 
   let profilId = null;
   try {
@@ -88,7 +88,7 @@ async function importerClientDepuisLien() {
       email: p.email || '',
       adresse: p.adresse ? (p.adresse + (p.ville ? ', ' + p.ville : '')) : '',
       ice: p.ice || '',
-      notes: 'Importé via profil Zelto',
+      notes: 'Importé via profil Tafir',
       reference_id: p.id || null,
       created_at: new Date().toISOString(),
     };
@@ -99,7 +99,7 @@ async function importerClientDepuisLien() {
       renderClients();
       document.getElementById('scanner-overlay')?.remove();
       showToast('✅ Client ' + p.raison + ' ajouté !', 'success');
-      logAudit('client', (result[0] || newClient).id, 'creation', p.raison + ' (import lien Zelto)');
+      logAudit('client', (result[0] || newClient).id, 'creation', p.raison + ' (import lien Tafir)');
     }
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
@@ -113,7 +113,7 @@ async function importerClientDepuisLien() {
 // non fonctionnel. Corrigé en utilisant jsQR (bibliothèque légère,
 // aucune dépendance) pour décoder réellement l'image prise, puis en
 // réutilisant importerClientDepuisLien() une fois le lien extrait —
-// même logique d'import que le champ "Via lien Zelto" juste au-dessus.
+// même logique d'import que le champ "Via lien Tafir" juste au-dessus.
 //
 // NÉCESSITE d'ajouter dans app.html, avant la fermeture de </body> :
 // <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
@@ -478,7 +478,7 @@ function ouvrirMsgClient() {
   if (c.reference_id) {
     demarrerConversation(c.reference_id, c.email, sb.user?.email);
   } else {
-    showToast('Ce client n a pas de compte Zelto', 'error');
+    showToast('Ce client n a pas de compte Tafir', 'error');
   }
 }
 
@@ -531,7 +531,7 @@ function filtrerPickerClients() {
       if (!container || !resultats.length) return;
       const zone = document.createElement('div');
       zone.id = 'clients-picker-annuaire';
-      zone.innerHTML = '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Zelto</div>' +
+      zone.innerHTML = '<div style="font-size:10px;font-weight:700;color:#9C9186;text-transform:uppercase;padding:8px 4px 4px">Sur Tafir</div>' +
         resultats.map(function(p) {
           return '<div class="card" style="cursor:pointer" onclick="choisirClientPicker(' + valeurPourOnclick(p.raison||'') + ')"><div class="card-ico" style="background:#E9F4F3">📲</div><div class="card-body"><div class="card-name">' + escapeHTML(p.raison||'') + '</div><div class="card-ref">' + escapeHTML(p.secteur||'') + (p.ville?' · '+escapeHTML(p.ville):'') + '</div></div></div>';
         }).join('');

@@ -3,7 +3,7 @@
 // client qui demande à nous ; ici, c'est nous qui demandons à notre
 // fournisseur).
 // ============================================================
-// Deux cas : le fournisseur a un compte Zelto (on réutilise directement
+// Deux cas : le fournisseur a un compte Tafir (on réutilise directement
 // creer_demande_devis, comme s'il recevait la demande de "son client")
 // ou pas (on envoie simplement un message WhatsApp/email avec la
 // description du besoin).
@@ -31,17 +31,17 @@ async function envoyerDemandeDevisFournisseur() {
   const description = (el('ddf-description')?.value || '').trim();
 
   if (!description) { showToast('Décrivez ce dont vous avez besoin', 'error'); return; }
-  if (!lien && !nom) { showToast('Indiquez le fournisseur (nom ou lien Zelto)', 'error'); return; }
-  // FIX: sans lien Zelto ET sans téléphone, la demande ne peut être remise
+  if (!lien && !nom) { showToast('Indiquez le fournisseur (nom ou lien Tafir)', 'error'); return; }
+  // FIX: sans lien Tafir ET sans téléphone, la demande ne peut être remise
   // à personne — avant, ce cas passait quand même et finissait sur une
   // tentative de copie presse-papier qui pouvait échouer silencieusement,
   // laissant l'utilisateur sans aucun retour concret ("le bouton ne
   // marche pas").
-  if (!lien && !tel) { showToast('Indiquez un lien Zelto ou un téléphone pour pouvoir transmettre la demande', 'error'); return; }
+  if (!lien && !tel) { showToast('Indiquez un lien Tafir ou un téléphone pour pouvoir transmettre la demande', 'error'); return; }
 
   const p = STATE.profil || {};
 
-  // CAS 1 : fournisseur sur Zelto (lien collé) — on lui envoie la demande
+  // CAS 1 : fournisseur sur Tafir (lien collé) — on lui envoie la demande
   // directement via la même RPC que celle utilisée par nos propres clients.
   if (lien) {
     let idUnique = null;
@@ -59,14 +59,14 @@ async function envoyerDemandeDevisFournisseur() {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             p_id_unique: idUnique,
-            p_client_nom: p.raison || sb.user?.email || 'Client Zelto',
+            p_client_nom: p.raison || sb.user?.email || 'Client Tafir',
             p_client_tel: p.tel || '',
             p_client_email: sb.user?.email || '',
             p_description: description
           })
         });
         if (resp.ok) {
-          showToast('✅ Demande envoyée au fournisseur sur Zelto', 'success');
+          showToast('✅ Demande envoyée au fournisseur sur Tafir', 'success');
           goScreen(window._ddfRetour || 'bon-commande', null);
           return;
         }
@@ -78,10 +78,10 @@ async function envoyerDemandeDevisFournisseur() {
         const errText = await resp.text().catch(function(){ return ''; });
         console.warn('Échec envoi demande de devis:', resp.status, errText);
         if (!tel) {
-          showToast('❌ Fournisseur introuvable sur Zelto — ajoutez son téléphone pour l\'envoyer par WhatsApp à la place', 'error');
+          showToast('❌ Fournisseur introuvable sur Tafir — ajoutez son téléphone pour l\'envoyer par WhatsApp à la place', 'error');
           return;
         }
-        showToast('Fournisseur introuvable sur Zelto — envoi par WhatsApp à la place', 'error');
+        showToast('Fournisseur introuvable sur Tafir — envoi par WhatsApp à la place', 'error');
       } catch(e) {
         console.warn('Erreur réseau — demande de devis:', e.message);
         if (!tel) {
@@ -92,7 +92,7 @@ async function envoyerDemandeDevisFournisseur() {
     }
   }
 
-  // CAS 2 : pas de compte Zelto (ou envoi Zelto raté) — message WhatsApp,
+  // CAS 2 : pas de compte Tafir (ou envoi Tafir raté) — message WhatsApp,
   // avec un téléphone obligatoire à ce stade (garanti par la validation
   // du début).
   const msg = encodeURIComponent(

@@ -299,7 +299,7 @@ function envoyerVia(canal) {
         _marquerBCEnvoye(id, true);
         closeAllModals();
       } else {
-        showToast('Aucun compte Zelto lié à ce fournisseur — liez-le via "Fournisseur sur Zelto" en modifiant le bon de commande', 'error');
+        showToast('Aucun compte Tafir lié à ce fournisseur — liez-le via "Fournisseur sur Tafir" en modifiant le bon de commande', 'error');
       }
     } else {
       afficherPickerClientsZelto();
@@ -339,7 +339,7 @@ function afficherPickerClientsZelto() {
   const clientsBP = (STATE.clients || []).filter(c => c.reference_id);
   picker.style.display = 'block';
   if (!clientsBP.length) {
-    picker.innerHTML = '<div style="font-size:12px;color:#9C9186;padding:10px;text-align:center">Aucun client avec compte Zelto lié. Importez-le via son lien de profil dans la fiche client.</div>';
+    picker.innerHTML = '<div style="font-size:12px;color:#9C9186;padding:10px;text-align:center">Aucun client avec compte Tafir lié. Importez-le via son lien de profil dans la fiche client.</div>';
     return;
   }
   picker.innerHTML = clientsBP.map(c =>
@@ -376,7 +376,7 @@ async function envoyerVersCompteZelto(destinataireId, destinataireNom, destinata
       showToast('❌ Échec de l\'envoi à ' + destinataireNom, 'error');
       return;
     }
-    showToast('✅ Envoyé à ' + destinataireNom + ' sur Zelto !', 'success');
+    showToast('✅ Envoyé à ' + destinataireNom + ' sur Tafir !', 'success');
     closeAllModals();
   } catch(e) {
     showToast('❌ Erreur d\'envoi', 'error');

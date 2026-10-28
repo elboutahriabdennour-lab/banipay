@@ -44,7 +44,7 @@ function renderFournisseurs() {
     const nb = (STATE.achats || []).filter(function (a) { return a.fournisseur === f.nom; }).length;
     return '<div class="card" onclick="ouvrirFicheFournisseur(' + valeurPourOnclick(f.id) + ')">' +
       '<div class="card-ico" style="background:#F5E4E1;font-weight:700;color:#B23A2E;font-size:18px">' + escapeHTML((f.nom || '?').charAt(0).toUpperCase()) + '</div>' +
-      '<div class="card-body"><div class="card-name">' + escapeHTML(f.nom || '') + (f.zelto_id ? ' <span style="font-size:9px;background:#E9F4F3;color:#1F6F72;padding:2px 6px;border-radius:6px;font-weight:700">Zelto</span>' : '') + '</div>' +
+      '<div class="card-body"><div class="card-name">' + escapeHTML(f.nom || '') + (f.zelto_id ? ' <span style="font-size:9px;background:#E9F4F3;color:#1F6F72;padding:2px 6px;border-radius:6px;font-weight:700">Tafir</span>' : '') + '</div>' +
       '<div class="card-ref">' + escapeHTML([f.ville, f.tel, f.email].filter(Boolean).join(' · ')) + '</div></div>' +
       '<div class="card-end"><div style="font-size:12px;color:#B23A2E;font-weight:600">' + (typeof fmtInt === 'function' ? fmtInt(total) : Math.round(total)) + ' MAD</div>' +
       '<div style="font-size:10px;color:#9C9186">' + nb + ' achat' + (nb > 1 ? 's' : '') + '</div></div></div>';
@@ -168,5 +168,5 @@ function exporterFournisseursCSV() {
   const rows = (STATE.fournisseurs || []).map(function (f) {
     return [f.nom, f.tel, f.email, f.ville, f.adresse, f.ice, f.identifiant_fiscal, f.conditions_paiement, f.notes].map(function (v) { return v || ''; });
   });
-  if (typeof telechargerCSV === 'function') telechargerCSV('zelto_fournisseurs_' + today() + '.csv', headers, rows);
+  if (typeof telechargerCSV === 'function') telechargerCSV('tafir_fournisseurs_' + today() + '.csv', headers, rows);
 }

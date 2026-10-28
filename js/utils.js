@@ -254,7 +254,7 @@ function exporterHistoriqueCSV() {
   const rows = logs.map(function(l) {
     return [formatDateTime(l.created_at), l.type_doc || '', l.action || '', l.details || '', l.acteur_email || ''];
   });
-  telechargerCSV('zelto_historique_' + new Date().toISOString().split('T')[0] + '.csv', headers, rows);
+  telechargerCSV('tafir_historique_' + new Date().toISOString().split('T')[0] + '.csv', headers, rows);
   showToast('✅ Export téléchargé', 'success');
 }
 function parseCSV(text) {

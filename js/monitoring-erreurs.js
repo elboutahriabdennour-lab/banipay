@@ -48,13 +48,13 @@ window.addEventListener('error', function(event) {
   const message = (event.message || 'Erreur inconnue') +
     '\n' + _contexteActuel() +
     (event.filename ? '\nFichier: ' + event.filename.split('/').pop() + ':' + event.lineno : '');
-  _envoyerAlerte('🔴 Erreur Zelto', message);
+  _envoyerAlerte('🔴 Erreur Tafir', message);
 });
 
 window.addEventListener('unhandledrejection', function(event) {
   const raison = event.reason?.message || String(event.reason) || 'Rejet de promesse non géré';
   const message = raison + '\n' + _contexteActuel();
-  _envoyerAlerte('🔴 Erreur Zelto (async)', message);
+  _envoyerAlerte('🔴 Erreur Tafir (async)', message);
 });
 
 // NOUVEAU (retour utilisateur) : déclencheur de test sans console — utile
@@ -63,6 +63,6 @@ window.addEventListener('unhandledrejection', function(event) {
 // avec ?test_monitoring=1 à la fin de l'adresse pour déclencher un test.
 if (new URLSearchParams(window.location.search).get('test_monitoring') === '1') {
   setTimeout(function() {
-    _envoyerAlerte('🔴 Erreur Zelto', 'TEST DIAGNOSTIC MONITORING — déclenché par ?test_monitoring=1, ignorez ceci.\n' + _contexteActuel());
+    _envoyerAlerte('🔴 Erreur Tafir', 'TEST DIAGNOSTIC MONITORING — déclenché par ?test_monitoring=1, ignorez ceci.\n' + _contexteActuel());
   }, 800);
 }

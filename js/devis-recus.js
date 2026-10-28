@@ -71,7 +71,7 @@ function renderDevisRecusAcceptes() {
     : '';
 
   zone.innerHTML = !liste.length
-    ? '<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun devis reçu accepté') + '</div>' + (q ? '' : '<div>Les devis que vous acceptez depuis d\'autres entreprises Zelto apparaîtront ici</div>') + '</div>'
+    ? '<div class="empty"><div class="empty-ico">📝</div><div class="empty-title">' + (q ? 'Aucun résultat pour cette recherche' : 'Aucun devis reçu accepté') + '</div>' + (q ? '' : '<div>Les devis que vous acceptez depuis d\'autres entreprises Tafir apparaîtront ici</div>') + '</div>'
     : liste.map(function(x) {
         const d = x.devis;
         return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #E3DCCF">' +

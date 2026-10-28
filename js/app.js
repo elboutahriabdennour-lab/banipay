@@ -101,7 +101,7 @@ async function loadPublicProfil(profilId) {
           <button id="btn-envoyer-demande-devis" style="width:100%;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Envoyer la demande</button>
           <div id="dd-feedback" style="font-size:12px;text-align:center;margin-top:8px;min-height:16px"></div>
         </div>
-        <div style="text-align:center;margin-top:20px;font-size:11px;color:#9C9186">Profil partagé via <strong>Zelto</strong></div>
+        <div style="text-align:center;margin-top:20px;font-size:11px;color:#9C9186">Profil partagé via <strong>Tafir</strong></div>
       </div>`;
     document.getElementById('btn-ouvrir-demande-devis').onclick = function() {
       document.getElementById('zone-demande-devis').style.display = 'block';
@@ -153,7 +153,7 @@ async function afficherPageInvitation(email, entrepriseId) {
     '<div style="font-family:Karla,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#2A2420,#1F6F72);display:flex;align-items:center;justify-content:center;padding:20px">' +
     '<div style="background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:400px;text-align:center">' +
       '<div style="font-size:48px;margin-bottom:12px">🔐</div>' +
-      '<div style="font-size:22px;font-weight:800;color:#2A2420;margin-bottom:4px">Zel<span style="color:#C9971F">to</span></div>' +
+      '<div style="font-size:22px;font-weight:800;color:#2A2420;margin-bottom:4px">Ta<span style="color:#C9971F">fir</span></div>' +
       '<div style="font-size:14px;color:#6B5F54;margin-bottom:24px">Invitation accès comptable</div>' +
       '<div style="background:#E9F4F3;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
         '<div style="font-size:12px;color:#9C9186;margin-bottom:4px">Entreprise</div>' +
@@ -169,7 +169,7 @@ async function afficherPageInvitation(email, entrepriseId) {
       '<button id="btn-refuse-inv" style="width:100%;padding:14px;background:#EAE4DA;color:#6B5F54;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
         'Refuser' +
       '</button>' +
-      '<div style="margin-top:20px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>' +
+      '<div style="margin-top:20px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>' +
     '</div></div>';
   setTimeout(function() {
     const btnA = document.getElementById('btn-accept-inv');
@@ -191,8 +191,8 @@ async function accepterInvitationEmail(emailEnc, entrepriseId) {
       '<div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px">' +
         '<div style="font-size:64px;margin-bottom:16px">✅</div>' +
         '<h2 style="color:#6E8F4E;margin-bottom:8px">Invitation acceptée !</h2>' +
-        '<p style="color:#6B5F54;margin-bottom:24px">Connectez-vous à Zelto pour accéder aux données.</p>' +
-        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#C9971F;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir Zelto</a>' +
+        '<p style="color:#6B5F54;margin-bottom:24px">Connectez-vous à Tafir pour accéder aux données.</p>' +
+        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#C9971F;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir Tafir</a>' +
       '</div>';
   } catch(e) {
     document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#B23A2E">Erreur: ' + e.message + '</div>';
@@ -299,7 +299,7 @@ async function repondreBonCommandePublic(bcId, reponse, bc, token) {
         <div style="background:${reponse === 'confirme' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
           <div style="font-size:13px;color:#6B5F54">Référence : <strong>${bc.ref}</strong></div>
         </div>
-        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
+        <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Tafir</strong></div>
         <div style="margin-top:16px;font-size:11px;color:#9C9186">Redirection dans <span id="compte-redirect-bc">4</span>s...</div>
       </div>
     `;
@@ -380,7 +380,7 @@ async function afficherBonLivraisonPublic(blId, token) {
   }
 }
 
-// NOUVEAU : ce document est verrouillé à un compte Zelto précis (le
+// NOUVEAU : ce document est verrouillé à un compte Tafir précis (le
 // client a été choisi dans l'annuaire à l'envoi) — la personne qui ouvre
 // le lien n'est pas connectée avec ce compte-là. Plutôt que de laisser
 // n'importe qui avec le lien agir dessus, on explique la situation et on
@@ -399,7 +399,7 @@ async function afficherEcranAccesReserve(docId, type) {
   } catch(e) {}
 
   const lienWhatsapp = emetteur.tel
-    ? 'https://wa.me/' + emetteur.tel.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Bonjour, je souhaite accéder à mon ' + type + ' (réf. document Zelto) — pouvez-vous me confirmer mon accès ?')
+    ? 'https://wa.me/' + emetteur.tel.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent('Bonjour, je souhaite accéder à mon ' + type + ' (réf. document Tafir) — pouvez-vous me confirmer mon accès ?')
     : null;
 
   document.body.innerHTML = `
@@ -407,7 +407,7 @@ async function afficherEcranAccesReserve(docId, type) {
       <div style="font-size:44px;margin-bottom:16px">🔒</div>
       <h2 style="color:#2A2420;margin-bottom:10px">Accès réservé</h2>
       <p style="color:#6B5F54;font-size:14px;line-height:1.6;margin-bottom:24px">
-        Ce${type === 'facture' ? 'tte facture est réservée' : ' devis est réservé'} au compte Zelto du destinataire prévu par ${escapeHTML(emetteur.raison || "l'entreprise émettrice")}.
+        Ce${type === 'facture' ? 'tte facture est réservée' : ' devis est réservé'} au compte Tafir du destinataire prévu par ${escapeHTML(emetteur.raison || "l'entreprise émettrice")}.
         Si vous pensez qu'il vous est destiné, connectez-vous avec le bon compte, ou contactez directement l'émetteur.
       </p>
       ${lienWhatsapp ? `<a href="${lienWhatsapp}" target="_blank" style="display:inline-block;padding:12px 24px;background:#25D366;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;margin-bottom:12px">💬 Contacter par WhatsApp</a><br>` : ''}
@@ -847,7 +847,7 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
         '<div style="font-size:48px;margin-bottom:16px">🤝</div>' +
         '<div style="font-size:18px;font-weight:700;margin-bottom:8px">Invitation comptable</div>' +
         '<div style="font-size:14px;color:#6B5F54;margin-bottom:6px">' + escapeHTML(decodeURIComponent(nomCpt || emailCpt)) + '</div>' +
-        '<div style="font-size:13px;color:#6B5F54;margin-bottom:20px">vous invite à partager vos documents Zelto</div>' +
+        '<div style="font-size:13px;color:#6B5F54;margin-bottom:20px">vous invite à partager vos documents Tafir</div>' +
         '<div style="background:#FBF0DA;border-radius:12px;padding:12px;margin-bottom:20px;font-size:12px;color:#1F6F72">' +
           'Le comptable pourra consulter vos factures, devis et documents en lecture seule.' +
         '</div>' +

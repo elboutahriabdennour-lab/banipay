@@ -1236,7 +1236,7 @@ async function ouvrirGestionEntreprises() {
     '<div style="font-size:17px;font-weight:700;margin-bottom:16px">🏢 Mes entreprises</div>' +
     '<div style="background:#FBF0DA;border-radius:14px;padding:16px;margin-bottom:16px">' +
       '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#1F6F72;margin-bottom:10px">Inviter une entreprise</div>' +
-      '<input id="invite-ent-email" style="width:100%;padding:10px;border:1.5px solid #E8D9AE;border-radius:10px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px" type="text" placeholder="Lien Zelto, nom de l entreprise, ou email">' +
+      '<input id="invite-ent-email" style="width:100%;padding:10px;border:1.5px solid #E8D9AE;border-radius:10px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-bottom:8px" type="text" placeholder="Lien Tafir, nom de l entreprise, ou email">' +
       '<button id="btn-send-invite-ent" style="width:100%;padding:11px;background:#1F6F72;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📧 Envoyer l invitation</button>' +
     '</div>' +
     '<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#9C9186;margin-bottom:10px">Portefeuille (' + invites.length + ')</div>' +
@@ -1296,7 +1296,7 @@ async function envoyerInvitationEntreprise() {
       const data = (await r.json()) || [];
       emailEnt = data[0]?.email || null;
     } catch(eNom) {}
-    if (!emailEnt) { showToast('Aucune entreprise trouvee avec ce nom — essayez son email ou son lien Zelto', 'error'); return; }
+    if (!emailEnt) { showToast('Aucune entreprise trouvee avec ce nom — essayez son email ou son lien Tafir', 'error'); return; }
   }
   try {
     const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable', {
@@ -1307,7 +1307,7 @@ async function envoyerInvitationEntreprise() {
     if (r.ok || r.status === 201) {
       const inviteUrl = window.location.origin + window.location.pathname + '?invite_cpt=' + encodeURIComponent(emailCpt) + '&pour=' + encodeURIComponent(emailEnt);
       if (navigator.share) {
-        try { await navigator.share({ title: 'Invitation Zelto', text: 'Invitation comptable Zelto: ' + inviteUrl }); }
+        try { await navigator.share({ title: 'Invitation Tafir', text: 'Invitation comptable Tafir: ' + inviteUrl }); }
         catch(e2) { navigator.clipboard?.writeText(inviteUrl); }
       } else { navigator.clipboard?.writeText(inviteUrl); }
       showToast('✅ Invitation envoyee !', 'success');
@@ -1846,7 +1846,7 @@ function renderComptableProfil() {
   const av = el('cpt-profil-av');
   if (av) av.textContent = nom.split(' ').slice(0,2).map(function(w){return w[0]||'';}).join('').toUpperCase() || 'C';
   setEl('cpt-profil-nom', nom);
-  setEl('cpt-profil-cabinet', cabinet ? '🏛️ ' + cabinet : 'Comptable Zelto');
+  setEl('cpt-profil-cabinet', cabinet ? '🏛️ ' + cabinet : 'Comptable Tafir');
   setEl('cpt-profil-email', email);
   const lienId = 'CPT-' + uid.substr(0,8).toUpperCase();
   const lien = window.location.origin + window.location.pathname + '?comptable=' + lienId;
@@ -1871,7 +1871,7 @@ function partagerProfilComptable() {
   if (!lien) return;
   const nom = sb.user?.user_metadata?.nom || 'Comptable';
   if (navigator.share) {
-    navigator.share({ title: nom + ' — Zelto Comptable', text: 'Voici le profil de votre comptable Zelto : ' + nom, url: lien })
+    navigator.share({ title: nom + ' — Tafir Comptable', text: 'Voici le profil de votre comptable Tafir : ' + nom, url: lien })
       .catch(function() { navigator.clipboard?.writeText(lien); showToast('Lien copie !', 'success'); });
   } else { navigator.clipboard?.writeText(lien); showToast('✅ Lien copie !', 'success'); }
 }
@@ -1896,7 +1896,7 @@ async function envoyerInvitationDepuisProfil() {
     await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_user_id: sb.user?.id, p_destinataire_email: emailEnt, p_type: 'invitation_comptable', p_titre: 'Invitation de votre comptable', p_corps: nomCpt + ' souhaite acceder a vos documents Zelto en tant que comptable.', p_meta: JSON.stringify({ comptable_email: emailCpt, nom_comptable: nomCpt }) })
+      body: JSON.stringify({ p_user_id: sb.user?.id, p_destinataire_email: emailEnt, p_type: 'invitation_comptable', p_titre: 'Invitation de votre comptable', p_corps: nomCpt + ' souhaite acceder a vos documents Tafir en tant que comptable.', p_meta: JSON.stringify({ comptable_email: emailCpt, nom_comptable: nomCpt }) })
     });
     if (document.getElementById('cpt-invite-email')) document.getElementById('cpt-invite-email').value = '';
     showToast('✅ Invitation envoyee ! L entreprise sera notifiee.', 'success');
@@ -2091,7 +2091,7 @@ async function ajouterEntrepriseCommeClient(entrepriseId) {
       body: JSON.stringify({
         user_id: (STATE.entrepriseId || sb.user.id), nom: profil.raison || profil.email || '', email: profil.email || '',
         tel: profil.tel || '', adresse: profil.adresse || '', ville: profil.ville || '', ice: profil.ice || '', rc: profil.rc || '',
-        note: 'Client Zelto · ' + (profil.secteur || ''), reference_id: entrepriseId, type: 'entreprise_banipay'
+        note: 'Client Tafir · ' + (profil.secteur || ''), reference_id: entrepriseId, type: 'entreprise_banipay'
       })
     });
   } catch(e) {}
