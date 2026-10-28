@@ -111,9 +111,9 @@ body{font-size:15px;line-height:1.45}
   .nav-fab{order:-1;flex:none;justify-content:flex-start;margin-bottom:10px}
   .nav-fab .fab{width:100%;height:48px;margin:0;border:none;border-radius:12px;font-size:15px;gap:8px;font-family:'Baloo 2',sans-serif;font-weight:700}
   .nav-fab .fab::after{content:"Nouveau";font-size:15px}
-  .screen{left:232px}
+  body:not(.sans-menu) .screen{left:232px}
   .screen.active:not(#screen-auth){padding-bottom:40px}
-  .screen>*:not(.topbar):not(.form-header):not(.sec-header):not(.dash-top):not(.modal-overlay):not([style*="position:fixed"]){max-width:880px;margin-left:auto;margin-right:auto}
+  .screen:not(#screen-comptable):not(#screen-cpt-entreprise):not(#screen-comptable-profil)>*:not(.topbar):not(.form-header):not(.sec-header):not(.dash-top):not(.modal-overlay):not([style*="position:fixed"]){max-width:880px;margin-left:auto;margin-right:auto}
   .screen>.dash-top{padding-left:max(20px,calc((100% - 880px)/2 + 20px));padding-right:max(20px,calc((100% - 880px)/2 + 20px))}
   .dash-hello{padding:0}
   #accueil-recents{margin:0 auto}
@@ -128,3 +128,5 @@ body{font-size:15px;line-height:1.45}
 .card .card-end button{display:none}
 .card-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .screen>.topbar+.sec-header{margin-top:0!important;padding-top:0;padding-bottom:14px}
+
+@media (min-width:1000px){#cpt-main-content{width:100%;max-width:1100px;margin:0 auto}}
