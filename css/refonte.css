@@ -189,3 +189,13 @@ body{font-size:15px;line-height:1.45}
   #cpt-main-content{max-width:1400px}
   #cpt-main-content div[style*="repeat(2,1fr)"]{grid-template-columns:repeat(3,1fr)!important}
 }
+
+/* Champs « form-input » (recherches, tris) : même style que les autres champs */
+.form-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;color:var(--ink);outline:none;min-height:46px;box-sizing:border-box;-webkit-appearance:none;appearance:none}
+.form-input:focus{border-color:var(--zellige);box-shadow:0 0 0 3px rgba(31,111,114,.14)}
+.form-input::placeholder{color:var(--ink-faint)}
+select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239C9186' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
+
+/* Bandeau « Espace comptable » : le menu de gauche commence en dessous */
+@media (min-width:1000px){body:has(#cpt-mode-pill) .bottom-nav{top:30px}}
+@media (min-width:1000px){.bottom-nav{overflow-y:auto}}
