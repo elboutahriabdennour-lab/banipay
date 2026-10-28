@@ -348,9 +348,8 @@ async function sauvegarderFacture(isDraft = false) {
   const ht = tot.ht;
   if (!isDraft) {
     const pe = STATE.profil || {};
-    if (!/^\d{15}$/.test(String(pe.ice || '').trim())) {
-      showToast('Pour émettre une facture, complétez d\'abord votre ICE (15 chiffres) dans votre profil.', 'error');
-      setTimeout(function () { goScreen('profil', null); }, 1200);
+    if (!/^\d{15}$/.test(String(pe.ice || '').trim()) || !String(pe.adresse || '').trim()) {
+      demanderIdentiteEmetteur(function () { sauvegarderFacture(false); });
       return;
     }
   }
@@ -894,20 +893,7 @@ function buildPDFHTML(f) {
 function exportPDFString(factureOrId) {
   const f = typeof factureOrId === 'object' ? factureOrId : STATE.factures.find(x => x.id === factureOrId);
   if (!f) return '';
-  const p = STATE.profil;
-  const accent = p.couleur_accent || '#C9971F';
-  const dv = f.devise||'MAD';
-  const recu = Number(f.montant_recu||0);
-  const cli = (STATE.clients||[]).find(function(c){return c.nom===f.client;}) || {};
-  const tv = calculerTotauxLignes(f.lignes);
-  const ventTVA = (tv.parTaux.length && Math.abs(tv.tva-Number(f.tva||0))<=0.02) ? tv.parTaux.map(function(x){return '<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>'+(x.taux===0?'TVA 0 % (exonéré)':'TVA '+x.taux+' %')+'</span><span>'+fmt(x.tva)+' '+dv+'</span></div>';}).join('') : '<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>TVA</span><span>'+fmt(f.tva)+' '+dv+'</span></div>';
-  const restant = Math.max(0, Number(f.ttc)-recu);
-  const legalParts=[p.rc?'RC: '+p.rc:null,p.identifiant_fiscal?'IF: '+p.identifiant_fiscal:null,p.ice?'ICE: '+p.ice:null,p.patente?'Patente: '+p.patente:null].filter(Boolean).join(' · ');
-  // FIX (même bug que renderDetail) : garde contre des lignes stockées
-  // comme texte JSON brut plutôt qu'un vrai tableau.
-  const lignesPourPDF = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
-  const lignesHTML=lignesPourPDF.map((l,i)=>`<tr style="background:${i%2===0?'#F1EEE8':'#fff'}"><td style="padding:8px 12px;font-size:12px">${escapeHTML(l.desc||'')}<\/td><td style="padding:8px 12px;text-align:center;font-size:12px">${l.qte} ${l.unite||''}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px">${fmt(l.pu)} ${dv}<\/td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}<\/td><\/tr>`).join('');
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${f.ref}<\/title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#2A2420;font-size:12px}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}<\/style><\/head><body><div style="background:#2A2420;padding:20px 28px;display:flex;justify-content:space-between"><div><div style="font-size:16px;font-weight:700;color:#fff">${escapeHTML(p.raison||'Mon Entreprise')}<\/div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:4px">${p.tel||''} · ${p.email||''}<\/div><\/div><div style="text-align:right"><div style="background:${accent};color:#fff;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700">FACTURE<\/div><div style="color:#fff;font-size:12px;margin-top:6px">${f.ref}<\/div><div style="color:rgba(255,255,255,0.5);font-size:10px;margin-top:2px">Date: ${f.date_emission||''}<\/div><\/div><\/div><div style="background:#F1EEE8;padding:6px 28px;text-align:center;font-size:9px;color:#6B5F54;border-bottom:1px solid #E3DCCF">${legalParts}<\/div><div style="display:flex;gap:10px;padding:12px 28px"><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Facturé à<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(f.client)}<\/div>${cli.adresse?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">${escapeHTML(cli.adresse)}<\/div>`:''}${cli.ice?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">ICE: ${escapeHTML(String(cli.ice))}<\/div>`:''}${f.chantier?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">Projet: ${escapeHTML(f.chantier)}<\/div>`:''}<\/div><div style="flex:1;border:1px solid #E3DCCF;border-radius:8px;padding:10px"><div style="font-size:9px;font-weight:700;text-transform:uppercase;background:${accent};color:#fff;padding:4px 8px;margin:-10px -10px 8px;border-radius:6px 6px 0 0">Émetteur<\/div><div style="font-size:13px;font-weight:700">${escapeHTML(p.raison||'')}<\/div>${p.adresse?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">${escapeHTML(p.adresse)}${p.ville?', '+escapeHTML(p.ville):''}<\/div>`:''}${p.rc?`<div style="font-size:11px;color:#6B5F54;margin-top:3px">RC: ${escapeHTML(String(p.rc))}<\/div>`:''}<\/div><\/div><div style="padding:0 28px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#2A2420"><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:left">Désignation<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:center">Qté<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">P.U. HT<\/th><th style="padding:8px 12px;font-size:10px;color:#fff;text-align:right">Total HT<\/th><\/tr><\/thead><tbody>${lignesHTML}<\/tbody><\/table><\/div><div style="padding:10px 28px;display:flex;justify-content:flex-end"><div style="width:250px;border:1px solid #E3DCCF;border-radius:8px;overflow:hidden"><div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;border-bottom:1px solid #EAE4DA;color:#6B5F54"><span>HT<\/span><span>${fmt(f.ht)} ${dv}<\/span><\/div>${ventTVA}${recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;font-size:11px;color:#6E8F4E"><span>Déjà reçu<\/span><span>-${fmt(recu)} ${dv}<\/span><\/div>`:''}<div style="display:flex;justify-content:space-between;padding:10px 12px;background:#2A2420"><span style="font-size:12px;font-weight:700;color:#fff">TOTAL TTC<\/span><span style="font-size:14px;font-weight:700;color:#6FB3B5">${fmt(f.ttc)} ${dv}<\/span><\/div>${restant>0&&recu>0?`<div style="display:flex;justify-content:space-between;padding:7px 12px;color:#B23A2E;font-size:11px"><span>Solde restant<\/span><span>${fmt(restant)} ${dv}<\/span><\/div>`:''}<\/div><\/div><div style="padding:3px 28px 10px;font-size:10px;color:#6B5F54;font-style:italic">Arrêtée à la somme de : ${montantEnLettres(f.ttc, dv)} TTC.${f.echeance?' Échéance : '+f.echeance+'.':''} Tout retard de paiement peut entraîner des pénalités, conformément à la réglementation en vigueur.<\/div>${f.note?`<div style="margin:0 28px 10px;background:#F7EFDC;border-left:3px solid #B8860B;padding:10px;font-size:11px;color:#7A5A0E">📌 ${escapeHTML(f.note)}<\/div>`:''}<div style="background:#2A2420;padding:12px 28px;margin-top:16px;text-align:center"><div style="font-size:11px;font-weight:700;color:#fff">Zel<span style="color:#6FB3B5">to<\/span><\/div><div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:3px">${legalParts}<\/div><\/div><\/body><\/html>`;
+  return construireHTMLDoc(optionsPDFFacture(f));
 }
 
 function calculerSoldeFacture(factureId) {
@@ -1314,4 +1300,42 @@ function _lignesTVAHtml(f, dv) {
   return t.parTaux.map(function (x) {
     return '<div class="d-tot-row"><span>' + (x.taux === 0 ? 'TVA 0 % (exonéré)' : 'TVA ' + x.taux + ' %') + '</span><span>' + fmt(x.tva) + ' ' + dv + '</span></div>';
   }).join('');
+}
+
+
+// Première facture : on demande les mentions légales ici, en une seule fenêtre (au lieu de renvoyer vers le profil).
+function demanderIdentiteEmetteur(apres) {
+  const p = STATE.profil || {};
+  let ov = document.getElementById('modal-identite');
+  if (ov) ov.remove();
+  ov = document.createElement('div');
+  ov.className = 'modal-overlay active';
+  ov.id = 'modal-identite';
+  ov.innerHTML = '<div class="modal">' +
+    '<div class="modal-handle"></div>' +
+    '<div class="modal-title">Avant votre première facture</div>' +
+    '<div style="font-size:12px;color:#6B5F54;margin-bottom:10px">Ces informations sont obligatoires sur une facture au Maroc. Elles sont enregistrées dans votre profil, une seule fois.</div>' +
+    '<label class="a-lbl">Nom de l\'entreprise</label><input class="m-inp" id="idn-raison" value="' + escapeHTML(p.raison || '') + '">' +
+    '<label class="a-lbl">ICE (15 chiffres)</label><input class="m-inp" id="idn-ice" inputmode="numeric" maxlength="15" value="' + escapeHTML(p.ice || '') + '">' +
+    '<label class="a-lbl">Adresse</label><input class="m-inp" id="idn-adresse" value="' + escapeHTML(p.adresse || '') + '">' +
+    '<label class="a-lbl">Ville</label><input class="m-inp" id="idn-ville" value="' + escapeHTML(p.ville || '') + '">' +
+    '<label class="a-lbl">Identifiant fiscal (IF)</label><input class="m-inp" id="idn-if" value="' + escapeHTML(p.identifiant_fiscal || '') + '">' +
+    '<label class="a-lbl">RC (si vous en avez un)</label><input class="m-inp" id="idn-rc" value="' + escapeHTML(p.rc || '') + '">' +
+    '<button class="m-btn" id="idn-ok">Enregistrer et continuer</button>' +
+    '<button class="m-btn-sec" id="idn-non">Annuler</button></div>';
+  document.body.appendChild(ov);
+  document.getElementById('idn-non').onclick = function () { ov.remove(); };
+  document.getElementById('idn-ok').onclick = async function () {
+    const v = function (id) { return (document.getElementById(id).value || '').trim(); };
+    const ice = v('idn-ice'), adresse = v('idn-adresse');
+    if (!/^\d{15}$/.test(ice)) { showToast('L\'ICE doit contenir exactement 15 chiffres', 'error'); return; }
+    if (!adresse) { showToast('Entrez votre adresse', 'error'); return; }
+    const data = { id: (STATE.entrepriseId || sb.user.id), raison: v('idn-raison'), ice: ice, adresse: adresse, ville: v('idn-ville'), identifiant_fiscal: v('idn-if'), rc: v('idn-rc') };
+    try {
+      await sb.upsert('profils_entreprise', data);
+      Object.assign(STATE.profil, { raison: data.raison, ice: ice, adresse: adresse, ville: data.ville, identifiant_fiscal: data.identifiant_fiscal, rc: data.rc });
+      ov.remove();
+      if (typeof apres === 'function') apres();
+    } catch (e) { showToast('Erreur : ' + e.message, 'error'); }
+  };
 }

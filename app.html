@@ -214,6 +214,7 @@
 <script src="js/config.js?v=1789327380"></script>
   <script src="js/utils.js?v=1789327380"></script>
   <script src="js/auth.js?v=1789327380"></script>
+<script src="js/auth-google.js?v=1"></script>
   <script src="js/nav.js?v=1789327380"></script>
   <script src="js/marche.js?v=1789327380"></script>
   <script src="js/contrats.js?v=1789327380"></script>
@@ -979,7 +980,7 @@
     <button type="button" class="devise-btn-f" data-devise="USD" onclick="setDeviseF('USD',this)" style="flex:1;padding:9px;border-radius:10px;border:1px solid #E3DCCF;background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">USD</button>
   </div>
   <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="total-ht">0 MAD</span></div>
-    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="total-tva">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA</span><span class="tr-val" id="total-tva">0 MAD</span></div>
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="total-ttc">0 MAD</span></div>
   </div>
@@ -1128,7 +1129,7 @@
   </div>
   <div class="total-recap">
     <div class="tr-row"><span class="tr-lbl">Sous-total HT</span><span class="tr-val" id="d-total-ht">0 MAD</span></div>
-    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="d-total-tva">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA</span><span class="tr-val" id="d-total-tva">0 MAD</span></div>
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="d-total-ttc">0 MAD</span></div>
   </div>
@@ -1184,9 +1185,10 @@
     </select>
   </div>
   <div class="form-section"><label class="f-lbl">Montant HT (MAD)</label><input id="av-montant" class="f-inp" type="number" placeholder="0.00" oninput="updateAvoirTotal()"></div>
+  <div class="form-section"><label class="f-lbl">TVA</label><select id="av-tva" class="f-inp" onchange="updateAvoirTotal()"><option value="20" selected>20 %</option><option value="14">14 %</option><option value="10">10 %</option><option value="7">7 %</option><option value="0">0 % (exonéré)</option></select></div>
   <div class="total-recap">
     <div class="tr-row"><span class="tr-lbl">Montant HT</span><span class="tr-val" id="av-total-ht">0 MAD</span></div>
-    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="av-total-tva">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA</span><span class="tr-val" id="av-total-tva">0 MAD</span></div>
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total Avoir TTC</span><span class="tr-val" id="av-total-ttc" style="color:#9CBB7A">0 MAD</span></div>
   </div>
@@ -2233,6 +2235,10 @@
     </select>
     <label class="a-lbl">Prix unitaire HT (MAD)</label>
     <input class="m-inp" id="mld-pu" type="number" placeholder="0.00" step="0.01">
+    <label class="a-lbl">TVA</label>
+    <select class="m-inp" id="mld-tva">
+      <option value="20" selected>20 %</option><option value="14">14 %</option><option value="10">10 %</option><option value="7">7 %</option><option value="0">0 % (exonéré)</option>
+    </select>
     <button class="m-btn" onclick="confirmerLigneDevis()">✓ Ajouter</button>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>
   </div>
@@ -2840,7 +2846,7 @@
   </div>
   <div class="total-recap">
     <div class="tr-row"><span class="tr-lbl">Total HT</span><span class="tr-val" id="bc-ht">0 MAD</span></div>
-    <div class="tr-row"><span class="tr-lbl">TVA (20%)</span><span class="tr-val" id="bc-tva">0 MAD</span></div>
+    <div class="tr-row"><span class="tr-lbl">TVA</span><span class="tr-val" id="bc-tva">0 MAD</span></div>
     <div class="tr-sep"></div>
     <div class="tr-row main"><span class="tr-lbl">Total TTC</span><span class="tr-val" id="bc-ttc">0 MAD</span></div>
   </div>

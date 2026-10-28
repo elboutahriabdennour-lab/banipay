@@ -22,12 +22,11 @@ function construireRefsQRFacture(f) {
   if (blTrouve) refsQR.push({ icon: '', label: 'Bon de livraison', ref: blTrouve.ref, url: '' });
   return refsQR;
 }
-function exportPDF(id) {
-  const f = STATE.factures.find(x=>x.id===id); if(!f) return;
+function optionsPDFFacture(f) {
   const profil = STATE.profil || {};
-  const lignes = typeof f.lignes === 'string' ? JSON.parse(f.lignes||'[]') : (f.lignes||[]);
-  const docUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (f.token_public||'');
-  genDocPDF({
+  const lignes = lignesEnTableau(f.lignes);
+  const docUrl = window.location.origin + window.location.pathname + '?doc=' + f.id + '&t=' + (f.token_public||'');
+  return {
     type:'FACTURE', ref:f.ref, color: profil.couleur_accent || '#C9971F',
     emetteur: profil,
     destinataire:(function() {
@@ -41,16 +40,20 @@ function exportPDF(id) {
     devise:f.devise||'MAD',
     montant_recu:f.montant_recu,
     showStamp: f.statut==='payee',
-    doc_id: id,
+    doc_id: f.id,
     doc_url: docUrl,
     signatureClient: f.signature_data || null,
     refsQR: construireRefsQRFacture(f),
-  });
+  };
+}
+function exportPDF(id) {
+  const f = STATE.factures.find(x=>x.id===id); if(!f) return;
+  genDocPDF(optionsPDFFacture(f));
 }
 function previewPDF() {
   const client = el('f-client')?.value.trim();
   if(!client){showToast('Remplissez le formulaire','error');return;}
-  const ht=STATE.lignesF.reduce((s,l)=>s+l.qte*l.pu,0);
+  const _tp=calculerTotauxLignes(STATE.lignesF);
   genDocPDF({
     type:'FACTURE', ref:el('f-ref')?.value, color: (STATE.profil||{}).couleur_accent || '#C9971F',
     emetteur: STATE.profil||{},
@@ -59,7 +62,7 @@ function previewPDF() {
     echeance:el('f-echeance')?.value,
     paiement:el('f-paiement')?.value,
     lignes:STATE.lignesF,
-    ht, tva:ht*0.2, ttc:ht*1.2,
+    ht:_tp.ht, tva:_tp.tva, ttc:_tp.ttc,
     devise:STATE.deviseF||'MAD',
     note:el('f-note')?.value||'',
     devis_ref: STATE.currentFacture?.devis_ref||'',
@@ -75,7 +78,7 @@ const _TRAD_PDF = {
     avoirPour: 'Avoir pour', destinataire: 'Destinataire', factureA: 'Facturé à',
     projet: 'Projet', emetteur: 'Émetteur',
     designation: 'Désignation', qte: 'Qté', puHt: 'P.U. HT', totalHt: 'Total HT',
-    sousTotalHt: 'Sous-total HT', tva: 'TVA (20%)', dejaRecu: 'Déjà reçu',
+    sousTotalHt: 'Sous-total HT', tva: 'TVA', tvaCol: 'TVA', dejaRecu: 'Déjà reçu',
     totalTtc: 'TOTAL TTC', resteAPayer: 'Reste à payer',
     arreteA: 'Arrêté à la somme de', juridiction: 'Juridiction : Maroc.',
     note: 'Note', motif: 'Motif',
@@ -89,7 +92,7 @@ const _TRAD_PDF = {
     avoirPour: 'إشعار دائن لـ', destinataire: 'المرسل إليه', factureA: 'فاتورة إلى',
     projet: 'المشروع', emetteur: 'المُصدر',
     designation: 'البيان', qte: 'الكمية', puHt: 'سعر الوحدة', totalHt: 'المجموع',
-    sousTotalHt: 'المجموع قبل الضريبة', tva: 'ضريبة القيمة المضافة (20%)', dejaRecu: 'المبلغ المستلم',
+    sousTotalHt: 'المجموع قبل الضريبة', tva: 'ضريبة القيمة المضافة', tvaCol: 'الضريبة', dejaRecu: 'المبلغ المستلم',
     totalTtc: 'المجموع الإجمالي', resteAPayer: 'المبلغ المتبقي',
     arreteA: 'أوقف على مبلغ', juridiction: 'الاختصاص القضائي: المغرب.',
     note: 'ملاحظة', motif: 'السبب',
@@ -99,7 +102,7 @@ const _TRAD_PDF = {
   },
 };
 function _langPDF() { return (typeof localStorage !== 'undefined' && localStorage.getItem('bp_langue') === 'ar') ? 'ar' : 'fr'; }
-function genDocPDF(opts) {
+function construireHTMLDoc(opts) {
   const {type,ref,color,emetteur:p,destinataire,date,echeance,validite,paiement,statut,lignes=[],note,ht=0,tva=0,ttc=0,devise='MAD',montant_recu=0,showStamp=false,showPrices=true,signature=false,extra='',motif='',devis_ref='',bl_ref='',doc_id='',badge_lettre=false,badge_tva=false,refsQR=[]} = opts;
   const signatureEmetteur = opts.signatureEmetteur || (p && p.signature_entreprise) || null;
   const signatureClient = opts.signatureClient || null;
@@ -119,9 +122,13 @@ function genDocPDF(opts) {
     return `<tr style="background:${i%2===0?'#F1EEE8':'#fff'}">
       <td style="padding:7px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
       <td style="padding:5px 8px;text-align:center;font-size:10px">${escapeHTML(String(l.qte||1))} ${escapeHTML(String(l.unite||''))}</td>
-      ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
+      ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px">${Number(l.tva) >= 0 ? Number(l.tva) : 20} %</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
     </tr>`;
   }).join('');
+  const _tx = calculerTotauxLignes(lignes);
+  const rowsTVA = (_tx.parTaux.length && Math.abs(_tx.tva - Number(tva || 0)) <= 0.02)
+    ? _tx.parTaux.map(function (x) { return '<div class="tot-row" style="background:#F7EFDC"><span>' + t.tva + ' ' + x.taux + ' %' + (x.taux === 0 ? (langue === 'ar' ? ' (معفى)' : ' (exonéré)') : '') + '</span><span style="font-weight:600;color:#2A2420">' + fmt(x.tva) + ' ' + devise + '</span></div>'; }).join('')
+    : '<div class="tot-row" style="background:#F7EFDC"><span>' + t.tva + '</span><span style="font-weight:600;color:#2A2420">' + fmt(tva) + ' ' + devise + '</span></div>';
   const html = `<!DOCTYPE html><html lang="${langue}" dir="${estRTL ? 'rtl' : 'ltr'}"><head><meta charset="UTF-8">
 <title>${escapeHTML(typeAffiche)} ${escapeHTML(ref)}<\/title>
 <style>
@@ -154,7 +161,7 @@ table{width:100%;border-collapse:collapse}
 thead tr{background:#2A2420}
 thead th{padding:5px 8px;font-size:9px;font-weight:700;color:#fff;text-align:left}
 thead th:nth-child(2){text-align:center}
-thead th:nth-child(3),thead th:nth-child(4){text-align:right}
+thead th:nth-child(3),thead th:nth-child(4),thead th:nth-child(5){text-align:right}
 tbody td{border-bottom:1px solid #EAE4DA}
 .totaux{padding:6px 24px;display:flex;justify-content:flex-end}
 .totaux-box{width:250px;border:1px solid #E3DCCF;border-radius:6px;overflow:hidden}
@@ -221,6 +228,8 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
       ${p.adresse?`<div class="line">${escapeHTML(p.adresse||'')}${p.ville?', '+escapeHTML(p.ville):''}</div>`:''}
       ${p.email?`<div class="line">E-mail : ${escapeHTML(p.email)}</div>`:''}
       ${p.tel?`<div class="line">Tél. : ${escapeHTML(p.tel)}</div>`:''}
+      ${p.ice?`<div class="line">ICE : ${escapeHTML(p.ice)}</div>`:''}
+      ${(p.identifiant_fiscal||p.rc)?`<div class="line">${p.identifiant_fiscal?'IF : '+escapeHTML(p.identifiant_fiscal):''}${(p.identifiant_fiscal&&p.rc)?' · ':''}${p.rc?'RC : '+escapeHTML(p.rc):''}</div>`:''}
     </div>
   </div>
 </div>
@@ -228,9 +237,9 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
 <div class="table-section">
 <table>
 <thead><tr>
-  <th style="width:44%">${t.designation}</th>
+  <th style="width:38%">${t.designation}</th>
   <th style="width:10%;text-align:center">${t.qte}</th>
-  ${showPrices?`<th style="width:22%;text-align:right">${t.puHt} (${devise})</th><th style="width:24%;text-align:right">${t.totalHt} (${devise})</th>`:''}
+  ${showPrices?`<th style="width:20%;text-align:right">${t.puHt} (${devise})</th><th style="width:8%;text-align:right">${t.tvaCol}</th><th style="width:24%;text-align:right">${t.totalHt} (${devise})</th>`:''}
 </tr></thead>
 <tbody>${lignesHtml}</tbody>
 </table>
@@ -238,13 +247,13 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
 ${showPrices?`
 <div class="totaux"><div class="totaux-box">
   <div class="tot-row"><span>${t.sousTotalHt}</span><span style="font-weight:600;color:#2A2420">${fmt(ht)} ${devise}</span></div>
-  <div class="tot-row" style="background:#F7EFDC"><span>${t.tva}</span><span style="font-weight:600;color:#2A2420">${fmt(tva)} ${devise}</span></div>
+  ${rowsTVA}
   ${paye>0?`<div class="tot-row" style="background:#EEF3E4"><span>${t.dejaRecu}</span><span style="font-weight:600;color:#6E8F4E">- ${fmt(paye)} ${devise}</span></div>`:''}
   <div class="tot-main"><span class="tot-main-lbl">${t.totalTtc}</span><span class="tot-main-val">${fmt(ttc)} ${devise}</span></div>
   ${paye>0&&restant>0?`<div class="tot-row" style="background:#F5E4E1"><span style="font-weight:700;color:#B23A2E">${t.resteAPayer}</span><span style="font-weight:700;color:#B23A2E">${fmt(restant)} ${devise}</span></div>`:''}
 </div></div>
 <div style="height:6px"></div>
-<div class="arrete">${t.arreteA} <strong>${ttcEnLettres(ttc)}</strong>. ${t.juridiction}</div>
+<div class="arrete">${t.arreteA} <strong>${ttcEnLettres(ttc)}</strong>. ${t.juridiction}${(type==='FACTURE'&&langue!=='ar')?' Tout retard de paiement peut entraîner des pénalités, conformément à la réglementation en vigueur.':''}</div>
 `:''}
 ${note?`<div style="margin:4px 24px;background:#F7EFDC;border-left:3px solid #B8860B;border-radius:0 6px 6px 0;padding:5px 8px;font-size:9px;color:#7A5A0E"><strong>${t.note} :</strong> ${escapeHTML(note)}</div>`:''}
 ${motif?`<div style="margin:6px 28px;background:#F5E4E1;border-left:3px solid #B23A2E;border-radius:0 6px 6px 0;padding:8px 10px;font-size:10px;color:#7A2E24"><strong>${t.motif} :</strong> ${escapeHTML(motif)}</div>`:''}
@@ -276,7 +285,10 @@ ${(p.banque||p.rib)?`<div class="bank-box">
 </div>
 </div>
 <\/body><\/html>`;
-  ouvrirPDFViewer(html, ref);
+  return html;
+}
+function genDocPDF(opts) {
+  ouvrirPDFViewer(construireHTMLDoc(opts), opts.ref);
 }
 function ouvrirPDFViewer(htmlContent, ref) {
   const ancien = document.getElementById('pdf-fullscreen');
@@ -339,27 +351,5 @@ function ouvrirPDFViewer(htmlContent, ref) {
   document.body.appendChild(screen);
 }
 function ttcEnLettres(montant) {
-  if (!montant || isNaN(montant)) return 'zéro dirham';
-  const n = Math.round(Number(montant) * 100);
-  const dirhams = Math.floor(n / 100);
-  const centimes = n % 100;
-  const units = ['','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'];
-  const tens = ['','','vingt','trente','quarante','cinquante','soixante','soixante','quatre-vingt','quatre-vingt'];
-  function conv(n) {
-    if (n === 0) return '';
-    if (n < 20) return units[n];
-    if (n < 100) {
-      const t = Math.floor(n/10), u = n%10;
-      if (t === 7 || t === 9) return tens[t] + (u===1&&t===7?'-et-':'-') + units[10+u];
-      return tens[t] + (u===1&&t!==8?'-et-':u?'-':'') + (u?units[u]:'');
-    }
-    if (n < 1000) {
-      const c = Math.floor(n/100), r = n%100;
-      return (c===1?'cent':units[c]+'-cent') + (r?(c===1?'-':'')+conv(r):'');
-    }
-    const m = Math.floor(n/1000), r = n%1000;
-    return (m===1?'mille':conv(m)+'-mille') + (r?'-'+conv(r):'');
-  }
-  const d = conv(dirhams) || 'zéro';
-  return d + ' dirham' + (dirhams>1?'s':'') + (centimes?' et '+conv(centimes)+' centime'+(centimes>1?'s':''):'');
+  return montantEnLettres(montant, 'MAD');
 }

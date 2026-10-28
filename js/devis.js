@@ -81,7 +81,7 @@ function renderLignesD() {
     <div class="ligne-item">
       <div class="ligne-body">
         <div class="ligne-desc">${l.desc}</div>
-        <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseD}</div>
+        <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseD} · TVA ${Number(l.tva) >= 0 ? Number(l.tva) : 20} %</div>
       </div>
       <div class="ligne-amt">${fmt(l.qte*l.pu)} ${STATE.deviseD}</div>
       <button class="ligne-del" onclick="supprimerLigneD(${i})">×</button>
@@ -92,10 +92,10 @@ function renderLignesD() {
 function supprimerLigneD(i) { STATE.lignesD.splice(i,1); renderLignesD(); }
 
 function updateTotauxD() {
-  const ht = STATE.lignesD.reduce((s,l) => s+l.qte*l.pu, 0);
-  setEl('d-total-ht', fmt(ht)+' '+STATE.deviseD);
-  setEl('d-total-tva', fmt(ht*0.2)+' '+STATE.deviseD);
-  setEl('d-total-ttc', fmt(ht*1.2)+' '+STATE.deviseD);
+  const t = calculerTotauxLignes(STATE.lignesD);
+  setEl('d-total-ht', fmt(t.ht)+' '+STATE.deviseD);
+  setEl('d-total-tva', fmt(t.tva)+' '+STATE.deviseD);
+  setEl('d-total-ttc', fmt(t.ttc)+' '+STATE.deviseD);
 }
 
 function openAddLigneDevis() {
@@ -119,7 +119,8 @@ function confirmerLigneDevis() {
   const unite = el('mld-unite')?.value||'u';
   if (!desc) { showToast('Entrez une description', 'error'); return; }
   if (pu <= 0) { showToast('Entrez un prix unitaire', 'error'); return; }
-  STATE.lignesD.push({desc,qte,pu,unite});
+  const tvaL = parseFloat(el('mld-tva')?.value);
+  STATE.lignesD.push({desc,qte,pu,unite,tva: tvaL >= 0 ? tvaL : 20});
   closeAllModals();
   renderLignesD();
 }
@@ -138,7 +139,8 @@ async function sauvegarderDevis() {
   const client = el('d-client')?.value.trim();
   if (!client) { showToast('Entrez le nom du client', 'error'); return; }
   if (!STATE.lignesD.length) { showToast('Ajoutez au moins une ligne', 'error'); return; }
-  const ht = STATE.lignesD.reduce((s,l)=>s+l.qte*l.pu,0);
+  const tot = calculerTotauxLignes(STATE.lignesD);
+  const ht = tot.ht;
   showToast('⏳ Sauvegarde...');
   try {
     const clientConnu = (STATE.clients || []).find(function(c) { return c.nom === client; });
@@ -151,7 +153,7 @@ async function sauvegarderDevis() {
       validite: parseInt(el('d-validite')?.value)||30,
       note: el('d-note')?.value.trim(),
       bc_id: el('d-bc-lie')?.value ? parseInt(el('d-bc-lie').value) : null,
-      statut: 'envoye', ht, tva:ht*0.2, ttc:ht*1.2,
+      statut: 'envoye', ht, tva:tot.tva, ttc:tot.ttc,
       lignes: STATE.lignesD, devise: STATE.deviseD,
       destinataire_id: clientConnu?.reference_id || null,
     });
@@ -219,7 +221,7 @@ function renderDetailDevis() {
   const totEl = el('dv-totals');
   if (totEl) totEl.innerHTML = `
     <div class="d-tot-row"><span>HT</span><span>${fmt(d.ht)} ${dv}</span></div>
-    <div class="d-tot-row"><span>TVA 20%</span><span>${fmt(d.tva)} ${dv}</span></div>
+    ${_lignesTVAHtml(d, dv)}
     <div class="d-tot-row main"><span>Total TTC</span><span>${fmt(d.ttc)} ${dv}</span></div>`;
   const actEl = el('dv-actions');
   if (!actEl) return;
@@ -304,23 +306,39 @@ function initAvoir() {
   el('av-montant') && (el('av-montant').value = '');
   el('av-date') && (el('av-date').value = today());
   el('av-ref') && (el('av-ref').value = getRef('AV', STATE.avoirs));
+  el('av-tva') && (el('av-tva').value = '20');
+  document.querySelectorAll('#av-tva option[data-auto]').forEach(function(o){o.remove();});
   const sel = el('av-facture-origine');
   if (sel) {
     sel.innerHTML = '<option value="">Sélectionner...</option>' +
       STATE.factures.map(f=>`<option value="${f.id}">${f.ref} — ${f.client} — ${fmt(f.ttc)} MAD</option>`).join('');
     sel.onchange = function() {
       const f = STATE.factures.find(x=>String(x.id)===this.value);
-      if(f){el('av-client').value=f.client;el('av-montant').value=Number(f.ht).toFixed(2);updateAvoirTotal();}
+      if(f){el('av-client').value=f.client;el('av-montant').value=Number(f.ht).toFixed(2);_appliquerTauxFactureAvoir(f);updateAvoirTotal();}
     };
   }
   updateAvoirTotal();
 }
 
+// Taux de TVA de l'avoir : celui de la facture d'origine (moyen si plusieurs taux).
+function _appliquerTauxFactureAvoir(f) {
+  const selT = el('av-tva'); if (!selT) return;
+  selT.querySelectorAll('option[data-auto]').forEach(function(o){o.remove();});
+  const ht = Number(f.ht) || 0, tva = Number(f.tva) || 0;
+  const exact = ht > 0 ? tva / ht * 100 : 20;
+  const proche = Math.round(exact * 100) / 100;
+  if ([0,7,10,14,20].indexOf(proche) >= 0) { selT.value = String(proche); return; }
+  const o = document.createElement('option');
+  o.value = exact.toFixed(6); o.textContent = proche + ' % (taux moyen de la facture)'; o.setAttribute('data-auto', '1');
+  selT.appendChild(o); selT.value = o.value;
+}
+function _tauxAvoir() { const v = parseFloat(el('av-tva')?.value); return v >= 0 ? v : 20; }
 function updateAvoirTotal() {
   const ht = parseFloat(el('av-montant')?.value)||0;
+  const tva = arrondir2(ht * _tauxAvoir() / 100);
   setEl('av-total-ht',fmt(ht)+' MAD');
-  setEl('av-total-tva',fmt(ht*0.2)+' MAD');
-  setEl('av-total-ttc',fmt(ht*1.2)+' MAD');
+  setEl('av-total-tva',fmt(tva)+' MAD');
+  setEl('av-total-ttc',fmt(ht + tva)+' MAD');
 }
 
 async function sauvegarderAvoir() {
@@ -328,7 +346,8 @@ async function sauvegarderAvoir() {
   const ht = parseFloat(el('av-montant')?.value)||0;
   if(!client||ht<=0){showToast('Remplissez tous les champs','error');return;}
   const factureOrigineId = el('av-facture-origine')?.value;
-  const ttcNouvelAvoir = ht * 1.2;
+  const tvaAvoir = arrondir2(ht * _tauxAvoir() / 100);
+  const ttcNouvelAvoir = arrondir2(ht + tvaAvoir);
   // AJOUT (chantier — lettrage facture ↔ avoir, détection d'écart) :
   // avant d'émettre, vérifie que le total des avoirs déjà émis sur cette
   // facture + ce nouveau ne dépasse pas son montant TTC — sinon
@@ -353,7 +372,7 @@ async function sauvegarderAvoir() {
   try {
     const r = await sb.post('avoirs',{
       user_id: (STATE.entrepriseId || sb.user.id), ref:el('av-ref')?.value,
-      client, ht, tva:ht*0.2, ttc:ht*1.2,
+      client, ht, tva:tvaAvoir, ttc:ttcNouvelAvoir,
       date_emission:el('av-date')?.value,
       motif:el('av-motif')?.value,
       facture_origine_id: factureOrigineId || null,
@@ -390,7 +409,7 @@ async function sauvegarderAvoir() {
             p_destinataire_email: clientInfo.email || '',
             p_type: 'avoir_recu',
             p_titre: '↩️ Avoir reçu — ' + (p.raison || sb.user?.email),
-            p_corps: (p.raison || sb.user?.email) + ' vous a envoyé un avoir de ' + fmt(ht * 1.2) + ' MAD.',
+            p_corps: (p.raison || sb.user?.email) + ' vous a envoyé un avoir de ' + fmt(ttcNouvelAvoir) + ' MAD.',
             p_meta: JSON.stringify({ emetteur_raison: p.raison || '' })
           })
         });
@@ -1135,7 +1154,7 @@ function exportDevisPDF(id) {
 function previewDevisPDF() {
   const client = el('d-client')?.value.trim();
   if (!client) { showToast('Remplissez le formulaire', 'error'); return; }
-  const ht = STATE.lignesD.reduce((s,l) => s + l.qte*l.pu, 0);
+  const _tp = calculerTotauxLignes(STATE.lignesD);
   genDocPDF({
     type: 'DEVIS', ref: el('d-ref')?.value, color: '#B8860B',
     emetteur: STATE.profil || {},
@@ -1145,7 +1164,7 @@ function previewDevisPDF() {
     paiement: '',
     lignes: STATE.lignesD,
     note: el('d-note')?.value || '',
-    ht, tva: ht*0.2, ttc: ht*1.2,
+    ht: _tp.ht, tva: _tp.tva, ttc: _tp.ttc,
     devise: STATE.deviseF || 'MAD',
     doc_id: STATE.currentDevis?.id || '',
     doc_url: STATE.currentDevis?.id ? (window.location.origin + window.location.pathname + '?doc=' + STATE.currentDevis.id + '&t=' + (STATE.currentDevis.token_public||'')) : '',
@@ -1173,8 +1192,8 @@ function previewAvoirPDF() {
     date: el('av-date')?.value,
     motif: motifLabels[motif] || motif,
     devis_ref: factureOrig ? 'Facture annulée: ' + factureOrig.ref : '',
-    lignes: [{ desc: motifLabels[motif] || 'Avoir', qte: 1, pu: ht, unite: 'Fft', tva: 20 }],
-    ht, tva: ht*0.2, ttc: ht*1.2,
+    lignes: [{ desc: motifLabels[motif] || 'Avoir', qte: 1, pu: ht, unite: 'Fft', tva: _tauxAvoir() }],
+    ht, tva: arrondir2(ht * _tauxAvoir() / 100), ttc: arrondir2(ht + ht * _tauxAvoir() / 100),
     devise: STATE.deviseF || 'MAD',
     showStamp: false,
   });

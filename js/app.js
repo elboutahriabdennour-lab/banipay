@@ -649,6 +649,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     goScreen('definir-mot-passe', null);
     return;
   }
+  if (accessTokenInvite && !typeInvite && hashParams.get('token_type') === 'bearer' && typeof finaliserConnexionOAuth === 'function') {
+    await finaliserConnexionOAuth(accessTokenInvite, refreshTokenInvite);
+    return;
+  }
   if (accessTokenInvite && typeInvite === 'signup') {
     history.replaceState(null, '', window.location.pathname + window.location.search);
     if (typeof sb._setSession === 'function') {
