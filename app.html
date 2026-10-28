@@ -628,7 +628,7 @@
   <!-- MODELE DE FACTURE -->
   <div class="screen" id="screen-modele-facture">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('profil',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div>
+      <button class="back-btn" onclick="goScreen('parametres',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div>
     </div>
     <div style="padding:16px 20px">
       <div class="sec-label" style="padding:0 0 4px">🎨 Modèle de facture</div>
@@ -1409,7 +1409,6 @@
 
     <div class="groupe-label">Mon compte</div>
     <button class="p-btn" onclick="ouvrirHistoriqueSiAdmin()" style="color:#5B6B64">📋 Historique</button>
-    <button class="p-btn" onclick="goScreen('modele-facture',null)" style="color:#1B5E4B">🎨 Modèle de facture</button>
     <button class="p-btn" onclick="goScreen('parametres',null)" style="color:#5B6B64">⚙️ Paramètres</button>
     <button class="p-btn" onclick="goScreen('mon-forfait',null)" style="color:#1B5E4B">📦 Mon forfait</button>
 
@@ -1928,17 +1927,21 @@
       <button class="back-btn" onclick="goScreen('profil')">&#8592;</button>
     </div>
   </div>
-  <div class="sec-label">Param&#232;tres entreprise</div>
+  <div class="sec-label">Param&#232;tres</div>
   <div style="padding:0 20px">
-    <!-- Langue -->
-    <div class="p-card" style="margin-bottom:14px">
-      <div class="p-card-title">🌐 Langue</div>
+    <div class="param-nav">
+      <button onclick="document.getElementById('param-g-docs').scrollIntoView({behavior:'smooth',block:'start'})">Documents</button>
+      <button onclick="document.getElementById('param-g-relances').scrollIntoView({behavior:'smooth',block:'start'})">Relances</button>
+      <button onclick="document.getElementById('param-g-appli').scrollIntoView({behavior:'smooth',block:'start'})">Application</button>
+      <button onclick="document.getElementById('param-g-compte').scrollIntoView({behavior:'smooth',block:'start'})">Compte</button>
+    </div>
+    <div class="groupe-label param-g" id="param-g-docs">Mes documents</div>
+    <!-- Apparence des documents -->
+    <div class="p-card" id="param-card-modele" style="margin-bottom:14px">
+      <div class="p-card-title">🎨 Apparence des factures et devis</div>
       <div style="padding:14px 16px">
-        <select id="param-langue" class="f-inp" onchange="changerLangueInterface()" style="margin-bottom:8px">
-          <option value="fr">Français</option>
-          <option value="ar">العربية (Arabe)</option>
-        </select>
-        <div style="font-size:10px;color:#8E9C95">⚠️ L'interface reste en français pour l'instant — seul le sens de lecture (droite à gauche) s'adapte. La traduction complète arrive dans une prochaine mise à jour.</div>
+        <div style="font-size:12px;color:#5B6B64;line-height:1.5;margin-bottom:12px">Couleur, police, logo, en-tête, textes… Vous choisissez tout, avec un aperçu en direct.</div>
+        <button class="s-btn blue full" onclick="goScreen('modele-facture',null)">Personnaliser mes factures</button>
       </div>
     </div>
     <!-- Numerotation -->
@@ -2000,17 +2003,58 @@
         </div>
       </div>
     </div>
-    <!-- Stock -->
+    <div class="groupe-label param-g" id="param-g-relances">Relances</div>
+    <!-- Relances automatiques -->
     <div class="p-card" style="margin-bottom:14px">
-      <div class="p-card-title">📦 Valorisation du stock</div>
+      <div class="p-card-title">⏰ Relances automatiques</div>
       <div style="padding:14px 16px">
-        <label class="f-lbl">Méthode de calcul</label>
-        <select id="param-methode-stock" class="f-inp">
-          <option value="CMUP">CMUP — Coût moyen unitaire pondéré</option>
-          <option value="FIFO">FIFO — Premier entré, premier sorti</option>
-          <option value="LIFO">LIFO — Dernier entré, premier sorti</option>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#5B6B64">
+          <input type="checkbox" id="param-relance-activee" style="width:16px;height:16px">
+          Activer les relances automatiques<span id="verrou-relances-auto"></span>
+        </label>
+        <label class="f-lbl">Relancer combien de jours avant l'échéance ?</label>
+        <input id="param-relance-jours" class="f-inp" type="number" min="1" max="30" value="3" style="margin-bottom:10px">
+        <label class="f-lbl">Message — avant échéance</label>
+        <textarea id="param-relance-msg-avant" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
+        <label class="f-lbl">Message — jour de l'échéance</label>
+        <textarea id="param-relance-msg-jour" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
+        <label class="f-lbl">Message — après échéance (retard)</label>
+        <textarea id="param-relance-msg-retard" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
+        <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Variables disponibles : {client}, {ref}, {montant}, {echeance}</div>
+        <button onclick="sauvegarderParametresRelance()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
+      </div>
+    </div>
+    <!-- Relances achats (chantier ajouté) -->
+    <div class="p-card" id="param-card-relance-achats" style="margin-bottom:14px">
+      <div class="p-card-title">🛒 Rappels de paiement fournisseur</div>
+      <div style="padding:14px 16px">
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#5B6B64">
+          <input type="checkbox" id="param-relance-achats-activee" style="width:16px;height:16px">
+          Activer les rappels de paiement fournisseur
+        </label>
+        <label class="f-lbl">Rappeler combien de jours avant l'échéance ?</label>
+        <input id="param-relance-achats-jours" class="f-inp" type="number" min="1" max="30" value="3" style="margin-bottom:10px">
+        <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Contrairement aux relances clients, ce sont de simples rappels pour vous-même — rien n'est envoyé automatiquement à vos fournisseurs.</div>
+        <button onclick="sauvegarderParametresRelanceAchats()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
+      </div>
+    </div>
+    <div class="groupe-label param-g" id="param-g-appli">Application</div>
+    <!-- Langue -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">🌐 Langue</div>
+      <div style="padding:14px 16px">
+        <select id="param-langue" class="f-inp" onchange="changerLangueInterface()" style="margin-bottom:8px">
+          <option value="fr">Français</option>
+          <option value="ar">العربية (Arabe)</option>
         </select>
-        <div style="font-size:11px;color:#8E9C95;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
+        <div style="font-size:10px;color:#8E9C95">⚠️ L'interface reste en français pour l'instant — seul le sens de lecture (droite à gauche) s'adapte. La traduction complète arrive dans une prochaine mise à jour.</div>
+      </div>
+    </div>
+    <!-- Affichage -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">🎨 Affichage</div>
+      <div style="padding:14px 16px">
+        <button class="p-btn" onclick="toggleDarkMode()">🌙 Basculer mode sombre / clair</button>
       </div>
     </div>
     <!-- Annuaire public -->
@@ -2033,6 +2077,38 @@
         <button onclick="document.getElementById('pe-raison')?.scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('pe-raison')?.focus()" style="width:100%;padding:10px;background:#F7EFDC;color:#B8860B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Compléter mes informations légales</button>
       </div>
     </div>
+    <div class="groupe-label param-g" id="param-g-compte">Compte et sécurité</div>
+    <!-- Securite -->
+    <div class="p-card" style="margin-bottom:14px">
+      <div class="p-card-title">&#128274; S&#233;curit&#233;</div>
+      <div style="padding:14px 16px">
+        <button class="p-btn blue" onclick="ouvrirModifMotDePasse()">&#128273; Changer le mot de passe</button>
+        <button class="p-btn" onclick="exporterToutesMesDonnees()">&#128190; Exporter toutes mes données</button>
+        <button class="p-btn danger" onclick="confirmerSuppressionCompte()">&#128465;&#65039; Supprimer mon compte</button>
+      </div>
+    </div>
+    <div class="groupe-label param-g" id="param-g-autres">Autres modules</div>
+    <!-- Stock -->
+    <div class="p-card" id="param-card-stock" style="margin-bottom:14px">
+      <div class="p-card-title">📦 Valorisation du stock</div>
+      <div style="padding:14px 16px">
+        <label class="f-lbl">Méthode de calcul</label>
+        <select id="param-methode-stock" class="f-inp">
+          <option value="CMUP">CMUP — Coût moyen unitaire pondéré</option>
+          <option value="FIFO">FIFO — Premier entré, premier sorti</option>
+          <option value="LIFO">LIFO — Dernier entré, premier sorti</option>
+        </select>
+        <div style="font-size:11px;color:#8E9C95;margin-top:6px">Détermine comment le coût de vos articles est calculé automatiquement à chaque entrée/sortie de stock.</div>
+      </div>
+    </div>
+    <!-- Documents BC/BL -->
+    <div class="p-card" id="param-card-bons" style="margin-bottom:14px">
+      <div class="p-card-title">📄 Bons de commande / livraison</div>
+      <div style="padding:14px 16px;display:flex;gap:8px">
+        <button onclick="goScreen('bons-commande-list',null)" style="flex:1;padding:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Bons de commande</button>
+        <button onclick="goScreen('bons-livraison-list',null)" style="flex:1;padding:10px;background:#EEF3E4;color:#55702E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📦 Bons de livraison</button>
+      </div>
+    </div>
     <!-- Équipe (fondation multi-utilisateurs) — masquée au lancement : les rôles ne sont pas encore appliqués -->
     <div class="p-card" style="margin-bottom:14px;display:none">
       <div class="p-card-title">👥 Équipe</div>
@@ -2051,65 +2127,7 @@
         <div id="equipe-liste"></div>
       </div>
     </div>
-    <!-- Relances automatiques -->
-    <div class="p-card" style="margin-bottom:14px">
-      <div class="p-card-title">⏰ Relances automatiques</div>
-      <div style="padding:14px 16px">
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#5B6B64">
-          <input type="checkbox" id="param-relance-activee" style="width:16px;height:16px">
-          Activer les relances automatiques<span id="verrou-relances-auto"></span>
-        </label>
-        <label class="f-lbl">Relancer combien de jours avant l'échéance ?</label>
-        <input id="param-relance-jours" class="f-inp" type="number" min="1" max="30" value="3" style="margin-bottom:10px">
-        <label class="f-lbl">Message — avant échéance</label>
-        <textarea id="param-relance-msg-avant" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
-        <label class="f-lbl">Message — jour de l'échéance</label>
-        <textarea id="param-relance-msg-jour" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
-        <label class="f-lbl">Message — après échéance (retard)</label>
-        <textarea id="param-relance-msg-retard" class="f-inp" rows="2" style="margin-bottom:8px"></textarea>
-        <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Variables disponibles : {client}, {ref}, {montant}, {echeance}</div>
-        <button onclick="sauvegarderParametresRelance()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
-      </div>
-    </div>
-    <!-- Relances achats (chantier ajouté) -->
-    <div class="p-card" style="margin-bottom:14px">
-      <div class="p-card-title">🛒 Rappels de paiement fournisseur</div>
-      <div style="padding:14px 16px">
-        <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:12px;color:#5B6B64">
-          <input type="checkbox" id="param-relance-achats-activee" style="width:16px;height:16px">
-          Activer les rappels de paiement fournisseur
-        </label>
-        <label class="f-lbl">Rappeler combien de jours avant l'échéance ?</label>
-        <input id="param-relance-achats-jours" class="f-inp" type="number" min="1" max="30" value="3" style="margin-bottom:10px">
-        <div style="font-size:10px;color:#8E9C95;margin-bottom:10px">Contrairement aux relances clients, ce sont de simples rappels pour vous-même — rien n'est envoyé automatiquement à vos fournisseurs.</div>
-        <button onclick="sauvegarderParametresRelanceAchats()" style="width:100%;padding:10px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 Enregistrer</button>
-      </div>
-    </div>
-    <!-- Documents BC/BL -->
-    <div class="p-card" style="margin-bottom:14px">
-      <div class="p-card-title">📄 Bons de commande / livraison</div>
-      <div style="padding:14px 16px;display:flex;gap:8px">
-        <button onclick="goScreen('bons-commande-list',null)" style="flex:1;padding:10px;background:#EDE6F0;color:#7C5CA6;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Bons de commande</button>
-        <button onclick="goScreen('bons-livraison-list',null)" style="flex:1;padding:10px;background:#EEF3E4;color:#55702E;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📦 Bons de livraison</button>
-      </div>
-    </div>
-    <!-- Affichage -->
-    <div class="p-card" style="margin-bottom:14px">
-      <div class="p-card-title">🎨 Affichage</div>
-      <div style="padding:14px 16px">
-        <button class="p-btn" onclick="toggleDarkMode()">🌙 Basculer mode sombre / clair</button>
-      </div>
-    </div>
-    <!-- Securite -->
-    <div class="p-card" style="margin-bottom:14px">
-      <div class="p-card-title">&#128274; S&#233;curit&#233;</div>
-      <div style="padding:14px 16px">
-        <button class="p-btn blue" onclick="ouvrirModifMotDePasse()">&#128273; Changer le mot de passe</button>
-        <button class="p-btn" onclick="exporterToutesMesDonnees()">&#128190; Exporter toutes mes données</button>
-        <button class="p-btn danger" onclick="confirmerSuppressionCompte()">&#128465;&#65039; Supprimer mon compte</button>
-      </div>
-    </div>
-    <button class="s-btn blue full" onclick="sauvegarderParametres()" style="margin-bottom:20px">&#128190; Sauvegarder les param&#232;tres</button>
+    <button class="s-btn blue full param-save" onclick="sauvegarderParametres()">&#128190; Sauvegarder les param&#232;tres</button>
   </div>
   <div class="pb"></div>
 </div>
@@ -3195,7 +3213,6 @@
   <div class="nav-item nav-desk" id="nav-brouillons" onclick="goScreen('brouillons',null)"><i class="ic ic-file-stack nav-ico"></i><div class="nav-lbl">Brouillons</div></div>
   <div class="nav-item nav-desk" id="nav-paiements" onclick="goScreen('historique-paiements',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Paiements</div></div>
   <div class="nav-item nav-desk" id="nav-tva" onclick="goScreen('tva',null)"><i class="ic ic-calculator nav-ico"></i><div class="nav-lbl">TVA</div></div>
-  <div class="nav-item nav-desk" id="nav-modele" onclick="goScreen('modele-facture',null)"><i class="ic ic-palette nav-ico"></i><div class="nav-lbl">Modèle de facture</div></div>
   <div class="nav-grow nav-desk"></div>
   <div class="nav-item nav-desk" id="nav-parametres" onclick="goScreen('parametres',null)"><i class="ic ic-settings nav-ico"></i><div class="nav-lbl">Paramètres</div></div>
   <div class="nav-item nav-desk nav-toggle" id="nav-toggle" onclick="basculerMenu()"><i class="ic ic-arrow-left nav-ico"></i><div class="nav-lbl">Réduire le menu</div></div>

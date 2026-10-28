@@ -133,6 +133,7 @@ async function loadComptableApp() {
     });
 
     renderComptableDashboard();
+    majBadgeATraiter();
   } catch(e) {
     console.error('loadComptableApp:', e);
     showToast('Erreur chargement', 'error');
@@ -1339,7 +1340,32 @@ function _cptEmptyState() {
   '</div>';
 }
 
+// Pastille rouge sur l'onglet « À traiter » : nombre de documents qui attendent encore le comptable
+// (factures non lettrées + TVA non vérifiée + remarques ouvertes), pour savoir d'un coup d'œil s'il y a du travail.
+function majBadgeATraiter() {
+  var btn = document.getElementById('cpt-nav-traiter');
+  if (!btn || !CPT || !CPT.entreprises) return;
+  var total = 0;
+  CPT.entreprises.forEach(function(inv) {
+    var facs = inv._factures || [], ctrls = inv._controles || [], rems = inv._remarques || [];
+    var lettres = ctrls.filter(function(c) { return c.lettre; }).map(function(c) { return String(c.facture_id); });
+    var tvaOk = ctrls.filter(function(c) { return c.tva_verifie; }).map(function(c) { return String(c.facture_id); });
+    total += facs.filter(function(f) { return lettres.indexOf(String(f.id)) < 0; }).length;
+    total += facs.filter(function(f) { return tvaOk.indexOf(String(f.id)) < 0; }).length;
+    total += rems.filter(function(r) { return r.statut === 'ouverte'; }).length;
+  });
+  var pastille = btn.querySelector('.cpt-badge');
+  if (!pastille) {
+    pastille = document.createElement('span');
+    pastille.className = 'cpt-badge';
+    btn.appendChild(pastille);
+  }
+  pastille.textContent = total > 99 ? '99+' : String(total);
+  pastille.style.display = total > 0 ? 'inline-flex' : 'none';
+}
+
 function switchCptNav(tab) {
+  try { majBadgeATraiter(); } catch (e) {}
   ['dashboard','entreprises','traiter','historique','activite','notifs'].forEach(function(t) {
     const btn = document.getElementById('cpt-nav-' + t);
     if (!btn) return;

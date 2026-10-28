@@ -33,11 +33,12 @@ function appliquerMode() {
   });
   document.querySelectorAll('[onclick*="ouvrirMessagerie"]').forEach(function (e) { e.style.display = 'none'; });
   // Blocs du tableau de bord et du profil liés aux autres modules
-  ['dashboard-achats-resume', 'valeur-stock-card', 'groupe-label-suivi', 'qa-suivi-equipe', 'groupe-label-reseau', 'qa-reseau-zelto'].forEach(function (id) {
+  ['param-card-stock', 'param-card-bons', 'param-card-relance-achats', 'dashboard-achats-resume', 'valeur-stock-card', 'groupe-label-suivi', 'qa-suivi-equipe', 'groupe-label-reseau', 'qa-reseau-zelto'].forEach(function (id) {
     var x = document.getElementById(id); if (x) x.style.display = 'none';
   });
   var plus = document.getElementById('lbl-plus-outils');
   if (plus && plus.parentNode) plus.parentNode.parentNode.style.display = 'none';
+  var ga = document.getElementById('param-g-autres'); if (ga) ga.style.display = 'none';
   // Titres de groupes vides + renommage
   document.querySelectorAll('.groupe-label').forEach(function (g) {
     var nx = g.nextElementSibling;

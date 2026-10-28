@@ -633,7 +633,7 @@ function goScreen(name, options) {
   const _navMap = {'dashboard':'nav-home','nouvelle':'nav-factures','detail':'nav-factures','mes-factures':'nav-factures','produits':'nav-produits','nouveau-produit':'nav-produits','modifier-produit':'nav-produits','avoir-list':'nav-avoirs','avoir':'nav-avoirs','brouillons':'nav-brouillons','historique-paiements':'nav-paiements','acomptes':'nav-paiements','tva':'nav-tva',
     'devis-list':'nav-devis','nouveau-devis':'nav-devis','detail-devis':'nav-devis',
     'clients':'nav-clients','nouveau-client':'nav-clients','detail-client':'nav-clients',
-    'profil':'nav-parametres','parametres':'nav-parametres','modele-facture':'nav-modele','stats':'nav-profil','archive':'nav-profil'};
+    'profil':'nav-parametres','parametres':'nav-parametres','modele-facture':'nav-parametres','stats':'nav-profil','archive':'nav-profil'};
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   const _activeNav = _navMap[name];
   if (_activeNav) { const _nb = document.getElementById(_activeNav); if(_nb) _nb.classList.add('active'); }
