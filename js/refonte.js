@@ -54,3 +54,16 @@ function renderAccueilBonjour() {
   window.addEventListener('load', brancher);
   brancher();
 })();
+
+
+// Menu de gauche (ordinateur) : réduire / agrandir, choix mémorisé.
+function basculerMenu(forcer) {
+  var ferme = typeof forcer === 'boolean' ? forcer : !document.body.classList.contains('menu-ferme');
+  document.body.classList.toggle('menu-ferme', ferme);
+  var t = document.querySelector('#nav-toggle .nav-lbl'); if (t) t.textContent = ferme ? 'Agrandir le menu' : 'Réduire le menu';
+  var i = document.querySelector('#nav-toggle .ic'); if (i) i.className = 'ic ' + (ferme ? 'ic-arrow-right' : 'ic-arrow-left') + ' nav-ico';
+  try { localStorage.setItem('zelto_menu_ferme', ferme ? '1' : '0'); } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', function () {
+  try { if (localStorage.getItem('zelto_menu_ferme') === '1') basculerMenu(true); } catch (e) {}
+});

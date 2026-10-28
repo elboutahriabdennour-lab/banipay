@@ -3157,6 +3157,15 @@
   <div class="nav-fab"><div class="fab" onclick="_ouvrirMenuNouveau()" aria-label="Nouveau"><i class="ic ic-plus"></i></div></div>
   <div class="nav-item" id="nav-devis" onclick="goScreen('devis-list',null)"><i class="ic ic-file-pen nav-ico"></i><div class="nav-lbl">Devis</div></div>
   <div class="nav-item" id="nav-clients" onclick="goScreen('clients',null)"><i class="ic ic-users nav-ico"></i><div class="nav-lbl">Clients</div></div>
+  <div class="nav-sep nav-desk">Gestion</div>
+  <div class="nav-item nav-desk" id="nav-produits" onclick="goScreen('produits',null)"><i class="ic ic-package nav-ico"></i><div class="nav-lbl">Produits</div></div>
+  <div class="nav-item nav-desk" id="nav-avoirs" onclick="goScreen('avoir-list',null)"><i class="ic ic-undo-2 nav-ico"></i><div class="nav-lbl">Avoirs</div></div>
+  <div class="nav-item nav-desk" id="nav-brouillons" onclick="goScreen('brouillons',null)"><i class="ic ic-file-stack nav-ico"></i><div class="nav-lbl">Brouillons</div></div>
+  <div class="nav-item nav-desk" id="nav-paiements" onclick="goScreen('historique-paiements',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Paiements</div></div>
+  <div class="nav-item nav-desk" id="nav-tva" onclick="goScreen('tva',null)"><i class="ic ic-calculator nav-ico"></i><div class="nav-lbl">TVA</div></div>
+  <div class="nav-grow nav-desk"></div>
+  <div class="nav-item nav-desk" id="nav-parametres" onclick="goScreen('parametres',null)"><i class="ic ic-settings nav-ico"></i><div class="nav-lbl">Paramètres</div></div>
+  <div class="nav-item nav-desk nav-toggle" id="nav-toggle" onclick="basculerMenu()"><i class="ic ic-arrow-left nav-ico"></i><div class="nav-lbl">Réduire le menu</div></div>
 </nav>
 <div id="sheet-nouveau" onclick="if(event.target===this)_fermerMenuNouveau()">
   <div class="sheet">

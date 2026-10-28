@@ -630,10 +630,10 @@ function goScreen(name, options) {
   const _bottomNav = document.querySelector('.bottom-nav');
   if (_bottomNav) _bottomNav.style.display = (_noNav.includes(name) || (window.innerWidth < 1000 && _noNavMobile.includes(name))) ? 'none' : 'flex';
 
-  const _navMap = {'dashboard':'nav-home','nouvelle':'nav-factures','detail':'nav-factures','mes-factures':'nav-factures',
+  const _navMap = {'dashboard':'nav-home','nouvelle':'nav-factures','detail':'nav-factures','mes-factures':'nav-factures','produits':'nav-produits','nouveau-produit':'nav-produits','modifier-produit':'nav-produits','avoir-list':'nav-avoirs','avoir':'nav-avoirs','brouillons':'nav-brouillons','historique-paiements':'nav-paiements','acomptes':'nav-paiements','tva':'nav-tva',
     'devis-list':'nav-devis','nouveau-devis':'nav-devis','detail-devis':'nav-devis',
     'clients':'nav-clients','nouveau-client':'nav-clients','detail-client':'nav-clients',
-    'profil':'nav-profil','stats':'nav-profil','parametres':'nav-profil','archive':'nav-profil'};
+    'profil':'nav-parametres','parametres':'nav-parametres','stats':'nav-profil','archive':'nav-profil'};
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
   const _activeNav = _navMap[name];
   if (_activeNav) { const _nb = document.getElementById(_activeNav); if(_nb) _nb.classList.add('active'); }
