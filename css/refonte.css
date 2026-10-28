@@ -203,3 +203,29 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 /* Bandeau « Espace comptable » : le menu de gauche commence en dessous */
 @media (min-width:1000px){body:has(#cpt-mode-pill) .bottom-nav{top:30px}}
 @media (min-width:1000px){.bottom-nav{overflow-y:auto}}
+
+/* ── Modèle de facture ── */
+.mf-aide{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:8px}
+.mf-apercu-boite{position:relative;width:100%;max-width:420px;margin:0 auto 16px;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 6px 20px rgba(20,36,31,.08)}
+.mf-apercu-boite iframe{position:absolute;top:0;left:0;width:794px;height:1123px;border:0;transform-origin:0 0;background:#fff}
+.mf-bloc{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.mf-titre{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin-bottom:10px}
+.mf-pastilles{display:flex;flex-wrap:wrap;gap:10px}
+.mf-pastille{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border);cursor:pointer;padding:0;position:relative}
+.mf-pastille.on{box-shadow:0 0 0 2.5px var(--ink)}
+.mf-libre{display:flex;align-items:center;justify-content:center;background:conic-gradient(#e0453a,#e8b73a,#5fbf5a,#3a9de0,#8a5ae0,#e0453a);color:#fff;font-weight:800;overflow:hidden}
+.mf-libre input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.mf-puces{display:flex;gap:8px;flex-wrap:wrap}
+.mf-puce{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:8px 14px;font:600 13px/1 'Inter',sans-serif;color:var(--ink);cursor:pointer}
+.mf-puce.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.mf-ligne{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font-size:14px;cursor:pointer;border-top:1px solid var(--border)}
+.mf-ligne:first-of-type{border-top:0}
+.mf-inter{width:44px;height:26px;border-radius:999px;background:#CBD3CD;position:relative;flex:none;transition:.15s}
+.mf-inter i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s}
+.mf-inter.on{background:var(--safran)}.mf-inter.on i{left:21px}
+.mf-reset{display:block;width:100%;background:none;border:0;color:var(--ink-soft);font:600 13px 'Inter',sans-serif;padding:14px;cursor:pointer;text-decoration:underline}
+@media (min-width:1000px){
+  .mf-page{display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:24px;align-items:start}
+  .mf-page .mf-apercu-boite{order:2;position:sticky;top:16px;margin:0}
+  .mf-page #mf-controles{order:1}
+}

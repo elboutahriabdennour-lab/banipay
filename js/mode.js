@@ -4,7 +4,7 @@ var MODE_ZELTO = 'facturation';
 
 var ECRANS_FACTURATION = ['dashboard','mes-factures','nouvelle','detail','historique-paiements','acomptes','brouillons',
   'avoir','avoir-list','devis-list','nouveau-devis','detail-devis','clients','nouveau-client','detail-client','modifier-client',
-  'produits','nouveau-produit','modifier-produit','tva','recherche','profil','parametres','audit',
+  'produits','nouveau-produit','modifier-produit','tva','recherche','profil','parametres','modele-facture','audit',
   'support','espace-support','mes-tickets-support','chat-ticket','qui-sommes-nous','auth','definir-mot-passe','verification-telephone',
   'comptable','cpt-entreprise','comptable-profil','attributions-cabinet','pdf-viewer','portail','profil-public'];
 
