@@ -164,3 +164,9 @@ body{font-size:15px;line-height:1.45}
   .cpt-tab .ic{font-size:20px}
   #cpt-main-content{padding-bottom:40px}
 }
+
+/* Connexion : toujours centrée, jamais décalée par le menu */
+#screen-auth{left:0!important}
+#screen-auth .auth-wrap{width:100%!important;max-width:400px!important;margin:auto!important}
+#screen-auth>*{max-width:none}
+#screen-auth .auth-wrap>*{margin-left:auto;margin-right:auto}
