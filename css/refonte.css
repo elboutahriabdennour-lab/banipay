@@ -119,6 +119,10 @@ body{font-size:15px;line-height:1.45}
   #accueil-recents{margin:0 auto}
   .dash-cta{padding-left:0;padding-right:0}.dash-sec{padding-left:4px;padding-right:4px}
   .dash-card,.alerte-bar{margin-left:auto;margin-right:auto}
+  #screen-profil>*:not(.topbar):not(.modal-overlay):not([style*="position:fixed"]){width:min(880px,calc(100% - 32px))!important;max-width:880px!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important}
+  #screen-profil>div[style*="margin:16px"]:not(.topbar):not(.modal-overlay):not([style*="position:fixed"]){width:min(848px,calc(100% - 32px))!important;max-width:848px!important}
+  #screen-profil .profil-hero{position:relative}
+  #screen-profil .profil-hero>button{top:14px!important}
   .toast{bottom:30px}
   .dash-cta{grid-template-columns:1fr 1fr 2fr}
   .quick-actions{grid-template-columns:repeat(6,1fr)}
