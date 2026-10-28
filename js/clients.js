@@ -228,7 +228,7 @@ function renderClients() {
       <div class="card-ico" style="background:#E9F4F3;font-weight:700;color:#C9971F;font-size:18px">${escapeHTML(c.nom).charAt(0).toUpperCase()}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(c.nom)}</div>
-        <div class="card-ref">${c.tel||''} ${c.email?'· '+c.email:''}</div>
+        <div class="card-ref">${escapeHTML(c.tel||'')} ${c.email?'· '+escapeHTML(c.email):''}</div>
       </div>
       <div class="card-end">
         <div style="font-size:12px;color:#6E8F4E;font-weight:600">${fmtInt(caTotal)} MAD</div>

@@ -735,7 +735,7 @@ function _collectionActuelle(type) {
 // guillemets simples et des antislashs éventuels dans la valeur elle-même
 // (ex : un nom de client avec une apostrophe).
 function _valeurPourOnclick(valeur) {
-  return "'" + String(valeur == null ? '' : valeur).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  return valeurPourOnclick(valeur == null ? '' : String(valeur));
 }
 
 function _construireRefTransaction(t) {

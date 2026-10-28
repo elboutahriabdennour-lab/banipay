@@ -1301,8 +1301,8 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
           <div style="font-size:64px;margin-bottom:16px">${statutActuel === valeurAcceptee ? '✅' : '❌'}</div>
           <h2 style="color:#2A2420;margin-bottom:8px">Ce ${isFacture ? 'facture' : 'devis'} a déjà été ${statutActuel === valeurAcceptee ? 'accepté' : 'refusé'}</h2>
           <div style="background:${statutActuel === valeurAcceptee ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-            <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
-            <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
+            <div style="font-size:13px;color:#6B5F54">Référence : <strong>${escapeHTML(d.ref)}</strong></div>
+            <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${escapeHTML(d.client)}</strong></div>
           </div>
           <p style="color:#6B5F54;font-size:13px">Aucune action supplémentaire n'est nécessaire.</p>
           <div style="margin-top:24px;font-size:11px;color:#9C9186">Propulsé par <strong style="color:#C9971F">Zelto</strong></div>
@@ -1356,8 +1356,8 @@ async function traiterActionDocument(docId, type, action, signatureData, token) 
         <div style="font-size:64px;margin-bottom:16px">${iconAction}</div>
         <h2 style="color:#2A2420;margin-bottom:8px">${titreFinal}</h2>
         <div style="background:${bg};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${d.ref}</strong></div>
-          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${d.client}</strong></div>
+          <div style="font-size:13px;color:#6B5F54">Référence : <strong>${escapeHTML(d.ref)}</strong></div>
+          <div style="font-size:13px;color:#6B5F54;margin-top:4px">Client : <strong>${escapeHTML(d.client)}</strong></div>
           <div style="font-size:13px;color:#6B5F54;margin-top:4px">Montant : <strong>${(d.ttc||0).toLocaleString('fr-FR', {minimumFractionDigits:2})} MAD TTC</strong></div>
         </div>
         <p style="color:#6B5F54;font-size:13px">${messageFinal}</p>

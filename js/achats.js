@@ -71,7 +71,7 @@ function renderAchats() {
       '<div class="card-ico" style="background:#F5E4E1;font-size:20px">' + (catIcons[a.categorie] || '📄') + '</div>' +
       '<div class="card-body">' +
         '<div class="card-name">' + escapeHTML(a.fournisseur || '—') + (a.fournisseur_banipay ? ' <span style="font-size:9px;background:#E9F4F3;color:#1F6F72;padding:1px 5px;border-radius:4px;font-weight:600">BP</span>' : (a.origine === 'auto_acceptation' ? ' <span style="font-size:9px;background:#EEF3E4;color:#55702E;padding:1px 5px;border-radius:4px;font-weight:600">AUTO</span>' : '')) + '</div>' +
-        '<div class="card-ref">' + (a.ref_fournisseur || '') + ' · ' + (a.date_achat || '') + '</div>' +
+        '<div class="card-ref">' + escapeHTML(a.ref_fournisseur || '') + ' · ' + (a.date_achat || '') + '</div>' +
       '</div>' +
       '<div class="card-end">' +
         '<div class="card-amount" style="color:#B23A2E">' + fmt(a.ttc || 0) + '</div>' +

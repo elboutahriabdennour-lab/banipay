@@ -43,9 +43,9 @@ function renderProfil() {
   const publicCard = el('pv-public-card');
   if (publicCard) {
     const reseaux = [
-      p.facebook ? `<a href="${escapeHTML(p.facebook)}" target="_blank" style="margin-right:10px">📘 Facebook</a>` : '',
-      p.instagram ? `<a href="${escapeHTML(p.instagram)}" target="_blank" style="margin-right:10px">📸 Instagram</a>` : '',
-      p.linkedin ? `<a href="${escapeHTML(p.linkedin)}" target="_blank">💼 LinkedIn</a>` : '',
+      p.facebook ? `<a href="${/^https?:\/\//i.test(p.facebook) ? escapeHTML(p.facebook) : '#'}" target="_blank" rel="noopener noreferrer" style="margin-right:10px">📘 Facebook</a>` : '',
+      p.instagram ? `<a href="${/^https?:\/\//i.test(p.instagram) ? escapeHTML(p.instagram) : '#'}" target="_blank" rel="noopener noreferrer" style="margin-right:10px">📸 Instagram</a>` : '',
+      p.linkedin ? `<a href="${/^https?:\/\//i.test(p.linkedin) ? escapeHTML(p.linkedin) : '#'}" target="_blank" rel="noopener noreferrer">💼 LinkedIn</a>` : '',
     ].filter(Boolean).join('');
     const infosPubliques = [
       ['🕐 Horaires',p.horaires],

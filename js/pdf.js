@@ -1,17 +1,25 @@
 // ZELTO — pdf.js
+// QR code généré localement (aucune adresse envoyée à un service tiers). Vide si la bibliothèque n'est pas chargée.
+function _qrLocal(texte) {
+  try {
+    if (typeof qrcode !== 'function') return '';
+    const q = qrcode(0, 'M'); q.addData(String(texte)); q.make();
+    return q.createDataURL(3, 0);
+  } catch (e) { return ''; }
+}
 function construireRefsQRFacture(f) {
   const refsQR = [];
   const base = window.location.origin + window.location.pathname;
   if (f.devis_ref) {
     const devisTrouve = (STATE.devis || []).find(function(d) { return d.ref === f.devis_ref; });
-    refsQR.push({ icon: '', label: 'Devis', ref: f.devis_ref, url: devisTrouve ? base + '?doc=' + devisTrouve.id + '&type=devis' + '&t=' + (devisTrouve.token_public||'') : '' });
+    refsQR.push({ icon: '', label: 'Devis', ref: f.devis_ref, url: '' });
   }
   if (f.bc_id) {
     const bcTrouve = (STATE.bonsCommande || []).find(function(b) { return b.id === f.bc_id; });
-    if (bcTrouve) refsQR.push({ icon: '', label: 'Bon de commande', ref: bcTrouve.ref, url: base + '?bc=' + bcTrouve.id + '&t=' + (bcTrouve.token_public||'') });
+    if (bcTrouve) refsQR.push({ icon: '', label: 'Bon de commande', ref: bcTrouve.ref, url: '' });
   }
   const blTrouve = (STATE.bonsLivraison || []).find(function(bl) { return bl.facture_id === f.id; });
-  if (blTrouve) refsQR.push({ icon: '', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id + '&t=' + (blTrouve.token_public||'') });
+  if (blTrouve) refsQR.push({ icon: '', label: 'Bon de livraison', ref: blTrouve.ref, url: '' });
   return refsQR;
 }
 function exportPDF(id) {
@@ -103,18 +111,19 @@ function genDocPDF(opts) {
   const t = _TRAD_PDF[langue];
   const typeAffiche = t.typeLabels[type] || type;
   const estRTL = langue === 'ar';
-  const docUrl = opts.doc_url || (doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '');
-  const qrUrl = docUrl ? 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&color=1E3A8A&bgcolor=ffffff&data=' + encodeURIComponent(docUrl) : '';
+  // Lien et QR code : uniquement sur les devis (acceptation par le client). Pas sur les factures.
+  const docUrl = isDevis ? (opts.doc_url || (doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '')) : '';
+  const qrUrl = docUrl ? _qrLocal(docUrl) : '';
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
     return `<tr style="background:${i%2===0?'#F1EEE8':'#fff'}">
       <td style="padding:7px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
-      <td style="padding:5px 8px;text-align:center;font-size:10px">${l.qte||1} ${l.unite||''}</td>
+      <td style="padding:5px 8px;text-align:center;font-size:10px">${escapeHTML(String(l.qte||1))} ${escapeHTML(String(l.unite||''))}</td>
       ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
     </tr>`;
   }).join('');
   const html = `<!DOCTYPE html><html lang="${langue}" dir="${estRTL ? 'rtl' : 'ltr'}"><head><meta charset="UTF-8">
-<title>${typeAffiche} ${ref}<\/title>
+<title>${escapeHTML(typeAffiche)} ${escapeHTML(ref)}<\/title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&display=swap');
@@ -174,7 +183,7 @@ tbody td{border-bottom:1px solid #EAE4DA}
   </div>
   <div class="h-right">
     <div class="h-doc-label">${typeAffiche}</div>
-    <div class="h-ref">${ref}</div>
+    <div class="h-ref">${escapeHTML(ref)}</div>
     <div class="h-meta">
       ${t.date} : ${date||'—'}<br>
       ${echeance?t.echeance+' : '+echeance+'<br>':''}
@@ -246,7 +255,7 @@ ${(p.banque||p.rib)?`<div class="bank-box">
 <div style="flex:1;min-height:20px"></div>
 <div class="sig-zone">
   <div class="sig-item"><div class="sig-lbl">${t.cachetSignature}</div>${signatureEmetteur?`<img src="${signatureEmetteur}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`:''}</div>
-  <div class="sig-item"><div class="sig-lbl">${t.bonPourAccord}</div>${signatureClient ? (signatureClient.startsWith('TEXTE:') ? `<div style="font-size:10px;color:#55702E;font-style:italic;margin-top:6px;line-height:1.4">✅ ${escapeHTML(signatureClient.slice(6))}</div>` : `<img src="${signatureClient}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`) : ''}</div>
+  <div class="sig-item"><div class="sig-lbl">${t.bonPourAccord}</div>${signatureClient ? (signatureClient.startsWith('TEXTE:') ? `<div style="font-size:10px;color:#55702E;font-style:italic;margin-top:6px;line-height:1.4">✅ ${escapeHTML(signatureClient.slice(6))}</div>` : `<img src="${/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+\/=]+$/.test(signatureClient) ? signatureClient : ''}" style="max-width:100%;max-height:44px;object-fit:contain;margin-top:4px">`) : ''}</div>
 </div>
 <div style="flex:1"></div>
 <div class="footer">

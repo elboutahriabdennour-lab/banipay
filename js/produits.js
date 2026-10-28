@@ -39,8 +39,8 @@ function renderProduits() {
     <div class="card">
       <div class="card-ico" style="background:#E9F4F3">${catIcons[p.categorie]||'📦'}</div>
       <div class="card-body">
-        <div class="card-name">${p.nom}</div>
-        <div class="card-ref">${p.unite||'u'} · ${p.description||''}</div>
+        <div class="card-name">${escapeHTML(p.nom)}</div>
+        <div class="card-ref">${escapeHTML(p.unite||'u')} · ${escapeHTML(p.description||'')}</div>
         ${enAlerte && !rupture ? '<div style="font-size:10px;color:#B8860B;font-weight:600;margin-top:2px">⚠️ Stock bas (seuil: '+p.seuil_alerte+')</div>' : ''}
       </div>
       <div class="card-end">

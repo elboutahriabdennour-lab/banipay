@@ -403,7 +403,9 @@ function normaliserTableauxDocument(doc) {
 // silencieusement ces comparaisons strictes.
 function valeurPourOnclick(valeur) {
   if (typeof valeur === 'number' || typeof valeur === 'boolean') return String(valeur);
-  return "'" + String(valeur == null ? '' : valeur).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+  // Sécurisé : échappe la valeur pour JavaScript PUIS pour l'attribut HTML (&, <, >, ", retours à la ligne).
+  const js = "'" + String(valeur == null ? '' : valeur).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ').replace(/\u2028|\u2029/g, ' ') + "'";
+  return js.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // FIX (bug réel signalé — QR code invisible pour l'utilisateur et son

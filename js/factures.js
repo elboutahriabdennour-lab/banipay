@@ -469,7 +469,7 @@ function renderDetail() {
     if (lignesEl) lignesEl.innerHTML = lignesFacture.map(l => `
     <div class="d-ligne">
       <div>
-        <div style="font-size:13px;font-weight:500">${l.desc}</div>
+        <div style="font-size:13px;font-weight:500">${escapeHTML(l.desc)}</div>
         <div style="font-size:11px;color:#9C9186">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${dv}</div>
       </div>
       <div style="font-size:13px;font-weight:600">${fmt(l.qte*l.pu)} ${dv}</div>
@@ -726,11 +726,11 @@ function genRecuPaiement(id) {
 <div class="card">
   <div class="header"><div style="font-size:40px;margin-bottom:8px">✅</div><h2>Reçu de paiement</h2><div style="opacity:0.8;margin-top:4px">${f.ref}</div></div>
   <div class="body">
-    <div class="row"><span style="color:#6B5F54">Client</span><strong>${f.client}</strong></div>
+    <div class="row"><span style="color:#6B5F54">Client</span><strong>${escapeHTML(f.client)}</strong></div>
     <div class="row"><span style="color:#6B5F54">Date</span><span>${new Date().toLocaleDateString('fr-MA')}</span></div>
     <div class="row"><span style="color:#6B5F54">Mode</span><span>${f.paiement||'Virement'}</span></div>
     <div class="row"><span style="color:#6B5F54">Référence</span><span>${f.ref}</span></div>
-    ${f.chantier ? `<div class="row"><span style="color:#6B5F54">Projet</span><span>${f.chantier}</span></div>` : ''}
+    ${f.chantier ? `<div class="row"><span style="color:#6B5F54">Projet</span><span>${escapeHTML(f.chantier)}</span></div>` : ''}
     <div class="total"><span>Montant reçu</span><span>${fmt(f.ttc)} ${f.devise||'MAD'}</span></div>
     <div style="font-size:11px;color:#9C9186;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #EAE4DA">
       ${p.raison||''} · ${p.tel||''} · ${p.email||''}
@@ -780,7 +780,7 @@ function relancerWhatsApp(id) {
     '\u2022 Date : ' + (f.date_emission||'') + '\n' +
     (f.echeance ? '\u2022 \u00c9ch\u00e9ance : ' + f.echeance + '\n' : '') +
     (f.chantier ? '\u2022 Projet : ' + f.chantier + '\n' : '') +
-    '\n\u{1F4CE} *Voir la facture :*\n' + (window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (f.token_public||'')) + '\n\n' +
+    '\n' +
     '\u{1F517} *Notre profil :*\n' + lienProfil + '\n\n' +
     'Merci de r\u00e9gulariser dans les meilleurs d\u00e9lais.\n\n' +
     'Cordialement,\n' + (p.raison||'') + '\n\u{1F4DE} ' + (p.tel||'') + (p.email ? '\n\u2709\ufe0f ' + p.email : '')
@@ -794,8 +794,7 @@ async function partagerDoc(type, id) {
   if (type === 'facture') {
     doc = STATE.factures.find(f => f.id === id);
     titre = `Facture ${doc?.ref}`;
-    const facUrl = window.location.origin + window.location.pathname + '?doc=' + id + '&t=' + (doc?.token_public||'');
-    texte = `*Facture ${doc?.ref}*\nClient: ${doc?.client}\nMontant: ${fmt(doc?.ttc)} ${doc?.devise||'MAD'} TTC\nDate: ${doc?.date_emission||''}\n\n📎 Voir: ${facUrl}\n\n${p.raison||''}\n${p.tel||''} · ${p.email||''}`;
+    texte = `*Facture ${doc?.ref}*\nClient: ${doc?.client}\nMontant: ${fmt(doc?.ttc)} ${doc?.devise||'MAD'} TTC\nDate: ${doc?.date_emission||''}\n\n${p.raison||''}\n${p.tel||''} · ${p.email||''}`;
   } else {
     doc = STATE.devis.find(d => d.id === id);
     titre = `Devis ${doc?.ref}`;
@@ -840,7 +839,7 @@ function creerAvoirDepuisFacture(id) {
     const sel = el('av-facture-origine');
     if (sel) {
       sel.innerHTML = '<option value="">Sélectionner...</option>' +
-        STATE.factures.map(fx => '<option value="' + fx.id + '"' + (fx.id===f.id?' selected':'') + '>' + fx.ref + ' — ' + escapeHTML(fx.client) + ' — ' + fmt(fx.ttc) + ' MAD</option>').join('');
+        STATE.factures.map(fx => '<option value="' + fx.id + '"' + (fx.id===f.id?' selected':'') + '>' + escapeHTML(fx.ref) + ' — ' + escapeHTML(fx.client) + ' — ' + fmt(fx.ttc) + ' MAD</option>').join('');
     }
     updateAvoirTotal();
   }, 100);
