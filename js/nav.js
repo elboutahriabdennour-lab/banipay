@@ -589,6 +589,8 @@ async function voirDocumentDepuisNotification(type, docId) {
 STATE._historiqueEcrans = STATE._historiqueEcrans || [];
 
 function goScreen(name, options) {
+  // Lancement « facturation seule » (voir js/mode.js) : un écran hors périmètre renvoie au tableau de bord.
+  if (typeof ecranAutorise === 'function' && !ecranAutorise(name)) { name = 'dashboard'; }
   // FIX (bug trouvé — bouton déconnexion) : sb.logout() (config.js) vide
   // entièrement STATE avant de le réinitialiser partiellement — sans
   // jamais recréer _historiqueEcrans. Sans cette ligne, l'appel suivant
@@ -617,6 +619,7 @@ function goScreen(name, options) {
     if (name !== 'auth') { goScreen('auth'); return; }
   }
   hideToast();
+  if (typeof appliquerMode === 'function') setTimeout(appliquerMode, 50);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const sc = el('screen-' + name);
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }

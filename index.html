@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zelto : facturation, devis et gestion pour PME marocaines</title>
-<meta name="description" content="Zelto simplifie la facturation, les devis et le suivi de stock pour les PME, artisans et indépendants marocains. Gratuit pour commencer.">
+<title>Zelto : devis et factures pour les entreprises marocaines</title>
+<meta name="description" content="Zelto simplifie les devis, les factures et les avoirs pour les entreprises marocaines, avec un accès direct pour votre comptable. Gratuit pour commencer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Karla:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/icones.css?v=1">
@@ -147,25 +147,22 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Zelto",
-  "description": "Zelto simplifie la facturation, les devis et le suivi de stock pour les PME, artisans et indépendants marocains. Gratuit pour commencer.",
+  "description": "Zelto simplifie les devis, les factures et les avoirs pour les entreprises marocaines, avec un accès direct pour votre comptable. Gratuit pour commencer.",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "url": "https://zelto.ma",
-  "inLanguage": ["fr", "en", "ar"],
+  "inLanguage": ["fr"],
   "offers": {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "MAD"
   },
   "featureList": [
-    "Facturation et devis",
-    "Signature électronique",
-    "Relances automatiques",
-    "Achats et fournisseurs",
-    "Gestion de stock automatique",
-    "Rentabilité par projet",
+    "Devis et factures",
+    "Avoirs et paiements",
     "Accès comptable direct",
-    "Support en direct"
+    "Clients et catalogue",
+    "Export PDF et CSV"
   ],
   "publisher": {
     "@type": "Organization",
@@ -204,7 +201,6 @@
     </div>
     <nav class="nav-links">
       <a href="#fonctionnalites">Fonctionnalités</a>
-      <a href="#guide">Guide</a>
       <a href="#forfaits">Tarifs</a>
       <a href="#histoire">Notre histoire</a>
     </nav>
@@ -224,9 +220,9 @@
     <path d="M 60 100 Q 600 10 1140 100" fill="none" stroke="url(#gradHero)" stroke-width="90" stroke-linecap="round"/>
   </svg>
   <div class="hero-content">
-    <div class="eyebrow">La gestion, enfin simple</div>
-    <h1>La gestion qui vous suit, <em>pas le cahier qui se perd</em></h1>
-    <p>Facturation, devis, suivi de stock et accès direct pour votre comptable, réunis dans une seule application mobile.</p>
+    <div class="eyebrow">Facturation simple pour les entreprises marocaines</div>
+    <h1>Vos factures, <em>simples et en règle</em></h1>
+    <p>Devis, factures et avoirs pour votre entreprise, avec un accès direct pour votre comptable, dans une seule application mobile.</p>
     <div class="hero-ctas">
       <a href="app.html" class="btn-primaire">Commencer gratuitement</a>
       <a href="#fonctionnalites" class="btn-secondaire">Voir comment ça marche</a>
@@ -262,9 +258,9 @@
       <p>Le client accepte le devis. Il devient une facture en un clic.</p>
     </div>
     <div class="probleme-item">
-      <div class="probleme-ico">📦</div>
-      <h3>3. Stock</h3>
-      <p>Le stock des articles vendus est mis à jour automatiquement.</p>
+      <div class="probleme-ico">💰</div>
+      <h3>3. Paiement</h3>
+      <p>Vous suivez les paiements reçus et ce qui reste à encaisser.</p>
     </div>
     <div class="probleme-item">
       <div class="probleme-ico">🤝</div>
@@ -276,14 +272,14 @@
 
 <section class="section" id="fonctionnalites">
   <div class="section-title">Les fonctionnalités</div>
-  <div class="section-sub">Huit modules, réunis dans une seule application. Cliquez pour le détail.</div>
+  <div class="section-sub">Tout ce qu'il faut pour facturer, encaisser et partager avec votre comptable. Cliquez pour le détail.</div>
   <div class="features-grid">
 
     <div class="feature-card" onclick="toggleFeature(this)">
       <div class="feature-card-top">
         <div>
           <div class="feature-ico" style="background:var(--teal-clair)">🧾</div>
-          <h3>Facturation & devis</h3>
+          <h3>Devis et factures</h3>
           <p>Création, envoi et suivi. Un devis accepté se convertit en facture en un clic.</p>
         </div>
         <div class="feature-chevron">▾</div>
@@ -291,32 +287,30 @@
       <div class="feature-detail">
         <ol>
           <li>Création du devis avec les lignes de prestation</li>
-          <li>Envoi au client par WhatsApp, email ou lien direct</li>
+          <li>Envoi au client par WhatsApp, e-mail ou lien direct</li>
           <li>Le client accepte depuis son téléphone, sans compte requis</li>
           <li>Conversion en facture en un clic, numérotée automatiquement</li>
         </ol>
       </div>
     </div>
-
     <div class="feature-card" onclick="toggleFeature(this)">
       <div class="feature-card-top">
         <div>
-          <div class="feature-ico" style="background:var(--safran-clair)">📦</div>
-          <h3>Stock automatique</h3>
-          <p>Chaque vente et chaque achat mettent à jour le stock automatiquement.</p>
+          <div class="feature-ico" style="background:var(--safran-clair)">↩️</div>
+          <h3>Avoirs et paiements</h3>
+          <p>Corrigez une facture par un avoir et suivez ce qui reste à encaisser.</p>
         </div>
         <div class="feature-chevron">▾</div>
       </div>
       <div class="feature-detail">
         <ol>
-          <li>Chaque article vendu réduit le stock au moment de la facture</li>
-          <li>Chaque achat enregistré augmente le stock correspondant</li>
-          <li>Une alerte signale les articles sous un seuil défini</li>
-          <li>Historique complet des mouvements, article par article</li>
+          <li>Avoir lié à la facture d'origine</li>
+          <li>Paiements partiels avec historique</li>
+          <li>Statuts clairs : payée, en attente, en retard</li>
+          <li>Montant total à recevoir visible dès l'accueil</li>
         </ol>
       </div>
     </div>
-
     <div class="feature-card" onclick="toggleFeature(this)">
       <div class="feature-card-top">
         <div>
@@ -331,106 +325,63 @@
           <li>Vous invitez votre comptable depuis l'application</li>
           <li>Il accède à vos factures, devis et TVA avec son propre compte</li>
           <li>Notes échangées directement sur chaque facture</li>
-          <li>Aucun fichier à envoyer par email ou WhatsApp</li>
+          <li>Aucun fichier à envoyer par e-mail ou WhatsApp</li>
         </ol>
       </div>
     </div>
-
     <div class="feature-card" onclick="toggleFeature(this)">
       <div class="feature-card-top">
         <div>
-          <div class="feature-ico" style="background:#EDE6F0">⏰</div>
-          <h3>Relances automatiques</h3>
-          <p>L'application relance vos clients à votre place, et vous rappelle vos propres paiements fournisseurs.</p>
+          <div class="feature-ico" style="background:#EDE6F0">👥</div>
+          <h3>Clients et catalogue</h3>
+          <p>Vos clients et vos prestations enregistrés une fois, réutilisés à chaque document.</p>
         </div>
         <div class="feature-chevron">▾</div>
       </div>
       <div class="feature-detail">
         <ol>
-          <li>Définissez le délai avant relance (ex. 3 jours avant échéance)</li>
-          <li>Message envoyé automatiquement par WhatsApp</li>
-          <li>Trois messages distincts : avant, le jour même, et en retard</li>
-          <li>Rappels de paiement fournisseur, pour ne rien rater de votre côté</li>
+          <li>Fiches clients avec leurs identifiants légaux (ICE, IF, RC)</li>
+          <li>Catalogue de produits et de prestations</li>
+          <li>Import de vos clients depuis un fichier CSV</li>
+          <li>Recherche rapide d'une facture ou d'un client</li>
         </ol>
       </div>
     </div>
-
     <div class="feature-card" onclick="toggleFeature(this)">
       <div class="feature-card-top">
         <div>
-          <div class="feature-ico" style="background:#F5E4E1">🛒</div>
-          <h3>Achats & fournisseurs</h3>
-          <p>Bons de commande, réception et factures d'achat au même endroit.</p>
+          <div class="feature-ico" style="background:#E9F4F3">📊</div>
+          <h3>Exports et TVA</h3>
+          <p>Des documents propres pour vos clients et des exports pour votre comptable.</p>
         </div>
         <div class="feature-chevron">▾</div>
       </div>
       <div class="feature-detail">
         <ol>
-          <li>Bon de commande envoyé au fournisseur</li>
-          <li>Réception confirmée à la livraison</li>
-          <li>Facture d'achat lue automatiquement par simple photo, à vérifier avant enregistrement</li>
-          <li>Suivi des dépenses par fournisseur et par catégorie</li>
+          <li>Facture et devis en PDF</li>
+          <li>Export CSV de vos factures</li>
+          <li>Récapitulatif de TVA</li>
+          <li>Journal des actions réalisées</li>
         </ol>
       </div>
     </div>
-
     <div class="feature-card" onclick="toggleFeature(this)">
       <div class="feature-card-top">
         <div>
-          <div class="feature-ico" style="background:var(--teal-clair)">🆘</div>
+          <div class="feature-ico" style="background:#F5E4E1">🆘</div>
           <h3>Un vrai support</h3>
-          <p>Une question ? Un chat en direct avec une vraie personne.</p>
+          <p>Une question ? Écrivez-nous depuis l'application.</p>
         </div>
         <div class="feature-chevron">▾</div>
       </div>
       <div class="feature-detail">
         <ol>
-          <li>Chat en direct accessible depuis l'application</li>
+          <li>Chat accessible depuis l'application</li>
           <li>Réponse par une personne, pas un robot</li>
-          <li>Partage d'écran possible en cas de besoin</li>
           <li>Suivi de chaque demande jusqu'à sa résolution</li>
         </ol>
       </div>
     </div>
-
-    <div class="feature-card" onclick="toggleFeature(this)">
-      <div class="feature-card-top">
-        <div>
-          <div class="feature-ico" style="background:#EEF3E4">📊</div>
-          <h3>Rentabilité par projet</h3>
-          <p>Comparez ce qu'un projet a rapporté et ce qu'il a coûté.</p>
-        </div>
-        <div class="feature-chevron">▾</div>
-      </div>
-      <div class="feature-detail">
-        <ol>
-          <li>Renseignez un même nom de projet sur vos factures et vos achats</li>
-          <li>La marge se calcule automatiquement, en temps réel</li>
-          <li>Alerte dès que les dépenses dépassent le budget accepté par le client</li>
-          <li>Utile pour réagir avant qu'un projet ne devienne déficitaire</li>
-        </ol>
-      </div>
-    </div>
-
-    <div class="feature-card" onclick="toggleFeature(this)">
-      <div class="feature-card-top">
-        <div>
-          <div class="feature-ico" style="background:#E9F4F3">🌍</div>
-          <h3>3 langues, vraiment</h3>
-          <p>Français, anglais et arabe — une vraie interface, pas une traduction de surface.</p>
-        </div>
-        <div class="feature-chevron">▾</div>
-      </div>
-      <div class="feature-detail">
-        <ol>
-          <li>Changez de langue à tout moment, depuis les paramètres</li>
-          <li>L'arabe s'affiche de droite à gauche, correctement adapté</li>
-          <li>Vos devis et factures suivent la même langue à l'impression</li>
-          <li>Utile pour travailler avec des clients francophones, anglophones ou arabophones</li>
-        </ol>
-      </div>
-    </div>
-
   </div>
 </section>
 
@@ -448,17 +399,6 @@ function toggleFeature(carte) {
 
 
 
-<section class="section" style="background:var(--papier-carte)" id="guide">
-  <div class="section-narrow" style="text-align:center">
-    <div class="section-title">Le guide de démarrage</div>
-    <div class="section-sub">Chaque section de l'application, avec le chemin exact à suivre. Disponible en trois langues.</div>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:28px">
-      <a href="guides/Zelto_Guide_Demarrage_FR.pdf" download class="btn-secondaire" style="display:flex;align-items:center;gap:8px">📄 Français</a>
-      <a href="guides/Zelto_Guide_Demarrage_EN.pdf" download class="btn-secondaire" style="display:flex;align-items:center;gap:8px">📄 English</a>
-      <a href="guides/Zelto_Guide_Demarrage_AR.pdf" download class="btn-secondaire" style="display:flex;align-items:center;gap:8px">📄 العربية</a>
-    </div>
-  </div>
-</section>
 
 <section class="section forfait" id="forfaits">
   <div class="section-title">Commencez gratuitement</div>
@@ -470,7 +410,7 @@ function toggleFeature(carte) {
 <section class="section" id="histoire">
   <div class="fondateur">
     <div class="section-title" style="margin-bottom:24px">D'où vient Zelto</div>
-    <p>Zelto est développé par une équipe avec un parcours en gestion d'entreprise, audit et finance. L'application est construite à partir d'une connaissance directe des besoins des PME marocaines.</p>
+    <p>Zelto est développé par un fondateur au parcours en gestion d'entreprise, audit et finance. L'application est construite à partir d'une connaissance directe des besoins des PME marocaines.</p>
     <div class="fondateur-signature">Zelto est construit avec les gens qui l'utilisent.</div>
   </div>
 </section>
@@ -487,7 +427,7 @@ function toggleFeature(carte) {
       <path d="M 30 146 L 51 137 L 45 148 L 51 159 Z" fill="#7FB8BA"/>
     </svg>
   </div>
-  <div style="font-size:12px;color:var(--encre-douce);font-style:italic;margin-bottom:8px">La gestion, enfin simple</div>
+  <div style="font-size:12px;color:var(--encre-douce);font-style:italic;margin-bottom:8px">Facturation simple pour les entreprises marocaines</div>
   <div class="footer-links">
     <a href="app.html">Se connecter</a>
     <a href="#fonctionnalites">Fonctionnalités</a>
