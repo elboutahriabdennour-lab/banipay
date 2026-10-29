@@ -651,6 +651,7 @@ function renderDetail() {
   actions.push(`<button class="action-item" onclick="dupliquerFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
   actions.push(`<button class="action-item danger" onclick="supprimerFacture(${f.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
   actEl.innerHTML = actions.join('');
+  if (typeof _afficherApercuFacture === 'function') _afficherApercuFacture(f);
 }
 
 async function marquerPayee(id) {
@@ -1342,4 +1343,29 @@ function demanderIdentiteEmetteur(apres) {
       if (typeof apres === 'function') apres();
     } catch (e) { showToast('Erreur : ' + e.message, 'error'); }
   };
+}
+
+
+// Ordinateur : la facture telle qu'elle sera envoyée s'affiche à droite de ses informations.
+function _afficherApercuFacture(f) {
+  var body = document.querySelector('#screen-detail .d-body');
+  if (!body) return;
+  var z = document.getElementById('detail-apercu');
+  if (window.innerWidth < 1000) { if (z) z.remove(); return; }
+  try {
+    var html = buildPDFHTML(f);
+    if (!html) { if (z) z.remove(); return; }
+    if (!z) { z = document.createElement('div'); z.id = 'detail-apercu'; body.appendChild(z); }
+    z.innerHTML = '<div style="font-size:12px;font-weight:700;color:#14241F;margin-bottom:8px">📄 Aperçu de la facture</div><div class="da-cadre"><iframe title="Aperçu de la facture" sandbox="" scrolling="no"></iframe></div>';
+    var cadre = z.querySelector('.da-cadre'), fr = z.querySelector('iframe');
+    var ajuster = function () {
+      var k = Math.min(1, (cadre.clientWidth || 560) / 794);
+      fr.style.cssText = 'width:794px;height:1123px;border:0;background:#fff;transform:scale(' + k + ');transform-origin:0 0';
+      cadre.style.height = Math.round(1123 * k) + 'px';
+    };
+    ajuster();
+    if (window.ResizeObserver) { try { new ResizeObserver(ajuster).observe(cadre); } catch (e) {} }
+    else setTimeout(ajuster, 300);
+    fr.srcdoc = html;
+  } catch (e) { if (z) z.remove(); }
 }

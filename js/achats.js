@@ -344,7 +344,7 @@ function previewAchatPJ(event) {
     const boutonRetirer = '<button type="button" onclick="retirerPhotoAchat()" style="margin-top:6px;width:100%;padding:8px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✕ Retirer cette pièce jointe</button>';
     preview.innerHTML = (isImage
       ? '<img src="' + e.target.result + '" style="max-width:100%;border-radius:10px;border:1px solid #DDE3DA">'
-      : '<div style="background:#F5F6F1;border-radius:10px;padding:10px;font-size:12px;color:#5B6B64;border:1px solid #DDE3DA">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>')
+      : (file.type === 'application/pdf' ? '<iframe class="ad-pdf" src="' + e.target.result + '" title="Facture" style="width:100%;height:70vh;border:1px solid #DDE3DA;border-radius:10px;background:#fff"></iframe>' : '') + '<div style="background:#F5F6F1;border-radius:10px;padding:10px;font-size:12px;color:#5B6B64;border:1px solid #DDE3DA;margin-top:6px">📎 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)</div>')
       + boutonRetirer;
     STATE._achatPJData = e.target.result;
     STATE._achatPJNom = file.name;
@@ -479,6 +479,7 @@ function ouvrirDetailAchat(id) {
       (a.fournisseur_banipay ? '<span style="margin-left:auto;background:rgba(255,255,255,0.2);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:600">Tafir</span>' : '') +
     '</div>' +
 
+    '<div class="ad-cols"><div class="ad-gauche">' +
     '<div style="margin:16px;background:#fff;border-radius:16px;padding:16px;border:1px solid #DDE3DA">' +
       '<div style="display:flex;justify-content:space-between;margin-bottom:12px">' +
         '<div><div style="font-size:11px;color:#8E9C95">Date</div><div style="font-size:13px;font-weight:600">' + (a.date_achat || '—') + '</div></div>' +
@@ -525,13 +526,6 @@ function ouvrirDetailAchat(id) {
         '<div style="font-size:11px;color:#5B6B64;margin-top:4px">Appuyez pour voir la fiche</div>' +
       '</div>' : '') +
 
-    (a.pj_data ?
-      '<div style="margin:0 16px 16px">' +
-        '<div style="font-size:12px;font-weight:700;color:#14241F;margin-bottom:8px">📎 Pièce jointe</div>' +
-        (a.pj_data.startsWith('data:image') ?
-          '<img src="' + a.pj_data + '" style="max-width:100%;border-radius:12px;border:1px solid #DDE3DA">' :
-          '<div style="background:#F5F6F1;padding:12px;border-radius:10px;font-size:12px;color:#5B6B64">📄 ' + (a.pj_nom || 'Fichier') + '</div>') +
-      '</div>' : '') +
 
     // NOUVEAU (retour utilisateur) : historique des transactions
     // bancaires déjà rapprochées avec cet achat, comme sur les factures.
@@ -554,7 +548,18 @@ function ouvrirDetailAchat(id) {
     '<div style="padding:0 16px 20px;display:flex;gap:8px">' +
       '<button onclick="marquerAchatPaye(\'' + a.id + '\')" style="flex:1;padding:12px;background:' + (a.statut === 'payee' ? '#EAE4DA' : '#55702E') + ';color:' + (a.statut === 'payee' ? '#5B6B64' : '#fff') + ';border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">' + (a.statut === 'payee' ? '✓ Payée' : '✅ Marquer payée') + '</button>' +
       '<button onclick="supprimerAchat(\'' + a.id + '\')" style="padding:12px 16px;background:#F5E4E1;color:#B23A2E;border:none;border-radius:12px;font-size:13px;cursor:pointer;font-family:inherit">🗑️</button>' +
-    '</div>';
+    '</div>' +
+    '</div><div class="ad-droite">' +
+    (a.pj_data ?
+      '<div style="margin:0 16px 16px">' +
+        '<div style="font-size:12px;font-weight:700;color:#14241F;margin-bottom:8px">📎 Facture d’origine</div>' +
+        (a.pj_data.startsWith('data:image') ?
+          '<img src="' + a.pj_data + '" style="width:100%;border-radius:12px;border:1px solid #DDE3DA">' :
+          (a.pj_data.startsWith('data:application/pdf') ?
+            '<iframe class="ad-pdf" src="' + a.pj_data + '" title="Facture" style="width:100%;height:78vh;border:1px solid #DDE3DA;border-radius:12px;background:#fff"></iframe>' :
+            '<div style="background:#F5F6F1;padding:12px;border-radius:10px;font-size:12px;color:#5B6B64">📄 ' + (a.pj_nom || 'Fichier') + '</div>')) +
+      '</div>' : '') +
+    '</div></div>';
 
   document.body.appendChild(overlay);
 }

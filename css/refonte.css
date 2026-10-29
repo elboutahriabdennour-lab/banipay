@@ -331,3 +331,26 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 }
 .rl-grid{gap:6px}
 #screen-rapprochement-releve .hero{padding-top:20px!important}
+
+/* ── Lire la facture à gauche, voir le document à droite (ordinateur) ── */
+.ad-cols{display:block}
+@media (min-width:1000px){
+  .ad-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:8px;padding:0 8px;align-items:start}
+  .ad-droite{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}
+  .ad-droite img{max-height:calc(100vh - 80px);object-fit:contain;background:#fff}
+  #achat-detail-overlay{left:232px!important}
+
+  #screen-nouvelle-achat.active{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:16px;align-content:start;padding-right:20px}
+  #screen-nouvelle-achat>*{grid-column:1;max-width:none!important;width:auto!important;margin-left:0!important;margin-right:0!important;box-sizing:border-box}
+  #screen-nouvelle-achat>.form-header{grid-column:1/-1;margin-right:-20px!important}
+  #screen-nouvelle-achat>div[style*="margin:12px 20px"]{margin-left:20px!important}
+  #screen-nouvelle-achat>#achat-pj-bloc{grid-column:2;grid-row:2/span 40;align-self:start;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;margin:12px 0 0 0!important;padding:14px;background:#fff;border:1px solid #EAE4DA;border-radius:16px}
+  #screen-nouvelle-achat #achat-pj-preview img{width:100%}
+}
+@media (min-width:1000px){
+  #screen-detail>.d-body{max-width:1320px!important;width:calc(100% - 32px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);column-gap:16px;align-items:start}
+  #screen-detail>.d-body>*{grid-column:1;min-width:0}
+  #screen-detail>.d-body>#detail-apercu{grid-column:2;grid-row:1/span 40;position:sticky;top:8px;background:#fff;border:1px solid #EAE4DA;border-radius:16px;padding:12px}
+  #detail-apercu .da-cadre{overflow:hidden;border:1px solid #EAE4DA;border-radius:8px;width:100%}
+}
+@media (min-width:1000px){#screen-detail>.detail-top{max-width:none!important;width:100%!important;margin:0!important;box-sizing:border-box;padding-left:32px;padding-right:32px}}
