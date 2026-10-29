@@ -217,6 +217,7 @@
 <script src="js/auth-google.js?v=1"></script>
 <script src="js/modele-facture.js?v=1"></script>
 <script src="js/menu-compte.js?v=1"></script>
+<script src="js/dictee-facture.js?v=1"></script>
   <script src="js/nav.js?v=1789327380"></script>
   <script src="js/marche.js?v=1789327380"></script>
   <script src="js/contrats.js?v=1789327380"></script>
@@ -947,6 +948,15 @@
     <div class="form-title">Nouvelle facture</div>
   </div>
   <div class="pb"></div>
+  <div class="form-section dictee-bloc" id="dictee-bloc">
+    <label class="f-lbl" for="dictee-texte">Dictez votre facture <span class="dictee-bete">assistant IA</span></label>
+    <textarea id="dictee-texte" class="f-inp" rows="2" maxlength="600" placeholder="Exemple : facture pour Karim, 3 chaises à 250 dirhams et 1 table à 900"></textarea>
+    <div class="dictee-actions">
+      <button type="button" class="dictee-mic" id="dictee-mic" onclick="dicterFacture()">&#127908; Dicter</button>
+      <button type="button" class="dictee-ok" id="dictee-ok" onclick="remplirFactureParIA()">Remplir la facture</button>
+    </div>
+    <div class="dictee-note" id="dictee-note">Votre phrase est envoy&#233;e &#224; un service d'IA pour pr&#233;remplir la facture. V&#233;rifiez toujours les lignes avant d'enregistrer.</div>
+  </div>
   <div class="form-section">
     <label class="f-lbl">Client *</label>
     <div style="display:flex;gap:8px">

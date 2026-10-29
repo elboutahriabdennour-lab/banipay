@@ -279,3 +279,15 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 .param-deco{margin:14px 0 6px;text-align:center}
 .param-deco-btn{background:none;border:1.5px solid #E5C4BF;color:#B23A2E;font-size:14px;font-weight:600;font-family:inherit;padding:11px 22px;border-radius:12px;cursor:pointer}
 @media (min-width:1000px){.param-deco{display:none}}
+
+/* ===== Dictée de facture (IA) ===== */
+.dictee-bloc{background:#E7F2EC;border-radius:16px;margin:0 16px 10px;padding:14px!important}
+.dictee-bete{font-size:10px;background:#1B5E4B;color:#fff;border-radius:8px;padding:2px 7px;margin-left:6px;font-weight:700;vertical-align:middle}
+.dictee-bloc textarea{width:100%;resize:vertical;min-height:56px;margin-top:6px}
+.dictee-actions{display:flex;gap:8px;margin-top:8px}
+.dictee-mic,.dictee-ok{font-family:inherit;font-size:14px;font-weight:700;border-radius:12px;padding:11px 14px;cursor:pointer;border:1.5px solid #1B5E4B}
+.dictee-mic{background:#fff;color:#1B5E4B;flex:0 0 auto}
+.dictee-mic.actif{background:#B23A2E;border-color:#B23A2E;color:#fff}
+.dictee-ok{background:#1B5E4B;color:#fff;flex:1}
+.dictee-ok:disabled{opacity:.6}
+.dictee-note{font-size:12px;color:#5B6B64;margin-top:8px;line-height:1.5}

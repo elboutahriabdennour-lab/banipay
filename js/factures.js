@@ -224,7 +224,7 @@ function renderLignesF() {
   c.innerHTML = STATE.lignesF.map((l, i) => `
     <div class="ligne-item">
       <div class="ligne-body">
-        <div class="ligne-desc">${l.desc}</div>
+        <div class="ligne-desc">${escapeHTML(l.desc)}</div>
         <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseF} · TVA ${Number(l.tva) >= 0 ? Number(l.tva) : 20} %</div>
       </div>
       <div class="ligne-amt">${fmt(l.qte * l.pu)} ${STATE.deviseF}</div>

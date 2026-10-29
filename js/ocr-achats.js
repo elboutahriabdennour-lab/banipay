@@ -24,7 +24,7 @@ function _chargerTesseract() {
   });
   return _tesseractChargement;
 }
-async function lireFactureParOCR(imageDataUrl) {
+async function _lireFactureTesseract(imageDataUrl) {
   try {
     await _chargerTesseract();
   } catch(e) {
@@ -103,7 +103,7 @@ function _chargerPdfJs() {
   });
   return _pdfjsChargement;
 }
-async function lireFacturePDF(pdfDataUrl) {
+async function _lireFacturePDFLocal(pdfDataUrl) {
   try {
     await _chargerPdfJs();
   } catch(e) {
@@ -192,4 +192,114 @@ function _extraireSuggestionsFacture(texte) {
     }
   }
   return suggestions;
+}
+
+// ============================================================
+// LECTURE PAR IA (api/lire-document.js) — avec repli sur la lecture locale
+// L'IA propose, l'utilisateur vérifie. Les montants ne sont remplis que si les calculs de la facture tombent juste.
+// ============================================================
+function _iaDocConsentement() {
+  try { if (localStorage.getItem('tafir_ia_doc_ok') === '1') return true; } catch (e) {}
+  var ok = confirm('Cette facture (photo ou PDF) sera envoyée à un service d’intelligence artificielle (Anthropic) pour être lue. Elle est traitée selon les conditions de ce prestataire. N’envoyez pas de document sensible. Continuer ?');
+  if (ok) { try { localStorage.setItem('tafir_ia_doc_ok', '1'); } catch (e) {} }
+  return ok;
+}
+function _reduireImage(dataUrl, maxCote) {
+  return new Promise(function (resolve) {
+    var img = new Image();
+    img.onload = function () {
+      var k = Math.min(1, maxCote / Math.max(img.naturalWidth, img.naturalHeight));
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = function () { resolve(dataUrl); };
+    img.src = dataUrl;
+  });
+}
+function _statutLecture(texte, ton) {
+  var z = document.getElementById('ocr-statut');
+  if (!z) {
+    z = document.createElement('div'); z.id = 'ocr-statut';
+    var pv = el('achat-pj-preview'); if (pv) pv.appendChild(z);
+  }
+  var couleurs = { info: ['#F7EFDC', '#8A5A00'], ok: ['#EEF3E4', '#55702E'], alerte: ['#F5E4E1', '#B23A2E'] };
+  var c = couleurs[ton || 'info'];
+  z.style.cssText = 'margin-top:8px;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:600;line-height:1.5;background:' + c[0] + ';color:' + c[1];
+  z.textContent = texte;
+}
+function _fmtMad(n) { return (typeof fmt === 'function' ? fmt(n) : Number(n).toFixed(2)) + ' MAD'; }
+
+async function _lireParIA(dataUrl) {
+  // Retourne true si l'IA a répondu (même avec un résultat incertain), false pour passer à la lecture locale.
+  if (!sb.token) return false;
+  if (!_iaDocConsentement()) return false;
+  _statutLecture('🔍 Lecture par IA en cours… (quelques secondes)', 'info');
+  var envoi = dataUrl;
+  if (dataUrl.indexOf('data:image/') === 0) envoi = await _reduireImage(dataUrl, 1800);
+  var r;
+  try {
+    r = await fetch('/api/lire-document', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sb.token },
+      body: JSON.stringify({ fichier: envoi })
+    });
+  } catch (e) { return false; }
+  var d = await r.json().catch(function () { return {}; });
+  if (r.status === 503 || r.status === 404 || r.status === 401) return false;
+  if (!r.ok) { if (typeof showToast === 'function') showToast(d.erreur || 'Lecture par IA impossible, lecture locale à la place.', 'error'); return false; }
+  _appliquerLectureIA(d);
+  return true;
+}
+
+function _appliquerLectureIA(d) {
+  if (!d.lisible) { _statutLecture('⚠️ Document illisible ou ce n’est pas une facture. Prenez une photo plus nette, bien cadrée, ou remplissez à la main.', 'alerte'); return; }
+  var mettre = function (id, val) { var e = el(id); if (e && val && !e.value) { e.value = val; e.style.background = '#E7F2EC'; } };
+  mettre('achat-fournisseur', d.fournisseur);
+  mettre('achat-ref', d.numero);
+  mettre('achat-date', d.date);
+  mettre('achat-echeance', d.echeance);
+  var notes = (d.avertissements || []).slice();
+  var montantsRemplis = false;
+  if (d.coherent && !(STATE.lignesAchat && STATE.lignesAchat.length)) {
+    STATE.lignesAchat = STATE.lignesAchat || [];
+    if (d.lignes && d.lignes.length) {
+      d.lignes.forEach(function (l) { STATE.lignesAchat.push({ desc: l.desc, qte: l.qte, pu: l.pu, unite: 'u', produit_id: null }); });
+    } else if (d.ht != null) {
+      STATE.lignesAchat.push({ desc: 'Facture ' + (d.numero || d.fournisseur || 'fournisseur'), qte: 1, pu: d.ht, unite: 'u', produit_id: null });
+    }
+    // Taux de TVA principal : celui de la plus grosse base.
+    var taux = null;
+    if (d.parTaux && d.parTaux.length) {
+      taux = d.parTaux.slice().sort(function (a, b) { return (b.base || 0) - (a.base || 0); })[0].taux;
+      if (d.parTaux.length > 1) notes.push('Plusieurs taux de TVA sur cette facture : l’application en applique un seul, comparez avec le total TTC imprimé.');
+    } else if (d.ht > 0 && d.tva != null) taux = Math.round(d.tva / d.ht * 100);
+    var sel = el('achat-tva-taux');
+    if (sel && taux != null && Array.prototype.some.call(sel.options, function (o) { return Number(o.value) === Number(taux); })) sel.value = String(taux);
+    if (typeof renderLignesAchat === 'function') renderLignesAchat();
+    if (typeof calcAchatTotaux === 'function') calcAchatTotaux();
+    montantsRemplis = STATE.lignesAchat.length > 0;
+    // Dernier contrôle : le total calculé par l'application doit égaler le TTC imprimé.
+    var htApp = STATE.lignesAchat.reduce(function (s, l) { return s + (Number(l.qte) || 0) * (Number(l.pu) || 0); }, 0);
+    var ttcApp = htApp * (1 + (parseFloat((el('achat-tva-taux') || {}).value || 20) / 100));
+    if (d.ttc != null && Math.abs(ttcApp - d.ttc) > 0.05) notes.push('Le total calculé (' + _fmtMad(ttcApp) + ') diffère du TTC imprimé (' + _fmtMad(d.ttc) + ') : vérifiez les lignes et le taux.');
+  }
+  if (!d.coherent) {
+    _statutLecture('⚠️ Les montants lus ne s’additionnent pas : je ne les ai pas remplis pour éviter une erreur. Le fournisseur, le numéro et les dates sont proposés. Saisissez les montants à la main (ou refaites une photo plus nette).' + (notes.length ? ' ' + notes.join(' ') : ''), 'alerte');
+    return;
+  }
+  var base = '✅ Lue par IA' + (d.modeleFort ? ' (seconde lecture renforcée)' : '') + '. Contrôle des calculs : OK' + (d.ttc != null ? ' (total TTC lu : ' + _fmtMad(d.ttc) + ')' : '') + '. Vérifiez avant d’enregistrer.';
+  _statutLecture(base + (notes.length ? ' ⚠️ ' + notes.join(' ') : ''), notes.length ? 'info' : 'ok');
+}
+
+async function lireFactureParOCR(imageDataUrl) {
+  var ok = false;
+  try { ok = await _lireParIA(imageDataUrl); } catch (e) { ok = false; }
+  if (!ok) { var z1 = document.getElementById('ocr-statut'); if (z1) z1.remove(); return _lireFactureTesseract(imageDataUrl); }
+}
+async function lireFacturePDF(pdfDataUrl) {
+  var ok = false;
+  try { if (pdfDataUrl.length <= 4000000) ok = await _lireParIA(pdfDataUrl); } catch (e) { ok = false; }
+  if (!ok) { var z2 = document.getElementById('ocr-statut'); if (z2) z2.remove(); return _lireFacturePDFLocal(pdfDataUrl); }
 }
