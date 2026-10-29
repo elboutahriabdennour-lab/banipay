@@ -1242,7 +1242,7 @@ function renderAvoirList() {
 }
 
 function exportAvoirPDF(id) {
-  const a = STATE.avoirs.find(x => x.id === id);
+  const a = STATE.avoirs.find(x => String(x.id) === String(id));
   if (!a) return;
   const motifLabels = {
     'annulation': 'Annulation totale de facture',

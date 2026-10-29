@@ -549,7 +549,7 @@ function renderDetail() {
       lettrageEl.innerHTML =
         '<div style="font-size:11px;font-weight:700;color:#8E9C95;text-transform:uppercase;margin-bottom:6px">↩️ Avoirs liés (lettrage)</div>' +
         avoirsLies.map(function(a) {
-          return '<div onclick="openDetailAvoir&&openDetailAvoir(' + a.id + ')" style="background:#fff;border:1px solid #DDE3DA;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">' +
+          return '<div onclick="exportAvoirPDF(\'' + a.id + '\')" style="background:#fff;border:1px solid #DDE3DA;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">' +
             '<div><div style="font-size:11px;color:#8E9C95">' + escapeHTML(a.motif||'') + '</div><div style="font-size:13px;font-weight:600">' + escapeHTML(a.ref||'') + '</div></div>' +
             '<div style="font-size:13px;font-weight:700;color:#8E2E24">-' + fmt(a.ttc) + ' MAD</div>' +
           '</div>';

@@ -587,6 +587,39 @@ function _sauvegarderTransactionsReleveLocal(releveId, transactions) {
     localStorage.setItem(_cleStockageReleve(releveId), JSON.stringify(transactions));
   } catch(e) { console.warn('Sauvegarde locale du relevé impossible:', e); }
 }
+function _sauvegarderResumeReleveLocal(releveId, resume) {
+  try { localStorage.setItem(_cleStockageReleve(releveId) + '_resume', JSON.stringify(resume || null)); } catch (e) {}
+}
+function _chargerResumeReleveLocal(releveId) {
+  try { var b = localStorage.getItem(_cleStockageReleve(releveId) + '_resume'); return b ? JSON.parse(b) : null; } catch (e) { return null; }
+}
+// Bandeau des soldes : solde initial, mouvements, solde final, et contrôle du calcul.
+function _htmlResumeReleve() {
+  var tr = STATE._transactionsReleveActuel || [];
+  if (!tr.length) return '';
+  var r = STATE._resumeReleve || {};
+  var deb = 0, cre = 0;
+  tr.forEach(function (t) { if (t.montant < 0) deb += -t.montant; else cre += t.montant; });
+  deb = Math.round(deb * 100) / 100; cre = Math.round(cre * 100) / 100;
+  var m = function (n) { return fmt(n) + ' MAD'; };
+  var carte = function (lib, val, coul) { return '<div class="rl-carte"><div class="rl-lib">' + lib + '</div><div class="rl-val" style="color:' + (coul || '#14241F') + '">' + val + '</div></div>'; };
+  var haut = '';
+  var ok = r.soldeInitial != null && r.soldeFinal != null;
+  haut += carte('Solde initial', r.soldeInitial != null ? m(r.soldeInitial) : '—');
+  haut += carte('Total débits', '-' + m(deb), '#B23A2E');
+  haut += carte('Total crédits', '+' + m(cre), '#55702E');
+  haut += carte('Solde final', r.soldeFinal != null ? m(r.soldeFinal) : '—');
+  var verdict;
+  if (ok) {
+    var ecart = Math.round((r.soldeInitial + cre - deb - r.soldeFinal) * 100) / 100;
+    verdict = Math.abs(ecart) < 0.01
+      ? '<div class="rl-verdict rl-ok">✅ Solde vérifié : ' + m(r.soldeInitial) + ' + ' + m(cre) + ' − ' + m(deb) + ' = ' + m(r.soldeFinal) + '</div>'
+      : '<div class="rl-verdict rl-ko">⚠️ Écart de ' + m(Math.abs(ecart)) + ' : au moins une ligne est mal lue ou manquante. Comparez avec le relevé avant de rapprocher.</div>';
+  } else {
+    verdict = '<div class="rl-verdict rl-info">ℹ️ Soldes non lus sur ce relevé. Mouvement net : ' + m(cre - deb) + '</div>';
+  }
+  return '<div class="rl-resume">' + haut + '</div>' + verdict;
+}
 function _chargerTransactionsReleveLocal(releveId) {
   try {
     const brut = localStorage.getItem(_cleStockageReleve(releveId));
@@ -630,6 +663,7 @@ async function analyserReleve(releveId, skipNavigation) {
   if (dejaAnalyse && dejaAnalyse.length) {
     STATE._transactionsReleveActuel = dejaAnalyse;
     STATE._releveActuelId = releveId;
+    STATE._resumeReleve = _chargerResumeReleveLocal(releveId);
     renderTransactionsReleve();
     if (!skipNavigation) goScreen('rapprochement-releve', null);
     return true;
@@ -665,6 +699,7 @@ async function analyserReleve(releveId, skipNavigation) {
   STATE._transactionsReleveActuel = avecSuggestions;
   STATE._releveActuelId = releveId;
   _sauvegarderTransactionsReleveLocal(releveId, avecSuggestions);
+  _sauvegarderResumeReleveLocal(releveId, STATE._resumeReleve);
   renderTransactionsReleve();
   if (!skipNavigation) goScreen('rapprochement-releve', null);
   return true;
@@ -980,9 +1015,10 @@ function renderTransactionsReleve() {
   // seul le tableau des lignes est reconstruit à chaque changement de
   // filtre/tri/recherche, dans un second conteneur séparé.
   if (!el('releve-filtres-bar-conteneur')) {
-    zone.innerHTML = '<div id="releve-filtres-bar-conteneur"></div><div id="releve-lignes-conteneur"></div>';
+    zone.innerHTML = '<div id="releve-resume-conteneur"></div><div id="releve-filtres-bar-conteneur"></div><div id="releve-lignes-conteneur"></div>';
     el('releve-filtres-bar-conteneur').innerHTML = _barreFiltresReleve();
   }
+  var rc = el('releve-resume-conteneur'); if (rc) rc.innerHTML = _htmlResumeReleve();
   _rafraichirLignesReleve();
 }
 
@@ -1025,7 +1061,7 @@ function _rafraichirLignesReleve() {
       // AJOUT (demande utilisateur) : en-têtes cliquables pour trier —
       // Date, Libellé (alphabétique) et Débit/Crédit (montant), avec
       // une flèche indiquant le sens du tri actif.
-      return '<div style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;padding:6px 20px;background:#F5F6F1;position:sticky;top:0;z-index:1">' +
+      return '<div class="rl-grid rl-head" style="padding:6px 20px;background:#F5F6F1;position:sticky;top:0;z-index:1">' +
         '<div onclick="trierParColonneReleve(\'date\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8E9C95;cursor:pointer">Date' + flecheDate + '</div>' +
         '<div onclick="trierParColonneReleve(\'libelle\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#8E9C95;cursor:pointer">Libellé' + flecheLibelle + '</div>' +
         '<div onclick="trierParColonneReleve(\'montant\')" style="font-size:9px;font-weight:700;text-transform:uppercase;color:#B23A2E;text-align:right;cursor:pointer">Débit' + flecheMontant + '</div>' +
@@ -1074,7 +1110,7 @@ function _rafraichirLignesReleve() {
         statutIcone = '—'; statutTitre = 'Aucune correspondance';
       }
 
-      return '<div onclick="ouvrirBulleTransaction(' + i + ')" style="display:grid;grid-template-columns:44px 1fr 60px 60px 28px;align-items:center;gap:4px;background:' + fondZebre + ';padding:10px 20px;border-bottom:1px solid #DDE3DA;border-left:4px solid ' + (t._traitee||dejaLieeAvec ? '#6E8F4E' : (t.montant>=0?'#1B5E4B':'#B23A2E')) + ';cursor:pointer">' +
+      return '<div onclick="ouvrirBulleTransaction(' + i + ')" class="rl-grid rl-row" style="align-items:center;gap:4px;background:' + fondZebre + ';padding:10px 20px;border-bottom:1px solid #DDE3DA;border-left:4px solid ' + (t._traitee||dejaLieeAvec ? '#6E8F4E' : (t.montant>=0?'#1B5E4B':'#B23A2E')) + ';cursor:pointer">' +
         '<div style="font-size:10px;font-weight:700;color:#8E9C95;line-height:1.3">' + escapeHTML((t.dateBrute||'').slice(0,5)) + '</div>' +
         '<div style="font-size:12px;font-weight:600;color:#14241F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:6px">' + escapeHTML(t.description) + '</div>' +
         colDebit +
