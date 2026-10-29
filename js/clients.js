@@ -108,55 +108,6 @@ async function importerClientDepuisLien() {
 //
 // NÉCESSITE d'ajouter dans app.html, avant la fermeture de </body> :
 // <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-async function importerClientDepuisQRImage(event) {
-  const file = event.target.files[0];
-  event.target.value = '';
-  if (!file) return;
-
-  if (typeof jsQR !== 'function') {
-    showToast('❌ Le lecteur de QR code n\'est pas encore installé — contactez le support', 'error');
-    return;
-  }
-
-  showToast('⏳ Lecture du QR code...');
-
-  try {
-    const dataUrl = await new Promise(function(resolve, reject) {
-      const reader = new FileReader();
-      reader.onload = function(e) { resolve(e.target.result); };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    const image = await new Promise(function(resolve, reject) {
-      const img = new Image();
-      img.onload = function() { resolve(img); };
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = image.width;
-    canvas.height = image.height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(image, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    const resultat = jsQR(imageData.data, imageData.width, imageData.height);
-
-    if (!resultat || !resultat.data) {
-      showToast('❌ Aucun QR code détecté sur cette photo — réessayez avec un cadrage net', 'error');
-      return;
-    }
-
-    const input = el('qr-link-input');
-    if (input) input.value = resultat.data;
-    await importerClientDepuisLien();
-  } catch(e) {
-    showToast('❌ Erreur lors de la lecture du QR code: ' + e.message, 'error');
-  }
-}
-
 async function chargerClientDepuisLien(lien) {
   if (!lien) return;
   el('qr-link-input') && (el('qr-link-input').value = lien);

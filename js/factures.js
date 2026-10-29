@@ -140,7 +140,7 @@ function renderFactureList() {
     const pct = f.ttc > 0 ? Math.round(recu / f.ttc * 100) : 0;
     const enSelection = typeof estEnSelection === 'function' && estEnSelection('factures');
     return `
-    <div class="card" onclick="${enSelection ? 'toggleSelectionItem(' + f.id + ')' : 'openDetail(' + f.id + ')'}">
+    <div class="card" onclick="${enSelection ? 'toggleSelectionItem(\'' + f.id + '\')' : 'openDetail(' + f.id + ')'}">
       ${typeof checkboxSelection === 'function' ? checkboxSelection('factures', f.id) : ''}
       <div class="card-ico" style="background:${bgs[f.statut]||'#EAE4DA'}">${icons[f.statut]||'📄'}</div>
       <div class="card-body">

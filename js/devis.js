@@ -30,7 +30,7 @@ function renderDevisList() {
   list.innerHTML = data.map(d => {
     const enSelection = typeof estEnSelection === 'function' && estEnSelection('devis');
     return `
-    <div class="card" onclick="${enSelection ? 'toggleSelectionItem(' + d.id + ')' : 'openDetailDevis(' + d.id + ')'}">
+    <div class="card" onclick="${enSelection ? 'toggleSelectionItem(\'' + d.id + '\')' : 'openDetailDevis(' + d.id + ')'}">
       ${typeof checkboxSelection === 'function' ? checkboxSelection('devis', d.id) : ''}
       <div class="card-ico" style="background:${bgs[d.statut]||'#EAE4DA'}">${icons[d.statut]||'📝'}</div>
       <div class="card-body">
@@ -891,7 +891,7 @@ function renderBonsCommandeListe() {
   list.innerHTML = bcs.map(function(bc) {
     const ht = (typeof bc.lignes === 'string' ? JSON.parse(bc.lignes || '[]') : (bc.lignes || [])).reduce(function(s, l) { return s + (l.qte||1)*(l.pu||0); }, 0);
     const enSelection = typeof estEnSelection === 'function' && estEnSelection('bc');
-    return '<div class="card" style="align-items:flex-start" onclick="' + (enSelection ? 'toggleSelectionItem(' + bc.id + ')' : 'voirBonCommande(' + bc.id + ')') + '">' +
+    return '<div class="card" style="align-items:flex-start" onclick="' + (enSelection ? 'toggleSelectionItem(\'' + bc.id + '\')' : 'voirBonCommande(' + bc.id + ')') + '">' +
       (typeof checkboxSelection === 'function' ? checkboxSelection('bc', bc.id) : '') +
       '<div class="card-ico" style="background:#EDE6F0">📋</div>' +
       '<div class="card-body"><div class="card-name">' + escapeHTML(bc.fournisseur||'') + '</div><div class="card-ref">' + (bc.ref||'') + ' · ' + (bc.date_commande||'') + '</div>' +

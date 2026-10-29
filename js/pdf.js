@@ -1,12 +1,5 @@
 // ZELTO — pdf.js
 // QR code généré localement (aucune adresse envoyée à un service tiers). Vide si la bibliothèque n'est pas chargée.
-function _qrLocal(texte) {
-  try {
-    if (typeof qrcode !== 'function') return '';
-    const q = qrcode(0, 'M'); q.addData(String(texte)); q.make();
-    return q.createDataURL(3, 0);
-  } catch (e) { return ''; }
-}
 function construireRefsQRFacture(f) {
   const refsQR = [];
   const base = window.location.origin + window.location.pathname;

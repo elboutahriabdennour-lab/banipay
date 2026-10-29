@@ -66,7 +66,7 @@ function renderAchats() {
 
   list.innerHTML = achats.map(function(a) {
     const enSelection = typeof estEnSelection === 'function' && estEnSelection('achats');
-    return '<div class="card" onclick="' + (enSelection ? 'toggleSelectionItem(' + a.id + ')' : "ouvrirDetailAchat('" + a.id + "')") + '">' +
+    return '<div class="card" onclick="' + (enSelection ? 'toggleSelectionItem(\'' + a.id + '\')' : "ouvrirDetailAchat('" + a.id + "')") + '">' +
       (typeof checkboxSelection === 'function' ? checkboxSelection('achats', a.id) : '') +
       '<div class="card-ico" style="background:#F5E4E1;font-size:20px">' + (catIcons[a.categorie] || '📄') + '</div>' +
       '<div class="card-body">' +
@@ -197,86 +197,6 @@ async function importerAchatDepuisFactureId(factureId) {
   } catch(e) {
     showToast('Erreur: ' + e.message, 'error');
   }
-}
-
-let _jsQRPromise = null;
-function _chargerJsQR() {
-  if (window.jsQR) return Promise.resolve();
-  if (_jsQRPromise) return _jsQRPromise;
-  _jsQRPromise = new Promise(function(resolve, reject) {
-    const script = document.createElement('script');
-    // FIX (bug réel signalé — cdnjs.cloudflare.com bloqué chez un
-    // utilisateur) : bascule sur cdn.jsdelivr.net, comme pour
-    // SheetJS et PDF.js — et comme le chargement global de jsQR dans
-    // app.html, qui utilise déjà cette même source.
-    script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
-    script.onload = resolve;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-  return _jsQRPromise;
-}
-
-async function scannerQRAchat() {
-  showToast('⏳ Ouverture de la caméra...');
-  try {
-    await _chargerJsQR();
-  } catch(e) {
-    showToast('Impossible de charger le lecteur QR (connexion ?)', 'error');
-    return;
-  }
-
-  const overlay = document.createElement('div');
-  overlay.id = 'qr-scan-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#000;display:flex;flex-direction:column';
-  overlay.innerHTML =
-    '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;background:rgba(0,0,0,0.6)">' +
-      '<button id="qr-scan-close" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">← Fermer</button>' +
-      '<div style="color:#fff;font-size:13px;font-weight:600">Visez le QR code de la facture</div>' +
-    '</div>' +
-    '<video id="qr-scan-video" style="flex:1;width:100%;object-fit:cover" playsinline autoplay muted></video>' +
-    '<canvas id="qr-scan-canvas" style="display:none"></canvas>';
-  document.body.appendChild(overlay);
-
-  const video = document.getElementById('qr-scan-video');
-  const canvas = document.getElementById('qr-scan-canvas');
-  const ctx = canvas.getContext('2d');
-  let stream = null;
-  let scanning = true;
-
-  function arreter() {
-    scanning = false;
-    if (stream) stream.getTracks().forEach(function(t) { t.stop(); });
-    overlay.remove();
-  }
-  document.getElementById('qr-scan-close').onclick = arreter;
-
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    video.srcObject = stream;
-  } catch(e) {
-    showToast('Accès caméra refusé ou indisponible', 'error');
-    overlay.remove();
-    return;
-  }
-
-  function boucleScan() {
-    if (!scanning) return;
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = window.jsQR(imageData.data, imageData.width, imageData.height);
-      if (code && code.data) {
-        arreter();
-        traiterLienScanne(code.data);
-        return;
-      }
-    }
-    requestAnimationFrame(boucleScan);
-  }
-  requestAnimationFrame(boucleScan);
 }
 
 async function traiterLienScanne(texte) {

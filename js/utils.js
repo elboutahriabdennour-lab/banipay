@@ -413,18 +413,6 @@ function valeurPourOnclick(valeur) {
 // (chargée dans app.html), au lieu de dépendre d'un service tiers
 // externe (api.qrserver.com) qui peut être bloqué, lent ou en panne
 // sans qu'aucun message d'erreur ne le signale.
-function genererQrDataUrl(texte, taillePx) {
-  if (typeof qrcode === 'undefined') return null;
-  try {
-    const qr = qrcode(0, 'M'); // type 0 = taille auto-ajustée au contenu
-    qr.addData(texte);
-    qr.make();
-    return qr.createDataURL(Math.max(2, Math.round((taillePx || 120) / qr.getModuleCount())), 0);
-  } catch (e) {
-    console.warn('genererQrDataUrl:', e);
-    return null;
-  }
-}
 
 
 // ── Calculs de facturation (TVA par taux, arrondis à 2 décimales) ──

@@ -28,6 +28,7 @@ function estEnSelection(type) {
 }
 
 function toggleSelectionItem(id) {
+  id = String(id);
   const i = STATE.selectionIds.indexOf(id);
   if (i > -1) STATE.selectionIds.splice(i, 1);
   else STATE.selectionIds.push(id);
@@ -56,8 +57,6 @@ function _rafraichirBarreSelection() {
   barre.innerHTML =
     '<span style="color:#fff;font-size:12px;font-weight:600;flex-shrink:0">' + n + ' sélectionné(s)</span>' +
     '<button onclick="supprimerSelection()" style="flex:1;padding:9px;background:#B23A2E;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" ' + (n?'':'disabled') + '>🗑️ Supprimer</button>' +
-    '<button onclick="partagerSelection()" style="flex:1;padding:9px;background:#1B5E4B;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" ' + (n?'':'disabled') + '>📤 Partager</button>' +
-    '<button onclick="envoyerSelectionGroupee()" style="flex:1;padding:9px;background:#6E8F4E;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit" ' + (n?'':'disabled') + '>✉️ Envoyer</button>' +
     '<button onclick="toggleSelectionMode(\'' + STATE.selectionMode + '\')" style="padding:9px 12px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>';
 }
 
@@ -69,7 +68,7 @@ async function supprimerSelection() {
   // Une facture émise ne se supprime pas (conservation légale) : seuls les brouillons partent.
   if (STATE.selectionMode === 'factures') {
     const ok = ids.filter(function(id) {
-      const f = (STATE.factures || []).find(function(x) { return x.id === id; });
+      const f = (STATE.factures || []).find(function(x) { return String(x.id) === String(id); });
       return !f || f.statut === 'brouillon';
     });
     refusees = ids.length - ok.length;
@@ -88,7 +87,7 @@ async function supprimerSelection() {
     try {
       const res = await sb.del(cfg.table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
       if (Array.isArray(res) && res.length === 0) { derniereErreur = 'La base a refusé la suppression.'; continue; }
-      STATE[cfg.stateKey] = (STATE[cfg.stateKey] || []).filter(function(x) { return x.id !== id; });
+      STATE[cfg.stateKey] = (STATE[cfg.stateKey] || []).filter(function(x) { return String(x.id) !== String(id); });
       reussies++;
     } catch(e) { derniereErreur = e.message || 'Erreur'; console.warn('Suppression échouée pour', id, e); }
   }
@@ -98,44 +97,10 @@ async function supprimerSelection() {
   toggleSelectionMode(STATE.selectionMode); // sort du mode sélection et rafraîchit
 }
 
-function partagerSelection() {
-  const cfg = _SELECTION_CONFIG[STATE.selectionMode];
-  if (!cfg || !STATE.selectionIds.length) return;
-  const items = (STATE[cfg.stateKey] || []).filter(function(x) { return STATE.selectionIds.includes(x.id); });
-  const base = window.location.origin + window.location.pathname;
-  const paramType = STATE.selectionMode === 'bc' ? 'bc' : STATE.selectionMode === 'devis' ? 'doc' : 'doc';
-  const lignes = items.map(function(it) {
-    const lien = (STATE.selectionMode === 'bc' ? base + '?bc=' + it.id : base + '?doc=' + it.id + (STATE.selectionMode === 'devis' ? '&type=devis' : '')) + '&t=' + (it.token_public||'');
-    return '• ' + (it.ref || '') + (it.client || it.fournisseur ? ' — ' + (it.client || it.fournisseur) : '') + '\n  ' + lien;
-  });
-  const texte = 'Voici ' + items.length + ' document(s) :\n\n' + lignes.join('\n\n');
-  navigator.clipboard?.writeText(texte).then(function() {
-    showToast('✅ Liste avec liens copiée — collez-la où vous voulez', 'success');
-  });
-}
-
-async function envoyerSelectionGroupee() {
-  const cfg = _SELECTION_CONFIG[STATE.selectionMode];
-  if (!cfg || !STATE.selectionIds.length) return;
-  // Envoie chaque élément sélectionné par WhatsApp, un message par élément
-  // (WhatsApp ne permet pas un envoi groupé multi-destinataires en un clic).
-  const ids = STATE.selectionIds.slice();
-  for (const id of ids) {
-    if (STATE.selectionMode === 'bc' && typeof ouvrirModalEnvoi === 'function') {
-      ouvrirModalEnvoi('bon-commande', id);
-      return; // ouvre le modal pour le premier — l'utilisateur répète pour les suivants
-    } else if ((STATE.selectionMode === 'factures' || STATE.selectionMode === 'devis') && typeof ouvrirModalEnvoi === 'function') {
-      ouvrirModalEnvoi(STATE.selectionMode === 'factures' ? 'facture' : 'devis', id);
-      return;
-    }
-  }
-  showToast('Envoi groupé non disponible pour ce type de document', 'error');
-}
-
 // Génère la case à cocher HTML pour une carte de liste, à insérer dans le
 // template de chaque écran concerné.
 function checkboxSelection(type, id) {
   if (!estEnSelection(type)) return '';
-  const coche = STATE.selectionIds.includes(id);
-  return '<input type="checkbox" id="sel-cb-' + type + '-' + id + '" ' + (coche?'checked':'') + ' onclick="event.stopPropagation();toggleSelectionItem(' + id + ')" style="width:20px;height:20px;margin-right:10px;flex-shrink:0">';
+  const coche = STATE.selectionIds.includes(String(id));
+  return '<input type="checkbox" id="sel-cb-' + type + '-' + id + '" ' + (coche?'checked':'') + ' onclick="event.stopPropagation();toggleSelectionItem(\'' + id + '\')" style="width:20px;height:20px;margin-right:10px;flex-shrink:0">';
 }
