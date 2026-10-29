@@ -28,29 +28,47 @@ function _trouverClient(nom) {
   return proches.length === 1 ? proches[0] : null;
 }
 
+var _dicteeVeutArreter = false, _dicteeFatal = false, _dicteeFinal = '', _dicteeDebut = 0;
 function dicterFacture() {
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var zone = document.getElementById('dictee-texte');
   if (!SR) { _dicteeNote('Le micro n’est pas disponible ici. Utilisez le micro de votre clavier, ou écrivez la phrase.', true); if (zone) zone.focus(); return; }
-  if (_dicteeEnCours && _dicteeReco) { _dicteeReco.stop(); return; }
-  var base = zone ? zone.value.trim() : '';
-  _dicteeReco = new SR();
-  _dicteeReco.lang = 'fr-FR';
-  _dicteeReco.interimResults = true;
-  _dicteeReco.continuous = false;
   var btn = document.getElementById('dictee-mic');
-  _dicteeReco.onstart = function () { _dicteeEnCours = true; if (btn) { btn.textContent = '⏹ Arrêter'; btn.classList.add('actif'); } _dicteeNote('Je vous écoute…'); };
-  _dicteeReco.onresult = function (e) {
-    var t = '';
-    for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-    if (zone) zone.value = (base ? base + ' ' : '') + t;
-  };
-  _dicteeReco.onerror = function (e) {
-    var refuse = e && (e.error === 'not-allowed' || e.error === 'service-not-allowed');
-    _dicteeNote(refuse ? 'Accès au micro refusé. Autorisez-le dans votre navigateur, ou écrivez la phrase.' : 'Le micro n’a rien entendu. Réessayez ou écrivez la phrase.', true);
-  };
-  _dicteeReco.onend = function () { _dicteeEnCours = false; if (btn) { btn.innerHTML = '&#127908; Dicter'; btn.classList.remove('actif'); } };
-  try { _dicteeReco.start(); } catch (e) { _dicteeNote('Le micro n’a pas pu démarrer.', true); }
+  // Un second clic arrête la dictée (elle ne s'arrête plus toute seule au moindre silence).
+  if (_dicteeEnCours && _dicteeReco) { _dicteeVeutArreter = true; try { _dicteeReco.stop(); } catch (e) {} return; }
+  var base = zone ? zone.value.trim() : '';
+  _dicteeVeutArreter = false; _dicteeFatal = false; _dicteeFinal = ''; _dicteeDebut = Date.now();
+  function lancer() {
+    _dicteeReco = new SR();
+    _dicteeReco.lang = 'fr-FR';
+    _dicteeReco.interimResults = true;
+    _dicteeReco.continuous = true;
+    _dicteeReco.onstart = function () { _dicteeEnCours = true; if (btn) { btn.textContent = '⏹ Arrêter'; btn.classList.add('actif'); } _dicteeNote('Je vous écoute… Cliquez sur « Arrêter » quand vous avez fini.'); };
+    _dicteeReco.onresult = function (e) {
+      var provisoire = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        var t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) _dicteeFinal += (_dicteeFinal ? ' ' : '') + t.trim(); else provisoire += t;
+      }
+      if (zone) zone.value = ((base ? base + ' ' : '') + _dicteeFinal + (provisoire ? ' ' + provisoire : '')).trim();
+    };
+    _dicteeReco.onerror = function (e) {
+      var err = e && e.error;
+      if (err === 'not-allowed' || err === 'service-not-allowed') { _dicteeFatal = true; _dicteeNote('Accès au micro refusé. Autorisez-le dans votre navigateur, ou écrivez la phrase.', true); }
+      else if (err === 'audio-capture') { _dicteeFatal = true; _dicteeNote('Aucun micro détecté sur cet appareil.', true); }
+      else if (err === 'network') { _dicteeFatal = true; _dicteeNote('Le service vocal du navigateur est injoignable (connexion). Écrivez la phrase.', true); }
+      // « no-speech » / « aborted » : silence passager, on continue d'écouter.
+    };
+    _dicteeReco.onend = function () {
+      var trop_long = Date.now() - _dicteeDebut > 120000;   // sécurité : 2 minutes maximum
+      if (!_dicteeVeutArreter && !_dicteeFatal && !trop_long) { try { lancer(); return; } catch (e) {} }
+      _dicteeEnCours = false;
+      if (btn) { btn.innerHTML = '&#127908; Dicter'; btn.classList.remove('actif'); }
+      if (!_dicteeFatal) _dicteeNote(zone && zone.value.trim() ? 'Dictée terminée. Vérifiez le texte, puis cliquez sur « Remplir la facture ».' : 'Rien entendu. Réessayez ou écrivez la phrase.', !(zone && zone.value.trim()));
+    };
+    try { _dicteeReco.start(); } catch (e) { _dicteeNote('Le micro n’a pas pu démarrer.', true); _dicteeEnCours = false; }
+  }
+  lancer();
 }
 
 async function remplirFactureParIA() {
