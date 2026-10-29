@@ -54,10 +54,25 @@ function _mfDessinerControles() {
     '<textarea class="f-inp" rows="2" maxlength="300" placeholder="Ex. : Merci pour votre confiance." oninput="_mfTexte(\'intro\',this.value)">' + escapeHTML(m.intro) + '</textarea></div>';
   html += '<div class="mf-bloc"><div class="mf-titre">Message en bas de page</div>' +
     '<input class="f-inp" maxlength="200" placeholder="Ex. : Paiement par virement sous 30 jours." value="' + escapeHTML(m.pied).replace(/"/g, '&quot;') + '" oninput="_mfTexte(\'pied\',this.value)"></div>';
+  html += '<div class="mf-bloc"><div class="mf-titre">Toutes les couleurs</div><div class="mf-aide" style="margin:-4px 0 8px">Changez chaque couleur une par une. « Auto » reprend la couleur d\'origine.</div>' +
+    COULEURS_MODELE.map(function (d) {
+      var v = m.c[d[0]] || '', affiche = v || d[2];
+      return '<div class="mf-ligne mf-coul"><span>' + d[1] + '</span><span class="mf-coul-ctl">' +
+        '<label class="mf-pastille mf-mini" style="background:' + affiche + '"><input type="color" value="' + affiche + '" onchange="_mfCouleur(\'' + d[0] + '\',this.value)"></label>' +
+        '<button type="button" class="mf-auto' + (v ? '' : ' on') + '" onclick="_mfCouleur(\'' + d[0] + '\',\'\')">Auto</button></span></div>';
+    }).join('') + '</div>';
   html += '<div class="mf-aide" style="margin:6px 0 14px">Les mentions obligatoires restent toujours affichées : numéro, dates, ICE, IF, RC, TVA et total en lettres.</div>';
-  html += '<button class="btn-primary" style="width:100%" onclick="enregistrerModeleFacture()">Enregistrer ce modèle</button>' +
-    '<button class="mf-reset" onclick="reinitialiserModeleFacture()">Revenir au modèle d\'origine</button>';
+  html += '<button class="mf-reset" onclick="reinitialiserModeleFacture()">Revenir au modèle d\'origine</button>' +
+    '<div class="mf-barre"><button class="btn-primary" style="width:100%" onclick="enregistrerModeleFacture()">Enregistrer ce modèle</button></div>';
   zone.innerHTML = html;
+}
+
+function _mfCouleur(cle, valeur) {
+  if (!_mf.brouillon.c) _mf.brouillon.c = {};
+  if (valeur) _mf.brouillon.c[cle] = valeur; else delete _mf.brouillon.c[cle];
+  _mfDessinerControles();
+  clearTimeout(_mf.minuteur);
+  _mf.minuteur = setTimeout(_mfApercu, 120);
 }
 
 function _mfTexte(cle, valeur) {

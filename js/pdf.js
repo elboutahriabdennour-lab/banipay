@@ -115,6 +115,28 @@ var POLICES_MODELE = {
 };
 var MODELE_DEFAUT = { couleur: '', police: 'inter', entete: 'sombre', logoPos: 'gauche', logoTaille: 'moyen', zebre: true,
   montrerRib: true, montrerSignature: true, montrerMarque: true, intro: '', pied: '' };
+// Couleurs réglables une à une (vide = automatique). [clé, libellé, valeur d'origine]
+var COULEURS_MODELE = [
+  ['fondPage', 'Fond de la page', '#FFFFFF'],
+  ['texte', 'Texte principal', '#14241F'],
+  ['texteDoux', 'Texte secondaire', '#5B6B64'],
+  ['fondEntete', 'Fond de l\'en-tête', '#14241F'],
+  ['texteEntete', 'Texte de l\'en-tête', '#FFFFFF'],
+  ['fondTitresBlocs', 'Titres « Facturé à » et « Émetteur »', '#1B5E4B'],
+  ['fondTableau', 'Fond du titre du tableau', '#14241F'],
+  ['texteTableau', 'Texte du titre du tableau', '#FFFFFF'],
+  ['fondLignes', 'Lignes en alternance', '#F5F6F1'],
+  ['fondTotal', 'Fond du total TTC', '#14241F'],
+  ['texteTotal', 'Texte du total TTC', '#FFFFFF'],
+  ['fondCoord', 'Fond des coordonnées bancaires', '#EEF3E4'],
+  ['texteCoord', 'Texte des coordonnées bancaires', '#6E8F4E'],
+  ['bordures', 'Traits et bordures', '#DDE3DA']
+];
+function _contraste(hex) {
+  var h = String(hex || '#ffffff').replace('#', '');
+  var l = (0.299 * parseInt(h.substr(0, 2), 16) + 0.587 * parseInt(h.substr(2, 2), 16) + 0.114 * parseInt(h.substr(4, 2), 16)) / 255;
+  return l > 0.62 ? '#14241F' : '#FFFFFF';
+}
 function normaliserModele(m) {
   m = (m && typeof m === 'object') ? m : {};
   var o = {};
@@ -125,6 +147,8 @@ function normaliserModele(m) {
   if (['gauche', 'droite'].indexOf(m.logoPos) >= 0) o.logoPos = m.logoPos;
   if (['petit', 'moyen', 'grand'].indexOf(m.logoTaille) >= 0) o.logoTaille = m.logoTaille;
   ['zebre', 'montrerRib', 'montrerSignature', 'montrerMarque'].forEach(function (c) { if (typeof m[c] === 'boolean') o[c] = m[c]; });
+  o.c = {};
+  if (m.c && typeof m.c === 'object') COULEURS_MODELE.forEach(function (d) { if (typeof m.c[d[0]] === 'string' && /^#[0-9a-fA-F]{6}$/.test(m.c[d[0]])) o.c[d[0]] = m.c[d[0]]; });
   if (typeof m.intro === 'string') o.intro = m.intro.slice(0, 300);
   if (typeof m.pied === 'string') o.pied = m.pied.slice(0, 200);
   return o;
@@ -151,7 +175,7 @@ function construireHTMLDoc(opts) {
   const qrUrl = docUrl ? _qrLocal(docUrl) : '';
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
-    return `<tr style="background:${(m.zebre&&i%2===0)?'#F5F6F1':'#fff'}">
+    return `<tr style="background:${(m.zebre&&i%2===0)?(m.c.fondLignes||'#F5F6F1'):'transparent'}">
       <td style="padding:7px 8px;font-size:10px">${escapeHTML(l.desc||l.designation||'')}</td>
       <td style="padding:5px 8px;text-align:center;font-size:10px">${escapeHTML(String(l.qte||1))} ${escapeHTML(String(l.unite||''))}</td>
       ${showPrices?`<td style="padding:5px 8px;text-align:right;font-size:10px">${fmt(Number(l.pu)||0)}</td><td style="padding:5px 8px;text-align:right;font-size:10px">${Number(l.tva) >= 0 ? Number(l.tva) : 20} %</td><td style="padding:5px 8px;text-align:right;font-size:10px;font-weight:600">${fmt(total)}</td>`:''}
@@ -215,6 +239,25 @@ tbody td{border-bottom:1px solid #EAE4DA}
 ${m.entete==='couleur'?`.header{background:${colorHeader}}.h-company,.h-ref{color:${surAccent}}.h-meta{color:${surAccent};opacity:.75}.h-doc-label{background:rgba(255,255,255,0.22);color:${surAccent}}.stripe{background:rgba(0,0,0,0.18)}`:''}
 ${m.entete==='clair'?`.header{background:#fff;padding-bottom:12px}.h-company{color:#14241F}.h-ref{color:#14241F}.h-meta{color:#5B6B64}.stripe{height:4px}`:''}
 .h-logo-d{margin-left:auto}
+.bloc-bd{background:transparent}
+${(function(){
+  var c = m.c, o = '';
+  if (c.fondPage) o += 'html,body{background:' + c.fondPage + '!important}';
+  if (c.texte) o += 'body,.bloc-bd .main,[style*="color:#14241F"]{color:' + c.texte + '!important}';
+  if (c.texteDoux) o += '.bloc-bd .line,.tot-row,.arrete,.footer-center,.sig-lbl,[style*="color:#5B6B64"]{color:' + c.texteDoux + '!important}';
+  if (c.fondEntete || c.texteEntete) {
+    var te = c.texteEntete || _contraste(c.fondEntete);
+    if (c.fondEntete) o += '.header{background:' + c.fondEntete + '!important}';
+    o += '.h-company,.h-ref{color:' + te + '!important}.h-meta{color:' + te + '!important;opacity:.75}';
+  }
+  if (c.fondTitresBlocs) o += '.bloc-hd{background:' + c.fondTitresBlocs + '!important;color:' + _contraste(c.fondTitresBlocs) + '!important}';
+  if (c.fondTableau || c.texteTableau) o += 'thead tr,thead th{' + (c.fondTableau ? 'background:' + c.fondTableau + '!important;' : '') + 'color:' + (c.texteTableau || _contraste(c.fondTableau || '#14241F')) + '!important}';
+  if (c.fondLignes) o += '.tot-row[style*="background"]{background:' + c.fondLignes + '!important}';
+  if (c.fondTotal || c.texteTotal) o += '.tot-main{' + (c.fondTotal ? 'background:' + c.fondTotal + '!important' : '') + '}.tot-main-lbl,.tot-main-val{color:' + (c.texteTotal || _contraste(c.fondTotal || '#14241F')) + '!important}';
+  if (c.fondCoord || c.texteCoord) o += '.bank-box{' + (c.fondCoord ? 'background:' + c.fondCoord + '!important;' : '') + 'color:' + (c.texteCoord || _contraste(c.fondCoord || '#EEF3E4')) + '!important}';
+  if (c.bordures) o += '.bloc,.totaux-box,.footer,.sig-item,.bank-box{border-color:' + c.bordures + '!important}tbody td,.tot-row{border-bottom-color:' + c.bordures + '!important}';
+  return o;
+})()}
 <\/style><\/head><body>
 <div style="display:flex;flex-direction:column;flex:1">
 <div class="header">

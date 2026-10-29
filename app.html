@@ -628,7 +628,7 @@
   <!-- MODELE DE FACTURE -->
   <div class="screen" id="screen-modele-facture">
     <div class="topbar">
-      <button class="back-btn" onclick="goScreen('parametres',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div>
+      <button class="back-btn" onclick="goScreen('parametres',null)">←</button><div class="topbar-brand" style="cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><button class="topbar-save" onclick="enregistrerModeleFacture()">&#128190; Enregistrer</button>
     </div>
     <div style="padding:16px 20px">
       <div class="sec-label" style="padding:0 0 4px">🎨 Modèle de facture</div>
@@ -1923,6 +1923,7 @@
 <div class="screen" id="screen-parametres">
   <div class="topbar">
     <div class="topbar-brand" onclick="goScreen('profil',null)" style="cursor:pointer" data-brand>Ta<span>fir</span></div>
+    <button class="topbar-save" onclick="sauvegarderParametres()">&#128190; Enregistrer</button>
     <div class="topbar-right">
       <button class="back-btn" onclick="goScreen('profil')">&#8592;</button>
     </div>
@@ -2127,7 +2128,7 @@
         <div id="equipe-liste"></div>
       </div>
     </div>
-    <button class="s-btn blue full param-save" onclick="sauvegarderParametres()">&#128190; Sauvegarder les param&#232;tres</button>
+    <div class="param-save-barre"><button class="s-btn blue full param-save" onclick="sauvegarderParametres()">&#128190; Sauvegarder les param&#232;tres</button></div>
   </div>
   <div class="pb"></div>
 </div>
