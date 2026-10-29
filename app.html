@@ -891,7 +891,6 @@
       <input id="achat-fournisseur-lien" style="flex:1;padding:10px;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-family:inherit;outline:none;background:#fff" placeholder="Lien de la facture ou du profil...">
       <button onclick="importerFournisseurZelto()" style="padding:10px 14px;background:#B23A2E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Import</button>
     </div>
-    <button onclick="scannerQRAchat()" style="width:100%;padding:10px;background:#fff;color:#B23A2E;border:1.5px solid #E0B6AC;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📷 Scanner le QR code de la facture</button>
   </div>
   <div class="form-section"><div class="form-label">Fournisseur *</div>
     <div style="display:flex;gap:8px">
@@ -1368,8 +1367,7 @@
   </div>
   <!-- QR -->
   <div style="background:#fff;border-radius:12px;margin:16px;padding:16px;border:1px solid #EAE4DA;text-align:center">
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#8E9C95;margin-bottom:12px">QR Code & Lien public</div>
-    <div id="qr-canvas-container" style="display:flex;justify-content:center;margin:0 auto 10px"></div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#8E9C95;margin-bottom:12px">Lien public</div>
     <!-- FIX: cet élément était auparavant absent du HTML alors que renderProfil()
          essayait déjà de le remplir (setEl('pv-lien', ...)) — le lien affiché
          sous le QR ne correspondait donc jamais au vrai lien public encodé
@@ -3142,10 +3140,9 @@
     </div>
   </div>
 
-  <!-- QR Code + Lien -->
+  <!-- Lien -->
   <div style="margin:-20px 20px 16px;background:#fff;border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
     <div style="font-size:12px;font-weight:700;color:#1B5E4B;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.08em">Mon lien profil</div>
-    <div id="cpt-qr-container" style="display:flex;justify-content:center;margin-bottom:14px"></div>
     <div id="cpt-lien-display" style="font-size:11px;color:#5B6B64;background:#F5F6F1;padding:8px;border-radius:8px;word-break:break-all;margin-bottom:12px"></div>
     <div style="display:flex;gap:8px">
       <button onclick="copierLienComptable()" style="flex:1;padding:10px;background:#E7F2EC;color:#1B5E4B;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 Copier</button>
@@ -3205,7 +3202,6 @@
   <div class="pb"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <!-- AJOUT (bug réel signalé — QR invisible) : la génération du QR
      passait par un service tiers externe (api.qrserver.com). Si ce
      service est bloqué, lent ou indisponible pour l'utilisateur, le QR
@@ -3213,7 +3209,6 @@
      cassée invisible. Remplacé par une génération 100% locale dans le
      navigateur, qui ne dépend plus d'aucun service externe une fois
      cette librairie chargée. -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <nav class="bottom-nav" id="bottom-nav">
   <div class="nav-item" id="nav-home" onclick="goScreen('dashboard',null)"><i class="ic ic-house nav-ico"></i><div class="nav-lbl">Accueil</div></div>
   <div class="nav-item" id="nav-factures" onclick="goScreen('mes-factures',null)"><i class="ic ic-receipt nav-ico"></i><div class="nav-lbl">Factures</div></div>

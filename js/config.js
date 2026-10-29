@@ -14,7 +14,7 @@ const sb = {
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${t}`,
       'Content-Type': 'application/json',
-      'Prefer': method === 'POST' ? 'return=representation' : undefined
+      'Prefer': (method === 'POST' || method === 'DELETE') ? 'return=representation' : undefined
     };
     Object.keys(h).forEach(k => h[k] === undefined && delete h[k]);
     let r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {

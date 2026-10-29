@@ -62,13 +62,6 @@ function renderProfil() {
 
   const publicUrl = window.location.origin+window.location.pathname+'?profil='+id;
   setEl('pv-lien', publicUrl);
-  const qrContainer = el('qr-canvas-container');
-  if (qrContainer) {
-    const qrDataUrl = genererQrDataUrl(publicUrl, 120);
-    qrContainer.innerHTML = qrDataUrl
-      ? '<img src="' + qrDataUrl + '" width="120" height="120" style="border-radius:8px;background:#F5F6F1">'
-      : '<div style="width:120px;height:120px;border-radius:8px;background:#F5F6F1;display:flex;align-items:center;justify-content:center;font-size:10px;color:#8E9C95;text-align:center;padding:8px">QR indisponible — utilisez le lien ci-dessous</div>';
-  }
   if(el('pv-objectif')) el('pv-objectif').textContent = p.objectif_mensuel ? fmtInt(p.objectif_mensuel)+' MAD/mois' : 'Non défini';
 }
 function goProfilEdit(show=true) {

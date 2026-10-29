@@ -810,10 +810,7 @@ function voirProfilComptablePublic(email, raison, tel) {
 }
 function ouvrirActionsEntreprise(idUnique, id, raison, tel, email) {
   const url = window.location.origin + window.location.pathname + '?profil=' + idUnique;
-  const qrDataUrl = genererQrDataUrl(url, 180);
-  const qrHtml = qrDataUrl
-    ? '<img src="' + qrDataUrl + '" style="width:140px;height:140px;margin-bottom:16px" alt="QR code">'
-    : '<div style="width:140px;height:140px;margin:0 auto 16px;border-radius:8px;background:#F5F6F1;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8E9C95;text-align:center;padding:8px">QR indisponible</div>';
+  const qrHtml = '';
 
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:flex;align-items:flex-end;justify-content:center';

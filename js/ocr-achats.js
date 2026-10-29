@@ -71,7 +71,7 @@ async function _lireFactureTesseract(imageDataUrl) {
     // sans confirmation bloquante (déjà visuellement signalés en orange,
     // risque bien moindre qu'un montant faux), mais le montant demande
     // désormais une confirmation explicite avant d'être ajouté.
-    if (suggestions.montantTTC && !STATE.lignesAchat.length) {
+    if (!_appliquerLignesLocales(texte) && suggestions.montantTTC && !STATE.lignesAchat.length) {
       const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nTotal TTC. Ajouter une ligne (montant converti en HT avec la TVA choisie) ? Vérifiez-le bien avant de confirmer.');
       if (confirme) {
         STATE.lignesAchat.push({ desc: 'Montant lu (TTC ' + suggestions.montantTTC.toFixed(2) + ' converti en HT) — à vérifier', qte: 1, pu: _htDepuisTTC(suggestions.montantTTC), unite: 'u', produit_id: null });
@@ -153,7 +153,7 @@ async function _lireFacturePDFLocal(pdfDataUrl) {
     }
     // FIX (retour utilisateur) : même correctif que pour la lecture par
     // photo — voir le commentaire détaillé dans lireFactureParOCR().
-    if (suggestions.montantTTC && !STATE.lignesAchat.length) {
+    if (!_appliquerLignesLocales(texte) && suggestions.montantTTC && !STATE.lignesAchat.length) {
       const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nTotal TTC. Ajouter une ligne (montant converti en HT avec la TVA choisie) ? Vérifiez-le bien avant de confirmer.');
       if (confirme) {
         STATE.lignesAchat.push({ desc: 'Montant lu (TTC ' + suggestions.montantTTC.toFixed(2) + ' converti en HT) — à vérifier', qte: 1, pu: _htDepuisTTC(suggestions.montantTTC), unite: 'u', produit_id: null });
@@ -167,6 +167,42 @@ async function _lireFacturePDFLocal(pdfDataUrl) {
       zoneStatut.textContent = '❌ Lecture du PDF indisponible (' + e.message + ') — remplissez manuellement. Si le PDF est un scan (image), la lecture automatique ne fonctionne que sur les PDF texte.';
     }
   }
+}
+function _nombreFr(t) {
+  t = String(t).replace(/\s/g, '');
+  if (t.indexOf(',') > -1) t = t.replace(/\./g, '').replace(',', '.');
+  return parseFloat(t);
+}
+// Lit les lignes du tableau d'une facture : « Désignation  Qté  PU  [TVA %]  Total ».
+// Une ligne n'est gardée que si Qté × PU = Total (sinon la lecture est douteuse et on l'ignore).
+function _extraireLignesFacture(texte) {
+  var lignes = [];
+  var re = /^(.*?[A-Za-zÀ-ÿ].*?)\s+(\d+(?:[.,]\d+)?)\s+(\d[\d\s.]*[.,]\d{2})\s*(?:(\d{1,2})\s*%\s*)?(\d[\d\s.]*[.,]\d{2})\s*(?:DH|MAD|Dhs?)?\s*$/i;
+  String(texte).split('\n').forEach(function (l) {
+    l = l.trim();
+    if (!l || /^(total|sous[-\s]?total|tva|net|montant|arr[êe]t)/i.test(l)) return;
+    var m = l.match(re);
+    if (!m) return;
+    var qte = _nombreFr(m[2]), pu = _nombreFr(m[3]), tot = _nombreFr(m[5]);
+    if (!(qte > 0 && pu > 0 && tot > 0)) return;
+    if (Math.abs(qte * pu - tot) > 0.02 * Math.max(1, tot) / 10 + 0.02) return;
+    lignes.push({ desc: m[1].replace(/\s+/g, ' ').trim(), qte: qte, pu: pu, unite: 'u', produit_id: null, tva: m[4] ? parseInt(m[4], 10) : null });
+  });
+  return lignes;
+}
+// Ajoute les lignes lues (si le tableau est lisible). Renvoie true si c'est fait.
+function _appliquerLignesLocales(texte) {
+  if (STATE.lignesAchat && STATE.lignesAchat.length) return false;
+  var lg = _extraireLignesFacture(texte);
+  if (!lg.length) return false;
+  var taux = lg.map(function (x) { return x.tva; }).filter(function (x) { return x !== null; });
+  var unique = taux.length && taux.every(function (x) { return x === taux[0]; }) ? taux[0] : null;
+  var sel = el('achat-tva-taux');
+  if (sel && unique !== null && Array.prototype.some.call(sel.options, function (o) { return parseInt(o.value, 10) === unique; })) sel.value = String(unique);
+  lg.forEach(function (x) { delete x.tva; STATE.lignesAchat.push(x); });
+  if (typeof renderLignesAchat === 'function') renderLignesAchat();
+  if (typeof calcAchatTotaux === 'function') calcAchatTotaux();
+  return true;
 }
 function _htDepuisTTC(ttc) {
   var taux = 20;

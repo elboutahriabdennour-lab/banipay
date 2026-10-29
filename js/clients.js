@@ -10,21 +10,12 @@ function ouvrirScannerQR() {
   box.innerHTML = `
     <div style="width:40px;height:4px;background:#DDE3DA;border-radius:2px;margin:0 auto 20px"></div>
     <div style="font-size:16px;font-weight:700;color:#14241F;margin-bottom:6px">➕ Ajouter un client</div>
-    <div style="font-size:12px;color:#5B6B64;margin-bottom:20px">Importez un client via son lien Tafir, un QR code ou manuellement</div>
+    <div style="font-size:12px;color:#5B6B64;margin-bottom:20px">Importez un client via son lien Tafir ou manuellement</div>
 
     <div style="background:#F5F6F1;border-radius:14px;padding:16px;margin-bottom:12px">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8E9C95;margin-bottom:10px">🔗 Via lien Tafir</div>
       <input id="qr-link-input" style="width:100%;padding:12px;border:1.5px solid #DDE3DA;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" placeholder="Collez le lien profil Tafir...">
       <button onclick="importerClientDepuisLien()" style="width:100%;margin-top:10px;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Importer</button>
-    </div>
-
-    <div style="background:#F5F6F1;border-radius:14px;padding:16px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#8E9C95;margin-bottom:10px">📷 Scanner un QR code</div>
-      <label style="display:block;text-align:center;padding:20px;border:2px dashed #DDE3DA;border-radius:10px;cursor:pointer;color:#1B5E4B;font-size:13px;font-weight:600">
-        📷 Ouvrir la caméra
-        <input type="file" accept="image/*" capture="environment" style="display:none" onchange="importerClientDepuisQRImage(event)">
-      </label>
-      <div style="font-size:10px;color:#8E9C95;text-align:center;margin-top:6px">Prend une photo du QR code profil Tafir</div>
     </div>
 
     <div style="background:#F5F6F1;border-radius:14px;padding:16px;margin-bottom:12px">

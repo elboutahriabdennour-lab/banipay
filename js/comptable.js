@@ -1877,11 +1877,6 @@ function renderComptableProfil() {
   const lienId = 'CPT-' + uid.substr(0,8).toUpperCase();
   const lien = window.location.origin + window.location.pathname + '?comptable=' + lienId;
   setEl('cpt-lien-display', lien);
-  const qrContainer = el('cpt-qr-container');
-  if (qrContainer) {
-    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=' + encodeURIComponent(lien);
-    qrContainer.innerHTML = '<img src="' + qrUrl + '" style="border-radius:10px;border:3px solid #E7F2EC" width="140" height="140">';
-  }
   const infos = el('cpt-profil-infos');
   if (infos) {
     const rows = [['Nom', nom], ['Cabinet', cabinet], ['Email', email], ['Specialite', meta.specialite || ''], ['Telephone', meta.tel || '']].filter(function(r) { return r[1]; });

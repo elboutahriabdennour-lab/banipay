@@ -678,7 +678,10 @@ async function supprimerFacture(id) {
     return;
   }
   if (!confirm('Supprimer ce brouillon ?')) return;
-  await sb.del('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
+  try {
+    const res = await sb.del('factures', `id=eq.${id}&user_id=eq.${(STATE.entrepriseId || sb.user.id)}`);
+    if (Array.isArray(res) && res.length === 0) { showToast('La base a refusé la suppression.', 'error'); return; }
+  } catch (e) { showToast('Suppression impossible : ' + (e.message || 'erreur'), 'error'); return; }
   STATE.factures = STATE.factures.filter(x => x.id !== id);
   showToast('Facture supprimée');
   logAudit('facture', id, 'suppression', f?.ref || '');

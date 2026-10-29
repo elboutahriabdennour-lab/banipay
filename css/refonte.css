@@ -302,3 +302,5 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 @media (min-width:1000px){
   .screen>div[style*="margin:"][style*="20px"]:not([style*="position:fixed"]):not(.modal-overlay){margin-left:auto!important;margin-right:auto!important;box-sizing:border-box;width:min(840px,calc(100% - 40px))}
 }
+/* Barre d'actions de la sélection : à droite du menu sur ordinateur */
+@media (min-width:1000px){#selection-action-bar{left:232px!important}}

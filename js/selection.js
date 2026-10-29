@@ -64,19 +64,37 @@ function _rafraichirBarreSelection() {
 async function supprimerSelection() {
   const cfg = _SELECTION_CONFIG[STATE.selectionMode];
   if (!cfg || !STATE.selectionIds.length) return;
-  const n = STATE.selectionIds.length;
-  if (!confirm('Supprimer ' + n + ' ' + (n>1?cfg.labelPl:cfg.labelUn) + ' ? Cette action est irréversible.')) return;
+  let ids = STATE.selectionIds.slice();
+  let refusees = 0;
+  // Une facture émise ne se supprime pas (conservation légale) : seuls les brouillons partent.
+  if (STATE.selectionMode === 'factures') {
+    const ok = ids.filter(function(id) {
+      const f = (STATE.factures || []).find(function(x) { return x.id === id; });
+      return !f || f.statut === 'brouillon';
+    });
+    refusees = ids.length - ok.length;
+    ids = ok;
+    if (!ids.length) {
+      showToast('Une facture émise ne peut pas être supprimée (conservation légale). Annulez-la ou créez un avoir.', 'error');
+      return;
+    }
+  }
+  const n = ids.length;
+  if (!confirm('Supprimer ' + n + ' ' + (n>1?cfg.labelPl:cfg.labelUn) + ' ? Cette action est irréversible.' + (refusees ? '\n\n' + refusees + ' facture(s) émise(s) seront conservées (suppression interdite).' : ''))) return;
 
   showToast('⏳ Suppression...');
-  let reussies = 0;
-  for (const id of STATE.selectionIds.slice()) {
+  let reussies = 0, derniereErreur = '';
+  for (const id of ids) {
     try {
-      await sb.del(cfg.table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
+      const res = await sb.del(cfg.table, 'id=eq.' + id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id));
+      if (Array.isArray(res) && res.length === 0) { derniereErreur = 'La base a refusé la suppression.'; continue; }
       STATE[cfg.stateKey] = (STATE[cfg.stateKey] || []).filter(function(x) { return x.id !== id; });
       reussies++;
-    } catch(e) { console.warn('Suppression échouée pour', id, e); }
+    } catch(e) { derniereErreur = e.message || 'Erreur'; console.warn('Suppression échouée pour', id, e); }
   }
-  showToast('✅ ' + reussies + ' ' + (reussies>1?cfg.labelPl:cfg.labelUn) + ' supprimé(s)', 'success');
+  const echecs = ids.length - reussies;
+  if (reussies) showToast('✅ ' + reussies + ' ' + (reussies>1?cfg.labelPl:cfg.labelUn) + ' supprimé(s)' + (echecs ? ' — ' + echecs + ' non supprimé(s)' : ''), 'success');
+  if (echecs || refusees) showToast((echecs ? 'Non supprimé : ' + derniereErreur : '') + (refusees ? ' ' + refusees + ' facture(s) émise(s) conservée(s).' : ''), 'error');
   toggleSelectionMode(STATE.selectionMode); // sort du mode sélection et rafraîchit
 }
 

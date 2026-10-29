@@ -172,7 +172,7 @@ function construireHTMLDoc(opts) {
   const estRTL = langue === 'ar';
   // Lien et QR code : uniquement sur les devis (acceptation par le client). Pas sur les factures.
   const docUrl = isDevis ? (opts.doc_url || (doc_id ? (window.location.origin + window.location.pathname + '?doc=' + doc_id) : '')) : '';
-  const qrUrl = docUrl ? _qrLocal(docUrl) : '';
+  const qrUrl = ''; // QR code retiré de Tafir
   const lignesHtml = (Array.isArray(lignes)?lignes:[]).map((l,i) => {
     const total = (Number(l.qte)||0) * (Number(l.pu)||0);
     return `<tr style="background:${(m.zebre&&i%2===0)?(m.c.fondLignes||'#F5F6F1'):'transparent'}">
@@ -285,7 +285,7 @@ ${(devis_ref||bl_ref||refsQR.length)?`<div class="refs-box" style="flex-wrap:wra
   ${bl_ref?`<span>${t.blRef} : <strong>${escapeHTML(bl_ref)}</strong></span>`:''}
   ${refsQR.map(function(r) {
     return '<span style="display:inline-flex;align-items:center;gap:6px">' + r.label + ' ' + t.refSuffixe + ' : <strong>' + escapeHTML(String(r.ref||'')) + '</strong>' +
-      (r.url ? '<img src="https://api.qrserver.com/v1/create-qr-code/?size=44x44&data=' + encodeURIComponent(r.url) + '" width="30" height="30" style="border-radius:3px;vertical-align:middle">' : '') +
+      '' +
     '</span>';
   }).join('')}
 </div>`:''}
