@@ -136,7 +136,7 @@
   .footer-logo{font-family:'Inter',serif;font-weight:700;font-size:18px;margin-bottom:8px}
   .footer-logo span{color:var(--safran)}
   footer p{font-size:12px;color:var(--encre-douce)}
-  .footer-links{display:flex;gap:20px;justify-content:center;margin:14px 0;font-size:12px}
+  .footer-links{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:center;margin:14px 0;font-size:12px}
   .footer-links a{text-decoration:none;color:var(--encre-douce)}
   .footer-links a:hover{color:var(--teal)}
 
@@ -158,31 +158,53 @@
      nom de domaine une fois choisi/migré. -->
 <script type="application/ld+json">
 {
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Tafir",
-  "description": "Tafir simplifie les devis, les factures et les avoirs pour les entreprises marocaines, avec un accès direct pour votre comptable. Gratuit pour commencer.",
-  "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
-  "url": "https://tafir.fr",
-  "inLanguage": ["fr"],
-  "offers": {
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://tafir.fr/#org",
+   "name": "Tafir",
+   "url": "https://tafir.fr",
+   "logo": "https://tafir.fr/icon-512.png"
+  },
+  {
+   "@type": "WebSite",
+   "@id": "https://tafir.fr/#site",
+   "url": "https://tafir.fr",
+   "name": "Tafir",
+   "inLanguage": "fr",
+   "publisher": {
+    "@id": "https://tafir.fr/#org"
+   }
+  },
+  {
+   "@type": "SoftwareApplication",
+   "name": "Tafir",
+   "description": "Tafir simplifie les devis, les factures et les avoirs pour les entreprises marocaines, avec un accès direct pour votre comptable. Gratuit pour commencer.",
+   "applicationCategory": "BusinessApplication",
+   "operatingSystem": "Web",
+   "url": "https://tafir.fr",
+   "inLanguage": [
+    "fr"
+   ],
+   "offers": {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "MAD"
-  },
-  "featureList": [
+   },
+   "featureList": [
     "Devis et factures",
     "Avoirs et paiements",
     "Accès comptable direct",
     "Clients et catalogue",
     "Export PDF et CSV"
-  ],
-  "publisher": {
-    "@type": "Organization",
-    "name": "Tafir",
-    "url": "https://tafir.fr"
+   ],
+   "@id": "https://tafir.fr/#app",
+   "publisher": {
+    "@id": "https://tafir.fr/#org"
+   }
   }
+ ]
 }
 </script>
 </head>
@@ -446,6 +468,9 @@ function toggleFeature(carte) {
     <a href="app.html">Se connecter</a>
     <a href="#fonctionnalites">Fonctionnalités</a>
     <a href="#histoire">Notre histoire</a>
+    <a href="ressources/mentions-obligatoires-facture-maroc.html">Mentions d'une facture</a>
+    <a href="outils/calculateur-tva-maroc.html">Calculateur TVA</a>
+    <a href="a-propos.html">À propos</a>
   </div>
   <p>© 2026 Tafir. Fait au Maroc</p>
 </footer>

@@ -493,3 +493,12 @@ function montantEnLettres(montant, devise) {
   if (cts > 0) s += ' et ' + nombreEnLettres(cts) + ' ' + (cts > 1 ? n[3] : n[2]);
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+
+// Depuis le 1er janvier 2026, seuls 20 %, 10 % et l'exonération existent (les taux 7 % et 14 % ont disparu).
+// On garde ces deux taux sélectionnables pour les anciens documents, mais on prévient l'utilisateur.
+function avertirAncienTaux(sel) {
+  if (sel && (sel.value === '7' || sel.value === '14')) {
+    showToast('Le taux ' + sel.value + ' % n\'existe plus depuis le 1er janvier 2026. Vérifiez avec votre comptable.', 'error');
+  }
+}

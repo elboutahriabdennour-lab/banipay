@@ -2,4 +2,52 @@ User-agent: *
 Allow: /
 Disallow: /app.html
 
+User-agent: GPTBot
+Allow: /
+Disallow: /app.html
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /app.html
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /app.html
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /app.html
+
+User-agent: Claude-User
+Allow: /
+Disallow: /app.html
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /app.html
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /app.html
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /app.html
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /app.html
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /app.html
+
+User-agent: Bingbot
+Allow: /
+Disallow: /app.html
+
+User-agent: CCBot
+Allow: /
+Disallow: /app.html
+
 Sitemap: https://tafir.fr/sitemap.xml

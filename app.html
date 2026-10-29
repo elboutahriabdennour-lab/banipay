@@ -1202,7 +1202,7 @@
     </select>
   </div>
   <div class="form-section"><label class="f-lbl">Montant HT (MAD)</label><input id="av-montant" class="f-inp" type="number" placeholder="0.00" oninput="updateAvoirTotal()"></div>
-  <div class="form-section"><label class="f-lbl">TVA</label><select id="av-tva" class="f-inp" onchange="updateAvoirTotal()"><option value="20" selected>20 %</option><option value="14">14 %</option><option value="10">10 %</option><option value="7">7 %</option><option value="0">0 % (exonéré)</option></select></div>
+  <div class="form-section"><label class="f-lbl">TVA</label><select id="av-tva" class="f-inp" onchange="updateAvoirTotal()"><option value="20" selected>20 %</option><option value="14">14 % (ancien taux)</option><option value="10">10 %</option><option value="7">7 % (ancien taux)</option><option value="0">0 % (exonéré)</option></select></div>
   <div class="total-recap">
     <div class="tr-row"><span class="tr-lbl">Montant HT</span><span class="tr-val" id="av-total-ht">0 MAD</span></div>
     <div class="tr-row"><span class="tr-lbl">TVA</span><span class="tr-val" id="av-total-tva">0 MAD</span></div>
@@ -1988,9 +1988,9 @@
         <label class="f-lbl">Taux par d&#233;faut</label>
         <select id="param-tva-defaut" class="f-inp">
           <option value="0">0%</option>
-          <option value="7">7%</option>
+          <option value="7">7 % (ancien taux)</option>
           <option value="10">10%</option>
-          <option value="14">14%</option>
+          <option value="14">14 % (ancien taux)</option>
           <option value="20" selected>20%</option>
         </select>
         <label class="f-lbl" style="margin-top:10px">Assujetti &#224; la TVA</label>
@@ -2240,11 +2240,11 @@
     <label class="a-lbl">Prix unitaire HT (MAD)</label>
     <input class="m-inp" id="ml-pu" type="number" placeholder="0.00" step="0.01">
     <label class="a-lbl">TVA</label>
-    <select class="m-inp" id="ml-tva">
+    <select class="m-inp" id="ml-tva" onchange="avertirAncienTaux(this)">
       <option value="20" selected>20 %</option>
-      <option value="14">14 %</option>
+      <option value="14">14 % (ancien taux)</option>
       <option value="10">10 %</option>
-      <option value="7">7 %</option>
+      <option value="7">7 % (ancien taux)</option>
       <option value="0">0 % (exonéré)</option>
     </select>
     <button class="m-btn" onclick="confirmerLigne()">✓ Ajouter</button>
@@ -2273,8 +2273,8 @@
     <label class="a-lbl">Prix unitaire HT (MAD)</label>
     <input class="m-inp" id="mld-pu" type="number" placeholder="0.00" step="0.01">
     <label class="a-lbl">TVA</label>
-    <select class="m-inp" id="mld-tva">
-      <option value="20" selected>20 %</option><option value="14">14 %</option><option value="10">10 %</option><option value="7">7 %</option><option value="0">0 % (exonéré)</option>
+    <select class="m-inp" id="mld-tva" onchange="avertirAncienTaux(this)">
+      <option value="20" selected>20 %</option><option value="14">14 % (ancien taux)</option><option value="10">10 %</option><option value="7">7 % (ancien taux)</option><option value="0">0 % (exonéré)</option>
     </select>
     <button class="m-btn" onclick="confirmerLigneDevis()">✓ Ajouter</button>
     <button class="m-btn-sec" onclick="closeAllModals()">Annuler</button>

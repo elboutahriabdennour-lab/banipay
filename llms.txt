@@ -1,0 +1,19 @@
+# Tafir
+
+> Tafir est un outil en ligne pour créer des devis, des factures et des avoirs, pensé pour les petites entreprises marocaines, avec un accès direct pour leur expert-comptable.
+
+Pour qui : TPE, PME, indépendants et auto-entrepreneurs au Maroc, et leurs comptables.
+Prix : gratuit pour commencer.
+Fonctionnement : application web (téléphone et ordinateur), sans installation. Le comptable consulte et exporte les documents (PDF, CSV).
+Données : chaque entreprise ne voit que ses propres documents.
+Langue : français.
+Limites : Tafir n'est pas un cabinet juridique ni comptable.
+Site : https://tafir.fr
+
+## Pages importantes
+
+- [Accueil](https://tafir.fr/) : présentation du service
+- [Mentions obligatoires d'une facture au Maroc](https://tafir.fr/ressources/mentions-obligatoires-facture-maroc.html) : ICE, numérotation, TVA, conservation, avec sources officielles
+- [Calculateur de TVA au Maroc](https://tafir.fr/outils/calculateur-tva-maroc.html) : HT vers TTC et inversement
+- [À propos](https://tafir.fr/a-propos.html) : mission et limites
+- [Mentions légales](https://tafir.fr/legal.html) : CGU et confidentialité
