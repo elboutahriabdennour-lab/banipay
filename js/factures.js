@@ -851,6 +851,7 @@ function creerAvoirDepuisFacture(id) {
       sel.innerHTML = '<option value="">Sélectionner...</option>' +
         STATE.factures.map(fx => '<option value="' + fx.id + '"' + (fx.id===f.id?' selected':'') + '>' + escapeHTML(fx.ref) + ' — ' + escapeHTML(fx.client) + ' — ' + fmt(fx.ttc) + ' MAD</option>').join('');
     }
+    if (typeof _appliquerTauxFactureAvoir === 'function') _appliquerTauxFactureAvoir(f);
     updateAvoirTotal();
   }, 100);
   showToast('↩️ Avoir pré-rempli depuis ' + f.ref);
