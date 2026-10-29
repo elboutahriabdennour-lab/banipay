@@ -753,6 +753,7 @@ async function convertirFactureEnAchat(factureId) {
       pj_data: null,
     };
 
+    if (typeof trouverDoublonAchat === 'function') { const dd = trouverDoublonAchat(achat); if (dd && dd.niveau === 'certain') { showToast('⛔ Cette facture est déjà dans vos achats : ' + _adDescription(dd.achat), 'error'); return; } }
     const r = await sb.post('factures_achat', achat);
     if (r && r.length) {
       STATE.achats = STATE.achats || [];

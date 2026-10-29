@@ -258,6 +258,8 @@ async function sauvegarderClient() {
       conditions_paiement: el('cl-conditions')?.value.trim(),
       limite_credit: parseFloat(el('cl-limite')?.value)||null,
     };
+    const dc = typeof trouverDoublonClient === 'function' ? trouverDoublonClient(body.nom, body.ice) : null;
+    if (dc) { showToast('⛔ Ce client existe déjà : ' + dc.nom + (dc.ice ? ' (ICE ' + dc.ice + ')' : ''), 'error'); return; }
     const r = await sb.post('clients', body);
     if (r && r.length > 0) { STATE.clients.push(r[0]); } else { throw new Error("Erreur serveur"); }
     STATE.clients.sort((a,b)=>a.nom.localeCompare(b.nom));
@@ -547,6 +549,7 @@ async function importerClientsCSV(event) {
         notes: getVal(r, ['notes', 'note']),
       };
 
+      if (typeof trouverDoublonClient === 'function' && trouverDoublonClient(body.nom, body.ice)) { ignores++; continue; }
       try {
         const result = await sb.post('clients', body);
         if (result && result.length) { STATE.clients.push(result[0]); importes++; }

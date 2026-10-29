@@ -407,6 +407,7 @@ async function sauvegarderAchat() {
     created_at: new Date().toISOString()
   };
 
+  if (typeof _adControleAchat === 'function' && !(await _adControleAchat(achat))) return;
   try {
     showToast('\u23f3 Enregistrement...');
     const result = await sb.post('factures_achat', achat);
@@ -431,7 +432,7 @@ async function sauvegarderAchat() {
       renderAchats();
     }
   } catch(e) {
-    showToast('Erreur: ' + e.message, 'error');
+    showToast(/duplicate key|unique/i.test(e.message || '') ? '⛔ Cette facture est déjà enregistrée (même fournisseur et même numéro).' : 'Erreur: ' + e.message, 'error');
   }
 }
 

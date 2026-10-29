@@ -735,6 +735,8 @@ async function uploadReleve(event) {
   const banque = (el('releve-banque')?.value || '').trim() || 'Banque';
   const uid = STATE.entrepriseId || sb.user?.id;
   if (!uid) return;
+  const dr = typeof trouverDoublonReleve === 'function' ? trouverDoublonReleve(file, banque, mois, annee) : null;
+  if (dr && !confirm('⚠️ Un relevé semblable existe déjà : ' + (dr.nom_fichier || '') + ' (' + (dr.banque || '') + ' ' + dr.mois + '/' + dr.annee + ').\n\nEnvoyer quand même ?')) { event.target.value = ''; return; }
   showToast('\u23f3 Upload en cours...');
   try {
     const reader = new FileReader();
