@@ -265,3 +265,17 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 .mf-mini-doc i{display:block;height:14px}
 .mf-mini-doc b{display:block;height:6px;margin:0 5px}
 .mf-mini-doc u{display:block;height:8px;margin:auto 5px 0 18px;text-decoration:none}
+
+/* ===== Menu du compte (avatar) + déconnexion ===== */
+#menu-compte{position:fixed;top:58px;right:12px;width:min(280px,calc(100vw - 24px));background:#fff;border:1px solid var(--border,#DDE3DA);border-radius:16px;box-shadow:0 14px 40px rgba(15,31,26,.22);z-index:300;overflow:hidden}
+#menu-compte .mc-tete{padding:14px 16px;border-bottom:1px solid var(--border,#DDE3DA);background:#F5F6F1}
+#menu-compte .mc-nom{font-weight:700;font-size:14px;color:#0F1F1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#menu-compte .mc-mail{font-size:12px;color:#5B6B64;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#menu-compte .mc-item{display:block;width:100%;text-align:left;padding:13px 16px;background:none;border:0;border-bottom:1px solid #EEF1EA;font-size:14px;font-weight:600;font-family:inherit;color:#0F1F1A;text-decoration:none;cursor:pointer}
+#menu-compte .mc-item:hover{background:#F5F6F1}
+#menu-compte .mc-deco{color:#B23A2E;border-bottom:0}
+@media (min-width:1000px){#menu-compte .mc-mobile{display:none}}
+.nav-deco .nav-lbl,.nav-deco .ic{color:#B23A2E}
+.param-deco{margin:14px 0 6px;text-align:center}
+.param-deco-btn{background:none;border:1.5px solid #E5C4BF;color:#B23A2E;font-size:14px;font-weight:600;font-family:inherit;padding:11px 22px;border-radius:12px;cursor:pointer}
+@media (min-width:1000px){.param-deco{display:none}}

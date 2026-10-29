@@ -41,7 +41,7 @@
       <div class="t-icon" onclick="ouvrirMessagerie()" style="position:relative">💬<span id="msg-badge" style="position:absolute;top:-2px;right:-2px;background:#B23A2E;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;display:none;align-items:center;justify-content:center"></span></div>
       <div class="t-icon" onclick="toggleNotifDropdown(event)" style="position:relative">🔔<span id="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:#B23A2E;border-radius:50%"></span></div>
       <div class="t-icon" onclick="goScreen('recherche',null)">🔍</div>
-      <div class="t-avatar" id="user-avatar" onclick="goScreen('profil',null)">AB</div>
+      <div class="t-avatar" id="user-avatar" onclick="ouvrirMenuCompte(event)" role="button" aria-label="Mon compte">AB</div>
     </div>
   </div>
   <div class="dash-hello"><div class="dash-hi" id="dash-hi">Bonjour</div><div class="dash-sub">Voici l'état de vos factures.</div></div>
@@ -216,6 +216,7 @@
   <script src="js/auth.js?v=1789327380"></script>
 <script src="js/auth-google.js?v=1"></script>
 <script src="js/modele-facture.js?v=1"></script>
+<script src="js/menu-compte.js?v=1"></script>
   <script src="js/nav.js?v=1789327380"></script>
   <script src="js/marche.js?v=1789327380"></script>
   <script src="js/contrats.js?v=1789327380"></script>
@@ -2129,6 +2130,7 @@
       </div>
     </div>
     <div class="param-save-barre"><button class="s-btn blue full param-save" onclick="sauvegarderParametres()">&#128190; Sauvegarder les param&#232;tres</button></div>
+    <div class="param-deco"><button class="param-deco-btn" onclick="doLogout()">Se d&#233;connecter</button></div>
   </div>
   <div class="pb"></div>
 </div>
@@ -3216,6 +3218,7 @@
   <div class="nav-item nav-desk" id="nav-tva" onclick="goScreen('tva',null)"><i class="ic ic-calculator nav-ico"></i><div class="nav-lbl">TVA</div></div>
   <div class="nav-grow nav-desk"></div>
   <div class="nav-item nav-desk" id="nav-parametres" onclick="goScreen('parametres',null)"><i class="ic ic-settings nav-ico"></i><div class="nav-lbl">Paramètres</div></div>
+  <div class="nav-item nav-desk nav-deco" id="nav-deconnexion" onclick="doLogout()"><i class="ic ic-log-out nav-ico"></i><div class="nav-lbl">Se déconnecter</div></div>
   <div class="nav-item nav-desk nav-toggle" id="nav-toggle" onclick="basculerMenu()"><i class="ic ic-arrow-left nav-ico"></i><div class="nav-lbl">Réduire le menu</div></div>
 </nav>
 <div id="sheet-nouveau" onclick="if(event.target===this)_fermerMenuNouveau()">
