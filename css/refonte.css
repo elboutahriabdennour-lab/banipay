@@ -295,3 +295,10 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 /* Entrées de test (Achats, Relevés) : visibles seulement quand le mode « complet » est activé sur l'appareil */
 .nav-test{display:none!important}
 @media (min-width:1000px){body[data-mode="complet"] .nav-test{display:flex!important}}
+
+/* Titre d'en-tête des formulaires : blanc sur la barre sombre (il était illisible) */
+.form-header .form-title{color:#fff}
+/* Ordinateur : les blocs à marges écrites dans le HTML restent alignés avec le reste du formulaire */
+@media (min-width:1000px){
+  .screen>div[style*="margin:"][style*="20px"]:not([style*="position:fixed"]):not(.modal-overlay){margin-left:auto!important;margin-right:auto!important;box-sizing:border-box;width:min(840px,calc(100% - 40px))}
+}

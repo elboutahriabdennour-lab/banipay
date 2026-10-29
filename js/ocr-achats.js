@@ -60,6 +60,9 @@ async function _lireFactureTesseract(imageDataUrl) {
     if (suggestions.date && el('achat-date') && !el('achat-date').value) {
       el('achat-date').value = suggestions.date;
     }
+    if (suggestions.reference && el('achat-ref') && !el('achat-ref').value) {
+      el('achat-ref').value = suggestions.reference;
+    }
     // FIX (retour utilisateur) : le montant — le champ le plus risqué en
     // cas d'erreur de lecture (une virgule mal interprétée peut
     // transformer 1250 en 12,50 sans que rien ne l'indique) — était
@@ -69,9 +72,9 @@ async function _lireFactureTesseract(imageDataUrl) {
     // risque bien moindre qu'un montant faux), mais le montant demande
     // désormais une confirmation explicite avant d'être ajouté.
     if (suggestions.montantTTC && !STATE.lignesAchat.length) {
-      const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nAjouter une ligne avec ce montant ? Vérifiez-le bien avant de confirmer.');
+      const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nTotal TTC. Ajouter une ligne (montant converti en HT avec la TVA choisie) ? Vérifiez-le bien avant de confirmer.');
       if (confirme) {
-        STATE.lignesAchat.push({ desc: 'Ligne suggérée par lecture automatique (à vérifier)', qte: 1, pu: suggestions.montantTTC, unite: 'u', produit_id: null });
+        STATE.lignesAchat.push({ desc: 'Montant lu (TTC ' + suggestions.montantTTC.toFixed(2) + ' converti en HT) — à vérifier', qte: 1, pu: _htDepuisTTC(suggestions.montantTTC), unite: 'u', produit_id: null });
         if (typeof renderLignesAchat === 'function') renderLignesAchat();
       }
     }
@@ -145,12 +148,15 @@ async function _lireFacturePDFLocal(pdfDataUrl) {
     if (suggestions.date && el('achat-date') && !el('achat-date').value) {
       el('achat-date').value = suggestions.date;
     }
+    if (suggestions.reference && el('achat-ref') && !el('achat-ref').value) {
+      el('achat-ref').value = suggestions.reference;
+    }
     // FIX (retour utilisateur) : même correctif que pour la lecture par
     // photo — voir le commentaire détaillé dans lireFactureParOCR().
     if (suggestions.montantTTC && !STATE.lignesAchat.length) {
-      const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nAjouter une ligne avec ce montant ? Vérifiez-le bien avant de confirmer.');
+      const confirme = confirm('Montant détecté par la lecture automatique : ' + suggestions.montantTTC.toFixed(2) + ' MAD\n\nTotal TTC. Ajouter une ligne (montant converti en HT avec la TVA choisie) ? Vérifiez-le bien avant de confirmer.');
       if (confirme) {
-        STATE.lignesAchat.push({ desc: 'Ligne suggérée par lecture automatique du PDF (à vérifier)', qte: 1, pu: suggestions.montantTTC, unite: 'u', produit_id: null });
+        STATE.lignesAchat.push({ desc: 'Montant lu (TTC ' + suggestions.montantTTC.toFixed(2) + ' converti en HT) — à vérifier', qte: 1, pu: _htDepuisTTC(suggestions.montantTTC), unite: 'u', produit_id: null });
         if (typeof renderLignesAchat === 'function') renderLignesAchat();
       }
     }
@@ -162,8 +168,15 @@ async function _lireFacturePDFLocal(pdfDataUrl) {
     }
   }
 }
+function _htDepuisTTC(ttc) {
+  var taux = 20;
+  try { taux = parseFloat(el('achat-tva-taux').value); if (isNaN(taux)) taux = 20; } catch (e) {}
+  return Math.round(ttc / (1 + taux / 100) * 100) / 100;
+}
 function _extraireSuggestionsFacture(texte) {
-  const suggestions = { fournisseur: null, date: null, montantTTC: null };
+  const suggestions = { fournisseur: null, date: null, montantTTC: null, reference: null };
+  const mRef = texte.match(/N[°o˚º]\s*[:.]?\s*([A-Z0-9][A-Z0-9\-\/_.]{2,24})/);
+  if (mRef && /\d/.test(mRef[1])) suggestions.reference = mRef[1];
   const matchDate = texte.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if (matchDate) {
     const j = matchDate[1].padStart(2,'0'), m = matchDate[2].padStart(2,'0'), a = matchDate[3];
@@ -187,7 +200,7 @@ function _extraireSuggestionsFacture(texte) {
   for (const ligne of lignes.slice(0, 8)) {
     if (motsTitreAExclure.test(ligne)) continue;
     if (/[a-zA-ZÀ-ÿ]{3,}/.test(ligne) && !/^\d+$/.test(ligne) && ligne.length < 60) {
-      suggestions.fournisseur = ligne;
+      suggestions.fournisseur = ligne.replace(/\s+(FACTURE|DEVIS|INVOICE|RE[CÇ]U)\s*$/i, '').trim();
       break;
     }
   }
