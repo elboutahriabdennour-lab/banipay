@@ -291,3 +291,7 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 .dictee-ok{background:#1B5E4B;color:#fff;flex:1}
 .dictee-ok:disabled{opacity:.6}
 .dictee-note{font-size:12px;color:#5B6B64;margin-top:8px;line-height:1.5}
+
+/* Entrées de test (Achats, Relevés) : visibles seulement quand le mode « complet » est activé sur l'appareil */
+.nav-test{display:none!important}
+@media (min-width:1000px){body[data-mode="complet"] .nav-test{display:flex!important}}

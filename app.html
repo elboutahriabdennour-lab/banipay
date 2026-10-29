@@ -3226,6 +3226,8 @@
   <div class="nav-item nav-desk" id="nav-brouillons" onclick="goScreen('brouillons',null)"><i class="ic ic-file-stack nav-ico"></i><div class="nav-lbl">Brouillons</div></div>
   <div class="nav-item nav-desk" id="nav-paiements" onclick="goScreen('historique-paiements',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Paiements</div></div>
   <div class="nav-item nav-desk" id="nav-tva" onclick="goScreen('tva',null)"><i class="ic ic-calculator nav-ico"></i><div class="nav-lbl">TVA</div></div>
+  <div class="nav-item nav-desk nav-test" id="nav-achats" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><i class="ic ic-shopping-cart nav-ico"></i><div class="nav-lbl">Achats</div></div>
+  <div class="nav-item nav-desk nav-test" id="nav-releves" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Relevés</div></div>
   <div class="nav-grow nav-desk"></div>
   <div class="nav-item nav-desk" id="nav-parametres" onclick="goScreen('parametres',null)"><i class="ic ic-settings nav-ico"></i><div class="nav-lbl">Paramètres</div></div>
   <div class="nav-item nav-desk nav-deco" id="nav-deconnexion" onclick="doLogout()"><i class="ic ic-log-out nav-ico"></i><div class="nav-lbl">Se déconnecter</div></div>

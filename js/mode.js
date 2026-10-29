@@ -31,7 +31,7 @@ function ecranAutorise(name) {
 
 // Masque tout raccourci (bouton, tuile, ligne) dont le clic mène vers un écran hors périmètre.
 function appliquerMode() {
-  if (!modeFacturation()) return;
+  if (!modeFacturation()) { document.body.setAttribute('data-mode', 'complet'); return; }
   var re = /goScreen\(\s*['"]([a-z0-9-]+)['"]/g;
   document.querySelectorAll('[onclick]').forEach(function (e) {
     var oc = e.getAttribute('onclick') || '', m, cibles = [];
