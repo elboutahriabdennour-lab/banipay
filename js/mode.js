@@ -2,6 +2,18 @@
 // Pour remettre toute l'application : mettre MODE_ZELTO = 'complet' (rien n'est supprimé, seulement masqué).
 var MODE_ZELTO = 'facturation';
 
+// Interrupteur de TEST, valable seulement sur l'appareil où on l'active (rien ne change pour les autres utilisateurs) :
+//   ouvrir  app.html?mode_test=complet  -> montre tous les modules (achats, relevés...) sur cet appareil
+//   ouvrir  app.html?mode_test=off      -> revient à « facturation seule »
+(function () {
+  try {
+    var q = new URLSearchParams(location.search).get('mode_test');
+    if (q === 'complet') localStorage.setItem('tafir_mode_test', 'complet');
+    if (q === 'off') localStorage.removeItem('tafir_mode_test');
+    if (localStorage.getItem('tafir_mode_test') === 'complet') MODE_ZELTO = 'complet';
+  } catch (e) {}
+})();
+
 var ECRANS_FACTURATION = ['dashboard','mes-factures','nouvelle','detail','historique-paiements','acomptes','brouillons',
   'avoir','avoir-list','devis-list','nouveau-devis','detail-devis','clients','nouveau-client','detail-client','modifier-client',
   'produits','nouveau-produit','modifier-produit','tva','recherche','profil','parametres','modele-facture','audit',
