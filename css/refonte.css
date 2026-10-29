@@ -239,11 +239,11 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 .param-nav button{flex:none;border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:8px 16px;font:600 13px 'Inter',sans-serif;color:var(--ink);cursor:pointer}
 .param-g{padding-left:0!important;margin-top:18px;scroll-margin-top:56px}
 
-@media (min-width:1000px){.param-save-barre{bottom:0!important}.mf-barre{bottom:0!important}#screen-parametres>div[style*="padding:0 20px"]{max-width:760px}}
+@media (min-width:1000px){#screen-parametres>div[style*="padding:0 20px"]{max-width:760px}}
 
-.param-save-barre{position:sticky;bottom:78px;z-index:5;background:var(--paper);padding:10px 0;margin:6px 0 10px;border-top:1px solid var(--border)}
+.param-save-barre{position:static;padding:6px 0;margin:6px 0 24px}
 .param-save{width:100%;margin:0}
-.mf-barre{position:sticky;bottom:78px;z-index:5;background:var(--paper);padding:10px 0;border-top:1px solid var(--border)}
+.mf-barre{position:static;padding:6px 0 24px}
 .topbar-save{margin-left:12px;border:0;border-radius:10px;background:var(--safran);color:#fff;font:700 13px 'Inter',sans-serif;padding:8px 14px;cursor:pointer;white-space:nowrap}
 .topbar-save:active{opacity:.85}
 .mf-coul{padding:8px 0}
@@ -254,3 +254,14 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
 .mf-auto.on{background:var(--ink);border-color:var(--ink);color:#fff}
 #screen-parametres .topbar-brand,#screen-modele-facture .topbar-brand{flex:none!important}
 .topbar-save{margin-right:auto}
+
+/* Suggestions de modèles d'après le logo */
+.mf-logo-coul{display:flex;gap:8px;align-items:center;margin-bottom:12px;font-size:12px;color:var(--ink-soft)}
+.mf-logo-coul i{width:22px;height:22px;border-radius:50%;box-shadow:0 0 0 1.5px var(--border);display:inline-block}
+.mf-sugs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mf-sug{display:flex;gap:10px;align-items:center;text-align:left;border:1.5px solid var(--border);background:#fff;border-radius:12px;padding:10px;cursor:pointer;font:600 13px 'Inter',sans-serif;color:var(--ink)}
+.mf-sug:hover{border-color:var(--ink)}
+.mf-mini-doc{flex:none;width:44px;height:58px;border-radius:5px;box-shadow:0 0 0 1px var(--border);display:flex;flex-direction:column;gap:4px;padding:0 0 5px;overflow:hidden}
+.mf-mini-doc i{display:block;height:14px}
+.mf-mini-doc b{display:block;height:6px;margin:0 5px}
+.mf-mini-doc u{display:block;height:8px;margin:auto 5px 0 18px;text-decoration:none}
