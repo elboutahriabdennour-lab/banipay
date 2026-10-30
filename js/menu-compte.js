@@ -24,6 +24,9 @@ function ouvrirMenuCompte(event) {
     '<button class="mc-item mc-mobile" role="menuitem" onclick="_mcAller(\'parametres\')">Param\u00e8tres</button>' +
     '<button class="mc-item" role="menuitem" onclick="window._retourSupport=\'dashboard\';_mcAller(\'support\')">Support</button>' +
     '<a class="mc-item" role="menuitem" href="legal.html" target="_blank" rel="noopener">Mentions l\u00e9gales</a>' +
+    (typeof _testActif === 'function' && _testActif() ?
+      '<button class="mc-item" role="menuitem" onclick="fermerMenuCompte();creerDonneesTest()">\ud83e\uddea Cr\u00e9er l\u2019entreprise de test</button>' +
+      '<button class="mc-item" role="menuitem" onclick="fermerMenuCompte();supprimerDonneesTest()">\ud83e\uddf9 Supprimer les donn\u00e9es de test</button>' : '') +
     '<button class="mc-item mc-deco" role="menuitem" onclick="fermerMenuCompte();doLogout()">Se d\u00e9connecter</button>';
   m.querySelector('.mc-nom').textContent = nom;
   m.querySelector('.mc-mail').textContent = email;
