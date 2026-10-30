@@ -1,0 +1,12 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Elboutahri;Abdennour;;;
+FN:Abdennour Elboutahri
+ORG:Piwy
+TITLE:Fondateur
+TEL;TYPE=CELL:+33751484291
+TEL;TYPE=CELL:+212643655520
+EMAIL;TYPE=WORK:contact@piwy.fr
+URL:https://piwy.fr
+NOTE:Piwy met en relation voyageurs et expéditeurs entre la France et le Maroc.
+END:VCARD
