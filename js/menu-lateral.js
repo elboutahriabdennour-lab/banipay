@@ -19,6 +19,7 @@ var TAFIR_MODULES = [
   { id: 'paiements', groupe: 'Facturation', libelle: 'Paiements', icone: 'banknote', ecran: 'historique-paiements' },
   { id: 'clients', groupe: 'Gestion', libelle: 'Clients', icone: 'users', ecran: 'clients' },
   { id: 'produits', groupe: 'Gestion', libelle: 'Produits', icone: 'package', ecran: 'produits' },
+  { id: 'stats', groupe: 'Gestion', libelle: 'Statistiques', icone: 'chart-column', ecran: 'stats' },
   { id: 'tva', groupe: 'Gestion', libelle: 'TVA', icone: 'calculator', ecran: 'tva' },
   { id: 'achats', groupe: 'Dépenses', libelle: 'Achats', icone: 'shopping-cart', complet: true, action: function () { loadAchats(); renderHubAchats(); goScreen('hub-achats', null); } },
   { id: 'releves', groupe: 'Dépenses', libelle: 'Relevés bancaires', icone: 'banknote', complet: true, action: function () { window._retourReleves = 'dashboard'; loadReleves(); goScreen('releves', null); } },
