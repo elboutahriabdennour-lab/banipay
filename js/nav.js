@@ -689,6 +689,7 @@ function goScreen(name, options) {
     'nouveau-produit': _safe(typeof initNouveauProduit!=='undefined'?initNouveauProduit:undefined,'initNouveauProduit'),
     'modifier-produit': function() {},
     'stats': function() { if (typeof renderStats==='function') renderStats(); if (typeof renderStatsDashboard==='function') renderStatsDashboard(); if (typeof verifierRappels==='function') verifierRappels(); if (typeof renderRapportMargeChantiers==='function') renderRapportMargeChantiers(); },
+    'rapports': function() { if (typeof renderRapports === 'function') renderRapports(); },
     'tva': _safe(typeof renderTVA!=='undefined'?renderTVA:undefined,'renderTVA'),
     'position-financiere': _safe(typeof renderPositionFinanciere!=='undefined'?renderPositionFinanciere:undefined,'renderPositionFinanciere'),
     'tresorerie': _safe(typeof renderTresorerie!=='undefined'?renderTresorerie:undefined,'renderTresorerie'),

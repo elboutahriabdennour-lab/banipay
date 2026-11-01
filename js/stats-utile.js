@@ -104,14 +104,20 @@
     f.forEach(function (x) { if (x.statut === 'payee') cnt.payee++; else if (enRetard.indexOf(x) >= 0) cnt.retard++; else cnt.attente++; });
     var hStat = '<div class="su-stat"><div style="background:#EEF3E4;color:#4F6B33"><b>' + cnt.payee + '</b>Payées</div><div style="background:#F7EFDC;color:#8A6508"><b>' + cnt.attente + '</b>En attente</div><div style="background:#F5E4E1;color:#B23A2E"><b>' + cnt.retard + '</b>En retard</div></div>';
 
+    var lienRap = '<div class="su-rap" onclick="goScreen(\'rapports\',null)"><b>📐 Créer mon propre rapport</b><span>Choisissez ce que vous voulez calculer (par client, par mois, par produit…) et enregistrez-le.</span></div>';
     var vide = !f.length ? '<div class="su-info">Aucune facture sur cette période. Changez la période ci-dessus, ou créez votre première facture.</div>' : '';
-    zone.innerHTML = vide + '<div class="su-kpis">' + kpis + '</div>' + alerteDep +
+    var A = (typeof analyserPaiements === 'function') ? analyserPaiements() : null;
+    zone.innerHTML = vide + (A ? htmlAlertesPaiement(A) : '') + '<div class="su-kpis">' + kpis + '</div>' + (A ? htmlDelaisPaiement(A) : '') + alerteDep + lienRap +
       '<div class="su-cols">' +
         '<div class="su-bloc su-large"><h3>CA par mois <small>12 derniers mois</small></h3>' + hMois + '</div>' +
         '<div class="su-bloc"><h3>Répartition des factures</h3>' + hStat + '<h3 style="margin-top:18px">TVA collectée par taux</h3>' + hTva + '</div>' +
         '<div class="su-bloc"><h3>À relancer <small>' + enRetard.length + ' en retard · ' + _m(montantRetard) + ' MAD</small></h3>' + hRelance + '</div>' +
         '<div class="su-bloc"><h3>À encaisser sous 30 jours <small>' + _m(totBientot) + ' MAD</small></h3>' + hBientot + '</div>' +
         '<div class="su-bloc su-large"><h3>Meilleurs clients</h3>' + hTop + '</div>' +
+        (A && A.clients.length ? '<div class="su-bloc su-large"><h3>Délai de paiement par client <small>factures soldées</small></h3>' + A.clients.slice().sort(function (a, b) { return (b.retard || 0) - (a.retard || 0); }).slice(0, 8).map(function (c) {
+          var r = c.retard == null ? null : Math.round(c.retard);
+          return '<div class="su-ligne"><div><b>' + _e(c.nom) + '</b><span>' + c.n + ' facture' + (c.n > 1 ? 's' : '') + ' payée' + (c.n > 1 ? 's' : '') + ' · paie en ' + Math.round(c.delai) + ' j en moyenne</span></div><strong style="color:' + (r > 0 ? '#B23A2E' : '#2F7A4D') + '">' + (r == null ? '—' : (r > 0 ? '+' : '') + r + ' j') + '</strong></div>';
+        }).join('') + '</div>' : '') +
       '</div>';
   };
 

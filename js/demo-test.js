@@ -62,6 +62,10 @@ async function creerDonneesTest() {
         paiement: 'virement', note: 'Donnée de test', statut: f.st, ht: t.ht, tva: t.tva, ttc: t.ttc, lignes: f.l, devise: 'MAD',
         montant_recu: f.recu === 'tout' ? t.ttc : f.recu });
       idsFactures[k] = r && r[0];
+      if (r && r[0] && f.recu) {   // un paiement daté, pour que les délais de paiement se calculent
+        var m = f.recu === 'tout' ? t.ttc : f.recu;
+        await sb.post('paiements', { user_id: uid, facture_id: r[0].id, montant: m, date: _tj(f.j + (k === 0 ? 38 : k === 4 ? 6 : 20)), mode: 'virement' });
+      }
     }; })(factures[i], i));
   }
   var devis = [['Karim Trading', [_tl('Peinture murale 20 L', 6, 450, 20)]], ['Atlas Distribution', [_tl('Ciment CPJ 45', 100, 80, 20, 'sac'), _tl('Transport local', 1, 200, 0)]]];
