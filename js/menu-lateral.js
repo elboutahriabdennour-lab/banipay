@@ -97,8 +97,11 @@ function _injecterBoutonsMenu() {
     var b = document.createElement('button');
     b.type = 'button'; b.className = 't-burger-tous' + (flottant ? ' t-burger-abs' : ''); b.setAttribute('aria-label', 'Menu'); b.innerHTML = '&#9776;';
     b.onclick = ouvrirMenuLateral;
-    if (flottant) tete.style.position = 'relative';
-    tete.appendChild(b);
+    if (flottant) {
+      tete.style.position = 'relative';
+      if (tete.firstElementChild) tete.firstElementChild.style.paddingLeft = '48px';
+      tete.appendChild(b);
+    } else tete.insertBefore(b, tete.firstChild);   // ☰ tout à gauche
   });
 }
 document.addEventListener('DOMContentLoaded', _injecterBoutonsMenu);

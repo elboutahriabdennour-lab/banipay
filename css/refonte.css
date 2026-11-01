@@ -392,3 +392,15 @@ body[data-mode="complet"] #menu-compte .mc-complet{display:block}
 .detail-top .t-burger-tous,.form-header .t-burger-tous{background:rgba(255,255,255,.16)}
 @media (min-width:1000px){.t-burger-tous{display:none!important}}
 .t-burger-abs{position:absolute;top:12px;right:14px;margin-left:0;z-index:5}
+
+/* ☰ à GAUCHE */
+.t-burger-tous{margin-left:0;margin-right:10px}
+.t-burger-abs{left:14px;right:auto;margin-right:0}
+.dash-top .t-burger{margin-right:10px;flex-shrink:0}
+.dash-top .topbar-brand{margin-right:auto}
+/* Plus de bande vide sous la barre du bas (téléphone) : la barre est prolongée vers le bas */
+@media (max-width:999px){
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0}
+  .bottom-nav::after{content:"";position:absolute;left:0;right:0;top:100%;height:160px;background:inherit;backdrop-filter:inherit;-webkit-backdrop-filter:inherit}
+  html,body{min-height:100%;min-height:-webkit-fill-available}
+}
