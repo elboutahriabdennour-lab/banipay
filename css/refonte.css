@@ -354,3 +354,13 @@ select.form-input,select.f-inp{background-image:url("data:image/svg+xml,%3Csvg x
   #detail-apercu .da-cadre{overflow:hidden;border:1px solid #EAE4DA;border-radius:8px;width:100%}
 }
 @media (min-width:1000px){#screen-detail>.detail-top{max-width:none!important;width:100%!important;margin:0!important;box-sizing:border-box;padding-left:32px;padding-right:32px}}
+
+/* Mobile : fiches « Achat » visibles seulement en mode complet ; bouton + des achats au-dessus de la barre */
+.nav-test-sheet,#menu-compte .mc-complet{display:none}
+body[data-mode="complet"] .nav-test-sheet{display:flex}
+body[data-mode="complet"] #menu-compte .mc-complet{display:block}
+#screen-achats .fab,#screen-hub-achats .fab{bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+@media (min-width:1000px){#screen-achats .fab{bottom:24px!important}}
+.dictee-langue{font-family:inherit;font-size:14px;border-radius:12px;padding:10px;border:1.5px solid #1B5E4B;background:#fff;margin-right:8px}
+.dictee-actions{flex-wrap:wrap}
+@media (min-width:1000px){body[data-mode="complet"] #menu-compte .mc-mobile{display:none}}

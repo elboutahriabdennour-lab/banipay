@@ -954,6 +954,7 @@
     <label class="f-lbl" for="dictee-texte">Dictez votre facture <span class="dictee-bete">assistant IA</span></label>
     <textarea id="dictee-texte" class="f-inp" rows="2" maxlength="600" placeholder="Exemple : facture pour Karim, 3 chaises à 250 dirhams et 1 table à 900"></textarea>
     <div class="dictee-actions">
+      <select id="dictee-langue" class="dictee-langue" onchange="_dicteeChoisirLangue(this.value)" aria-label="Langue de la dictée"><option value="fr-FR">Français</option><option value="ar-MA">Arabe / Darija (Maroc)</option><option value="ar-SA">العربية (arabe standard)</option><option value="en-US">English</option></select>
       <button type="button" class="dictee-mic" id="dictee-mic" onclick="dicterFacture()">&#127908; Dicter</button>
       <button type="button" class="dictee-ok" id="dictee-ok" onclick="remplirFactureParIA()">Remplir la facture</button>
     </div>
@@ -3239,6 +3240,7 @@
     <div class="sheet-it" onclick="_allerCreer('nouveau-devis')"><div class="sheet-ico" style="background:var(--zellige-light)">📝</div><div><div class="sheet-n">Devis</div><div class="sheet-d">Proposer un prix avant de facturer</div></div></div>
     <div class="sheet-it" onclick="_allerCreer('nouveau-client')"><div class="sheet-ico" style="background:var(--plum-light)">👥</div><div><div class="sheet-n">Client</div><div class="sheet-d">Ajouter une fiche client</div></div></div>
     <div class="sheet-it" onclick="_allerCreer('avoir')"><div class="sheet-ico" style="background:var(--sauge-light)">↩️</div><div><div class="sheet-n">Avoir</div><div class="sheet-d">Corriger ou annuler une facture</div></div></div>
+    <div class="sheet-it nav-test-sheet" onclick="_allerCreerAchat()"><div class="sheet-ico" style="background:#F6E3E0">🛒</div><div><div class="sheet-n">Achat</div><div class="sheet-d">Enregistrer une facture fournisseur</div></div></div>
   </div>
 </div>
 <script src="js/brand.js?v=1"></script>

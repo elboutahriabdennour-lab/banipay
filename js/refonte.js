@@ -7,6 +7,12 @@ function _allerCreer(ecran) {
   goScreen(ecran, null);
 }
 
+function _allerCreerAchat() {
+  _fermerMenuNouveau();
+  try { STATE.lignesAchat = []; window._achatFactureLieeId = null; STATE._achatPJData = null; STATE._achatPJNom = null; var pv = document.getElementById('achat-pj-preview'); if (pv) pv.innerHTML = ''; } catch (e) {}
+  goScreen('nouvelle-achat', null);
+}
+
 function _statutLibelle(s) {
   return ({ payee: 'Payée', attente: 'En attente', envoyee: 'Envoyée', retard: 'En retard', brouillon: 'Brouillon', annulee: 'Annulée' })[s] || (s || '');
 }

@@ -28,6 +28,24 @@ function _trouverClient(nom) {
   return proches.length === 1 ? proches[0] : null;
 }
 
+function _dicteeLangue() {
+  var sel = document.getElementById('dictee-langue');
+  var l = sel ? sel.value : '';
+  if (!l) { try { l = localStorage.getItem('tafir_dictee_langue') || ''; } catch (e) {} }
+  return l || 'fr-FR';
+}
+function _dicteeChoisirLangue(l) {
+  try { localStorage.setItem('tafir_dictee_langue', l); } catch (e) {}
+  if (_dicteeEnCours && _dicteeReco) { _dicteeVeutArreter = true; try { _dicteeReco.stop(); } catch (e) {} }
+  var z = document.getElementById('dictee-texte');
+  if (z) z.dir = (l.indexOf('ar') === 0) ? 'rtl' : 'auto';
+  _dicteeNote(l.indexOf('ar') === 0 ? 'Si le micro ne comprend pas l’arabe, utilisez le micro de votre clavier (touche micro du téléphone) dans la case ci-dessous.' : '');
+}
+function _dicteeInitLangue() {
+  var sel = document.getElementById('dictee-langue'); if (!sel) return;
+  var l = ''; try { l = localStorage.getItem('tafir_dictee_langue') || ''; } catch (e) {}
+  if (l) sel.value = l;
+}
 var _dicteeVeutArreter = false, _dicteeFatal = false, _dicteeFinal = '', _dicteeDebut = 0;
 function dicterFacture() {
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -36,11 +54,12 @@ function dicterFacture() {
   var btn = document.getElementById('dictee-mic');
   // Un second clic arrête la dictée (elle ne s'arrête plus toute seule au moindre silence).
   if (_dicteeEnCours && _dicteeReco) { _dicteeVeutArreter = true; try { _dicteeReco.stop(); } catch (e) {} return; }
+  _dicteeInitLangue();
   var base = zone ? zone.value.trim() : '';
   _dicteeVeutArreter = false; _dicteeFatal = false; _dicteeFinal = ''; _dicteeDebut = Date.now();
   function lancer() {
     _dicteeReco = new SR();
-    _dicteeReco.lang = 'fr-FR';
+    _dicteeReco.lang = _dicteeLangue();
     _dicteeReco.interimResults = true;
     _dicteeReco.continuous = true;
     _dicteeReco.onstart = function () { _dicteeEnCours = true; if (btn) { btn.textContent = '⏹ Arrêter'; btn.classList.add('actif'); } _dicteeNote('Je vous écoute… Cliquez sur « Arrêter » quand vous avez fini.'); };
