@@ -410,3 +410,51 @@ body[data-mode="complet"] #menu-compte .mc-complet{display:block}
   html{background:#fff}
   .bottom-nav{background:#fff}
 }
+
+/* ── Statistiques : vue d'ensemble utile ── */
+#su-ens{padding:0 20px 24px}
+.su-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.su-kpi{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px}
+.su-kpi-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7A8A83}
+.su-kpi-v{font-size:20px;font-weight:800;margin-top:6px;word-break:break-word}
+.su-kpi-s{font-size:11px;color:#7A8A83;margin-top:3px}
+.su-cols{display:grid;grid-template-columns:1fr;gap:12px}
+.su-bloc{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px}
+.su-bloc h3{font-size:14px;font-weight:800;margin:0 0 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.su-bloc h3 small{font-size:11px;font-weight:600;color:#7A8A83}
+.su-ligne{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #F0F2EC;cursor:pointer;font-size:13px}
+.su-ligne:last-child{border-bottom:0}.su-ligne:hover{background:#F8F9F5}
+.su-ligne div{display:flex;flex-direction:column;min-width:0}.su-ligne span{font-size:11px;color:#7A8A83}
+.su-ligne b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.su-vide{font-size:12px;color:#7A8A83;padding:12px 0}
+.su-info{background:#FBF1DC;color:#7A5A06;border-radius:12px;padding:12px 14px;font-size:13px;margin-bottom:12px}
+.su-barre{margin-bottom:12px}.su-barre-t{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:4px}
+.su-barre-t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.su-barre-t i{font-style:normal;color:#7A8A83;font-weight:600;margin-left:4px}
+.su-piste{height:8px;background:#EEF1EA;border-radius:5px}.su-piste div{height:100%;background:#1B5E4B;border-radius:5px}
+.su-mois{display:flex;align-items:flex-end;gap:4px;height:170px}
+.su-mcol{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;min-width:0}
+.su-mbar{flex:1;width:100%;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.su-mfac,.su-menc{width:42%;border-radius:4px 4px 0 0;min-height:2px}.su-mfac{background:#1B5E4B}.su-menc{background:#9CBB7A}
+.su-mlib{font-size:10px;color:#7A8A83;margin-top:5px;text-transform:capitalize}
+.su-legende{display:flex;gap:16px;font-size:11px;color:#5B6B64;margin-top:10px}.su-legende i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.su-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.su-stat div{border-radius:12px;padding:12px 6px;text-align:center;font-size:11px;font-weight:600}.su-stat b{display:block;font-size:22px;font-weight:800}
+@media (min-width:1000px){
+  #screen-stats>*:not(.topbar):not([style*="position:fixed"]){max-width:1180px!important}
+  .su-kpis{grid-template-columns:repeat(6,1fr)}
+  .su-kpi-v{font-size:18px}
+  .su-cols{grid-template-columns:repeat(2,1fr)}
+  .su-large{grid-column:span 2}
+}
+
+/* ── Menu de gauche (ordinateur) : sans barres de défilement moches, plus compact ── */
+@media (min-width:1000px){
+  .bottom-nav{overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none}
+  .bottom-nav::-webkit-scrollbar{display:none}
+}
+@media (min-width:1000px) and (max-height:820px){
+  .bottom-nav{padding-top:70px;gap:1px}
+  .nav-item{padding:8px 14px}
+  body.menu-ferme .nav-item{padding:8px 0}
+  .nav-fab{margin-bottom:6px}.nav-fab .fab{height:42px}
+  .bottom-nav::before{top:16px}
+}

@@ -87,3 +87,11 @@ document.addEventListener('DOMContentLoaded', function () {
   b.innerHTML = '<i class="ic ' + (ferme ? 'ic-arrow-right' : 'ic-arrow-left') + '"></i>' + (ferme ? 'Agrandir le menu' : 'Réduire le menu');
   barre.appendChild(b);
 });
+
+// Menu de gauche réduit : chaque icône affiche son nom au survol.
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('#bottom-nav .nav-item').forEach(function (n) {
+    var l = n.querySelector('.nav-lbl'); if (l && !n.title) n.title = l.textContent.trim();
+  });
+  var fab = document.querySelector('#bottom-nav .nav-fab .fab'); if (fab && !fab.title) fab.title = 'Nouveau';
+});
