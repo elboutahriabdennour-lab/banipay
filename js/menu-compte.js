@@ -21,13 +21,6 @@ function ouvrirMenuCompte(event) {
   m.setAttribute('role', 'menu');
   m.innerHTML =
     '<div class="mc-tete"><div class="mc-nom"></div><div class="mc-mail"></div></div>' +
-    '<button class="mc-item mc-mobile" role="menuitem" onclick="_mcAller(\'produits\')">Produits</button>' +
-    '<button class="mc-item mc-mobile" role="menuitem" onclick="_mcAller(\'avoir-list\')">Avoirs</button>' +
-    '<button class="mc-item mc-mobile" role="menuitem" onclick="_mcAller(\'brouillons\')">Brouillons</button>' +
-    '<button class="mc-item mc-mobile" role="menuitem" onclick="_mcAller(\'historique-paiements\')">Paiements</button>' +
-    '<button class="mc-item mc-mobile" role="menuitem" onclick="_mcAller(\'tva\')">TVA</button>' +
-    '<button class="mc-item mc-mobile mc-complet" role="menuitem" onclick="fermerMenuCompte();loadAchats();renderHubAchats();goScreen(\'hub-achats\',null)">Achats</button>' +
-    '<button class="mc-item mc-mobile mc-complet" role="menuitem" onclick="fermerMenuCompte();window._retourReleves=\'dashboard\';loadReleves();goScreen(\'releves\',null)">Relev\u00e9s bancaires</button>' +
     '<button class="mc-item mc-mobile" role="menuitem" onclick="_mcAller(\'parametres\')">Param\u00e8tres</button>' +
     '<button class="mc-item" role="menuitem" onclick="window._retourSupport=\'dashboard\';_mcAller(\'support\')">Support</button>' +
     '<a class="mc-item" role="menuitem" href="legal.html" target="_blank" rel="noopener">Mentions l\u00e9gales</a>' +
