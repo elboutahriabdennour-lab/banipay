@@ -364,3 +364,7 @@ body[data-mode="complet"] #menu-compte .mc-complet{display:block}
 .dictee-langue{font-family:inherit;font-size:14px;border-radius:12px;padding:10px;border:1.5px solid #1B5E4B;background:#fff;margin-right:8px}
 .dictee-actions{flex-wrap:wrap}
 @media (min-width:1000px){body[data-mode="complet"] #menu-compte .mc-mobile{display:none}}
+
+/* Bouton « trois traits » : téléphone uniquement ; menu défilable si l'écran est petit */
+@media (min-width:1000px){.t-burger{display:none!important}}
+#menu-compte{max-height:calc(100vh - 80px);overflow-y:auto}
