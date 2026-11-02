@@ -286,7 +286,10 @@ function envoyerVia(canal) {
       'Consulter et répondre : ' + docUrl + '\n\n' +
       'Cordialement,\n' + (p.raison||'')
     );
-    window.location.href = 'mailto:' + (doc.client_email || '') + '?subject=' + sujet + '&body=' + corps;
+    const ouvrirMessagerie = function () { window.location.href = 'mailto:' + (doc.client_email || '') + '?subject=' + sujet + '&body=' + corps; };
+    if (typeof envoyerDocParEmail === 'function' && doc.client_email) {
+      envoyerDocParEmail({ doc: doc, docUrl: docUrl, libelleDoc: libelleDoc, libelleDest: libelleDest, isBC: isBC }).then(function (traite) { if (!traite) ouvrirMessagerie(); });
+    } else { ouvrirMessagerie(); }
     if (isBC) _marquerBCEnvoye(id);
     closeAllModals();
   } else if (canal === 'lien') {

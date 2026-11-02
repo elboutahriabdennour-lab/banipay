@@ -111,6 +111,8 @@
       '<section class="cx-bloc"><h3>Documents reçus</h3>' + htmlAdresse() +
       '<label class="cx-ajout">＋ Ajouter des documents (PDF ou photos)<input type="file" id="cx-fichiers" multiple accept="application/pdf,image/jpeg,image/png,image/webp" onchange="cxAjouter(this)"></label>' +
       '<div id="cx-liste">' + htmlDocs() + '</div></section>' +
+      '<section class="cx-bloc"><h3>Envoi d’emails</h3><p class="cx-note">Vos factures et devis partent par email depuis Tafir, avec votre adresse en « Répondre à ». Tant que l’envoi n’est pas activé, votre messagerie s’ouvre à la place.</p>' +
+      '<div class="cx-acts"><button class="cx-test" onclick="envoyerEmailTest()">Envoyer un email de test à mon adresse</button></div></section>' +
       '<section class="cx-bloc"><h3>Fichiers pour votre comptable ou votre logiciel</h3>' +
       '<p class="cx-note">Les brouillons sont exclus. Les montants viennent de vos factures, à faire contrôler par votre comptable avant tout usage.</p>' +
       '<div class="cx-exp">' +
