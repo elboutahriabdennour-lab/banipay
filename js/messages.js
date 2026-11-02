@@ -426,15 +426,24 @@ function annulerPJMsg() {
 
 function voirPJMessage(msgId) {
   const msg = (STATE.messagesConv || []).find(function(m) { return m.id === msgId; });
-  if (!msg || !msg.pj_data) return;
-  if (msg.pj_data.startsWith('data:image')) {
-    const win = window.open();
-    win.document.write('<img src="' + msg.pj_data + '" style="max-width:100%">');
-  } else {
+  if (!msg || typeof msg.pj_data !== 'string' || !msg.pj_data) return;
+  // Sécurité : une pièce jointe vient d'un autre utilisateur. On n'accepte que des images ou des PDF
+  // encodés en base64, et on n'écrit jamais son contenu comme du code dans une page.
+  const img = /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(msg.pj_data);
+  const pdf = /^data:application\/pdf;base64,[A-Za-z0-9+\/=]+$/.test(msg.pj_data);
+  if (img) {
+    const win = window.open('', '_blank');
+    if (!win) { showToast('Autorisez les fenêtres pour voir l’image', 'error'); return; }
+    const el = win.document.createElement('img');
+    el.src = msg.pj_data; el.style.maxWidth = '100%';
+    win.document.body.appendChild(el);
+  } else if (pdf) {
     const a = document.createElement('a');
     a.href = msg.pj_data;
-    a.download = msg.pj_nom || 'fichier';
+    a.download = String(msg.pj_nom || 'fichier').replace(/[^\w.\- ]+/g, '_').slice(0, 80);
     a.click();
+  } else {
+    showToast('Pièce jointe non reconnue : ouverture refusée', 'error');
   }
 }
 
