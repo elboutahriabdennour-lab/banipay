@@ -236,6 +236,7 @@
   <script src="js/stats-utile.js?v=1"></script>
   <script src="js/delais-paiement.js?v=1"></script>
   <script src="js/rapports-perso.js?v=1"></script>
+  <script src="js/connexions.js?v=1"></script>
   <script src="js/profil.js?v=1789327380"></script>
   <script src="js/comptable.js?v=1789327380"></script>
   <script src="js/messages.js?v=1789327380"></script>
@@ -1516,6 +1517,16 @@
     <button class="s-btn blue" onclick="saveProfil()" style="width:100%;margin-bottom:10px">💾 Enregistrer</button>
     <button class="s-btn gray" onclick="goProfilEdit(false)" style="width:100%;margin-bottom:20px">Annuler</button>
   </div>
+  <div class="pb"></div>
+</div>
+
+<!-- CONNEXIONS -->
+<div class="screen" id="screen-connexions">
+  <div class="topbar">
+    <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div>
+  </div>
+  <div class="sec-label">Connexions</div>
+  <div id="cx-contenu"></div>
   <div class="pb"></div>
 </div>
 
@@ -3242,6 +3253,7 @@
   <div class="nav-item nav-desk" id="nav-paiements" onclick="goScreen('historique-paiements',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Paiements</div></div>
   <div class="nav-item nav-desk" id="nav-stats" onclick="goScreen('stats',null)"><i class="ic ic-chart-column nav-ico"></i><div class="nav-lbl">Statistiques</div></div>
   <div class="nav-item nav-desk" id="nav-rapports" onclick="goScreen('rapports',null)"><i class="ic ic-clipboard-list nav-ico"></i><div class="nav-lbl">Rapports</div></div>
+  <div class="nav-item nav-desk" id="nav-connexions" onclick="goScreen('connexions',null)"><i class="ic ic-link nav-ico"></i><div class="nav-lbl">Connexions</div></div>
   <div class="nav-item nav-desk" id="nav-tva" onclick="goScreen('tva',null)"><i class="ic ic-calculator nav-ico"></i><div class="nav-lbl">TVA</div></div>
   <div class="nav-item nav-desk nav-test" id="nav-achats" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><i class="ic ic-shopping-cart nav-ico"></i><div class="nav-lbl">Achats</div></div>
   <div class="nav-item nav-desk nav-test" id="nav-releves" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Relevés</div></div>
