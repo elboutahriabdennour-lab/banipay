@@ -1,53 +1,67 @@
 User-agent: *
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: GPTBot
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: OAI-SearchBot
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: Claude-User
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: Claude-SearchBot
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: Perplexity-User
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: Applebot-Extended
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: Bingbot
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 User-agent: CCBot
 Allow: /
 Disallow: /app.html
+Disallow: /api/
 
 Sitemap: https://tafir.fr/sitemap.xml
+# Résumé du site pour les assistants IA : https://tafir.fr/llms.txt

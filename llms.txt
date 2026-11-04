@@ -15,5 +15,14 @@ Site : https://tafir.fr
 - [Accueil](https://tafir.fr/) : présentation du service
 - [Mentions obligatoires d'une facture au Maroc](https://tafir.fr/ressources/mentions-obligatoires-facture-maroc.html) : ICE, numérotation, TVA, conservation, avec sources officielles
 - [Calculateur de TVA au Maroc](https://tafir.fr/outils/calculateur-tva-maroc.html) : HT vers TTC et inversement
+- [Présentation de Tafir](https://tafir.fr/presentation.html) : ce que fait Tafir, étape par étape
+- [Facturation électronique au Maroc](https://tafir.fr/actualites/facturation-electronique-maroc.html) : calendrier annoncé, ce qui est confirmé ou non, sources
 - [À propos](https://tafir.fr/a-propos.html) : mission et limites
 - [Mentions légales](https://tafir.fr/legal.html) : CGU et confidentialité
+
+## Guides PDF pas à pas
+
+- [Guide 1 : bien démarrer](https://tafir.fr/guides/Tafir-Guide-1-Bien-demarrer.pdf)
+- [Guide 2 : facturer](https://tafir.fr/guides/Tafir-Guide-2-Facturer.pdf)
+- [Guide 3 : être payé et piloter](https://tafir.fr/guides/Tafir-Guide-3-Etre-paye-et-piloter.pdf)
+- [Guide 4 : comptable, exports et connexions](https://tafir.fr/guides/Tafir-Guide-4-Comptable-et-connexions.pdf)
