@@ -690,6 +690,7 @@ function goScreen(name, options) {
     'modifier-produit': function() {},
     'stats': function() { if (typeof renderStats==='function') renderStats(); if (typeof renderStatsDashboard==='function') renderStatsDashboard(); if (typeof verifierRappels==='function') verifierRappels(); if (typeof renderRapportMargeChantiers==='function') renderRapportMargeChantiers(); },
     'rapports': function() { if (typeof renderRapports === 'function') renderRapports(); },
+    'admin': function() { if (typeof renderAdmin === 'function') renderAdmin(); },
     'connexions': function() { if (typeof renderConnexions === 'function') renderConnexions(); },
     'tva': _safe(typeof renderTVA!=='undefined'?renderTVA:undefined,'renderTVA'),
     'position-financiere': _safe(typeof renderPositionFinanciere!=='undefined'?renderPositionFinanciere:undefined,'renderPositionFinanciere'),
