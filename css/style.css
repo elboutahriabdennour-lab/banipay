@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 :root{--ink:#14241F;--ink-soft:#5B6B64;--ink-faint:#8E9C95;--paper:#F5F6F1;--surface:#FFFFFF;--border:#DDE3DA;--border-dash:#BFCBBF;--safran:#1B5E4B;--safran-dark:#134436;--safran-light:#E7F2EC;--zellige:#1B5E4B;--zellige-dark:#134436;--zellige-light:#E7F2EC;--brique:#B23A2E;--brique-dark:#8E2E24;--brique-light:#F5E4E1;--sauge:#6E8F4E;--sauge-dark:#55702E;--sauge-light:#EEF3E4;--ambre:#B8860B;--ambre-light:#F7EFDC;--plum:#7C5CA6;--plum-light:#EDE6F0;--charcoal:#0F1F1A;}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 /* FIX (retour utilisateur — curseur de texte au clic un peu partout) :

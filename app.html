@@ -24,6 +24,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Tafir — Factures, devis et gestion pour PME">
 <meta name="twitter:image" content="https://tafir.fr/og-image.png">
+<link rel="stylesheet" href="css/fonts.css?v=1">
 <link rel="stylesheet" href="css/style.css?v=1786737877">
 <link rel="stylesheet" href="css/icones.css?v=1">
 <link rel="stylesheet" href="css/refonte.css?v=1">
@@ -239,6 +240,7 @@
   <script src="js/envoi-email.js?v=1"></script>
   <script src="js/connexions.js?v=1"></script>
   <script src="js/admin.js?v=1"></script>
+  <script src="js/a11y.js?v=1"></script>
   <script src="js/profil.js?v=1789327380"></script>
   <script src="js/comptable.js?v=1789327380"></script>
   <script src="js/messages.js?v=1789327380"></script>
@@ -2844,7 +2846,7 @@
   <!-- Modale note pour une nouvelle photo de carnet -->
   <div class="modal-overlay" id="modal-carnet-note">
     <div class="modal-box">
-      <img id="carnet-photo-apercu" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:220px;object-fit:cover">
+      <img alt="" id="carnet-photo-apercu" style="width:100%;border-radius:12px;margin-bottom:14px;max-height:220px;object-fit:cover">
       <label class="f-lbl">Note (optionnelle)</label>
       <textarea id="carnet-note-input" class="f-inp" rows="3" placeholder="Ex: Coulage de la dalle terminé"></textarea>
       <button onclick="confirmerAjoutPhotoChantier()" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px">Enregistrer dans le carnet</button>
@@ -3135,7 +3137,7 @@
 <div class="screen" id="screen-cpt-entreprise" style="background:#F5F6F1">
   <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
     <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
-    <img id="cpt-ent-logo" style="display:none;width:32px;height:32px;border-radius:8px;object-fit:cover;background:#fff;flex-shrink:0">
+    <img alt="" id="cpt-ent-logo" style="display:none;width:32px;height:32px;border-radius:8px;object-fit:cover;background:#fff;flex-shrink:0">
     <div style="flex:1;cursor:pointer" onclick="toggleEntrepriseDropdownCpt(event)">
       <div style="font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:4px" id="cpt-ent-nom">Entreprise <span style="font-size:10px;opacity:0.6">▾</span></div>
       <div style="font-size:11px;color:rgba(255,255,255,0.5)" id="cpt-ent-sub"></div>
