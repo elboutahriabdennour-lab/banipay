@@ -1,6 +1,6 @@
 // ZELTO — auth-google.js : lien expiré, connexion Google (désactivée tant que non configurée), navigateurs intégrés.
 // Pour activer Google : configurer Google dans Supabase (Authentication → Providers), puis mettre true ci-dessous.
-var GOOGLE_LOGIN_ACTIF = false;
+var GOOGLE_LOGIN_ACTIF = true;
 
 function navigateurIntegre() {
   var ua = navigator.userAgent || '';
