@@ -850,11 +850,6 @@ async function inviterComptable() {
         console.warn('inviterComptable: échec insertion', resp.status, erreurBrute);
         return;
       }
-      const userResp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_user_by_email', {
-        method: 'POST',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_email: emailCpt })
-      }).catch(function() { return { ok: false }; });
       await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
         method: 'POST',
         headers: {
