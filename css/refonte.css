@@ -572,3 +572,13 @@ body.menu-ferme .nav-item .tf-cadenas{position:absolute;top:4px;right:10px;margi
 .tf-verrou-ok{font-family:inherit;font-size:16px;font-weight:700;background:#1B5E4B;color:#fff;border:0;border-radius:14px;padding:13px 28px;cursor:pointer;min-width:140px}
 .t-icon.tf-verrou .tf-cadenas{position:absolute;top:-5px;right:-5px;font-size:11px;margin:0}
 .t-icon.tf-verrou>*:not(.tf-cadenas){opacity:.55}
+
+/* Bandeau « informations légales à compléter » (accueil) */
+#bandeau-profil{display:flex;align-items:center;gap:12px;margin:0 16px 12px;padding:12px 14px;background:#FFF4DC;border:1px solid #E8C873;border-radius:14px;color:#5A4410}
+#bandeau-profil .bp-txt{flex:1;display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.35}
+#bandeau-profil .bp-txt b{font-size:14px}
+#bandeau-profil .bp-btn{flex:none;font-family:inherit;font-size:14px;font-weight:700;background:#1B5E4B;color:#fff;border:0;border-radius:10px;padding:10px 14px;cursor:pointer}
+/* Pastille « mode test » */
+#tf-testpill{position:fixed;right:12px;bottom:84px;z-index:99990;display:flex;align-items:center;gap:10px;background:#14241F;color:#fff;border-radius:999px;padding:8px 8px 8px 14px;font-size:12px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+#tf-testpill button{font-family:inherit;font-size:12px;font-weight:700;background:#F0B54A;color:#14241F;border:0;border-radius:999px;padding:7px 12px;cursor:pointer}
+@media (min-width:1000px){#tf-testpill{bottom:16px}}

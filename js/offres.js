@@ -178,7 +178,20 @@ function renderMonForfait() {
   const offreActuelleId = STATE.profil?.offre_id;
   const offres = STATE.toutesOffres || [];
   if (!offres.length) {
-    zone.innerHTML = '<div class="empty"><div class="empty-ico">📦</div><div class="empty-title">Catalogue non disponible</div></div>';
+    // Aucune formule dans la base : présentation par défaut. Aucun prix n'est affiché tant qu'il n'est pas décidé.
+    var F = [
+      { nom: 'Gratuit', etat: 'Formule actuelle', actif: true, pts: ['Factures, devis, avoirs et brouillons', 'Clients, produits et suivi des paiements', 'Achats et fournisseurs', 'Accès gratuit pour votre expert-comptable'] },
+      { nom: 'Pro', etat: 'Bientôt', actif: false, pts: ['Relevés bancaires et rapprochement', 'Dictée et lecture de documents par IA', 'Factures récurrentes', 'Gestion de stock'] },
+      { nom: 'Équipe', etat: 'Bientôt', actif: false, pts: ['Plusieurs utilisateurs', 'Registre du personnel', 'Carnet de chantier et contrats'] }
+    ];
+    zone.innerHTML = F.map(function (f) {
+      return '<div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:2px solid ' + (f.actif ? '#1B5E4B' : '#DDE3DA') + ';position:relative' + (f.actif ? '' : ';opacity:.85') + '">' +
+        '<div style="position:absolute;top:-10px;right:14px;background:' + (f.actif ? '#1B5E4B' : '#5B6B64') + ';color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px">' + (f.actif ? '✓ ' : '🔒 ') + f.etat + '</div>' +
+        '<div style="font-size:15px;font-weight:800;color:#14241F;margin-bottom:4px">' + f.nom + '</div>' +
+        '<div style="font-size:12px;color:#5B6B64;margin-bottom:10px">' + (f.actif ? 'Gratuit pendant le lancement' : 'Tarif communiqué au lancement') + '</div>' +
+        f.pts.map(function (t) { return '<div style="font-size:12px;color:#5B6B64;padding:3px 0">' + (f.actif ? '✅ ' : '🔒 ') + t + '</div>'; }).join('') +
+        '</div>';
+    }).join('');
     return;
   }
   zone.innerHTML = offres.map(function(o) {

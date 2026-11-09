@@ -28,8 +28,7 @@ var ECRANS_VERROUILLES = {
   'contrats': 'Les contrats', 'nouveau-contrat': 'Les contrats',
   'carnet-chantier': 'Le carnet de chantier',
   'rapport-stock': 'La gestion de stock',
-  'abonnements': 'Les factures récurrentes', 'nouvel-abonnement': 'Les factures récurrentes', 'detail-abonnement': 'Les factures récurrentes',
-  'mon-forfait': 'Les forfaits'
+  'abonnements': 'Les factures récurrentes', 'nouvel-abonnement': 'Les factures récurrentes', 'detail-abonnement': 'Les factures récurrentes'
 };
 
 // Compatibilité avec l'ancien lancement « facturation seule » : plus utilisé, tout est autorisé.
@@ -111,7 +110,23 @@ document.addEventListener('click', function (ev) {
   afficherVerrou(null, t.getAttribute('data-verrou-nom'));
 }, true);
 
+// Pastille visible tant que le mode test est actif sur cet appareil : les cadenas sont alors levés.
+function majPastilleTest() {
+  var p = document.getElementById('tf-testpill');
+  if (!_modeTestActif()) { if (p) p.remove(); return; }
+  if (p) return;
+  p = document.createElement('div');
+  p.id = 'tf-testpill';
+  p.innerHTML = '<span>Mode test : cadenas levés</span><button type="button">Désactiver</button>';
+  p.querySelector('button').onclick = function () {
+    try { localStorage.removeItem('tafir_mode_test'); } catch (e) {}
+    location.href = location.pathname + '?mode_test=off';
+  };
+  document.body.appendChild(p);
+}
+
 function appliquerMode() {
+  majPastilleTest();
   document.body.setAttribute('data-mode', 'complet');
   marquerVerrous();
 }

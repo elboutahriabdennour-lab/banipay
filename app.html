@@ -27,7 +27,7 @@
 <link rel="stylesheet" href="css/fonts.css?v=1">
 <link rel="stylesheet" href="css/style.css?v=1786737877">
 <link rel="stylesheet" href="css/icones.css?v=1">
-<link rel="stylesheet" href="css/refonte.css?v=2">
+<link rel="stylesheet" href="css/refonte.css?v=3">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -216,7 +216,7 @@
 <script src="js/monitoring-erreurs.js?v=2"></script>
 <script src="js/config.js?v=1789327380"></script>
   <script src="js/utils.js?v=1789327380"></script>
-  <script src="js/auth.js?v=1789327380"></script>
+  <script src="js/auth.js?v=1790600000"></script>
 <script src="js/auth-google.js?v=1"></script>
 <script src="js/modele-facture.js?v=1"></script>
 <script src="js/menu-compte.js?v=1"></script>
@@ -224,8 +224,8 @@
 <script src="js/export-ventes.js?v=1"></script>
 <script src="js/anti-doublons.js?v=1"></script>
 <script src="js/demo-test.js?v=1"></script>
-<script src="js/menu-lateral.js?v=2"></script>
-  <script src="js/nav.js?v=1790500000"></script>
+<script src="js/menu-lateral.js?v=3"></script>
+  <script src="js/nav.js?v=1790600000"></script>
   <script src="js/marche.js?v=1789327380"></script>
   <script src="js/contrats.js?v=1789327380"></script>
   <script src="js/factures.js?v=1790400000"></script>
@@ -267,7 +267,7 @@
 <script src="js/demandes-devis.js?v=1789327380"></script>
 <script src="js/fournisseurs.js?v=1790200000"></script>
 <script src="js/chat-ticket.js?v=1789327380"></script>
-<script src="js/offres.js?v=1789327380"></script>
+<script src="js/offres.js?v=1790600000"></script>
 <script src="js/acces-total.js?v=1790300000"></script>
 <script src="js/onboarding.js?v=1789327380"></script>
 <script src="js/notes-facture.js?v=1789327380"></script>
@@ -663,7 +663,8 @@
       <button class="back-btn" onclick="goScreen(window._retourMonForfait||'profil',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right"></div>
     </div>
     <div style="padding:16px 20px">
-      <div class="sec-label" style="padding:0 0 12px">📦 Mon forfait</div>
+      <div class="sec-label" style="padding:0 0 8px">📦 Abonnements</div>
+      <div style="font-size:13px;color:#5B6B64;line-height:1.5;margin-bottom:14px">Pendant le lancement, toutes les fonctions ouvertes sont gratuites. Les formules ci-dessous présentent ce que Tafir proposera ; aucun paiement n'est demandé pour le moment.</div>
       <div id="mon-forfait-content"></div>
     </div>
     <div class="pb"></div>
@@ -3272,6 +3273,7 @@
   <div class="nav-item nav-desk" id="nav-tva" onclick="goScreen('tva',null)"><i class="ic ic-calculator nav-ico"></i><div class="nav-lbl">TVA</div></div>
   <div class="nav-item nav-desk" id="nav-achats" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><i class="ic ic-shopping-cart nav-ico"></i><div class="nav-lbl">Achats</div></div>
   <div class="nav-item nav-desk" id="nav-fournisseurs" onclick="loadFournisseurs();goScreen('fournisseurs',null)"><i class="ic ic-users nav-ico"></i><div class="nav-lbl">Fournisseurs</div></div>
+  <div class="nav-item nav-desk" id="nav-abonnements-offres" onclick="window._retourMonForfait='dashboard';goScreen('mon-forfait',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Abonnements</div></div>
   <div class="nav-sep nav-desk">Bientôt disponible</div>
   <div class="nav-item nav-desk" id="nav-releves" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Relevés</div></div>
   <div class="nav-item nav-desk" id="nav-tresorerie" onclick="goScreen('position-financiere',null)"><i class="ic ic-chart-column nav-ico"></i><div class="nav-lbl">Trésorerie</div></div>
@@ -3283,7 +3285,6 @@
   <div class="nav-item nav-desk" id="nav-messagerie" onclick="goScreen('messages',null)"><i class="ic ic-message-circle nav-ico"></i><div class="nav-lbl">Messagerie</div></div>
   <div class="nav-item nav-desk" id="nav-annuaire" onclick="goScreen('annuaire',null)"><i class="ic ic-users nav-ico"></i><div class="nav-lbl">Annuaire</div></div>
   <div class="nav-item nav-desk" id="nav-marche" onclick="goScreen('marche',null)"><i class="ic ic-shopping-cart nav-ico"></i><div class="nav-lbl">Marché</div></div>
-  <div class="nav-item nav-desk" id="nav-forfait" onclick="goScreen('mon-forfait',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Forfaits</div></div>
   <div class="nav-grow nav-desk"></div>
   <div class="nav-item nav-desk" id="nav-parametres" onclick="goScreen('parametres',null)"><i class="ic ic-settings nav-ico"></i><div class="nav-lbl">Paramètres</div></div>
   <div class="nav-item nav-desk nav-deco" id="nav-deconnexion" onclick="doLogout()"><i class="ic ic-log-out nav-ico"></i><div class="nav-lbl">Se déconnecter</div></div>
@@ -3301,7 +3302,8 @@
 </div>
 <script src="js/brand.js?v=1"></script>
 <script src="js/refonte.js?v=1"></script>
-<script src="js/mode.js?v=2"></script>
+<script src="js/mode.js?v=3"></script>
+  <script src="js/bandeau-profil.js?v=1"></script>
 <script src="js/icones.js?v=1"></script>
 </body>
 </html>

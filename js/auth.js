@@ -509,20 +509,10 @@ async function _continuerApresAuthentification(email, errEl, remember) {
       // avant de pouvoir utiliser l'app normalement. Redéclenché à
       // chaque connexion tant que ce n'est pas complet, pas seulement
       // une fois à l'inscription.
-      const p = STATE.profil || {};
-      // FIX (cas signalé) : l'auto-entrepreneur n'a pas de RC — l'exiger
-      // dans tous les cas l'aurait bloqué indéfiniment, sans jamais
-      // pouvoir remplir ce champ (le formulaire le dit déjà lui-même :
-      // "l'auto-entrepreneur n'en a pas, laissez vide").
-      const rcRequis = p.forme !== 'Auto-entrepreneur';
-      const profilIncomplet = !p.raison || !p.secteur || (rcRequis && !p.rc) || !p.identifiant_fiscal || !p.ice;
-      if (profilIncomplet) {
-        goScreen('profil');
-        setTimeout(function() {
-          if (typeof goProfilEdit === 'function') goProfilEdit(true);
-          showToast('⚠️ Complétez vos informations légales pour continuer', 'error');
-        }, 200);
-      } else {
+      // Connexion : on arrive TOUJOURS sur l'accueil. Si les informations légales (raison sociale, secteur, RC, IF, ICE)
+      // sont incomplètes, un bandeau sur l'accueil le rappelle (js/bandeau-profil.js) et la création d'une facture est bloquée
+      // tant qu'elles ne sont pas remplies (voir goScreen dans js/nav.js).
+      {
         goScreen('dashboard');
         showToast('✅ Bienvenue !', 'success');
         // FIX (bug signalé) : sans cette vérification, l'onboarding se

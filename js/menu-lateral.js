@@ -36,7 +36,7 @@ var TAFIR_MODULES = [
   { id: 'messagerie', groupe: 'Bientôt disponible', libelle: 'Messagerie', icone: 'message-circle', ecran: 'messages' },
   { id: 'annuaire', groupe: 'Bientôt disponible', libelle: 'Annuaire', icone: 'users', ecran: 'annuaire' },
   { id: 'marche', groupe: 'Bientôt disponible', libelle: 'Marché', icone: 'shopping-cart', ecran: 'marche' },
-  { id: 'forfait', groupe: 'Bientôt disponible', libelle: 'Forfaits', icone: 'banknote', ecran: 'mon-forfait' },
+  { id: 'abonnements-offres', groupe: 'Compte', libelle: 'Abonnements', icone: 'banknote', action: function () { window._retourMonForfait = 'dashboard'; goScreen('mon-forfait', null); } },
   { id: 'parametres', groupe: 'Compte', libelle: 'Paramètres', icone: 'settings', ecran: 'parametres' },
   { id: 'support', groupe: 'Compte', libelle: 'Support', icone: 'message-circle', action: function () { window._retourSupport = 'dashboard'; goScreen('support', null); } },
   { id: 'test-creer', groupe: 'Compte', libelle: 'Créer l’entreprise de test', icone: 'package', visible: function () { return typeof _testActif === 'function' && _testActif(); }, action: function () { creerDonneesTest(); } },

@@ -594,6 +594,13 @@ function goScreen(name, options) {
     if (typeof afficherVerrou === 'function') afficherVerrou(name);
     return;
   }
+  // Une facture doit porter les informations légales de l'émetteur : on bloque la création tant qu'elles manquent.
+  if (name === 'nouvelle' && typeof profilLegalIncomplet === 'function' && profilLegalIncomplet()) {
+    if (typeof showToast === 'function') showToast('⚠️ Complétez vos informations légales (raison sociale, ICE, IF, RC) avant de créer une facture', 'error');
+    goScreen('profil', null);
+    setTimeout(function () { if (typeof goProfilEdit === 'function') goProfilEdit(true); }, 200);
+    return;
+  }
   // FIX (bug trouvé — bouton déconnexion) : sb.logout() (config.js) vide
   // entièrement STATE avant de le réinitialiser partiellement — sans
   // jamais recréer _historiqueEcrans. Sans cette ligne, l'appel suivant
@@ -623,6 +630,7 @@ function goScreen(name, options) {
   }
   hideToast();
   if (typeof appliquerMode === 'function') setTimeout(appliquerMode, 50);
+  if (name === 'dashboard' && typeof majBandeauProfil === 'function') setTimeout(majBandeauProfil, 400);
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const sc = el('screen-' + name);
   if (sc) { sc.classList.add('active'); sc.scrollTop = 0; }
