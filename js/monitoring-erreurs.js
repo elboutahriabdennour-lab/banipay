@@ -27,6 +27,8 @@ function _dejaSignaleeRecemment(cle) {
 }
 
 function _envoyerAlerte(titre, message) {
+  // Désactivé tant que le sujet n'a pas été personnalisé : sinon les erreurs partiraient vers un sujet public d'exemple.
+  if (!NTFY_TOPIC || NTFY_TOPIC.indexOf('CHANGEZ') >= 0) return;
   const cle = titre + '|' + message.slice(0, 100);
   if (_dejaSignaleeRecemment(cle)) return;
   try {
@@ -40,8 +42,9 @@ function _envoyerAlerte(titre, message) {
 
 function _contexteActuel() {
   const ecran = document.querySelector('.screen.active')?.id || 'inconnu';
-  const email = (typeof sb !== 'undefined' && sb.user?.email) ? sb.user.email : 'non connecté';
-  return 'Écran: ' + ecran + ' | Compte: ' + email;
+  // Aucune donnée personnelle (pas d'e-mail) n'est envoyée au service tiers.
+  const connecte = (typeof sb !== 'undefined' && sb.user) ? 'connecté' : 'non connecté';
+  return 'Écran: ' + ecran + ' | ' + connecte;
 }
 
 window.addEventListener('error', function(event) {

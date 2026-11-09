@@ -554,3 +554,21 @@ body[data-mode="complet"] #menu-compte .mc-complet{display:block}
 @media (min-width:900px){.ad-grille{grid-template-columns:repeat(4,1fr)}}
 #screen-admin>*:not(.topbar):not(.sec-label){margin-left:20px;margin-right:20px}
 @media (min-width:1000px){#screen-admin>*:not(.topbar){max-width:1100px}}
+
+/* ── Modules verrouillés (cadenas) et message « bientôt disponible » ─────────── */
+.tf-verrou{position:relative;cursor:pointer}
+.tf-verrou>*:not(.tf-cadenas){opacity:.55}
+.tf-cadenas{font-size:13px;line-height:1;font-style:normal;flex:none}
+.qa-item.tf-verrou .tf-cadenas,.sheet-it.tf-verrou .tf-cadenas,.p-card.tf-verrou .tf-cadenas,#valeur-stock-card.tf-verrou .tf-cadenas{position:absolute;top:7px;right:9px}
+.nav-item .tf-cadenas,.ml-it .tf-cadenas{margin-left:auto}
+.bottom-nav .nav-item.tf-verrou .tf-cadenas{position:absolute;top:2px;right:6px;margin:0}
+body.menu-ferme .nav-item .tf-cadenas{position:absolute;top:4px;right:10px;margin:0}
+.ml-it.ml-verrou span{opacity:.6}
+#tf-verrou-overlay{position:fixed;inset:0;z-index:100000;background:rgba(15,31,26,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+.tf-verrou-carte{background:#fff;color:#14241F;border-radius:22px;max-width:360px;width:100%;padding:28px 24px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.tf-verrou-ico{font-size:40px;line-height:1;margin-bottom:10px}
+.tf-verrou-titre{font-size:20px;font-weight:800;margin-bottom:8px}
+.tf-verrou-txt{font-size:15px;line-height:1.5;color:#3E4F48;margin:0 0 20px}
+.tf-verrou-ok{font-family:inherit;font-size:16px;font-weight:700;background:#1B5E4B;color:#fff;border:0;border-radius:14px;padding:13px 28px;cursor:pointer;min-width:140px}
+.t-icon.tf-verrou .tf-cadenas{position:absolute;top:-5px;right:-5px;font-size:11px;margin:0}
+.t-icon.tf-verrou>*:not(.tf-cadenas){opacity:.55}

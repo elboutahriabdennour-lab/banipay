@@ -589,8 +589,11 @@ async function voirDocumentDepuisNotification(type, docId) {
 STATE._historiqueEcrans = STATE._historiqueEcrans || [];
 
 function goScreen(name, options) {
-  // Lancement « facturation seule » (voir js/mode.js) : un écran hors périmètre renvoie au tableau de bord.
-  if (typeof ecranAutorise === 'function' && !ecranAutorise(name)) { name = 'dashboard'; }
+  // Modules pas encore fiables (voir js/mode.js) : un écran verrouillé affiche « bientôt disponible » et on reste où on est.
+  if (typeof ecranVerrouille === 'function' && ecranVerrouille(name)) {
+    if (typeof afficherVerrou === 'function') afficherVerrou(name);
+    return;
+  }
   // FIX (bug trouvé — bouton déconnexion) : sb.logout() (config.js) vide
   // entièrement STATE avant de le réinitialiser partiellement — sans
   // jamais recréer _historiqueEcrans. Sans cette ligne, l'appel suivant

@@ -22,8 +22,21 @@ var TAFIR_MODULES = [
   { id: 'stats', groupe: 'Gestion', libelle: 'Statistiques', icone: 'chart-column', ecran: 'stats' },
   { id: 'rapports', groupe: 'Gestion', libelle: 'Rapports', icone: 'clipboard-list', ecran: 'rapports' },
   { id: 'tva', groupe: 'Gestion', libelle: 'TVA', icone: 'calculator', ecran: 'tva' },
-  { id: 'achats', groupe: 'Dépenses', libelle: 'Achats', icone: 'shopping-cart', complet: true, action: function () { loadAchats(); renderHubAchats(); goScreen('hub-achats', null); } },
-  { id: 'releves', groupe: 'Dépenses', libelle: 'Relevés bancaires', icone: 'banknote', complet: true, action: function () { window._retourReleves = 'dashboard'; loadReleves(); goScreen('releves', null); } },
+  { id: 'connexions', groupe: 'Gestion', libelle: 'Connexions', icone: 'link', ecran: 'connexions' },
+  { id: 'hub-ventes', groupe: 'Ventes et achats', libelle: 'Ventes', icone: 'banknote', action: function () { renderHubVentes(); goScreen('hub-ventes', null); } },
+  { id: 'achats', groupe: 'Ventes et achats', libelle: 'Achats', icone: 'shopping-cart', action: function () { loadAchats(); renderHubAchats(); goScreen('hub-achats', null); } },
+  { id: 'fournisseurs', groupe: 'Ventes et achats', libelle: 'Fournisseurs', icone: 'users', action: function () { loadFournisseurs(); goScreen('fournisseurs', null); } },
+  { id: 'releves', groupe: 'Bientôt disponible', libelle: 'Relevés bancaires', icone: 'banknote', ecran: 'releves' },
+  { id: 'tresorerie', groupe: 'Bientôt disponible', libelle: 'Trésorerie', icone: 'chart-column', ecran: 'position-financiere' },
+  { id: 'abonnements', groupe: 'Bientôt disponible', libelle: 'Factures récurrentes', icone: 'file-stack', ecran: 'abonnements' },
+  { id: 'contrats', groupe: 'Bientôt disponible', libelle: 'Contrats', icone: 'file-pen', ecran: 'contrats' },
+  { id: 'stock', groupe: 'Bientôt disponible', libelle: 'Stock', icone: 'package', ecran: 'rapport-stock' },
+  { id: 'employes', groupe: 'Bientôt disponible', libelle: 'Personnel', icone: 'users', ecran: 'employes' },
+  { id: 'chantier', groupe: 'Bientôt disponible', libelle: 'Carnet de chantier', icone: 'clipboard-list', ecran: 'carnet-chantier' },
+  { id: 'messagerie', groupe: 'Bientôt disponible', libelle: 'Messagerie', icone: 'message-circle', ecran: 'messages' },
+  { id: 'annuaire', groupe: 'Bientôt disponible', libelle: 'Annuaire', icone: 'users', ecran: 'annuaire' },
+  { id: 'marche', groupe: 'Bientôt disponible', libelle: 'Marché', icone: 'shopping-cart', ecran: 'marche' },
+  { id: 'forfait', groupe: 'Bientôt disponible', libelle: 'Forfaits', icone: 'banknote', ecran: 'mon-forfait' },
   { id: 'parametres', groupe: 'Compte', libelle: 'Paramètres', icone: 'settings', ecran: 'parametres' },
   { id: 'support', groupe: 'Compte', libelle: 'Support', icone: 'message-circle', action: function () { window._retourSupport = 'dashboard'; goScreen('support', null); } },
   { id: 'test-creer', groupe: 'Compte', libelle: 'Créer l’entreprise de test', icone: 'package', visible: function () { return typeof _testActif === 'function' && _testActif(); }, action: function () { creerDonneesTest(); } },
@@ -43,15 +56,14 @@ function _mlAller(id) {
   if (id === 'deco') { doLogout(); return; }
   var m = TAFIR_MODULES.filter(function (x) { return x.id === id; })[0];
   if (!m) return;
+  if (m.ecran && typeof ecranVerrouille === 'function' && ecranVerrouille(m.ecran)) { afficherVerrou(m.ecran); return; }
   if (typeof m.action === 'function') m.action(); else if (m.ecran) goScreen(m.ecran, null);
 }
 function ouvrirMenuLateral(event) {
   if (event) { event.stopPropagation(); event.preventDefault(); }
   if (document.getElementById('ml-overlay')) { fermerMenuLateral(); return; }
-  var complet = document.body.getAttribute('data-mode') === 'complet';
   var groupes = [], index = {};
   TAFIR_MODULES.forEach(function (m) {
-    if (m.complet && !complet) return;
     if (typeof m.visible === 'function' && !m.visible()) return;
     if (!(m.groupe in index)) { index[m.groupe] = groupes.length; groupes.push([m.groupe, []]); }
     groupes[index[m.groupe]][1].push(m);
@@ -59,7 +71,7 @@ function ouvrirMenuLateral(event) {
   var h = '';
   groupes.forEach(function (g) {
     h += '<div class="ml-titre"></div>';
-    g[1].forEach(function (m) { h += '<button class="ml-it" data-id="' + m.id + '"><i class="ic ic-' + (m.icone || 'package') + ' ml-ico"></i><span></span></button>'; });
+    g[1].forEach(function (m) { var lock = m.ecran && typeof ecranVerrouille === 'function' && ecranVerrouille(m.ecran); h += '<button class="ml-it' + (lock ? ' ml-verrou' : '') + '" data-id="' + m.id + '"><i class="ic ic-' + (m.icone || 'package') + ' ml-ico"></i><span></span>' + (lock ? '<b class="tf-cadenas" aria-hidden="true">🔒</b>' : '') + '</button>'; });
   });
   var o = document.createElement('div');
   o.id = 'ml-overlay';

@@ -27,7 +27,7 @@
 <link rel="stylesheet" href="css/fonts.css?v=1">
 <link rel="stylesheet" href="css/style.css?v=1786737877">
 <link rel="stylesheet" href="css/icones.css?v=1">
-<link rel="stylesheet" href="css/refonte.css?v=1">
+<link rel="stylesheet" href="css/refonte.css?v=2">
 <style>
 #screen-comptable.active{display:flex!important;flex-direction:column}
 </style>
@@ -213,7 +213,7 @@
   <div style="height:80px"></div>
 </div>
 
-<script src="js/monitoring-erreurs.js?v=1789327380"></script>
+<script src="js/monitoring-erreurs.js?v=2"></script>
 <script src="js/config.js?v=1789327380"></script>
   <script src="js/utils.js?v=1789327380"></script>
   <script src="js/auth.js?v=1789327380"></script>
@@ -224,8 +224,8 @@
 <script src="js/export-ventes.js?v=1"></script>
 <script src="js/anti-doublons.js?v=1"></script>
 <script src="js/demo-test.js?v=1"></script>
-<script src="js/menu-lateral.js?v=1"></script>
-  <script src="js/nav.js?v=1789327380"></script>
+<script src="js/menu-lateral.js?v=2"></script>
+  <script src="js/nav.js?v=1790500000"></script>
   <script src="js/marche.js?v=1789327380"></script>
   <script src="js/contrats.js?v=1789327380"></script>
   <script src="js/factures.js?v=1790400000"></script>
@@ -3270,8 +3270,20 @@
   <div class="nav-item nav-desk" id="nav-connexions" onclick="goScreen('connexions',null)"><i class="ic ic-link nav-ico"></i><div class="nav-lbl">Connexions</div></div>
   <div class="nav-item nav-desk" id="nav-admin" style="display:none" onclick="goScreen('admin',null)"><i class="ic ic-chart-column nav-ico"></i><div class="nav-lbl">Admin</div></div>
   <div class="nav-item nav-desk" id="nav-tva" onclick="goScreen('tva',null)"><i class="ic ic-calculator nav-ico"></i><div class="nav-lbl">TVA</div></div>
-  <div class="nav-item nav-desk nav-test" id="nav-achats" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><i class="ic ic-shopping-cart nav-ico"></i><div class="nav-lbl">Achats</div></div>
-  <div class="nav-item nav-desk nav-test" id="nav-releves" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Relevés</div></div>
+  <div class="nav-item nav-desk" id="nav-achats" onclick="loadAchats();renderHubAchats();goScreen('hub-achats',null)"><i class="ic ic-shopping-cart nav-ico"></i><div class="nav-lbl">Achats</div></div>
+  <div class="nav-item nav-desk" id="nav-fournisseurs" onclick="loadFournisseurs();goScreen('fournisseurs',null)"><i class="ic ic-users nav-ico"></i><div class="nav-lbl">Fournisseurs</div></div>
+  <div class="nav-sep nav-desk">Bientôt disponible</div>
+  <div class="nav-item nav-desk" id="nav-releves" onclick="window._retourReleves='dashboard';loadReleves();goScreen('releves',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Relevés</div></div>
+  <div class="nav-item nav-desk" id="nav-tresorerie" onclick="goScreen('position-financiere',null)"><i class="ic ic-chart-column nav-ico"></i><div class="nav-lbl">Trésorerie</div></div>
+  <div class="nav-item nav-desk" id="nav-abonnements" onclick="goScreen('abonnements',null)"><i class="ic ic-file-stack nav-ico"></i><div class="nav-lbl">Récurrent</div></div>
+  <div class="nav-item nav-desk" id="nav-contrats" onclick="goScreen('contrats',null)"><i class="ic ic-file-pen nav-ico"></i><div class="nav-lbl">Contrats</div></div>
+  <div class="nav-item nav-desk" id="nav-stock" onclick="goScreen('rapport-stock',null)"><i class="ic ic-package nav-ico"></i><div class="nav-lbl">Stock</div></div>
+  <div class="nav-item nav-desk" id="nav-employes" onclick="goScreen('employes',null)"><i class="ic ic-users nav-ico"></i><div class="nav-lbl">Personnel</div></div>
+  <div class="nav-item nav-desk" id="nav-chantier" onclick="goScreen('carnet-chantier',null)"><i class="ic ic-clipboard-list nav-ico"></i><div class="nav-lbl">Chantier</div></div>
+  <div class="nav-item nav-desk" id="nav-messagerie" onclick="goScreen('messages',null)"><i class="ic ic-message-circle nav-ico"></i><div class="nav-lbl">Messagerie</div></div>
+  <div class="nav-item nav-desk" id="nav-annuaire" onclick="goScreen('annuaire',null)"><i class="ic ic-users nav-ico"></i><div class="nav-lbl">Annuaire</div></div>
+  <div class="nav-item nav-desk" id="nav-marche" onclick="goScreen('marche',null)"><i class="ic ic-shopping-cart nav-ico"></i><div class="nav-lbl">Marché</div></div>
+  <div class="nav-item nav-desk" id="nav-forfait" onclick="goScreen('mon-forfait',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Forfaits</div></div>
   <div class="nav-grow nav-desk"></div>
   <div class="nav-item nav-desk" id="nav-parametres" onclick="goScreen('parametres',null)"><i class="ic ic-settings nav-ico"></i><div class="nav-lbl">Paramètres</div></div>
   <div class="nav-item nav-desk nav-deco" id="nav-deconnexion" onclick="doLogout()"><i class="ic ic-log-out nav-ico"></i><div class="nav-lbl">Se déconnecter</div></div>
@@ -3284,12 +3296,12 @@
     <div class="sheet-it" onclick="_allerCreer('nouveau-devis')"><div class="sheet-ico" style="background:var(--zellige-light)">📝</div><div><div class="sheet-n">Devis</div><div class="sheet-d">Proposer un prix avant de facturer</div></div></div>
     <div class="sheet-it" onclick="_allerCreer('nouveau-client')"><div class="sheet-ico" style="background:var(--plum-light)">👥</div><div><div class="sheet-n">Client</div><div class="sheet-d">Ajouter une fiche client</div></div></div>
     <div class="sheet-it" onclick="_allerCreer('avoir')"><div class="sheet-ico" style="background:var(--sauge-light)">↩️</div><div><div class="sheet-n">Avoir</div><div class="sheet-d">Corriger ou annuler une facture</div></div></div>
-    <div class="sheet-it nav-test-sheet" onclick="_allerCreerAchat()"><div class="sheet-ico" style="background:#F6E3E0">🛒</div><div><div class="sheet-n">Achat</div><div class="sheet-d">Enregistrer une facture fournisseur</div></div></div>
+    <div class="sheet-it" onclick="_allerCreerAchat()"><div class="sheet-ico" style="background:#F6E3E0">🛒</div><div><div class="sheet-n">Achat</div><div class="sheet-d">Enregistrer une facture fournisseur</div></div></div>
   </div>
 </div>
 <script src="js/brand.js?v=1"></script>
 <script src="js/refonte.js?v=1"></script>
-<script src="js/mode.js?v=1"></script>
+<script src="js/mode.js?v=2"></script>
 <script src="js/icones.js?v=1"></script>
 </body>
 </html>

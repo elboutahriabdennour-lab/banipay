@@ -1,68 +1,125 @@
-// ZELTO — mode.js : lancement « facturation seule ».
-// Pour remettre toute l'application : mettre MODE_ZELTO = 'complet' (rien n'est supprimé, seulement masqué).
-var MODE_ZELTO = 'facturation';
+// Tafir — mode.js : tout est visible. Les modules pas encore fiables portent un cadenas.
+//
+// POUR OUVRIR UN MODULE : supprimer sa ligne dans ECRANS_VERROUILLES (plus bas). Rien d'autre à faire.
+// POUR VERROUILLER UN MODULE : ajouter une ligne  'nom-de-l-ecran': 'Nom affiché',
+//
+// Interrupteur de TEST, valable seulement sur l'appareil où on l'active :
+//   ouvrir  app.html?mode_test=complet  -> lève les cadenas sur cet appareil et affiche les outils de test
+//   ouvrir  app.html?mode_test=off      -> remet les cadenas et masque les outils de test
+// (À RETIRER avant le lancement public, avec js/demo-test.js.)
+var MODE_ZELTO = 'complet';
 
-// Interrupteur de TEST, valable seulement sur l'appareil où on l'active (rien ne change pour les autres utilisateurs) :
-//   ouvrir  app.html?mode_test=complet  -> montre tous les modules (achats, relevés...) sur cet appareil
-//   ouvrir  app.html?mode_test=off      -> revient à « facturation seule »
 (function () {
   try {
     var q = new URLSearchParams(location.search).get('mode_test');
     if (q === 'complet') localStorage.setItem('tafir_mode_test', 'complet');
     if (q === 'off') localStorage.removeItem('tafir_mode_test');
-    if (localStorage.getItem('tafir_mode_test') === 'complet') MODE_ZELTO = 'complet';
   } catch (e) {}
 })();
 
-var ECRANS_FACTURATION = ['dashboard','mes-factures','nouvelle','detail','historique-paiements','acomptes','brouillons',
-  'avoir','avoir-list','devis-list','nouveau-devis','detail-devis','clients','nouveau-client','detail-client','modifier-client',
-  'stats','rapports','connexions','admin','produits','nouveau-produit','modifier-produit','tva','recherche','profil','parametres','modele-facture','audit',
-  'support','espace-support','mes-tickets-support','chat-ticket','qui-sommes-nous','auth','definir-mot-passe','verification-telephone',
-  'comptable','cpt-entreprise','comptable-profil','attributions-cabinet','pdf-viewer','portail','profil-public'];
+// ── Modules verrouillés : écran → nom affiché dans le message ──────────────────────────────────
+var ECRANS_VERROUILLES = {
+  'messages': 'La messagerie', 'chat': 'La messagerie',
+  'annuaire': 'L’annuaire des entreprises',
+  'marche': 'Le marché', 'nouvelle-annonce': 'Le marché', 'mes-annonces': 'Le marché',
+  'tresorerie': 'La trésorerie', 'position-financiere': 'La position financière',
+  'releves': 'Les relevés bancaires', 'rapprochement-releve': 'Les relevés bancaires', 'rapprochement': 'Le rapprochement bancaire',
+  'employes': 'Le registre du personnel', 'nouvel-employe': 'Le registre du personnel',
+  'contrats': 'Les contrats', 'nouveau-contrat': 'Les contrats',
+  'carnet-chantier': 'Le carnet de chantier',
+  'rapport-stock': 'La gestion de stock',
+  'abonnements': 'Les factures récurrentes', 'nouvel-abonnement': 'Les factures récurrentes', 'detail-abonnement': 'Les factures récurrentes',
+  'mon-forfait': 'Les forfaits'
+};
 
-function modeFacturation() { return MODE_ZELTO === 'facturation'; }
+// Compatibilité avec l'ancien lancement « facturation seule » : plus utilisé, tout est autorisé.
+var ECRANS_FACTURATION = [];
+function modeFacturation() { return false; }
+function ecranAutorise() { return true; }
 
-// Un écran est autorisé s'il est dans la liste, ou s'il n'existe pas comme écran (pages spéciales).
-function ecranAutorise(name) {
-  if (!modeFacturation() || !name) return true;
-  if (!document.getElementById('screen-' + name)) return true;
-  return ECRANS_FACTURATION.indexOf(name) >= 0;
+function _modeTestActif() { try { return localStorage.getItem('tafir_mode_test') === 'complet'; } catch (e) { return false; } }
+// Un écran verrouillé reste ouvert pour le propriétaire qui a activé le mode test sur son appareil.
+function ecranVerrouille(name) {
+  if (!name || _modeTestActif()) return false;
+  return Object.prototype.hasOwnProperty.call(ECRANS_VERROUILLES, name);
+}
+function nomModuleVerrouille(name) { return ECRANS_VERROUILLES[name] || 'Cette fonction'; }
+
+// ── Message « bientôt disponible » ─────────────────────────────────────────────────────────────
+function fermerVerrou() {
+  var o = document.getElementById('tf-verrou-overlay'); if (o) o.remove();
+  document.removeEventListener('keydown', _toucheVerrou, true);
+}
+function _toucheVerrou(e) { if (e.key === 'Escape') fermerVerrou(); }
+function afficherVerrou(name, nomLibre) {
+  fermerVerrou();
+  var nom = nomLibre || nomModuleVerrouille(name);
+  var o = document.createElement('div');
+  o.id = 'tf-verrou-overlay';
+  o.onclick = function (e) { if (e.target === o) fermerVerrou(); };
+  o.innerHTML = '<div class="tf-verrou-carte" role="dialog" aria-modal="true" aria-labelledby="tf-verrou-titre">' +
+    '<div class="tf-verrou-ico" aria-hidden="true">🔒</div>' +
+    '<div class="tf-verrou-titre" id="tf-verrou-titre">Bientôt disponible</div>' +
+    '<p class="tf-verrou-txt"></p>' +
+    '<button type="button" class="tf-verrou-ok">Compris</button></div>';
+  o.querySelector('.tf-verrou-txt').textContent = nom + ' ne fonctionne pas encore pour le moment. Nous l’ouvrons dès qu’il est fiable.';
+  o.querySelector('.tf-verrou-ok').onclick = fermerVerrou;
+  document.body.appendChild(o);
+  o.querySelector('.tf-verrou-ok').focus();
+  document.addEventListener('keydown', _toucheVerrou, true);
 }
 
-// Masque tout raccourci (bouton, tuile, ligne) dont le clic mène vers un écran hors périmètre.
-function appliquerMode() {
-  if (!modeFacturation()) { document.body.setAttribute('data-mode', 'complet'); return; }
-  var re = /goScreen\(\s*['"]([a-z0-9-]+)['"]/g;
+// ── Cadenas sur tous les raccourcis qui mènent à un module verrouillé ──────────────────────────
+var VERROUS_PAR_ID = { 'param-card-stock': 'La gestion de stock', 'valeur-stock-card': 'La gestion de stock' };
+
+function _cibles(oc) {
+  var re = /goScreen\(\s*['"]([a-z0-9-]+)['"]/g, m, c = [];
+  while ((m = re.exec(oc))) c.push(m[1]);
+  return c;
+}
+function _poserCadenas(e, nom) {
+  if (e.classList.contains('tf-verrou')) return;
+  e.classList.add('tf-verrou');
+  e.setAttribute('data-verrou-nom', nom);
+  var s = document.createElement('span');
+  s.className = 'tf-cadenas'; s.setAttribute('aria-hidden', 'true'); s.textContent = '🔒';
+  e.appendChild(s);
+  e.setAttribute('title', 'Bientôt disponible');
+}
+function marquerVerrous() {
   document.querySelectorAll('[onclick]').forEach(function (e) {
-    var oc = e.getAttribute('onclick') || '', m, cibles = [];
-    re.lastIndex = 0;
-    while ((m = re.exec(oc))) cibles.push(m[1]);
+    if (e.classList.contains('tf-verrou') || e.classList.contains('back-btn')) return;
+    var sc = e.closest('.screen');
+    if (sc && sc.id && Object.prototype.hasOwnProperty.call(ECRANS_VERROUILLES, sc.id.replace('screen-', ''))) return;
+    var oc = e.getAttribute('onclick') || '';
+    if (oc.indexOf('ouvrirMessagerie') >= 0) { _poserCadenas(e, 'La messagerie'); return; }
+    var cibles = _cibles(oc);
     if (!cibles.length) return;
-    if (e.closest('.screen:not(#screen-dashboard):not(#screen-profil):not(#screen-parametres)') && e.classList.contains('back-btn')) return;
-    var interdit = cibles.some(function (c) { return !ecranAutorise(c); });
-    var autorise = cibles.some(function (c) { return ecranAutorise(c); });
-    if (interdit && !autorise && !e.classList.contains('back-btn')) e.style.display = 'none';
+    var tous = cibles.every(function (c) { return Object.prototype.hasOwnProperty.call(ECRANS_VERROUILLES, c); });
+    if (tous) _poserCadenas(e, nomModuleVerrouille(cibles[0]));
   });
-  document.querySelectorAll('[onclick*="ouvrirMessagerie"]').forEach(function (e) { e.style.display = 'none'; });
-  // Blocs du tableau de bord et du profil liés aux autres modules
-  ['param-card-stock', 'param-card-bons', 'param-card-relance-achats', 'dashboard-achats-resume', 'valeur-stock-card', 'groupe-label-suivi', 'qa-suivi-equipe', 'groupe-label-reseau', 'qa-reseau-zelto'].forEach(function (id) {
-    var x = document.getElementById(id); if (x) x.style.display = 'none';
+  Object.keys(VERROUS_PAR_ID).forEach(function (id) {
+    var x = document.getElementById(id); if (x) _poserCadenas(x, VERROUS_PAR_ID[id]);
   });
-  var plus = document.getElementById('lbl-plus-outils');
-  if (plus && plus.parentNode) plus.parentNode.parentNode.style.display = 'none';
-  var ga = document.getElementById('param-g-autres'); if (ga) ga.style.display = 'none';
-  // Titres de groupes vides + renommage
-  document.querySelectorAll('.groupe-label').forEach(function (g) {
-    var nx = g.nextElementSibling;
-    if (nx && nx.classList.contains('quick-actions')) {
-      var vis = [].some.call(nx.children, function (c) { return c.style.display !== 'none'; });
-      g.style.display = vis ? '' : 'none';
-      if (nx) nx.style.display = vis ? '' : 'none';
-    }
-  });
-  var labs = document.querySelectorAll('.groupe-label');
-  if (labs[0] && labs[0].textContent.indexOf('Achats') >= 0) labs[0].textContent = 'Facturation';
-  document.body.setAttribute('data-mode', 'facturation');
 }
 
-document.addEventListener('DOMContentLoaded', function () { appliquerMode(); setTimeout(appliquerMode, 600); });
+// Clic sur un élément verrouillé : on bloque avant que son action ne s'exécute.
+document.addEventListener('click', function (ev) {
+  var t = ev.target && ev.target.closest ? ev.target.closest('.tf-verrou') : null;
+  if (!t || _modeTestActif()) return;
+  ev.preventDefault(); ev.stopImmediatePropagation();
+  afficherVerrou(null, t.getAttribute('data-verrou-nom'));
+}, true);
+
+function appliquerMode() {
+  document.body.setAttribute('data-mode', 'complet');
+  marquerVerrous();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  appliquerMode(); setTimeout(appliquerMode, 600); setTimeout(appliquerMode, 2500);
+  // Les écrans générés plus tard (listes, hubs) sont aussi marqués.
+  var t = null;
+  new MutationObserver(function () { clearTimeout(t); t = setTimeout(marquerVerrous, 250); })
+    .observe(document.body, { childList: true, subtree: true });
+});
