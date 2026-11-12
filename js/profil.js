@@ -186,7 +186,7 @@ async function partagerProfil() {
 STATE.mesParrainages = STATE.mesParrainages || [];
 function lienParrainage() {
   const id = STATE.profil.id_unique || 'BP-000000';
-  return `${window.location.origin}${window.location.pathname.replace('app.html','index.html')}?parrain=${id}`;
+  return `${window.location.origin}/?parrain=${id}`;
 }
 function copierLienParrainage() {
   navigator.clipboard?.writeText(lienParrainage()).then(() => showToast('✅ Lien de parrainage copié !', 'success'));
