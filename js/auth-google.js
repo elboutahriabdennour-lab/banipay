@@ -59,16 +59,16 @@ async function compteGoogleANouveau(u, tok) {
       '/rest/v1/profils_entreprise?id=eq.' + u.id + '&select=id&limit=1',
       '/rest/v1/profils_comptable?user_id=eq.' + u.id + '&select=id&limit=1',
       '/rest/v1/profils_comptable?email=eq.' + encodeURIComponent(em) + '&select=id&limit=1',
-      '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(em) + '&statut=eq.acceptee&select=id&limit=1'
+      '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(em) + '&statut=eq.acceptee&limit=1'
     ];
     for (var i = 0; i < urls.length; i++) {
       var r = await fetch(SUPABASE_URL + urls[i], { headers: h });
-      if (!r.ok) return false;
+      if (!r.ok) { console.warn('compteGoogleANouveau:', r.status, urls[i]); return false; }
       var rows = await r.json();
       if (rows && rows.length) return false;
     }
     var rE = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', { method: 'POST', headers: h, body: '{}' });
-    if (!rE.ok) return false;
+    if (!rE.ok) { console.warn('compteGoogleANouveau mon_entreprise_id:', rE.status); return false; }
     var eid = await rE.json();
     if (eid && eid !== u.id) return false;
     var rA = await fetch(SUPABASE_URL + '/rest/v1/rpc/email_est_agent_support', { method: 'POST', headers: h, body: JSON.stringify({ p_email: em }) });
