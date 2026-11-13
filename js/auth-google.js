@@ -52,8 +52,8 @@ function _hdrG(tok) { return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer 
 async function compteGoogleANouveau(u, tok) {
   try {
     var prov = (u.app_metadata && u.app_metadata.provider) || '';
-    if (prov !== 'google') return false;
-    if (u.user_metadata && u.user_metadata.role) return false;
+    if (prov !== 'google') { console.info('compteGoogleANouveau: fournisseur =', prov); return false; }
+    if (u.user_metadata && u.user_metadata.role) { console.info('compteGoogleANouveau: rôle déjà défini'); return false; }
     var h = _hdrG(tok), em = (u.email || '').toLowerCase();
     var urls = [
       '/rest/v1/profils_entreprise?id=eq.' + u.id + '&select=id&limit=1',
@@ -65,14 +65,15 @@ async function compteGoogleANouveau(u, tok) {
       var r = await fetch(SUPABASE_URL + urls[i], { headers: h });
       if (!r.ok) { console.warn('compteGoogleANouveau:', r.status, urls[i]); return false; }
       var rows = await r.json();
-      if (rows && rows.length) return false;
+      if (rows && rows.length) { console.info('compteGoogleANouveau: fiche existante', urls[i]); return false; }
     }
     var rE = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', { method: 'POST', headers: h, body: '{}' });
-    if (!rE.ok) { console.warn('compteGoogleANouveau mon_entreprise_id:', rE.status); return false; }
-    var eid = await rE.json();
-    if (eid && eid !== u.id) return false;
+    // Pour un compte tout neuf cette fonction peut échouer : on l'ignore (même tolérance qu'à la connexion par e-mail).
+    if (rE.ok) { var eid = await rE.json(); if (eid && eid !== u.id) return false; }
+    else console.warn('compteGoogleANouveau mon_entreprise_id ignoré:', rE.status);
     var rA = await fetch(SUPABASE_URL + '/rest/v1/rpc/email_est_agent_support', { method: 'POST', headers: h, body: JSON.stringify({ p_email: em }) });
     if (rA.ok && (await rA.json())) return false;
+    console.info('compteGoogleANouveau: compte neuf, choix affiché');
     return true;
   } catch (e) { return false; }
 }
