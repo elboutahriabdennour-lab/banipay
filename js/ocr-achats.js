@@ -124,7 +124,7 @@ async function _lireFacturePDFLocal(pdfDataUrl) {
     const binaire = atob(base64);
     const octets = new Uint8Array(binaire.length);
     for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
-    const doc = await pdfjsLib.getDocument({ data: octets }).promise;
+    const doc = await pdfjsLib.getDocument({ data: octets, isEvalSupported: false }).promise;
     let texte = '';
     const nbPages = Math.min(doc.numPages, 3);
     for (let p = 1; p <= nbPages; p++) {

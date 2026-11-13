@@ -58,11 +58,12 @@ async function importerClientDepuisLien() {
   showToast('⏳ Chargement du profil...');
 
   try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id_unique=eq.' + profilId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    const rv = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_vitrine_publique', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_id_unique: String(profilId) })
     });
-    const data = await r.json();
-    const p = data && data[0];
+    const p = rv.ok ? await rv.json() : null;
 
     if (!p) { showToast('Profil introuvable', 'error'); return; }
 
@@ -298,7 +299,7 @@ function openDetailClient(id) {
     factEl.innerHTML = cFact.map(f=>`
       <div class="card" onclick="openDetail(${f.id})" style="margin-bottom:8px">
         <div class="card-ico" style="background:#E7F2EC">📄</div>
-        <div class="card-body"><div class="card-name">${f.ref}</div><div class="card-ref">${f.date_emission||''}</div></div>
+        <div class="card-body"><div class="card-name">${escapeHTML(f.ref)}</div><div class="card-ref">${f.date_emission||''}</div></div>
         <div class="card-end"><div class="card-amt">${fmt(f.ttc)} MAD</div><div class="badge b-${f.statut}">${badgeF(f.statut)}</div></div>
       </div>`).join('') || '<div style="color:#8E9C95;font-size:13px;padding:8px 0">Aucune facture</div>';
   }
@@ -308,7 +309,7 @@ function openDetailClient(id) {
     devisEl.innerHTML = cDevis.map(d => `
       <div class="card" onclick="openDetailDevis(${d.id})" style="margin-bottom:8px">
         <div class="card-ico" style="background:#F7EFDC">📝</div>
-        <div class="card-body"><div class="card-name">${d.ref}</div><div class="card-ref">${d.date_emission||''}</div></div>
+        <div class="card-body"><div class="card-name">${escapeHTML(d.ref)}</div><div class="card-ref">${d.date_emission||''}</div></div>
         <div class="card-end"><div class="card-amt">${fmt(d.ttc)} MAD</div><div class="badge b-${d.statut}">${badgeDV(d.statut)}</div></div>
       </div>`).join('') || '<div style="color:#8E9C95;font-size:13px;padding:8px 0">Aucun devis</div>';
   }
@@ -321,7 +322,7 @@ function openDetailClient(id) {
       return `
       <div class="card" style="margin-bottom:8px">
         <div class="card-ico" style="background:#EEF3E4">💰</div>
-        <div class="card-body"><div class="card-name">${facLiee ? facLiee.ref : 'Facture #' + p.facture_id}</div><div class="card-ref">${p.date || ''} · ${p.mode || ''}</div></div>
+        <div class="card-body"><div class="card-name">${escapeHTML(facLiee ? facLiee.ref : 'Facture #' + p.facture_id)}</div><div class="card-ref">${p.date || ''} · ${p.mode || ''}</div></div>
         <div class="card-end"><div class="card-amt" style="color:#6E8F4E">${fmt(p.montant||0)} MAD</div></div>
       </div>`;
     }).join('') || '<div style="color:#8E9C95;font-size:13px;padding:8px 0">Aucun paiement enregistré</div>';

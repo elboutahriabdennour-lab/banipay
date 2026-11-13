@@ -854,7 +854,7 @@ async function inviterComptable() {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY),
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({

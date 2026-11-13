@@ -35,7 +35,7 @@ function renderDevisList() {
       <div class="card-ico" style="background:${bgs[d.statut]||'#EAE4DA'}">${icons[d.statut]||'📝'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(d.client)}</div>
-        <div class="card-ref">${d.ref} · ${d.date_emission||''} · ${d.validite||30}j</div>
+        <div class="card-ref">${escapeHTML(d.ref)} · ${d.date_emission||''} · ${d.validite||30}j</div>
         ${d.statut==='accepte'?'<div style="display:inline-block;background:#EEF3E4;color:#6E8F4E;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">✅ Accepté</div>':d.statut==='refuse'?'<div style="display:inline-block;background:#F5E4E1;color:#8E2E24;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:2px">❌ Refusé</div>':''}
       </div>
       <div class="card-end">
@@ -80,7 +80,7 @@ function renderLignesD() {
   c.innerHTML = STATE.lignesD.map((l,i) => `
     <div class="ligne-item">
       <div class="ligne-body">
-        <div class="ligne-desc">${l.desc}</div>
+        <div class="ligne-desc">${escapeHTML(l.desc)}</div>
         <div class="ligne-meta">${l.qte} ${l.unite||'u'} × ${fmt(l.pu)} ${STATE.deviseD} · TVA ${Number(l.tva) >= 0 ? Number(l.tva) : 20} %</div>
       </div>
       <div class="ligne-amt">${fmt(l.qte*l.pu)} ${STATE.deviseD}</div>
@@ -403,7 +403,7 @@ async function sauvegarderAvoir() {
         const p = STATE.profil || {};
         await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
           method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
           body: JSON.stringify({
             p_user_id: clientInfo.reference_id,
             p_destinataire_email: clientInfo.email || '',
@@ -528,7 +528,7 @@ function renderLignesBC() {
   const c=el('bc-lignes'); if(!c) return;
   c.innerHTML=STATE.lignesBC.map((l,i)=>`
     <div class="ligne-item">
-      <div class="ligne-body"><div class="ligne-desc">${l.desc}</div><div class="ligne-meta">${l.qte} × ${fmt(l.pu)} MAD</div></div>
+      <div class="ligne-body"><div class="ligne-desc">${escapeHTML(l.desc)}</div><div class="ligne-meta">${l.qte} × ${fmt(l.pu)} MAD</div></div>
       <div class="ligne-amt">${fmt(l.qte*l.pu)} MAD</div>
       <button class="ligne-del" onclick="STATE.lignesBC.splice(${i},1);renderLignesBC()">×</button>
     </div>`).join('');
@@ -965,7 +965,7 @@ function renderLignesBL() {
   const c=el('bl-lignes'); if(!c) return;
   c.innerHTML=STATE.lignesBL.map((l,i)=>`
     <div class="ligne-item">
-      <div class="ligne-body"><div class="ligne-desc">${l.desc}</div><div class="ligne-meta">Qté: ${l.qte} ${l.unite||'u'}</div></div>
+      <div class="ligne-body"><div class="ligne-desc">${escapeHTML(l.desc)}</div><div class="ligne-meta">Qté: ${l.qte} ${l.unite||'u'}</div></div>
       <div class="ligne-amt">${l.qte} ${l.unite||'u'}</div>
       <button class="ligne-del" onclick="STATE.lignesBL.splice(${i},1);renderLignesBL()">×</button>
     </div>`).join('');
@@ -1051,7 +1051,7 @@ async function sauvegarderBonLivraison() {
           const p = STATE.profil || {};
           await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
             method: 'POST',
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
             body: JSON.stringify({
               p_user_id: clientInfo.reference_id,
               p_destinataire_email: clientInfo.email || '',
@@ -1230,7 +1230,7 @@ function renderAvoirList() {
         <div>
           <div style="font-size:13px;font-weight:700;color:#8E2E24">↩️ ${escapeHTML(a.ref||'')}</div>
           <div style="font-size:12px;color:#14241F;margin-top:2px">${escapeHTML(a.client||'')}</div>
-          <div style="font-size:11px;color:#5B6B64;margin-top:2px">${a.motif||''} · ${a.date_emission||''}</div>
+          <div style="font-size:11px;color:#5B6B64;margin-top:2px">${escapeHTML(a.motif||'')} · ${a.date_emission||''}</div>
           ${a.facture_origine_ref?`<div style="font-size:10px;color:#8E9C95">Facture: ${a.facture_origine_ref}</div>`:''}
         </div>
         <div style="text-align:right">

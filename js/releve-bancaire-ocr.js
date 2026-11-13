@@ -94,7 +94,7 @@ async function _lireReleveBancairePdf(pdfDataUrl) {
     const binaire = atob(base64);
     const octets = new Uint8Array(binaire.length);
     for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i);
-    const doc = await pdfjsLib.getDocument({ data: octets }).promise;
+    const doc = await pdfjsLib.getDocument({ data: octets, isEvalSupported: false }).promise;
     let texte = '';
     const nbPages = Math.min(doc.numPages, 20);
     for (let p = 1; p <= nbPages; p++) {
@@ -2687,7 +2687,7 @@ function _afficherDiagnosticEchecLectureReleve() {
       STATE._derniereErreurLectureReleve = 'La bibliothèque de lecture PDF (PDF.js) n\'a pas pu être chargée — vérifiez votre connexion internet et réessayez.';
       return null;
     }
-    var doc = await pdfjsLib.getDocument({ data: octets.slice() }).promise;
+    var doc = await pdfjsLib.getDocument({ data: octets.slice(), isEvalSupported: false }).promise;
     var toutesLignes = [];
     var texte = '';
     var nbPages = Math.min(doc.numPages, 40);

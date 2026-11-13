@@ -318,11 +318,16 @@ async function gererClicNotification(e) {
     const patchBody = {}; patchBody[champ] = valeur;
     if (btnDA) patchBody.signature_data = 'TEXTE:Accepté électroniquement le ' + new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
     try {
-      await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + docId, {
+      const rPatch = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + encodeURIComponent(docId), {
         method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(patchBody)
       });
+      const majOk = rPatch.ok ? await rPatch.json().catch(function() { return []; }) : [];
+      if (!Array.isArray(majOk) || !majOk.length) {
+        showToast('Réponse non enregistrée. Ouvrez le document depuis son lien pour répondre.', 'error');
+        return true;
+      }
       if (nid && !btnDAtt) {
         await fetch(SUPABASE_URL + '/rest/v1/rpc/marquer_notification_lue', {
           method: 'POST',

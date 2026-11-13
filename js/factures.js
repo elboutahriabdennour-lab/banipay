@@ -145,7 +145,7 @@ function renderFactureList() {
       <div class="card-ico" style="background:${bgs[f.statut]||'#EAE4DA'}">${icons[f.statut]||'📄'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(f.client)}</div>
-        <div class="card-ref">${f.ref} · ${f.date_emission||''}</div>
+        <div class="card-ref">${escapeHTML(f.ref)} · ${f.date_emission||''}</div>
         ${recu > 0 && f.statut !== 'payee' ? `<div style="margin-top:4px;height:3px;background:#DDE3DA;border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#6E8F4E;border-radius:2px"></div></div>` : ''}
         ${(function() {
           const n = (STATE._compteursNotesFactures || {})[f.id];
@@ -316,7 +316,7 @@ function filtrerProduits() {
   picker.innerHTML = filtered.length ? filtered.map(p => `
     <div class="produit-picker-item" onclick="ajouterDepuisCatalogue(${p.id})">
       <div>
-        <div style="font-size:13px;font-weight:600;color:#14241F">${p.nom}</div>
+        <div style="font-size:13px;font-weight:600;color:#14241F">${escapeHTML(p.nom)}</div>
         <div style="font-size:11px;color:#8E9C95">${p.unite||'u'} · ${fmt(p.prix_ht)} MAD HT</div>
       </div>
       <div style="color:#1B5E4B;font-size:22px;font-weight:300">＋</div>
@@ -728,7 +728,7 @@ function genRecuPaiement(id) {
   const f = STATE.factures.find(x => x.id === id);
   if (!f) return;
   const p = STATE.profil;
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Reçu ${f.ref}<\/title>
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Reçu ${escapeHTML(f.ref)}<\/title>
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;max-width:420px;margin:40px auto;padding:20px}
 .card{border:1px solid #DDE3DA;border-radius:16px;overflow:hidden}
 .header{background:#6E8F4E;color:#fff;padding:24px;text-align:center}
@@ -738,16 +738,16 @@ function genRecuPaiement(id) {
 .btn{display:block;width:100%;background:#6E8F4E;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px}
 @media print{.btn{display:none}}<\/style><\/head><body>
 <div class="card">
-  <div class="header"><div style="font-size:40px;margin-bottom:8px">✅</div><h2>Reçu de paiement</h2><div style="opacity:0.8;margin-top:4px">${f.ref}</div></div>
+  <div class="header"><div style="font-size:40px;margin-bottom:8px">✅</div><h2>Reçu de paiement</h2><div style="opacity:0.8;margin-top:4px">${escapeHTML(f.ref)}</div></div>
   <div class="body">
     <div class="row"><span style="color:#5B6B64">Client</span><strong>${escapeHTML(f.client)}</strong></div>
     <div class="row"><span style="color:#5B6B64">Date</span><span>${new Date().toLocaleDateString('fr-MA')}</span></div>
     <div class="row"><span style="color:#5B6B64">Mode</span><span>${f.paiement||'Virement'}</span></div>
-    <div class="row"><span style="color:#5B6B64">Référence</span><span>${f.ref}</span></div>
+    <div class="row"><span style="color:#5B6B64">Référence</span><span>${escapeHTML(f.ref)}</span></div>
     ${f.chantier ? `<div class="row"><span style="color:#5B6B64">Projet</span><span>${escapeHTML(f.chantier)}</span></div>` : ''}
     <div class="total"><span>Montant reçu</span><span>${fmt(f.ttc)} ${f.devise||'MAD'}</span></div>
     <div style="font-size:11px;color:#8E9C95;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #EAE4DA">
-      ${p.raison||''} · ${p.tel||''} · ${p.email||''}
+      ${escapeHTML(p.raison||'')} · ${escapeHTML(p.tel||'')} · ${escapeHTML(p.email||'')}
     </div>
   </div>
 </div>
@@ -1071,7 +1071,7 @@ function filterRelances(filter, btn) {
       <div class="card-ico" style="background:${f.statut==='retard'?'#F5E4E1':'#F7EFDC'}">${f.statut==='retard'?'⚠️':'🧱'}</div>
       <div class="card-body">
         <div class="card-name">${escapeHTML(f.client)}</div>
-        <div class="card-ref">${f.ref} ${jours > 0 ? '· <span style="color:#B23A2E">'+jours+' jours de retard</span>' : '· '+formatDate(f.echeance)}</div>
+        <div class="card-ref">${escapeHTML(f.ref)} ${jours > 0 ? '· <span style="color:#B23A2E">'+jours+' jours de retard</span>' : '· '+formatDate(f.echeance)}</div>
       </div>
       <div class="card-end">
         <div style="font-size:13px;font-weight:700;color:#B23A2E">${fmt(restant)} MAD</div>

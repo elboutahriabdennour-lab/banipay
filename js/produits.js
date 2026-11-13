@@ -361,7 +361,7 @@ async function envoyerVersCompteZelto(destinataireId, destinataireNom, destinata
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
       headers: {
-        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({

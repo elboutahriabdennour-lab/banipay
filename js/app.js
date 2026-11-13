@@ -64,18 +64,31 @@ async function loadPortailClient(clientId) {
   showToast('Portail client — fonctionnalité à venir');
 }
 
+// Aides pour les pages publiques : chaque appel exige le code secret du lien (voir SQL 054).
+async function _rpcPublic(nom, corps) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + nom, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(corps)
+    });
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
+}
+async function _emetteurPublic(type, docId, token) {
+  const p = await _rpcPublic('get_emetteur_public', { p_type: type, p_doc_id: String(docId), p_token: String(token || '') });
+  return (p && typeof p === 'object') ? p : {};
+}
+
 async function loadPublicProfil(profilId) {
   document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Karla,sans-serif;color:#5B6B64">⏳ Chargement...</div>';
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/profils_entreprise?id_unique=eq.${profilId}&select=*`,
-      {headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
-    const d = await r.json();
-    const p = d && d[0];
+    const p = await _rpcPublic('get_vitrine_publique', { p_id_unique: String(profilId) });
     if (!p) { document.body.innerHTML='<div style="text-align:center;padding:60px 20px;font-family:Karla,sans-serif"><h2>Profil introuvable</h2></div>'; return; }
     document.body.innerHTML = `
       <div style="font-family:Karla,-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:20px">
         <div style="background:#1B5E4B;border-radius:16px;padding:24px;text-align:center;margin-bottom:16px">
-          ${p.logo?`<img src="${p.logo}" style="max-width:80px;max-height:50px;object-fit:contain;margin-bottom:12px;filter:brightness(0) invert(1)"><br>`:''}
+          ${p.logo?`<img src="${escapeHTML(p.logo)}" style="max-width:80px;max-height:50px;object-fit:contain;margin-bottom:12px;filter:brightness(0) invert(1)"><br>`:''}
           <div style="font-size:24px;font-weight:700;color:#fff">${escapeHTML(p.raison||'—')}</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">${escapeHTML(p.secteur||'')} ${p.forme?'· '+escapeHTML(p.forme):''}</div>
         </div>
@@ -142,10 +155,7 @@ async function loadPublicProfil(profilId) {
 async function afficherPageInvitation(email, entrepriseId) {
   let profil = {};
   try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + entrepriseId + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const data = await r.json();
+    const data = [await _rpcPublic('get_entreprise_invitation', { p_entreprise_id: entrepriseId, p_email: email })];
     profil = (data && data[0]) || {};
   } catch(e) {}
 
@@ -158,63 +168,20 @@ async function afficherPageInvitation(email, entrepriseId) {
       '<div style="background:#E7F2EC;border-radius:14px;padding:16px;margin-bottom:24px;text-align:left">' +
         '<div style="font-size:12px;color:#8E9C95;margin-bottom:4px">Entreprise</div>' +
         '<div style="font-size:16px;font-weight:700;color:#14241F">' + escapeHTML(profil.raison || 'Entreprise') + '</div>' +
-        (profil.secteur ? '<div style="font-size:12px;color:#5B6B64;margin-top:2px">' + profil.secteur + '</div>' : '') +
+        (profil.secteur ? '<div style="font-size:12px;color:#5B6B64;margin-top:2px">' + escapeHTML(profil.secteur) + '</div>' : '') +
       '</div>' +
       '<div style="font-size:13px;color:#5B6B64;margin-bottom:24px">' +
-        'Vous avez été invité(e) à accéder aux données comptables de cette entreprise en lecture seule.' +
+        'Vous avez été invité(e) à accéder aux données comptables de cette entreprise en lecture seule. Connectez-vous (ou créez un compte) avec l\u2019adresse ' + escapeHTML(email) + ' : l\u2019invitation vous attend dans vos notifications.' +
       '</div>' +
-      '<button id="btn-accept-inv" style="width:100%;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit">' +
-        '\u2705 Accepter' +
-      '</button>' +
-      '<button id="btn-refuse-inv" style="width:100%;padding:14px;background:#EAE4DA;color:#5B6B64;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-family:inherit">' +
-        'Refuser' +
+      '<button id="btn-accept-inv" style="width:100%;padding:14px;background:#6E8F4E;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">' +
+        'Se connecter pour répondre' +
       '</button>' +
       '<div style="margin-top:20px;font-size:11px;color:#8E9C95">Propulsé par <strong style="color:#1B5E4B">Tafir</strong></div>' +
     '</div></div>';
   setTimeout(function() {
     const btnA = document.getElementById('btn-accept-inv');
-    const btnR = document.getElementById('btn-refuse-inv');
-    if (btnA) btnA.onclick = function() { accepterInvitationEmail(encodeURIComponent(email), entrepriseId); };
-    if (btnR) btnR.onclick = function() { refuserInvitationEmail(encodeURIComponent(email), entrepriseId); };
+    if (btnA) btnA.onclick = function() { window.location.href = window.location.origin + window.location.pathname; };
   }, 100);
-}
-
-async function accepterInvitationEmail(emailEnc, entrepriseId) {
-  const email = decodeURIComponent(emailEnc);
-  try {
-    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email.toLowerCase()), {
-      method: 'PATCH',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'acceptee' })
-    });
-    document.body.innerHTML =
-      '<div style="font-family:Arial,sans-serif;text-align:center;padding:60px 20px">' +
-        '<div style="font-size:64px;margin-bottom:16px">✅</div>' +
-        '<h2 style="color:#6E8F4E;margin-bottom:8px">Invitation acceptée !</h2>' +
-        '<p style="color:#5B6B64;margin-bottom:24px">Connectez-vous à Tafir pour accéder aux données.</p>' +
-        '<a href="' + window.location.origin + window.location.pathname + '" style="background:#1B5E4B;color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600">Ouvrir Tafir</a>' +
-      '</div>';
-  } catch(e) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#B23A2E">Erreur: ' + e.message + '</div>';
-  }
-}
-
-async function refuserInvitationEmail(emailEnc, entrepriseId) {
-  const email = decodeURIComponent(emailEnc);
-  try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?entreprise_id=eq.' + entrepriseId + '&comptable_email=eq.' + encodeURIComponent(email.toLowerCase()), {
-      method: 'PATCH',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'refusee' })
-    });
-    if (!r.ok) {
-      document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#B23A2E;font-family:Arial">❌ Échec — l\'invitation n\'a pas pu être mise à jour. Réessayez ou contactez le support.</div>';
-      return;
-    }
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial"><div style="font-size:48px">❌</div><h2>Invitation refusée</h2></div>';
-  } catch(e) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#B23A2E;font-family:Arial">❌ Erreur: ' + e.message + '</div>';
-  }
 }
 
 async function afficherBonCommandePublic(bcId, token) {
@@ -231,11 +198,7 @@ async function afficherBonCommandePublic(bcId, token) {
       return;
     }
 
-    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + bc.user_id + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const profils = await rp.json();
-    const profil = (profils && profils[0]) || {};
+    const profil = await _emetteurPublic('bc', bcId, token);
 
     genDocPDF({
       type: 'BON DE COMMANDE', ref: bc.ref, color: '#7C5CA6',
@@ -269,7 +232,7 @@ async function afficherBonCommandePublic(bcId, token) {
       }, 400);
     }
   } catch(e) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + escapeHTML(e.message) + '</div>';
   }
 }
 
@@ -297,7 +260,7 @@ async function repondreBonCommandePublic(bcId, reponse, bc, token) {
         <div style="font-size:64px;margin-bottom:16px">${icon}</div>
         <h2 style="color:#14241F;margin-bottom:8px">Bon de commande ${reponse === 'confirme' ? 'confirmé' : 'refusé'} !</h2>
         <div style="background:${reponse === 'confirme' ? '#EEF3E4' : '#F5E4E1'};border-radius:12px;padding:16px;margin:16px 0;text-align:left">
-          <div style="font-size:13px;color:#5B6B64">Référence : <strong>${bc.ref}</strong></div>
+          <div style="font-size:13px;color:#5B6B64">Référence : <strong>${escapeHTML(bc.ref)}</strong></div>
         </div>
         <div style="margin-top:24px;font-size:11px;color:#8E9C95">Propulsé par <strong style="color:#1B5E4B">Tafir</strong></div>
         <div style="margin-top:16px;font-size:11px;color:#8E9C95">Redirection dans <span id="compte-redirect-bc">4</span>s...</div>
@@ -331,11 +294,7 @@ async function afficherBonLivraisonPublic(blId, token) {
       document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#5B6B64"><div style="font-size:48px;margin-bottom:16px">🔍</div><h2>Bon de livraison introuvable</h2></div>';
       return;
     }
-    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + bl.user_id + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const profils = await rp.json();
-    const profil = (profils && profils[0]) || {};
+    const profil = await _emetteurPublic('bl', blId, token);
 
     // FIX (retour utilisateur) : le bon de livraison n'avait jamais de QR
     // code du tout — contrairement au devis, à la facture et au bon de
@@ -352,11 +311,7 @@ async function afficherBonLivraisonPublic(blId, token) {
     let docUrlFacture = '';
     if (bl.facture_id) {
       try {
-        const rFact = await fetch(SUPABASE_URL + '/rest/v1/factures?id=eq.' + bl.facture_id + '&select=ref,token_public', {
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-        });
-        const factures = await rFact.json();
-        const facture = factures && factures[0];
+        const facture = await _rpcPublic('get_facture_liee_bl', { p_bl_id: String(blId), p_token: String(token || '') });
         if (facture) {
           const base = window.location.origin + window.location.pathname;
           docUrlFacture = base + '?doc=' + bl.facture_id + '&t=' + (facture.token_public || '');
@@ -376,7 +331,7 @@ async function afficherBonLivraisonPublic(blId, token) {
       doc_url: docUrlFacture || undefined,
     });
   } catch(e) {
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + escapeHTML(e.message) + '</div>';
   }
 }
 
@@ -442,11 +397,7 @@ async function afficherDocumentPublic(docId, token) {
       return;
     }
 
-    const rp = await fetch(SUPABASE_URL + '/rest/v1/profils_entreprise?id=eq.' + doc.user_id + '&select=*', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const profils = await rp.json();
-    profil = (profils && profils[0]) || {};
+    profil = await _emetteurPublic(isDevis ? 'devis' : 'facture', docId, token);
 
     const lignes = typeof doc.lignes === 'string' ? JSON.parse(doc.lignes || '[]') : (doc.lignes || []);
 
@@ -455,35 +406,15 @@ async function afficherDocumentPublic(docId, token) {
     if (doc.devis_ref) {
       refsQR.push({ icon: '📝', label: 'Devis', ref: doc.devis_ref, url: '' });
     }
-    if (doc.bc_id) {
-      try {
-        const rBC = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_commande_public', {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ p_bc_id: doc.bc_id })
-        });
-        if (rBC.ok) {
-          const bcData = (await rBC.json()) || [];
-          const bc = bcData[0];
-          if (bc) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: bc.ref, url: base + '?bc=' + bc.id + '&t=' + (bc.token_public||'') });
-        }
-      } catch(eBC) {}
-    }
     let blTrouve = null;
-    if (!isDevis) {
-      try {
-        const rBLref = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_bon_livraison_facture', {
-          method: 'POST',
-          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ p_facture_id: docId })
-        });
-        if (rBLref.ok) {
-          const blsRef = (await rBLref.json()) || [];
-          blTrouve = blsRef[0] || null;
-          if (blTrouve) refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: blTrouve.ref, url: base + '?bl=' + blTrouve.id + '&t=' + (blTrouve.token_public||'') });
-        }
-      } catch(eBLref) {}
-    }
+    try {
+      const liens = await _rpcPublic('get_liens_document_public', { p_type: isDevis ? 'devis' : 'facture', p_doc_id: String(docId), p_token: String(token || '') });
+      if (liens && liens.bc) refsQR.push({ icon: '📋', label: 'Bon de commande', ref: liens.bc.ref, url: base + '?bc=' + liens.bc.id + '&t=' + (liens.bc.token_public || '') });
+      if (liens && liens.bl && !isDevis) {
+        blTrouve = liens.bl;
+        refsQR.push({ icon: '📦', label: 'Bon de livraison', ref: liens.bl.ref, url: base + '?bl=' + liens.bl.id + '&t=' + (liens.bl.token_public || '') });
+      }
+    } catch (eLiens) {}
 
     genDocPDF({
       type: isDevis ? 'DEVIS' : 'FACTURE',
@@ -603,7 +534,7 @@ async function afficherDocumentPublic(docId, token) {
 
   } catch(e) {
     console.error('afficherDocumentPublic:', e);
-    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + e.message + '</div>';
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Arial;color:#B23A2E">Erreur: ' + escapeHTML(e.message) + '</div>';
   }
 }
 
@@ -883,7 +814,7 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
           method: 'POST',
           headers: {
             'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY),
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({

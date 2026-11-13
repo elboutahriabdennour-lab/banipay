@@ -1611,7 +1611,7 @@ async function declarerTVAMois(mois) {
     const destinataireEmail = inv?.entreprise_email || '';
     await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({
         p_user_id: CPT.currentEntrepriseId,
         p_destinataire_email: destinataireEmail || '',
@@ -1916,7 +1916,7 @@ async function envoyerInvitationDepuisProfil() {
     });
     await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + (sb.token || SUPABASE_KEY), 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_user_id: sb.user?.id, p_destinataire_email: emailEnt, p_type: 'invitation_comptable', p_titre: 'Invitation de votre comptable', p_corps: nomCpt + ' souhaite acceder a vos documents Tafir en tant que comptable.', p_meta: JSON.stringify({ comptable_email: emailCpt, nom_comptable: nomCpt }) })
     });
     if (document.getElementById('cpt-invite-email')) document.getElementById('cpt-invite-email').value = '';
