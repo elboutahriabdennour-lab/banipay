@@ -24,20 +24,43 @@ function connexionGoogle() {
     if (e) e.textContent = 'Google ne fonctionne pas dans ce navigateur intégré. Ouvrez le lien dans Chrome ou Safari, ou connectez-vous avec votre e-mail.';
     return;
   }
+  if (window._googleEnCours) return;
+  window._googleEnCours = true;
+  var bg = document.querySelector('#btn-google button');
+  if (bg) { bg.disabled = true; bg.style.opacity = '.7'; var sp = bg.querySelector('span'); if (sp) sp.textContent = 'Connexion à Google…'; }
   window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(window.location.origin + window.location.pathname);
 }
 
+
+// Écran « Connexion en cours… » affiché dès le retour de Google, pour que la page de connexion ne donne pas l'impression d'un échec.
+function chargementGoogle(afficher) {
+  var d = document.getElementById('chargement-google');
+  if (!afficher) { if (d) d.remove(); return; }
+  if (d || !document.body) return;
+  d = document.createElement('div');
+  d.id = 'chargement-google';
+  d.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#0F2A22;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:inherit;font-size:16px;gap:14px';
+  d.innerHTML = '<div style="width:34px;height:34px;border:3px solid rgba(255,255,255,.25);border-top-color:#C8E86B;border-radius:50%;animation:cgspin 0.9s linear infinite"></div><div>Connexion en cours…</div><style>@keyframes cgspin{to{transform:rotate(360deg)}}</style>';
+  document.body.appendChild(d);
+}
+window.addEventListener('pageshow', function (e) {
+  if (e.persisted) { window._googleEnCours = false; var bg = document.querySelector('#btn-google button'); if (bg) { bg.disabled = false; bg.style.opacity = ''; var sp = bg.querySelector('span'); if (sp) sp.textContent = 'Continuer avec Google'; } }
+});
+
 async function finaliserConnexionOAuth(accessToken, refreshToken) {
   history.replaceState(null, '', window.location.pathname + window.location.search);
+  chargementGoogle(true);
   try {
     var r = await fetch(SUPABASE_URL + '/auth/v1/user', { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + accessToken } });
     var u = await r.json();
     if (!r.ok || !u || !u.id) throw new Error('Connexion Google impossible');
     try { localStorage.setItem('bp_remember_v2', '1'); } catch (e) {}
     sb._setSession({ access_token: accessToken, refresh_token: refreshToken, user: u });
-    if (await compteGoogleANouveau(u, accessToken)) await demanderTypeCompte(u, accessToken);
+    if (await compteGoogleANouveau(u, accessToken)) { chargementGoogle(false); await demanderTypeCompte(u, accessToken); chargementGoogle(true); }
     await apresConnexionVerifierTelephone();
+    chargementGoogle(false);
   } catch (e) {
+    chargementGoogle(false);
     goScreen('auth', null); switchTab('login');
     var el2 = document.getElementById('login-err'); if (el2) el2.textContent = 'La connexion Google a échoué. Réessayez ou utilisez votre e-mail.';
   }
@@ -165,4 +188,8 @@ function installerBoutonGoogle() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function () { installerBoutonGoogle(); messageLienExpire(); });
+document.addEventListener('DOMContentLoaded', function () {
+  var hp = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+  if (hp.get('access_token') && hp.get('token_type') === 'bearer' && !hp.get('type')) chargementGoogle(true);
+  installerBoutonGoogle(); messageLienExpire();
+});
