@@ -106,6 +106,18 @@ var POLICES_MODELE = {
   playfair:   { nom: 'Playfair — classique',   css: "'Playfair Display',Georgia,serif",    gf: 'Playfair+Display:wght@400;600;700' },
   georgia:    { nom: 'Georgia — sobre',        css: "Georgia,'Times New Roman',serif",     gf: '' }
 };
+// Polices du modèle de facture : fichiers hébergés sur tafir.fr (dossier /fonts), plus aucun appel à Google.
+function policesLocalesCSS(id) {
+  var o = (typeof location !== 'undefined' && location.origin && location.origin !== 'null') ? location.origin : 'https://tafir.fr';
+  function ff(nom, fichier, poids) { return "@font-face{font-family:'" + nom + "';font-style:normal;font-weight:" + poids + ";font-display:swap;src:url('" + o + "/fonts/" + fichier + "') format('woff2')}"; }
+  if (id === 'inter') return ff('Inter', 'inter-latin-wght-normal.woff2', '100 900');
+  if (id === 'lora') return ff('Lora', 'lora-latin-wght-normal.woff2', '400 700');
+  if (id === 'montserrat') return ff('Montserrat', 'montserrat-latin-wght-normal.woff2', '100 900');
+  if (id === 'playfair') return ff('Playfair Display', 'playfair-display-latin-wght-normal.woff2', '400 900');
+  if (id === 'poppins') return ff('Poppins', 'poppins-latin-400-normal.woff2', '400') + ff('Poppins', 'poppins-latin-600-normal.woff2', '600') + ff('Poppins', 'poppins-latin-700-normal.woff2', '700');
+  return '';
+}
+
 var MODELE_DEFAUT = { couleur: '', police: 'inter', entete: 'sombre', logoPos: 'gauche', logoTaille: 'moyen', zebre: true,
   montrerRib: true, montrerSignature: true, montrerMarque: true, intro: '', pied: '' };
 // Couleurs réglables une à une (vide = automatique). [clé, libellé, valeur d'origine]
@@ -181,7 +193,7 @@ function construireHTMLDoc(opts) {
   const html = `<!DOCTYPE html><html lang="${langue}" dir="${estRTL ? 'rtl' : 'ltr'}"><head><meta charset="UTF-8">
 <title>${escapeHTML(typeAffiche)} ${escapeHTML(ref)}<\/title>
 <style>
-${police.gf?`@import url('https://fonts.googleapis.com/css2?family=${police.gf}&display=swap');`:''}
+${policesLocalesCSS(m.police)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:${police.css};color:#14241F;font-size:11px;background:#fff;width:210mm;min-height:297mm;margin:0 auto;max-width:210mm;display:flex;flex-direction:column}
 @media print{

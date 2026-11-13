@@ -3,19 +3,7 @@
 // POUR OUVRIR UN MODULE : supprimer sa ligne dans ECRANS_VERROUILLES (plus bas). Rien d'autre à faire.
 // POUR VERROUILLER UN MODULE : ajouter une ligne  'nom-de-l-ecran': 'Nom affiché',
 //
-// Interrupteur de TEST, valable seulement sur l'appareil où on l'active :
-//   ouvrir  app.html?mode_test=complet  -> lève les cadenas sur cet appareil et affiche les outils de test
-//   ouvrir  app.html?mode_test=off      -> remet les cadenas et masque les outils de test
-// (À RETIRER avant le lancement public, avec js/demo-test.js.)
 var MODE_ZELTO = 'complet';
-
-(function () {
-  try {
-    var q = new URLSearchParams(location.search).get('mode_test');
-    if (q === 'complet') localStorage.setItem('tafir_mode_test', 'complet');
-    if (q === 'off') localStorage.removeItem('tafir_mode_test');
-  } catch (e) {}
-})();
 
 // ── Modules verrouillés : écran → nom affiché dans le message ──────────────────────────────────
 var ECRANS_VERROUILLES = {
@@ -36,10 +24,8 @@ var ECRANS_FACTURATION = [];
 function modeFacturation() { return false; }
 function ecranAutorise() { return true; }
 
-function _modeTestActif() { try { return localStorage.getItem('tafir_mode_test') === 'complet'; } catch (e) { return false; } }
-// Un écran verrouillé reste ouvert pour le propriétaire qui a activé le mode test sur son appareil.
 function ecranVerrouille(name) {
-  if (!name || _modeTestActif()) return false;
+  if (!name) return false;
   return Object.prototype.hasOwnProperty.call(ECRANS_VERROUILLES, name);
 }
 function nomModuleVerrouille(name) { return ECRANS_VERROUILLES[name] || 'Cette fonction'; }
@@ -105,28 +91,12 @@ function marquerVerrous() {
 // Clic sur un élément verrouillé : on bloque avant que son action ne s'exécute.
 document.addEventListener('click', function (ev) {
   var t = ev.target && ev.target.closest ? ev.target.closest('.tf-verrou') : null;
-  if (!t || _modeTestActif()) return;
+  if (!t) return;
   ev.preventDefault(); ev.stopImmediatePropagation();
   afficherVerrou(null, t.getAttribute('data-verrou-nom'));
 }, true);
 
-// Pastille visible tant que le mode test est actif sur cet appareil : les cadenas sont alors levés.
-function majPastilleTest() {
-  var p = document.getElementById('tf-testpill');
-  if (!_modeTestActif()) { if (p) p.remove(); return; }
-  if (p) return;
-  p = document.createElement('div');
-  p.id = 'tf-testpill';
-  p.innerHTML = '<span>Mode test : cadenas levés</span><button type="button">Désactiver</button>';
-  p.querySelector('button').onclick = function () {
-    try { localStorage.removeItem('tafir_mode_test'); } catch (e) {}
-    location.href = location.pathname + '?mode_test=off';
-  };
-  document.body.appendChild(p);
-}
-
 function appliquerMode() {
-  majPastilleTest();
   document.body.setAttribute('data-mode', 'complet');
   marquerVerrous();
 }
