@@ -479,17 +479,12 @@ async function _continuerApresAuthentification(email, errEl, remember) {
           // FIX: cherche l'id de l'invitation d'abord, puis passe par la
           // RPC sécurisée (qui vérifie le plafond de 10 entreprises pour
           // un cabinet gratuit) — un PATCH direct le contournait.
-          const rFind = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(inv.emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(inv.pourEmail) + '&select=id', {
+          const rFind = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(inv.emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(inv.pourEmail) + '&statut=eq.en_attente&select=id', {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
           });
           const trouve = (await rFind.json()) || [];
           if (trouve[0]?.id) {
-            await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + trouve[0].id, {
-              method: 'PATCH',
-              headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ entreprise_id: sb.user.id })
-            });
-            const respAccept = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_invitation_comptable', {
+            const respAccept = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_invitation_entreprise', {
               method: 'POST',
               headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
               body: JSON.stringify({ p_invitation_id: trouve[0].id, p_reponse: 'acceptee' })

@@ -115,6 +115,22 @@ function badgeDV(s) { return {envoye:'Envoyé',accepte:'Accepté',refuse:'Refus�
 // CONSTRUCTION HTML PARTAGÉE (écran plein page + panneau déroulant)
 // ============================================================
 
+// Aide : appelle une fonction sécurisée sur les invitations (voir SQL 057) avec la connexion de l'utilisateur.
+async function rpcInvitation(nom, corps) {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + nom, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(corps)
+    });
+    const d = await r.json().catch(function() { return null; });
+    return { ok: r.ok, data: d, message: (d && d.message) || '' };
+  } catch (e) { return { ok: false, data: null, message: e.message || 'Erreur réseau' }; }
+}
+function messageInvitation(rep) {
+  return /Plafond/i.test(rep.message) ? '⛔ Ce cabinet a atteint son plafond de 10 entreprises.' : '❌ ' + (rep.message || 'Erreur');
+}
+
 async function chargerInvitationsComptableEnAttente() {
   const uid = STATE.entrepriseId || sb.user?.id;
   const emailEnt = sb.user?.email;
@@ -139,7 +155,8 @@ async function chargerInvitationsComptableEnAttente() {
       });
     }
   } catch(e2) {}
-  return invitationsCpt;
+  // Seules les invitations envoyées PAR un comptable s'affichent ici (celles que l'entreprise a envoyées elle-même n'ont rien à accepter).
+  return invitationsCpt.filter(function(inv) { return inv.sens !== 'entreprise_vers_comptable' && inv.sens !== 'auto_soi_meme'; });
 }
 
 function htmlInvitationsCpt(invitationsCpt) {
@@ -249,18 +266,9 @@ async function gererClicNotification(e) {
   const btnA = e.target.closest('.btn-accept-cpt-inv');
   if (btnA) {
     const invId = btnA.dataset.id;
-    const invResp = await fetch(
-      SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId + '&select=*',
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }
-    );
-    const invData = await invResp.json();
-    const inv = invData && invData[0];
-
-    await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
-      method: 'PATCH',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'acceptee', entreprise_id: (STATE.entrepriseId || sb.user?.id) })
-    });
+    const repA = await rpcInvitation('repondre_invitation_entreprise', { p_invitation_id: invId, p_reponse: 'acceptee' });
+    if (!repA.ok) { showToast(messageInvitation(repA), 'error'); return true; }
+    const inv = repA.data;
 
     if (inv && inv.comptable_email) {
       try {
@@ -291,12 +299,8 @@ async function gererClicNotification(e) {
   }
   const btnR = e.target.closest('.btn-refuse-cpt-inv');
   if (btnR) {
-    const rRef = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + btnR.dataset.id, {
-      method: 'PATCH',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'refusee' })
-    });
-    if (!rRef.ok) { showToast('Erreur lors du refus', 'error'); return true; }
+    const rRef = await rpcInvitation('repondre_invitation_entreprise', { p_invitation_id: btnR.dataset.id, p_reponse: 'refusee' });
+    if (!rRef.ok) { showToast('Erreur lors du refus : ' + (rRef.message || ''), 'error'); return true; }
     showToast('Invitation refusée', 'success');
     await genNotifications();
     fermerNotifDropdown();

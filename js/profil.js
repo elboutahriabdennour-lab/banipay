@@ -954,10 +954,10 @@ async function revoquerComptable(invId) {
     // un échec silencieux affichait "Accès révoqué" alors que le
     // comptable gardait un accès complet aux données financières — un
     // vrai risque de confidentialité, pas juste un désagrément d'affichage.
-    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
-      method: 'PATCH',
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/changer_statut_invitation', {
+      method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'revoquee' })
+      body: JSON.stringify({ p_invitation_id: invId, p_statut: 'revoquee' })
     });
     if (!r.ok) { showToast('❌ Échec de la révocation — réessayez, l\'accès n\'a PAS été retiré', 'error'); return; }
     showToast('Accès révoqué', 'success');

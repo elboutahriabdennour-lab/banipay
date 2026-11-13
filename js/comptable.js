@@ -1319,10 +1319,10 @@ async function envoyerInvitationEntreprise() {
 
 async function mettreAJourInvitation(invId, statut) {
   try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
-      method: 'PATCH',
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/changer_statut_invitation', {
+      method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: statut })
+      body: JSON.stringify({ p_invitation_id: invId, p_statut: statut })
     });
     if (!r.ok) { showToast('❌ Erreur lors de la mise a jour', 'error'); return; }
     showToast('Mis a jour', 'success');
@@ -2062,10 +2062,10 @@ async function accepterInvitationComptable(invId, entrepriseId) {
 }
 async function refuserInvitationComptable(invId) {
   try {
-    const r = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?id=eq.' + invId, {
-      method: 'PATCH',
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/repondre_invitation_comptable', {
+      method: 'POST',
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ statut: 'refusee' })
+      body: JSON.stringify({ p_invitation_id: invId, p_reponse: 'refusee' })
     });
     if (!r.ok) { showToast('Erreur lors du refus', 'error'); return; }
     showToast('Invitation refusee', 'success');

@@ -800,15 +800,17 @@ async function afficherInvitationComptable(emailCpt, pourEmail, nomCpt) {
         }
 
         const entrepriseId = STATE.entrepriseId || sb.user.id;
-        await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(pourEmail), {
-          method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + sb.token,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ statut: 'acceptee', entreprise_id: entrepriseId })
+        const rFind = await fetch(SUPABASE_URL + '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(emailCpt) + '&entreprise_email=eq.' + encodeURIComponent(pourEmail) + '&statut=eq.en_attente&select=id&limit=1', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token }
         });
+        const trouve = rFind.ok ? ((await rFind.json()) || []) : [];
+        if (!trouve[0] || !trouve[0].id) {
+          overlay.remove();
+          showToast('Invitation introuvable ou déjà traitée. Vérifiez que vous êtes connecté avec l\u2019adresse invitée.', 'error');
+          return;
+        }
+        const repA = await rpcInvitation('repondre_invitation_entreprise', { p_invitation_id: trouve[0].id, p_reponse: 'acceptee' });
+        if (!repA.ok) { showToast(messageInvitation(repA), 'error'); return; }
 
         await fetch(SUPABASE_URL + '/rest/v1/rpc/envoyer_notification', {
           method: 'POST',
