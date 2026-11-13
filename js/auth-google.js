@@ -63,7 +63,13 @@ async function compteGoogleANouveau(u, tok) {
     ];
     for (var i = 0; i < urls.length; i++) {
       var r = await fetch(SUPABASE_URL + urls[i], { headers: h });
-      if (!r.ok) { console.warn('compteGoogleANouveau:', r.status, urls[i]); return false; }
+      if (!r.ok) {
+        // La 1re vérification (sa propre fiche entreprise) est indispensable. Les autres peuvent être refusées
+        // par la base (ex. « permission denied for table users ») : on les ignore au lieu de bloquer le choix.
+        console.warn('compteGoogleANouveau: vérification ignorée', r.status, urls[i]);
+        if (i === 0) return false;
+        continue;
+      }
       var rows = await r.json();
       if (rows && rows.length) { console.info('compteGoogleANouveau: fiche existante', urls[i]); return false; }
     }
