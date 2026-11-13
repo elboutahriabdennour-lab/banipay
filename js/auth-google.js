@@ -35,11 +35,96 @@ async function finaliserConnexionOAuth(accessToken, refreshToken) {
     if (!r.ok || !u || !u.id) throw new Error('Connexion Google impossible');
     try { localStorage.setItem('bp_remember_v2', '1'); } catch (e) {}
     sb._setSession({ access_token: accessToken, refresh_token: refreshToken, user: u });
+    if (await compteGoogleANouveau(u, accessToken)) await demanderTypeCompte(u, accessToken);
     await apresConnexionVerifierTelephone();
   } catch (e) {
     goScreen('auth', null); switchTab('login');
     var el2 = document.getElementById('login-err'); if (el2) el2.textContent = 'La connexion Google a échoué. Réessayez ou utilisez votre e-mail.';
   }
+}
+
+
+// ── Choix du type de compte à la première connexion Google ──────────────
+function _hdrG(tok) { return { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' }; }
+
+// Vrai seulement pour un NOUVEAU compte Google (aucun rôle, aucune fiche, aucune invitation, pas membre d'équipe).
+// En cas de doute ou d'erreur réseau : faux (l'utilisateur arrive dans son espace habituel, rien n'est demandé).
+async function compteGoogleANouveau(u, tok) {
+  try {
+    var prov = (u.app_metadata && u.app_metadata.provider) || '';
+    if (prov !== 'google') return false;
+    if (u.user_metadata && u.user_metadata.role) return false;
+    var h = _hdrG(tok), em = (u.email || '').toLowerCase();
+    var urls = [
+      '/rest/v1/profils_entreprise?id=eq.' + u.id + '&select=id&limit=1',
+      '/rest/v1/profils_comptable?user_id=eq.' + u.id + '&select=id&limit=1',
+      '/rest/v1/profils_comptable?email=eq.' + encodeURIComponent(em) + '&select=id&limit=1',
+      '/rest/v1/invitations_comptable?comptable_email=eq.' + encodeURIComponent(em) + '&statut=eq.acceptee&select=id&limit=1'
+    ];
+    for (var i = 0; i < urls.length; i++) {
+      var r = await fetch(SUPABASE_URL + urls[i], { headers: h });
+      if (!r.ok) return false;
+      var rows = await r.json();
+      if (rows && rows.length) return false;
+    }
+    var rE = await fetch(SUPABASE_URL + '/rest/v1/rpc/mon_entreprise_id', { method: 'POST', headers: h, body: '{}' });
+    if (!rE.ok) return false;
+    var eid = await rE.json();
+    if (eid && eid !== u.id) return false;
+    var rA = await fetch(SUPABASE_URL + '/rest/v1/rpc/email_est_agent_support', { method: 'POST', headers: h, body: JSON.stringify({ p_email: em }) });
+    if (rA.ok && (await rA.json())) return false;
+    return true;
+  } catch (e) { return false; }
+}
+
+// Affiche l'écran de choix. Résout quand le rôle est enregistré dans le compte.
+function demanderTypeCompte(u, tok) {
+  return new Promise(function (resolve) {
+    var nomG = (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || (u.email || '').split('@')[0];
+    var d = document.createElement('div');
+    d.id = 'choix-compte';
+    d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(20,36,31,.72);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+    var card = 'background:#fff;border-radius:16px;max-width:420px;width:100%;padding:22px;font-family:inherit;color:#14241F';
+    var opt = 'display:block;width:100%;text-align:left;border:1.5px solid #DDE3DA;background:#fff;border-radius:12px;padding:14px;margin-top:10px;cursor:pointer;font:inherit;color:#14241F';
+    d.innerHTML = '<div style="' + card + '">' +
+      '<div style="font-size:19px;font-weight:800">Bienvenue sur Tafir</div>' +
+      '<div style="font-size:14px;color:#4C5A53;margin-top:6px">Vous êtes :</div>' +
+      '<button type="button" id="cc-ent" style="' + opt + '"><b>Une entreprise</b><br><span style="font-size:13px;color:#4C5A53">Je crée mes factures et mes devis.</span></button>' +
+      '<button type="button" id="cc-cpt" style="' + opt + '"><b>Un cabinet d’expertise comptable</b><br><span style="font-size:13px;color:#4C5A53">Je consulte les factures de mes clients.</span></button>' +
+      '<div id="cc-cab" style="display:none;margin-top:12px"><label style="font-size:13px;font-weight:600">Nom du cabinet</label>' +
+      '<input id="cc-cabinet" type="text" maxlength="120" style="width:100%;box-sizing:border-box;margin-top:4px;padding:11px;border:1.5px solid #DDE3DA;border-radius:10px;font:inherit"></div>' +
+      '<label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:#4C5A53;margin-top:14px"><input type="checkbox" id="cc-cgu" style="margin-top:2px"><span>J’accepte les <a href="legal.html#cgu" target="_blank" style="color:#1B6B52">conditions d’utilisation</a> et la <a href="legal.html#confidentialite" target="_blank" style="color:#1B6B52">politique de confidentialité</a>.</span></label>' +
+      '<div id="cc-err" style="color:#B3261E;font-size:13px;margin-top:8px;min-height:16px"></div>' +
+      '<button type="button" id="cc-ok" class="a-btn" style="margin-top:6px;width:100%">Continuer</button></div>';
+    document.body.appendChild(d);
+    var role = '';
+    function pick(r) {
+      role = r;
+      document.getElementById('cc-ent').style.borderColor = r === 'entreprise' ? '#1B6B52' : '#DDE3DA';
+      document.getElementById('cc-cpt').style.borderColor = r === 'comptable' ? '#1B6B52' : '#DDE3DA';
+      document.getElementById('cc-cab').style.display = r === 'comptable' ? 'block' : 'none';
+    }
+    document.getElementById('cc-ent').onclick = function () { pick('entreprise'); };
+    document.getElementById('cc-cpt').onclick = function () { pick('comptable'); };
+    document.getElementById('cc-ok').onclick = async function () {
+      var err = document.getElementById('cc-err'), btn = this;
+      if (!role) { err.textContent = 'Choisissez entreprise ou cabinet.'; return; }
+      if (!document.getElementById('cc-cgu').checked) { err.textContent = 'Veuillez accepter les conditions et la politique de confidentialité.'; return; }
+      var cabinet = (document.getElementById('cc-cabinet').value || '').trim();
+      if (role === 'comptable' && !cabinet) { err.textContent = 'Indiquez le nom du cabinet.'; return; }
+      btn.disabled = true; err.textContent = 'Enregistrement…';
+      try {
+        var data = { role: role, nom: nomG };
+        if (role === 'comptable') data.cabinet = cabinet;
+        var r = await fetch(SUPABASE_URL + '/auth/v1/user', { method: 'PUT', headers: _hdrG(tok), body: JSON.stringify({ data: data }) });
+        var nu = await r.json();
+        if (!r.ok || !nu || !nu.id) throw new Error('Enregistrement impossible');
+        sb.user = nu;
+        try { localStorage.setItem('bp_u', JSON.stringify(nu)); } catch (e) {}
+        d.remove(); resolve(true);
+      } catch (e) { btn.disabled = false; err.textContent = 'Échec de l’enregistrement. Réessayez.'; }
+    };
+  });
 }
 
 function messageLienExpire() {
