@@ -21,11 +21,14 @@
     return _zxingPromesse;
   }
 
+  // Clé de comparaison : pour un code 100 % numérique, les zéros de tête sont ignorés (UPC-A 12 chiffres = EAN-13 commençant par 0).
+  function cle(c) { c = norm(c); return /^\d+$/.test(c) ? c.replace(/^0+/, '') : c.toLowerCase(); }
+
   // Cherche un article par code-barres (puis par référence exacte).
   function trouver(code) {
     code = norm(code); if (!code) return null;
     var l = STATE.produits || [];
-    return l.filter(function (p) { return norm(p.code_barre) === code; })[0]
+    return l.filter(function (p) { return p.code_barre && cle(p.code_barre) === cle(code); })[0]
         || l.filter(function (p) { return p.reference && norm(p.reference).toLowerCase() === code.toLowerCase(); })[0]
         || null;
   }
@@ -57,15 +60,21 @@
       try { if (flux) flux.getTracks().forEach(function (t) { t.stop(); }); } catch (x) {}
       ov.remove();
     }
-    function trouve(code) {
+    var derniere = null, nbLectures = 0;
+    function trouve(code, format, manuel) {
       code = norm(code); if (!code || fini) return;
+      // Caméra : le même code doit être lu 2 fois de suite (évite les lectures fausses). Saisie / lecteur USB : tout de suite.
+      if (!manuel) {
+        if (code === derniere) nbLectures++; else { derniere = code; nbLectures = 1; }
+        if (nbLectures < 2) { etat('Lecture… ' + code + ' (confirmation)'); return; }
+      }
       fini = true; nettoyer();
-      try { surCode(code); } catch (x) { console.warn('scan:', x); }
+      try { surCode(code, format || (manuel ? 'saisie' : '')); } catch (x) { console.warn('scan:', x); }
     }
     ov.querySelector('#cb-fermer').onclick = nettoyer;
     var champ = ov.querySelector('#cb-manuel');
-    ov.querySelector('#cb-valider').onclick = function () { trouve(champ.value); };
-    champ.onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); trouve(champ.value); } };
+    ov.querySelector('#cb-valider').onclick = function () { trouve(champ.value, 'saisie', true); };
+    champ.onkeydown = function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); trouve(champ.value, 'saisie', true); } };
     setTimeout(function () { try { champ.focus(); } catch (x) {} }, 100);
 
     function etat(t) { var n = ov.querySelector('#cb-etat'); if (n) n.textContent = t; }
@@ -80,7 +89,7 @@
         try { det = new BarcodeDetector({ formats: FORMATS }); } catch (x) { det = new BarcodeDetector(); }
         (function tour() {
           if (arret) return;
-          det.detect(video).then(function (r) { if (r && r.length && r[0].rawValue) trouve(r[0].rawValue); else boucle = setTimeout(tour, 180); })
+          det.detect(video).then(function (r) { if (r && r.length && r[0].rawValue) { trouve(r[0].rawValue, r[0].format); if (!fini) boucle = setTimeout(tour, 150); } else boucle = setTimeout(tour, 180); })
             .catch(function () { boucle = setTimeout(tour, 400); });
         })();
       }).catch(function () { etat('Caméra refusée : utilisez le champ ci-dessous ou un lecteur.'); });
@@ -91,7 +100,7 @@
         hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.ITF, Z.BarcodeFormat.QR_CODE]);
         lecteur = new Z.BrowserMultiFormatReader(hints, 300);
         lecteur.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } }, audio: false }, video, function (res) {
-          if (res && res.getText) trouve(res.getText());
+          if (res && res.getText) { var f = ''; try { f = Z.BarcodeFormat[res.getBarcodeFormat()] || ''; } catch (x) {} trouve(res.getText(), f); }
         }).catch(function () { etat('Caméra refusée : utilisez le champ ci-dessous ou un lecteur.'); });
       }).catch(function () { etat('Scan caméra indisponible : utilisez le champ ci-dessous ou un lecteur.'); });
     }
@@ -99,12 +108,12 @@
 
   // Remplit un champ de formulaire avec un code scanné.
   function scannerDansChamp(idChamp) {
-    scanner('Scanner le code-barres de l\'article', function (code) {
+    scanner('Scanner le code-barres de l\'article', function (code, format) {
       var c = document.getElementById(idChamp); if (c) { c.value = code; c.dispatchEvent(new Event('input', { bubbles: true })); }
       var p = trouver(code);
       var courant = window.STATE && STATE.currentProduit;
       if (p && !(courant && courant.id === p.id)) showToast('⚠️ Ce code est déjà utilisé par : ' + p.nom, 'error');
-      else showToast('✅ Code lu : ' + code, 'success');
+      else showToast('✅ Code lu : ' + code + (format && format !== 'saisie' ? ' (' + String(format).toUpperCase().replace('_', '-') + ')' : ''), 'success');
     });
   }
 
