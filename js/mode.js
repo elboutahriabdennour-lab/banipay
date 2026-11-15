@@ -51,7 +51,7 @@ function afficherVerrou(name, nomLibre) {
 }
 
 // ── Cadenas sur tous les raccourcis qui mènent à un module verrouillé ──────────────────────────
-var VERROUS_PAR_ID = { 'param-card-stock': 'La gestion de stock', 'valeur-stock-card': 'La gestion de stock' };
+var VERROUS_PAR_ID = {};
 
 function _cibles(oc) {
   var re = /goScreen\(\s*['"]([a-z0-9-]+)['"]/g, m, c = [];
