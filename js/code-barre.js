@@ -142,5 +142,55 @@
     });
   }
 
-  window.CB = { norm: norm, trouver: trouver, scanner: scanner, scannerDansChamp: scannerDansChamp, genererInterne: genererInterne, scannerPourStock: scannerPourStock, scannerPourLigne: scannerPourLigne };
+  // ── Étiquette imprimable : affiche le vrai code-barres de l'article, à scanner ou à imprimer ──
+  var _jsbPromesse = null;
+  function chargerJsBarcode() {
+    if (window.JsBarcode) return Promise.resolve(window.JsBarcode);
+    if (_jsbPromesse) return _jsbPromesse;
+    _jsbPromesse = new Promise(function (ok, ko) {
+      var sc = document.createElement('script'); sc.src = 'js/vendor/jsbarcode.min.js?v=1';
+      sc.onload = function () { window.JsBarcode ? ok(window.JsBarcode) : ko(new Error('jsb')); };
+      sc.onerror = function () { _jsbPromesse = null; ko(new Error('jsb')); };
+      document.head.appendChild(sc);
+    });
+    return _jsbPromesse;
+  }
+  function formatPour(code) {
+    if (/^\d{13}$/.test(code)) return 'EAN13';
+    if (/^\d{8}$/.test(code)) return 'EAN8';
+    return 'CODE128';
+  }
+  function etiquette(code, nom, prix) {
+    code = norm(code);
+    if (!code) { showToast('Saisissez ou créez d\'abord un code-barres', 'error'); return; }
+    chargerJsBarcode().then(function (JB) {
+      var ancien = document.getElementById('cb-etiquette'); if (ancien) ancien.remove();
+      var ov = document.createElement('div'); ov.id = 'cb-etiquette';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,31,26,.85);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
+      ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:16px;max-width:360px;width:100%;text-align:center">'
+        + '<div style="font-weight:800;color:#1B5E4B;margin-bottom:8px">🏷️ Étiquette</div>'
+        + '<div id="cb-etq" style="background:#fff;border:1px solid #EAE4DA;border-radius:8px;padding:10px">'
+        + '<div style="font-size:13px;font-weight:700;margin-bottom:2px">' + e(nom || '') + '</div>'
+        + (prix ? '<div style="font-size:13px;margin-bottom:4px">' + e(prix) + '</div>' : '')
+        + '<svg id="cb-svg" style="max-width:100%"></svg></div>'
+        + '<div style="font-size:11px;color:#8E9C95;margin:8px 0">Scannez ce code avec la caméra de Tafir pour tester, ou imprimez-le.</div>'
+        + '<div style="display:flex;gap:8px"><button type="button" id="cb-etq-imp" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid #1B5E4B;background:#fff;color:#1B5E4B;font-weight:700;cursor:pointer;font-family:inherit">🖨️ Imprimer</button>'
+        + '<button type="button" id="cb-etq-fermer" style="flex:1;padding:12px;border-radius:10px;border:none;background:#1B5E4B;color:#fff;font-weight:700;cursor:pointer;font-family:inherit">Fermer</button></div></div>';
+      document.body.appendChild(ov);
+      try { JB('#cb-svg', code, { format: formatPour(code), width: 2, height: 70, displayValue: true, fontSize: 14, margin: 6 }); }
+      catch (x) { try { JB('#cb-svg', code, { format: 'CODE128', width: 2, height: 70, displayValue: true, fontSize: 14, margin: 6 }); } catch (y) { showToast('Code illisible pour une étiquette', 'error'); ov.remove(); return; } }
+      ov.querySelector('#cb-etq-fermer').onclick = function () { ov.remove(); };
+      ov.querySelector('#cb-etq-imp').onclick = function () {
+        var w = window.open('', '_blank', 'width=380,height=420'); if (!w) { showToast('Autorisez les fenêtres pour imprimer', 'error'); return; }
+        w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Étiquette</title><style>@page{margin:4mm}body{margin:0;font-family:sans-serif;text-align:center}</style></head><body>' + ov.querySelector('#cb-etq').innerHTML + '</body></html>');
+        w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 300);
+      };
+    }).catch(function () { showToast('Étiquette indisponible', 'error'); });
+  }
+  function etiquetteDepuisChamp(idCode, idNom, idPrix) {
+    var c = document.getElementById(idCode), n = document.getElementById(idNom), p = document.getElementById(idPrix);
+    etiquette(c && c.value, n && n.value, p && p.value ? p.value + ' MAD TTC' : '');
+  }
+
+  window.CB = { etiquette: etiquette, etiquetteDepuisChamp: etiquetteDepuisChamp, norm: norm, trouver: trouver, scanner: scanner, scannerDansChamp: scannerDansChamp, genererInterne: genererInterne, scannerPourStock: scannerPourStock, scannerPourLigne: scannerPourLigne };
 })();
