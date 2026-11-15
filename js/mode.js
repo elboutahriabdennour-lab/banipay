@@ -10,12 +10,8 @@ var ECRANS_VERROUILLES = {
   'messages': 'La messagerie', 'chat': 'La messagerie',
   'annuaire': 'L’annuaire des entreprises',
   'marche': 'Le marché', 'nouvelle-annonce': 'Le marché', 'mes-annonces': 'Le marché',
-  'tresorerie': 'La trésorerie', 'position-financiere': 'La position financière',
   'releves': 'Les relevés bancaires', 'rapprochement-releve': 'Les relevés bancaires', 'rapprochement': 'Le rapprochement bancaire',
   'employes': 'Le registre du personnel', 'nouvel-employe': 'Le registre du personnel',
-  'contrats': 'Les contrats', 'nouveau-contrat': 'Les contrats',
-  'carnet-chantier': 'Le carnet de chantier',
-  'rapport-stock': 'La gestion de stock',
   'abonnements': 'Les factures récurrentes', 'nouvel-abonnement': 'Les factures récurrentes', 'detail-abonnement': 'Les factures récurrentes'
 };
 
