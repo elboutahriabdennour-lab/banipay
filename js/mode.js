@@ -12,7 +12,6 @@ var ECRANS_VERROUILLES = {
   'marche': 'Le marché', 'nouvelle-annonce': 'Le marché', 'mes-annonces': 'Le marché',
   'releves': 'Les relevés bancaires', 'rapprochement-releve': 'Les relevés bancaires', 'rapprochement': 'Le rapprochement bancaire',
   'employes': 'Le registre du personnel', 'nouvel-employe': 'Le registre du personnel',
-  'abonnements': 'Les factures récurrentes', 'nouvel-abonnement': 'Les factures récurrentes', 'detail-abonnement': 'Les factures récurrentes'
 };
 
 // Compatibilité avec l'ancien lancement « facturation seule » : plus utilisé, tout est autorisé.

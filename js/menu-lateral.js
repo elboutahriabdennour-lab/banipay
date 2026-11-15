@@ -29,7 +29,7 @@ var TAFIR_MODULES = [
   { id: 'fournisseurs', groupe: 'Ventes et achats', libelle: 'Fournisseurs', icone: 'users', action: function () { loadFournisseurs(); goScreen('fournisseurs', null); } },
   { id: 'releves', groupe: 'Bientôt disponible', libelle: 'Relevés bancaires', icone: 'banknote', ecran: 'releves' },
   { id: 'tresorerie', groupe: 'Gestion', libelle: 'Trésorerie', icone: 'chart-column', ecran: 'position-financiere' },
-  { id: 'abonnements', groupe: 'Bientôt disponible', libelle: 'Factures récurrentes', icone: 'file-stack', ecran: 'abonnements' },
+  { id: 'abonnements', groupe: 'Facturation', libelle: 'Factures récurrentes', icone: 'file-stack', ecran: 'abonnements' },
   { id: 'contrats', groupe: 'Gestion', libelle: 'Contrats', icone: 'file-pen', ecran: 'contrats' },
   { id: 'stock', groupe: 'Gestion', libelle: 'Stock', icone: 'package', ecran: 'rapport-stock' },
   { id: 'employes', groupe: 'Bientôt disponible', libelle: 'Personnel', icone: 'users', ecran: 'employes' },
