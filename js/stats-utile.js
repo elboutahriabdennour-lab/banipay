@@ -37,9 +37,16 @@
     var montantRetard = enRetard.reduce(function (s, x) { return s + _reste(x); }, 0);
     var taux = ca > 0 ? Math.round(encaisse / ca * 100) : 0;
     var moyenne = f.length ? ca / f.length : 0;
+    // Ventes de caisse (tickets regroupés par jour) : ajoutées au CA, à l'encaissé et à la TVA.
+    var vc = (typeof caisseNormalisee === 'function') ? filtrerParPeriode(caisseNormalisee(), STATE.statsPeriode, 'date_emission') : [];
+    var caCaisse = vc.reduce(function (s, x) { return s + Number(x.ttc || 0); }, 0);
+    ca += caCaisse; encaisse += caCaisse;
+    caHT += vc.reduce(function (s, x) { return s + Number(x.ht || 0); }, 0);
+    tva += vc.reduce(function (s, x) { return s + Number(x.tva || 0); }, 0);
+    taux = ca > 0 ? Math.round(encaisse / ca * 100) : 0;
 
     var kpis =
-      carte('Chiffre d’affaires TTC', _m(ca), f.length + ' facture' + (f.length > 1 ? 's' : '') + (totAvoirs ? ' · avoirs − ' + _m(totAvoirs) : ''), '#0F1F1A') +
+      carte('Chiffre d’affaires TTC', _m(ca), f.length + ' facture' + (f.length > 1 ? 's' : '') + (caCaisse ? ' · caisse ' + _m(caCaisse) : '') + (totAvoirs ? ' · avoirs − ' + _m(totAvoirs) : ''), '#0F1F1A') +
       carte('Encaissé', _m(encaisse), taux + ' % du CA', '#2F7A4D') +
       carte('Reste à encaisser', _m(aEncaisser), 'factures non soldées', '#B8860B') +
       carte('En retard', _m(montantRetard), enRetard.length + ' facture' + (enRetard.length > 1 ? 's' : ''), montantRetard > 0 ? '#B23A2E' : '#2F7A4D') +
@@ -94,6 +101,11 @@
       mois[idx[c]].fac += Number(x.ttc || 0);
       mois[idx[c]].enc += x.statut === 'payee' ? Number(x.ttc || 0) : Math.min(Number(x.montant_recu || 0), Number(x.ttc || 0));
     });
+    if (typeof caisseNormalisee === 'function') caisseNormalisee().forEach(function (x) {
+      var d = _jour(x.date_emission); if (!d) return;
+      var c = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); if (!(c in idx)) return;
+      mois[idx[c]].fac += Number(x.ttc || 0); mois[idx[c]].enc += Number(x.ttc || 0);
+    });
     var maxM = Math.max.apply(null, mois.map(function (m) { return m.fac; }).concat([1]));
     var hMois = '<div class="su-mois">' + mois.map(function (m) {
       return '<div class="su-mcol" title="' + m.lib + ' — facturé ' + _m(m.fac) + ' · encaissé ' + _m(m.enc) + '"><div class="su-mbar"><div class="su-mfac" style="height:' + Math.round(m.fac / maxM * 100) + '%"></div><div class="su-menc" style="height:' + Math.round(m.enc / maxM * 100) + '%"></div></div><div class="su-mlib">' + m.lib + '</div></div>';
@@ -106,6 +118,7 @@
 
     var lienRap = '<div class="su-rap" onclick="goScreen(\'rapports\',null)"><b>📐 Créer mon propre rapport</b><span>Choisissez ce que vous voulez calculer (par client, par mois, par produit…) et enregistrez-le.</span></div>';
     var vide = !f.length ? '<div class="su-info">Aucune facture sur cette période. Changez la période ci-dessus, ou créez votre première facture.</div>' : '';
+    if (vc.length && !f.length) vide = '';
     var A = (typeof analyserPaiements === 'function') ? analyserPaiements() : null;
     zone.innerHTML = vide + (A ? htmlAlertesPaiement(A) : '') + '<div class="su-kpis">' + kpis + '</div>' + (A ? htmlDelaisPaiement(A) : '') + alerteDep + lienRap +
       '<div class="su-cols">' +

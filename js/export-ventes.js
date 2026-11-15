@@ -66,7 +66,8 @@ async function exporterVentesComptable() {
     .sort(function (a, b) { return (a.date_emission + a.ref) < (b.date_emission + b.ref) ? -1 : 1; });
   var avoirs = (STATE.avoirs || []).filter(function (a) { return a.date_emission && a.date_emission >= per.du && a.date_emission <= per.au; })
     .sort(function (a, b) { return a.date_emission < b.date_emission ? -1 : 1; });
-  if (!factures.length && !avoirs.length) { showToast('Aucune facture ni avoir sur cette période', 'error'); return; }
+  var jours = typeof caisseJours === 'function' ? caisseJours(per.du, per.au) : [];
+  if (!factures.length && !avoirs.length && !jours.length) { showToast('Aucune vente sur cette période', 'error'); return; }
 
   var horsMad = 0;
   var tot = { '0': [0, 0], '10': [0, 0], '20': [0, 0], 'autre': [0, 0] };
@@ -90,6 +91,12 @@ async function exporterVentesComptable() {
     var libStatut = { payee: 'Payée', attente: 'En attente', envoyee: 'Envoyée', retard: 'En retard', annulee: 'Annulée' }[f.statut] || f.statut;
     journal.push([f.ref || '', _evFR(f.date_emission), _evFR(f.echeance), f.client || '', iceDe(f.client), libStatut,
       det['20'][0], det['20'][1], det['10'][0], det['10'][1], det['0'][0], det['autre'][0], det['autre'][1], ht, tva, ttc, recu, reste, f.devise || 'MAD']);
+  });
+  jours.forEach(function (j) {
+    ['0', '10', '20', 'autre'].forEach(function (k) { tot[k][0] += j.parTaux[k][0]; tot[k][1] += j.parTaux[k][1]; });
+    sHT += j.ht; sTVA += j.tva; sTTC += j.ttc; sRecu += j.ttc;
+    journal.push(['CAISSE ' + j.date, _evFR(j.date), '', 'Ventes comptoir (' + j.n + ' ticket' + (j.n > 1 ? 's' : '') + ')', '', 'Payée',
+      j.parTaux['20'][0], j.parTaux['20'][1], j.parTaux['10'][0], j.parTaux['10'][1], j.parTaux['0'][0], j.parTaux['autre'][0], j.parTaux['autre'][1], j.ht, j.tva, j.ttc, j.ttc, 0, 'MAD']);
   });
   journal.push(['TOTAL (MAD)', '', '', '', '', '', _evR(tot['20'][0]), _evR(tot['20'][1]), _evR(tot['10'][0]), _evR(tot['10'][1]), _evR(tot['0'][0]), _evR(tot['autre'][0]), _evR(tot['autre'][1]), _evR(sHT), _evR(sTVA), _evR(sTTC), _evR(sRecu), _evR(sReste), '']);
 
@@ -122,6 +129,7 @@ async function exporterVentesComptable() {
   recap.push([]);
   recap.push(['Factures émises (hors brouillons)', factures.length]);
   recap.push(['Avoirs émis', avoirs.length]);
+  if (jours.length) recap.push(['Jours de caisse inclus (tickets regroupés par jour)', jours.length]);
   recap.push(['Total TTC facturé', _evR(sTTC)]);
   recap.push(['Total encaissé', _evR(sRecu)]);
   recap.push(['Reste à encaisser', _evR(sReste)]);

@@ -159,6 +159,7 @@
     }
     ov.remove();
     var snapshot = { vente: vente, lignes: lignes, t: t, mode: paiement, recu: recu, rendu: rendu };
+    (STATE.ventesCaisse = STATE.ventesCaisse || []).unshift({ id: vente.id, numero: vente.numero, lignes: lignes, total_ht: t.ht, total_tva: t.tva, total_ttc: t.ttc, mode_paiement: paiement, created_at: vente.created_at || new Date().toISOString() });
     panier = []; dessiner(); grille(); chargerJour();
     afficherTicket(snapshot);
   }

@@ -25,6 +25,11 @@ function renderTVA() {
     parMois[mois].tva += Number(f.tva) || 0;
     parMois[mois].ttc += Number(f.ttc) || 0;
   });
+  if (typeof caisseJours === 'function') caisseJours().forEach(function(j) {
+    const mois = j.date.substring(0, 7);
+    if (!parMois[mois]) parMois[mois] = { ht: 0, tva: 0, ttc: 0 };
+    parMois[mois].ht += j.ht; parMois[mois].tva += j.tva; parMois[mois].ttc += j.ttc;
+  });
   const moisTries = Object.keys(parMois).sort().reverse();
   tbody.innerHTML = moisTries.length
     ? moisTries.map(function(m) {

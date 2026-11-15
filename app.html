@@ -241,6 +241,7 @@
   <script src="js/connexions.js?v=1"></script>
   <script src="js/code-barre.js?v=1"></script>
   <script src="js/caisse.js?v=1"></script>
+  <script src="js/liaisons.js?v=1"></script>
   <script src="js/admin.js?v=1"></script>
   <script src="js/a11y.js?v=1"></script>
   <script src="js/profil.js?v=178932738057"></script>
@@ -1229,6 +1230,7 @@
       <option value="retour">Retour marchandise</option>
     </select>
   </div>
+  <div id="av-retours"></div>
   <div class="form-section"><label class="f-lbl">Montant HT (MAD)</label><input id="av-montant" class="f-inp" type="number" placeholder="0.00" oninput="updateAvoirTotal()"></div>
   <div class="form-section"><label class="f-lbl">TVA</label><select id="av-tva" class="f-inp" onchange="updateAvoirTotal()"><option value="20" selected>20 %</option><option value="14">14 % (ancien taux)</option><option value="10">10 %</option><option value="7">7 % (ancien taux)</option><option value="0">0 % (exonéré)</option></select></div>
   <div class="total-recap">

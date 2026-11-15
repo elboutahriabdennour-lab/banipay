@@ -35,6 +35,7 @@ async function loadAll() {
     await verifierExpirationDevis();
     const pays = await sb.get('paiements', `user_id=eq.${uid}&order=created_at.desc`);
     STATE.paiements = pays || [];
+    if (typeof chargerVentesCaisse === 'function') await chargerVentesCaisse(uid);
 
     try {
       const respNotes = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_compteurs_notes_factures', {

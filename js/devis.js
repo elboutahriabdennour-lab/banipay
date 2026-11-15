@@ -252,6 +252,7 @@ function renderDetailDevis() {
   actions.push(`<button class="action-item" onclick="dupliquerDevis(${d.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
   actions.push(`<button class="action-item danger" onclick="supprimerDevis(${d.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
   actEl.innerHTML = actions.join('');
+  if (typeof pdfSigneMontrer === 'function') pdfSigneMontrer(actEl, 'devis', d);
 }
 
 async function changerStatutDevis(id, statut) {
@@ -379,6 +380,7 @@ async function sauvegarderAvoir() {
       facture_origine_ref:STATE.factures.find(f=>String(f.id)===el('av-facture-origine')?.value)?.ref||''
     });
     STATE.avoirs.unshift(r[0]);
+    if (typeof appliquerRetoursAvoir === 'function') { try { await appliquerRetoursAvoir(r[0]); } catch (eRet) { console.warn('Retours avoir:', eRet); } }
     const factureId = el('av-facture-origine')?.value;
     if (factureId) {
       const f = STATE.factures.find(x => String(x.id) === factureId);
@@ -389,7 +391,7 @@ async function sauvegarderAvoir() {
           const lignesOrigine = typeof f.lignes === 'string' ? JSON.parse(f.lignes || '[]') : (f.lignes || []);
           for (const ligne of lignesOrigine) {
             if (ligne.produit_id && typeof enregistrerEntreeStock === 'function') {
-              await enregistrerEntreeStock(ligne.produit_id, Number(ligne.qte) || 0, Number(ligne.pu) || 0, 'Annulation facture ' + (f.ref || ''), r[0]?.ref || '');
+              await enregistrerEntreeStock(ligne.produit_id, Number(ligne.qte) || 0, Number((STATE.produits.find(function(pp){return pp.id===ligne.produit_id;})||{}).cout_moyen) || 0, 'Annulation facture ' + (f.ref || ''), r[0]?.ref || '');
             }
           }
         } catch(eStock) { console.warn('Restauration stock après annulation:', eStock.message); }

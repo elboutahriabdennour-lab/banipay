@@ -150,6 +150,7 @@ const COMPTES_CGNC = {
   tvaCollectee: '4455',
   tvaDeductible: '3455',
   banque: '5141',
+  caisse: '5161',
 };
 
 let _sheetjsChargement = null;
@@ -238,6 +239,15 @@ async function exporterEcrituresComptables(factures, achats, paiements, profil) 
     lignesAvoirs.push([av.date_emission, 'AV', COMPTES_CGNC.clients, 'Clients', libelle, av.ref || '', '', ttc.toFixed(2)]);
   });
 
+  if (typeof caisseJours === 'function') {
+    caisseJours().forEach(function(j) {
+      const lib = 'Ventes caisse du ' + j.date + ' (' + j.n + ' ticket' + (j.n > 1 ? 's' : '') + ')', ref = 'CAISSE-' + j.date.replace(/-/g, '');
+      if (j.especes > 0) lignesVentes.push([j.date, 'VE', COMPTES_CGNC.caisse, 'Caisses', lib, ref, j.especes.toFixed(2), '']);
+      if (j.autre > 0) lignesVentes.push([j.date, 'VE', COMPTES_CGNC.banque, 'Banques', lib, ref, j.autre.toFixed(2), '']);
+      lignesVentes.push([j.date, 'VE', COMPTES_CGNC.ventes, 'Ventes de biens et services produits', lib, ref, '', j.ht.toFixed(2)]);
+      if (j.tva > 0) lignesVentes.push([j.date, 'VE', COMPTES_CGNC.tvaCollectee, 'État, TVA facturée', lib, ref, '', j.tva.toFixed(2)]);
+    });
+  }
   const toutesLignes = lignesVentes.concat(lignesAchats).concat(lignesReglements).concat(lignesAvoirs);
   if (!toutesLignes.length) { showToast('Aucune écriture à exporter', 'error'); return; }
 
