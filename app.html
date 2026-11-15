@@ -1363,6 +1363,7 @@
       document.getElementById('p-lbl-options').textContent = masque ? '▲ Masquer' : '▼ Options avancées (référence, stock, coût d\\u2019achat...)';
     " style="font-size:12px;color:#7C5CA6;font-weight:600;cursor:pointer"><span id="p-lbl-options">▼ Options avancées (référence, stock, coût d'achat...)</span></span>
   </div>
+    <div class="form-section"><label class="f-lbl">Code-barres</label><div style="display:flex;gap:8px"><input id="p-cb" class="f-inp" style="flex:1;min-width:0" inputmode="text" autocomplete="off" maxlength="64" placeholder="Scannez ou tapez le code"><button type="button" class="f-inp" style="width:auto;cursor:pointer" onclick="CB.scannerDansChamp('p-cb')" aria-label="Scanner">&#128247;</button><button type="button" class="f-inp" style="width:auto;cursor:pointer;font-size:12px" onclick="CB.genererInterne('p-cb')">Cr&#233;er un code</button></div><div style="font-size:11px;color:#8E9C95;margin-top:4px">Lecteur USB ou Bluetooth : cliquez dans le champ puis scannez.</div></div>
   <div id="p-options-avancees" style="display:none">
     <div class="form-section">
       <div class="f-row">
@@ -1370,7 +1371,6 @@
         <div><label class="f-lbl">Stock</label><input id="p-stock" class="f-inp" type="number" placeholder="0"></div>
       </div>
     </div>
-    <div class="form-section"><label class="f-lbl">Code-barres</label><div style="display:flex;gap:8px"><input id="p-cb" class="f-inp" style="flex:1;min-width:0" inputmode="text" autocomplete="off" maxlength="64" placeholder="Scannez ou tapez le code"><button type="button" class="f-inp" style="width:auto;cursor:pointer" onclick="CB.scannerDansChamp('p-cb')" aria-label="Scanner">&#128247;</button><button type="button" class="f-inp" style="width:auto;cursor:pointer;font-size:12px" onclick="CB.genererInterne('p-cb')">Cr&#233;er un code</button></div><div style="font-size:11px;color:#8E9C95;margin-top:4px">Lecteur USB ou Bluetooth : cliquez dans le champ puis scannez.</div></div>
     <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="p-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
     <div class="form-section">
       <div class="f-row">
