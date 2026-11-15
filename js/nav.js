@@ -705,6 +705,7 @@ function goScreen(name, options) {
     'nouveau-client': _safe(typeof initNouveauClient!=='undefined'?initNouveauClient:undefined,'initNouveauClient'),
     'detail-client': function() {},
     'modifier-client': function() {},
+    'caisse': function() { if (typeof initCaisse === 'function') initCaisse(); },
     'produits': _safe(typeof renderProduits!=='undefined'?renderProduits:undefined,'renderProduits'),
     'nouveau-produit': _safe(typeof initNouveauProduit!=='undefined'?initNouveauProduit:undefined,'initNouveauProduit'),
     'modifier-produit': function() {},

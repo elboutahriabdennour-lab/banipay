@@ -19,6 +19,7 @@ var TAFIR_MODULES = [
   { id: 'paiements', groupe: 'Facturation', libelle: 'Paiements', icone: 'banknote', ecran: 'historique-paiements' },
   { id: 'clients', groupe: 'Gestion', libelle: 'Clients', icone: 'users', ecran: 'clients' },
   { id: 'produits', groupe: 'Gestion', libelle: 'Produits', icone: 'package', ecran: 'produits' },
+  { id: 'caisse', groupe: 'Gestion', libelle: 'Caisse', icone: 'banknote', ecran: 'caisse' },
   { id: 'stats', groupe: 'Gestion', libelle: 'Statistiques', icone: 'chart-column', ecran: 'stats' },
   { id: 'rapports', groupe: 'Gestion', libelle: 'Rapports', icone: 'clipboard-list', ecran: 'rapports' },
   { id: 'tva', groupe: 'Gestion', libelle: 'TVA', icone: 'calculator', ecran: 'tva' },

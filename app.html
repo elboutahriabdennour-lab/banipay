@@ -87,6 +87,7 @@
   <div class="quick-actions">
     <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){window._retourRapportStock='dashboard';goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock<span id="verrou-stock-dashboard"></span></div></div>
     <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
+    <div class="qa-item" onclick="goScreen('caisse',null)"><div class="qa-ico" style="background:#E7F2EC">🛒</div><div class="qa-lbl">Caisse</div></div>
     <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#EDE6F0">👥</div><div class="qa-lbl">Clients</div></div>
     <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#EEF3E4">🧮</div><div class="qa-lbl">TVA</div></div>
     <!-- FIX (audit) : "Archive" (coffre-fort de documents : statuts, RIB,
@@ -239,6 +240,7 @@
   <script src="js/envoi-email.js?v=1"></script>
   <script src="js/connexions.js?v=1"></script>
   <script src="js/code-barre.js?v=1"></script>
+  <script src="js/caisse.js?v=1"></script>
   <script src="js/admin.js?v=1"></script>
   <script src="js/a11y.js?v=1"></script>
   <script src="js/profil.js?v=178932738057"></script>
@@ -1243,6 +1245,28 @@
 </div>
 
 <!-- PRODUITS -->
+<div class="screen" id="screen-caisse">
+  <div class="topbar">
+    <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right">
+      <span style="font-size:13px;color:rgba(255,255,255,0.8);cursor:pointer;padding:6px 12px;background:rgba(255,255,255,0.1);border-radius:20px" onclick="CAISSE.vider()">Vider</span>
+    </div>
+  </div>
+  <div id="caisse-contenu" style="padding:12px 16px 120px;max-width:720px;margin:0 auto">
+    <div id="caisse-jour" style="font-size:11px;color:#6B7A72;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="f-inp" id="caisse-recherche" style="flex:1;min-width:0" autocomplete="off" placeholder="Scannez ou cherchez un article..." oninput="CAISSE.recherche()" onkeydown="CAISSE.recherche(event)">
+      <button type="button" class="f-inp" style="width:auto;cursor:pointer;font-size:18px" onclick="CAISSE.scanner()" aria-label="Scanner">📷</button>
+    </div>
+    <div id="caisse-grille" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px;max-height:230px;overflow:auto"></div>
+    <div style="font-size:12px;font-weight:700;color:#14241F;margin-bottom:2px">Vente en cours</div>
+    <div id="caisse-panier"></div>
+  </div>
+  <div style="position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #DDE3DA;padding:10px 16px;display:flex;align-items:center;gap:12px;z-index:50">
+    <div style="flex:1"><div style="font-size:11px;color:#8E9C95">Total TTC</div><div id="caisse-total" style="font-size:22px;font-weight:800;color:#14241F">0,00 MAD</div></div>
+    <button type="button" id="caisse-encaisser" disabled onclick="CAISSE.encaisser()" style="padding:14px 22px;border:none;border-radius:12px;background:#1B5E4B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Encaisser</button>
+  </div>
+</div>
+
 <div class="screen" id="screen-produits">
   <div class="topbar">
     <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right">
