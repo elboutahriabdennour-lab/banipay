@@ -706,6 +706,7 @@ function goScreen(name, options) {
     'detail-client': function() {},
     'modifier-client': function() {},
     'caisse': function() { if (typeof initCaisse === 'function') initCaisse(); },
+    'creances': function() { if (typeof initCreances === 'function') initCreances(); },
     'produits': _safe(typeof renderProduits!=='undefined'?renderProduits:undefined,'renderProduits'),
     'nouveau-produit': _safe(typeof initNouveauProduit!=='undefined'?initNouveauProduit:undefined,'initNouveauProduit'),
     'modifier-produit': function() {},

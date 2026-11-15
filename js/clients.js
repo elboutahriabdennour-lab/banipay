@@ -292,7 +292,8 @@ function openDetailClient(id) {
     `<div class="p-card-title">Informations</div>` +
     fields.map(([k,v])=>`<div class="p-row"><span class="p-lbl">${k}</span><span class="p-val">${v}</span></div>`).join('') +
     `<div class="p-row"><span class="p-lbl">CA payé</span><span class="p-val" style="color:#6E8F4E;font-weight:700">${fmtInt(caTotal)} MAD</span></div>` +
-    `<div class="p-row"><span class="p-lbl">Factures</span><span class="p-val">${nbFact}</span></div>`;
+    `<div class="p-row"><span class="p-lbl">Factures</span><span class="p-val">${nbFact}</span></div>` +
+    (function(){ var d = STATE.factures.filter(f=>f.client===c.nom && window.CREANCES && ['payee','annulee','brouillon'].indexOf(f.statut)<0).reduce((s,f)=>s+CREANCES.reste(f),0); return d>0.009 ? `<div class="p-row"><span class="p-lbl">Reste à payer</span><span class="p-val" style="color:#B3402F;font-weight:700">${fmtInt(d)} MAD</span></div>` : ''; })();
   const factEl = el('dc-factures');
   if (factEl) {
     const cFact = STATE.factures.filter(f=>f.client===c.nom);

@@ -241,6 +241,7 @@
   <script src="js/connexions.js?v=1"></script>
   <script src="js/code-barre.js?v=1"></script>
   <script src="js/caisse.js?v=1"></script>
+  <script src="js/creances.js?v=1"></script>
   <script src="js/liaisons.js?v=1"></script>
   <script src="js/admin.js?v=1"></script>
   <script src="js/a11y.js?v=1"></script>
@@ -1247,6 +1248,16 @@
 </div>
 
 <!-- PRODUITS -->
+<div class="screen" id="screen-creances">
+  <div class="topbar">
+    <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div>
+  </div>
+  <div style="padding:12px 16px 40px;max-width:720px;margin:0 auto">
+    <div style="font-size:16px;font-weight:800;margin-bottom:10px">Créances clients</div>
+    <div id="creances-contenu"></div>
+  </div>
+</div>
+
 <div class="screen" id="screen-caisse">
   <div class="topbar">
     <button class="back-btn" onclick="goScreen('dashboard',null)">←</button><div class="topbar-brand" style="flex:1;cursor:pointer" onclick="goScreen('dashboard',null)" data-brand>Ta<span>fir</span></div><div class="topbar-right">
