@@ -238,6 +238,7 @@
   <script src="js/rapports-perso.js?v=1"></script>
   <script src="js/envoi-email.js?v=1"></script>
   <script src="js/connexions.js?v=1"></script>
+  <script src="js/code-barre.js?v=1"></script>
   <script src="js/admin.js?v=1"></script>
   <script src="js/a11y.js?v=1"></script>
   <script src="js/profil.js?v=178932738057"></script>
@@ -1261,7 +1262,7 @@
     </div>
   </div>
   <div style="padding:8px 20px 0"><button onclick="telechargerTemplateProduitsCSV()" style="background:none;border:none;color:#8E9C95;font-size:11px;text-decoration:underline;cursor:pointer;font-family:inherit">Télécharger un modèle CSV vide</button></div>
-  <div style="padding:10px 20px 0"><input class="f-inp" id="search-produit-inp" placeholder="🔍 Rechercher un article..." oninput="renderProduits()"></div>
+  <div style="padding:10px 20px 0"><div style="display:flex;gap:8px"><input class="f-inp" style="flex:1;min-width:0" id="search-produit-inp" placeholder="🔍 Nom, référence ou code-barres..." oninput="renderProduits()"><button type="button" class="f-inp" style="width:auto;cursor:pointer;font-size:12px;font-weight:700;color:#1B5E4B" onclick="CB.scannerPourStock()">📷 Scanner<br>stock</button></div></div>
   <div style="padding:8px 20px 0">
     <select class="f-inp" id="produits-tri" onchange="renderProduits()">
       <option value="defaut">🔤 Trier par nom (A à Z)</option>
@@ -1343,6 +1344,7 @@
         <div><label class="f-lbl">Stock</label><input id="p-stock" class="f-inp" type="number" placeholder="0"></div>
       </div>
     </div>
+    <div class="form-section"><label class="f-lbl">Code-barres</label><div style="display:flex;gap:8px"><input id="p-cb" class="f-inp" style="flex:1;min-width:0" inputmode="text" autocomplete="off" maxlength="64" placeholder="Scannez ou tapez le code"><button type="button" class="f-inp" style="width:auto;cursor:pointer" onclick="CB.scannerDansChamp('p-cb')" aria-label="Scanner">&#128247;</button><button type="button" class="f-inp" style="width:auto;cursor:pointer;font-size:12px" onclick="CB.genererInterne('p-cb')">Cr&#233;er un code</button></div><div style="font-size:11px;color:#8E9C95;margin-top:4px">Lecteur USB ou Bluetooth : cliquez dans le champ puis scannez.</div></div>
     <div class="form-section"><label class="f-lbl">Seuil d'alerte stock (optionnel)</label><input id="p-seuil" class="f-inp" type="number" placeholder="Ex: 5"></div>
     <div class="form-section">
       <div class="f-row">
@@ -1923,6 +1925,7 @@
   <div class="pb"></div>
   <div class="form-section"><label class="f-lbl">D&#233;signation *</label><input id="mp-nom" class="f-inp"></div>
   <div class="form-section"><label class="f-lbl">R&#233;f&#233;rence</label><input id="mp-ref" class="f-inp"></div>
+  <div class="form-section"><label class="f-lbl">Code-barres</label><div style="display:flex;gap:8px"><input id="mp-cb" class="f-inp" style="flex:1;min-width:0" inputmode="text" autocomplete="off" maxlength="64" placeholder="Scannez ou tapez le code"><button type="button" class="f-inp" style="width:auto;cursor:pointer" onclick="CB.scannerDansChamp('mp-cb')" aria-label="Scanner">&#128247;</button><button type="button" class="f-inp" style="width:auto;cursor:pointer;font-size:12px" onclick="CB.genererInterne('mp-cb')">Cr&#233;er un code</button></div><div style="font-size:11px;color:#8E9C95;margin-top:4px">Lecteur USB ou Bluetooth : cliquez dans le champ puis scannez.</div></div>
   <div class="form-section"><label class="f-lbl">Description</label><input id="mp-desc" class="f-inp"></div>
   <div class="form-section">
     <div class="f-row">
@@ -2340,7 +2343,7 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">📦 Depuis le catalogue</div>
-    <input class="m-inp" id="search-produit" placeholder="🔍 Rechercher un article..." oninput="filtrerProduits()">
+    <div style="display:flex;gap:8px"><input class="m-inp" style="flex:1;min-width:0" id="search-produit" placeholder="🔍 Nom ou code-barres..." oninput="filtrerProduits()" onkeydown="if(event.key==='Enter'){var a=CB.trouver(this.value);if(a){event.preventDefault();ajouterDepuisCatalogue(a.id);}}"><button type="button" class="m-inp" style="width:auto;cursor:pointer" onclick="CB.scannerPourLigne()" aria-label="Scanner">📷</button></div>
     <div id="produits-picker" style="max-height:50vh;overflow-y:auto"></div>
     <button class="m-btn-sec" onclick="closeAllModals()">Fermer</button>
   </div>

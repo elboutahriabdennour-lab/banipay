@@ -17,7 +17,7 @@ function renderProduits() {
   const q = (el('search-produit-inp')?.value||'').toLowerCase();
   const cat = el('filtre-categorie')?.value||'tous';
   let data = STATE.produits.filter(p =>
-    (!q || p.nom.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q)) &&
+    (!q || p.nom.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q) || (p.reference||'').toLowerCase().includes(q) || (p.code_barre||'').toLowerCase().includes(q)) &&
     (cat==='tous' || p.categorie===cat)
   );
   // AJOUT (demande utilisateur — organiser comme l'accueil) : tri.
@@ -58,10 +58,14 @@ function renderProduits() {
   }).join('');
 }
 function initNouveauProduit() {
-  ['p-nom','p-desc','p-ref','p-prix','p-prix-ttc','p-cout','p-stock','p-seuil'].forEach(id=>{const e=el(id);if(e)e.value='';});
+  ['p-nom','p-desc','p-ref','p-cb','p-prix','p-prix-ttc','p-cout','p-stock','p-seuil'].forEach(id=>{const e=el(id);if(e)e.value='';});
   el('p-unite')&&(el('p-unite').value='u');
   el('p-categorie')&&(el('p-categorie').value='service');
   el('p-tva')&&(el('p-tva').value='20');
+  if (window._cbCodeAttente) {
+    el('p-cb') && (el('p-cb').value = window._cbCodeAttente); window._cbCodeAttente = null;
+    const z = el('p-options-avancees'); if (z) z.style.display = 'block';
+  }
 }
 function calcPrixTTC() {
   const ht = parseFloat(el('p-prix')?.value)||0;
@@ -78,10 +82,12 @@ function calcPrixTTC() {
 async function sauvegarderProduit() {
   const nom = el('p-nom')?.value.trim();
   if(!nom){showToast("Entrez le nom de l'article",'error');return;}
+  const cb = window.CB ? CB.norm(el('p-cb')?.value) : '';
+  if (cb && CB.trouver(cb) && CB.trouver(cb).code_barre) { showToast('Ce code-barres est déjà utilisé par : ' + CB.trouver(cb).nom, 'error'); return; }
   if (typeof verifierLimiteProduits === 'function' && !verifierLimiteProduits()) return;
   showToast('⏳...');
   try {
-    const r = await sb.post('produits',{
+    const nouveau = {
       user_id: (STATE.entrepriseId || sb.user.id), nom,
       description:el('p-desc')?.value.trim(),
       reference:el('p-ref')?.value.trim(),
@@ -92,7 +98,9 @@ async function sauvegarderProduit() {
       seuil_alerte:el('p-seuil')?.value!==''?parseInt(el('p-seuil')?.value):null,
       unite:el('p-unite')?.value,
       categorie:el('p-categorie')?.value,
-    });
+    };
+    if (cb) nouveau.code_barre = cb;
+    const r = await sb.post('produits', nouveau);
     if (r && r.length > 0) { STATE.produits.push(r[0]); } else { throw new Error("Erreur serveur"); }
     STATE.produits.sort((a,b)=>a.nom.localeCompare(b.nom));
     showToast('✅ Article ajouté !','success');
@@ -115,6 +123,7 @@ function ouvrirModifProduit(id) {
   STATE.currentProduit = p;
   el('mp-nom') && (el('mp-nom').value = p.nom || '');
   el('mp-ref') && (el('mp-ref').value = p.reference || '');
+  el('mp-cb') && (el('mp-cb').value = p.code_barre || '');
   el('mp-desc') && (el('mp-desc').value = p.description || '');
   el('mp-prix') && (el('mp-prix').value = p.prix_ht || '');
   el('mp-tva') && (el('mp-tva').value = p.tva_rate || 20);
@@ -141,6 +150,9 @@ async function sauvegarderModifProduit() {
   if (!p) return;
   const nom = el('mp-nom')?.value.trim();
   if (!nom) { showToast('Le nom est obligatoire', 'error'); return; }
+  const cbm = window.CB ? CB.norm(el('mp-cb')?.value) : '';
+  const autre = cbm ? (STATE.produits || []).filter(function(x) { return x.id !== p.id && CB.norm(x.code_barre) === cbm; })[0] : null;
+  if (autre) { showToast('Ce code-barres est déjà utilisé par : ' + autre.nom, 'error'); return; }
   const data = {
     nom,
     reference: el('mp-ref')?.value.trim(),
@@ -153,6 +165,7 @@ async function sauvegarderModifProduit() {
     unite: el('mp-unite')?.value,
     categorie: el('mp-categorie')?.value,
   };
+  if (cbm || p.code_barre) data.code_barre = cbm || null;
   showToast('⏳ Mise à jour...');
   try {
     await sb.patch('produits', `id=eq.${p.id}&user_id=eq.${sb.user.id}`, data);

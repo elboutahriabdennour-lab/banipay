@@ -310,7 +310,7 @@ function openCatalogue() {
 
 function filtrerProduits() {
   const q = (el('search-produit')?.value || '').toLowerCase();
-  const filtered = STATE.produits.filter(p => p.nom.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q));
+  const filtered = STATE.produits.filter(p => p.nom.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q) || (p.reference||'').toLowerCase().includes(q) || (p.code_barre||'').toLowerCase().includes(q));
   const picker = el('produits-picker');
   if (!picker) return;
   picker.innerHTML = filtered.length ? filtered.map(p => `
@@ -651,6 +651,7 @@ function renderDetail() {
   actions.push(`<button class="action-item" onclick="dupliquerFacture(${f.id})"><div class="action-ico" style="background:#EDE6F0">📋</div>Dupliquer</button>`);
   actions.push(`<button class="action-item danger" onclick="supprimerFacture(${f.id})"><div class="action-ico" style="background:#F5E4E1">🗑️</div>Supprimer</button>`);
   actEl.innerHTML = actions.join('');
+  if (typeof pdfSigneMontrer === 'function') pdfSigneMontrer(actEl, 'facture', f);
   if (typeof _afficherApercuFacture === 'function') _afficherApercuFacture(f);
 }
 
