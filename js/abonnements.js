@@ -89,7 +89,7 @@ function renderAbonnements() {
   const statutLabels = { actif: '● Actif', suspendu: '⏸ Suspendu', annule: '✕ Annulé' };
   list.innerHTML = abs.map(function(a) {
     const lignes = typeof a.lignes === 'string' ? JSON.parse(a.lignes || '[]') : (a.lignes || []);
-    const total = lignes.reduce(function(s, l) { return s + (Number(l.qte)||0) * (Number(l.pu)||0); }, 0) * 1.2;
+    const total = _totauxAB(lignes).ttc;
     return '<div class="card" onclick="openDetailAbonnement(' + a.id + ')">' +
       '<div class="card-ico" style="background:#E7F2EC">🔁</div>' +
       '<div class="card-body">' +
@@ -123,19 +123,31 @@ function initNouvelAbonnement() {
   renderLignesAB();
 }
 
+// TVA par ligne (20 % si la ligne n'en porte pas : anciens abonnements).
+function _tauxLigneAB(l) { var t = Number(l && l.tva); return [0, 7, 10, 14, 20].indexOf(t) >= 0 ? t : 20; }
+function _totauxAB(lignes) {
+  var ht = 0, tva = 0;
+  (lignes || []).forEach(function(l) {
+    var h = (Number(l.qte) || 0) * (Number(l.pu) || 0);
+    ht += h; tva += h * _tauxLigneAB(l) / 100;
+  });
+  ht = Math.round(ht * 100) / 100; tva = Math.round(tva * 100) / 100;
+  return { ht: ht, tva: tva, ttc: Math.round((ht + tva) * 100) / 100 };
+}
+
 function renderLignesAB() {
   const c = el('ab-lignes-container');
   if (!c) return;
   c.innerHTML = STATE.lignesAB.map(function(l, i) {
     return '<div class="ligne-item">' +
-      '<div class="ligne-body"><div class="ligne-desc">' + l.desc + '</div><div class="ligne-meta">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD</div></div>' +
+      '<div class="ligne-body"><div class="ligne-desc">' + l.desc + '</div><div class="ligne-meta">' + l.qte + ' ' + (l.unite||'u') + ' × ' + fmt(l.pu) + ' MAD · TVA ' + _tauxLigneAB(l) + ' %</div></div>' +
       '<div class="ligne-amt">' + fmt(l.qte * l.pu) + ' MAD</div>' +
       '<button class="ligne-del" onclick="STATE.lignesAB.splice(' + i + ',1);renderLignesAB()">×</button>' +
     '</div>';
   }).join('');
-  const ht = STATE.lignesAB.reduce(function(s, l) { return s + l.qte * l.pu; }, 0);
-  setEl('ab-total-ht', fmt(ht) + ' MAD');
-  setEl('ab-total-ttc', fmt(ht * 1.2) + ' MAD');
+  const tAB = _totauxAB(STATE.lignesAB);
+  setEl('ab-total-ht', fmt(tAB.ht) + ' MAD');
+  setEl('ab-total-ttc', fmt(tAB.ttc) + ' MAD');
 }
 
 function openAddLigneAB() {
@@ -143,6 +155,7 @@ function openAddLigneAB() {
   el('mlab-qte') && (el('mlab-qte').value = '1');
   el('mlab-pu') && (el('mlab-pu').value = '');
   el('mlab-unite') && (el('mlab-unite').value = 'u');
+  el('mlab-tva') && (el('mlab-tva').value = '20');
   el('modal-ligne-ab')?.classList.add('active');
   setTimeout(function() { el('mlab-desc')?.focus(); }, 100);
 }
@@ -154,7 +167,8 @@ function confirmerLigneAB() {
   const unite = el('mlab-unite')?.value || 'u';
   if (!desc) { showToast('Entrez une description', 'error'); return; }
   if (pu <= 0) { showToast('Entrez un prix', 'error'); return; }
-  STATE.lignesAB.push({ desc, qte, pu, unite });
+  const tvaL = parseInt(el('mlab-tva')?.value);
+  STATE.lignesAB.push({ desc, qte, pu, unite, tva: [0, 7, 10, 14, 20].indexOf(tvaL) >= 0 ? tvaL : 20 });
   closeAllModals();
   renderLignesAB();
 }
@@ -213,7 +227,7 @@ function renderDetailAbonnement() {
   const freqLabels = { mensuel: 'Mensuel', trimestriel: 'Trimestriel', annuel: 'Annuel' };
 
   setEl('dab-client', a.client);
-  setEl('dab-amount', fmt(ht * 1.2) + ' ' + (a.devise||'MAD') + ' TTC / ' + (freqLabels[a.frequence]||a.frequence).toLowerCase());
+  setEl('dab-amount', fmt(_totauxAB(lignes).ttc) + ' ' + (a.devise||'MAD') + ' TTC / ' + (freqLabels[a.frequence]||a.frequence).toLowerCase());
   setEl('dab-ref', 'Prochaine génération : ' + formatDate(a.prochaine_date) + (a.chantier ? ' · ' + a.chantier : ''));
 
   // NOUVEAU (suivi de contrats) : affiche l'échéance du contrat si elle
@@ -308,7 +322,8 @@ async function supprimerAbonnement(id) {
 
 async function genererFactureDepuisAbonnement(a) {
   const lignes = typeof a.lignes === 'string' ? JSON.parse(a.lignes || '[]') : (a.lignes || []);
-  const ht = lignes.reduce(function(s, l) { return s + (Number(l.qte)||0) * (Number(l.pu)||0); }, 0);
+  const tot = _totauxAB(lignes);
+  const lignesFacture = lignes.map(function(l) { return Object.assign({}, l, { tva: _tauxLigneAB(l) }); });
   const ref = getRef('FAC', STATE.factures);
   // FIX (même trou que les autres chemins de facturation) : si le client
   // de cet abonnement est un compte Tafir connu, verrouille la facture
@@ -322,9 +337,9 @@ async function genererFactureDepuisAbonnement(a) {
     chantier: a.chantier || '',
     date_emission: today(),
     paiement: 'virement',
-    statut: 'envoyee',
-    lignes: lignes,
-    ht: ht, tva: ht * 0.2, ttc: ht * 1.2,
+    statut: 'attente',
+    lignes: lignesFacture,
+    ht: tot.ht, tva: tot.tva, ttc: tot.ttc,
     devise: a.devise || 'MAD',
     montant_recu: 0,
     note: a.note ? '(Facturation récurrente) ' + a.note : '(Facturation récurrente)',
@@ -340,23 +355,35 @@ async function genererFactureDepuisAbonnement(a) {
   return r && r[0];
 }
 
+// Réserve l'échéance AVANT de créer la facture : si l'application est ouverte sur deux appareils,
+// un seul des deux obtient la réservation, donc une seule facture est créée.
+async function _reserverEcheance(a, prochaine, jour) {
+  const uid = STATE.entrepriseId || sb.user.id;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/abonnements?id=eq.' + encodeURIComponent(a.id) + '&user_id=eq.' + encodeURIComponent(uid) + '&prochaine_date=eq.' + encodeURIComponent(a.prochaine_date), {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ prochaine_date: prochaine, derniere_generation: jour })
+    });
+    const d = await r.json();
+    return Array.isArray(d) && d.length > 0;
+  } catch (e) { return false; }
+}
+async function _annulerReservation(a, ancienneDate, ancienneDerniere) {
+  try { await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), { prochaine_date: ancienneDate, derniere_generation: ancienneDerniere || null }); } catch (e) { console.warn('annulation réservation:', e); }
+}
+
 async function genererFactureImmediate(id) {
   const a = STATE.abonnements.find(function(x) { return x.id === id; });
   if (!a) return;
   showToast('⏳ Génération de la facture...');
   try {
-    const facture = await genererFactureDepuisAbonnement(a);
-    // FIX (audit workflow — argent) : avant, la date de prochaine
-    // génération avançait même si la facture n'avait pas été créée
-    // (échec silencieux de sb.post sans exception) — l'abonnement
-    // pensait avoir facturé cette échéance alors que non, et le client
-    // n'aurait jamais été facturé pour cette période.
-    if (!facture) { showToast('❌ La facture n\'a pas pu être créée', 'error'); return; }
+    const ancienneDate = a.prochaine_date, ancienneDerniere = a.derniere_generation;
     const prochaine = calculerProchaineDateAbonnement(a.prochaine_date, a.frequence, a.jour_generation);
-    await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
-      prochaine_date: prochaine,
-      derniere_generation: today()
-    });
+    if (!(await _reserverEcheance(a, prochaine, today()))) { showToast('Cette échéance a déjà été facturée (autre appareil ?). Rechargez la page.', 'error'); return; }
+    let facture = null;
+    try { facture = await genererFactureDepuisAbonnement(a); } catch (eGen) { facture = null; }
+    if (!facture) { await _annulerReservation(a, ancienneDate, ancienneDerniere); showToast('❌ La facture n\'a pas pu être créée', 'error'); return; }
     a.prochaine_date = prochaine;
     a.derniere_generation = today();
     renderDetailAbonnement();
@@ -380,17 +407,12 @@ async function verifierAbonnements() {
   let count = 0;
   for (const a of aTraiter) {
     try {
-      const facture = await genererFactureDepuisAbonnement(a);
-      // FIX (audit workflow — argent) : même risque qu'en génération
-      // manuelle, mais plus grave ici car ce chemin tourne sans
-      // supervision humaine à chaque connexion — sans ce garde-fou, une
-      // échéance de facturation aurait pu être silencieusement sautée.
-      if (!facture) { console.warn('verifierAbonnements: facture non créée pour', a.client); continue; }
+      const ancienneDate = a.prochaine_date, ancienneDerniere = a.derniere_generation;
       const prochaine = calculerProchaineDateAbonnement(a.prochaine_date, a.frequence, a.jour_generation);
-      await sb.patch('abonnements', 'id=eq.' + a.id + '&user_id=eq.' + (STATE.entrepriseId || sb.user.id), {
-        prochaine_date: prochaine,
-        derniere_generation: todayStr
-      });
+      if (!(await _reserverEcheance(a, prochaine, todayStr))) continue; // déjà traitée par un autre appareil
+      let facture = null;
+      try { facture = await genererFactureDepuisAbonnement(a); } catch (eGen) { facture = null; }
+      if (!facture) { await _annulerReservation(a, ancienneDate, ancienneDerniere); console.warn('verifierAbonnements: facture non créée pour', a.client); continue; }
       a.prochaine_date = prochaine;
       a.derniere_generation = todayStr;
       count++;
