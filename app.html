@@ -3130,7 +3130,7 @@
 <!-- ===== DASHBOARD COMPTABLE FULL ===== -->
 <div class="screen" id="screen-comptable" style="background:#F5F6F1;flex-direction:column">
   <!-- Header violet -->
-  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:16px 20px 12px;flex-shrink:0">
+  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:calc(16px + env(safe-area-inset-top,0px)) 20px 12px;flex-shrink:0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <!-- Logo -->
       <div style="font-size:20px;font-weight:900;color:#fff;cursor:pointer" onclick="switchCptNav('dashboard')">Ta<span style="color:#C8E55A">fir</span></div>
@@ -3180,7 +3180,7 @@
 </div>
 
 <div class="screen" id="screen-cpt-entreprise" style="background:#F5F6F1">
-  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
+  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:calc(14px + env(safe-area-inset-top,0px)) 20px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10">
     <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
     <img alt="" id="cpt-ent-logo" style="display:none;width:32px;height:32px;border-radius:8px;object-fit:cover;background:#fff;flex-shrink:0">
     <div style="flex:1;cursor:pointer" onclick="toggleEntrepriseDropdownCpt(event)">
@@ -3215,7 +3215,7 @@
 
 <div class="screen" id="screen-comptable-profil" style="background:#F5F6F1">
   <!-- Header -->
-  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:0 0 30px">
+  <div style="background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:env(safe-area-inset-top,0px) 0 30px">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px">
       <button onclick="goScreen('comptable',null)" style="background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">←</button>
       <div style="font-size:14px;font-weight:700;color:#fff">Mon profil</div>
