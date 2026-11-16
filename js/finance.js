@@ -52,6 +52,16 @@ function renderPositionFinanciere() {
         '<div style="font-size:18px;font-weight:800;color:#134436">' + fmt(valeurStock) + ' MAD</div>' +
       '</div>' : '') +
 
+    (function () {
+      if (typeof caisseJours !== 'function') return '';
+      var d = new Date(), m = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+      var j = caisseJours(m + '-01', m + '-31'); if (!j.length) return '';
+      var tot = j.reduce(function (s, x) { return s + x.ttc; }, 0), esp = j.reduce(function (s, x) { return s + x.especes; }, 0);
+      return '<div style="background:#F7EFDC;border-radius:12px;padding:14px;margin-bottom:16px">' +
+        '<div style="font-size:11px;font-weight:600;color:#8A6A12">🛒 Ventes de caisse ce mois (déjà encaissées)</div>' +
+        '<div style="font-size:18px;font-weight:800;color:#8A6A12">' + fmt(tot) + ' MAD</div>' +
+        '<div style="font-size:10px;color:#8A6A12;margin-top:2px">dont ' + fmt(esp) + ' MAD en espèces · non incluses dans le solde net ci-dessus</div></div>';
+    })() +
     '<div style="font-size:11px;color:#8E9C95;text-align:center;padding:0 8px">Estimation indicative basée sur les factures/achats enregistrés dans Tafir — ne remplace pas un état de trésorerie comptable complet.</div>' +
     '<div style="padding:16px 0"><button onclick="exporterEcrituresComptables(STATE.factures, STATE.achats, STATE.paiements, STATE.profil)" style="width:100%;padding:12px;background:#0F1F1A;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (CSV, plan comptable marocain)</button></div>' +
     '<button onclick="goScreen(\'rapprochement\',null)" style="width:100%;padding:12px;background:#1B5E4B;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">🔗 Rapprocher mes paiements</button>';

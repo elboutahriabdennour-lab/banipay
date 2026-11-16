@@ -11,15 +11,20 @@
   // ── Ventes de caisse en mémoire ──
   window.chargerVentesCaisse = async function (uid) {
     try {
-      var r = await sb.get('ventes_caisse', 'user_id=eq.' + uid + '&select=id,numero,lignes,total_ht,total_tva,total_ttc,mode_paiement,created_at&order=created_at.desc&limit=5000');
+      var base = 'user_id=eq.' + uid + '&select=id,numero,lignes,total_ht,total_tva,total_ttc,mode_paiement,created_at';
+      var r = null;
+      try { r = await sb.get('ventes_caisse', base + ',client_nom,facture_ref&order=created_at.desc&limit=5000'); } catch (y) { r = null; }
+      if (!Array.isArray(r)) r = await sb.get('ventes_caisse', base + '&order=created_at.desc&limit=5000'); // base pas encore mise à jour (SQL 063)
       STATE.ventesCaisse = Array.isArray(r) ? r : [];
     } catch (x) { STATE.ventesCaisse = []; }
   };
 
   // Regroupe les tickets par jour, avec le détail par taux de TVA (TTC saisi → HT et TVA).
-  window.caisseJours = function (du, au) {
+  // Les tickets déjà transformés en facture (facture_ref) sont exclus : la facture les remplace, sinon double compte.
+  window.caisseJours = function (du, au, source) {
     var jours = {};
-    (STATE.ventesCaisse || []).forEach(function (v) {
+    (source || STATE.ventesCaisse || []).forEach(function (v) {
+      if (v.facture_ref) return;
       var j = jourLocal(v.created_at); if (!j) return;
       if (du && j < du) return; if (au && j > au) return;
       var o = jours[j] || (jours[j] = { date: j, n: 0, ttc: 0, ht: 0, tva: 0, especes: 0, autre: 0, parTaux: { '0': [0, 0], '10': [0, 0], '20': [0, 0], 'autre': [0, 0] } });

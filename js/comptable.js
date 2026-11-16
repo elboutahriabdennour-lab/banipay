@@ -284,6 +284,11 @@ async function ouvrirEntreprise(entrepriseId) {
     });
     if (rp.ok) CPT.currentPaiements = (await rp.json()) || [];
   } catch(ePaie) {}
+  CPT.currentCaisse = [];
+  try {
+    const rc = await sb.get('ventes_caisse', 'user_id=eq.' + encodeURIComponent(entrepriseId) + '&select=id,numero,lignes,total_ht,total_tva,total_ttc,mode_paiement,created_at,facture_ref&order=created_at.desc&limit=5000');
+    if (Array.isArray(rc)) CPT.currentCaisse = rc;
+  } catch(eCa) {}
   CPT.currentBonsCommande = [];
   CPT.currentBonsLivraison = [];
   try {
@@ -492,6 +497,22 @@ function creerFiltreCpt() {
   return '<div style="padding:10px 16px;display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #EAE4DA;background:#fff">' + boutonsHtml + boutonTous + '</div>';
 }
 
+// Ventes de caisse de l'entreprise (lecture seule) : un total par jour, tickets déjà facturés exclus.
+function blocCaisseCpt() {
+  const src = CPT.currentCaisse || [];
+  if (!src.length || typeof caisseJours !== 'function') return '';
+  const mois = CPT.filtres.moisFactures || '';
+  const jours = caisseJours(mois ? mois + '-01' : null, mois ? mois + '-31' : null, src).reverse();
+  if (!jours.length) return '';
+  const tot = jours.reduce(function(s, j) { return s + j.ttc; }, 0), tva = jours.reduce(function(s, j) { return s + j.tva; }, 0);
+  return '<div style="padding:10px 16px;background:#E7F2EC;border-bottom:1px solid #DDE3DA">' +
+    '<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:#134436"><span>🛒 Ventes de caisse' + (mois ? ' (' + mois + ')' : '') + '</span><span>' + fmt(tot) + ' MAD TTC</span></div>' +
+    '<div style="font-size:10px;color:#134436;margin:2px 0 6px">dont TVA ' + fmt(tva) + ' MAD · tickets déjà transformés en facture non comptés ici</div>' +
+    jours.slice(0, 31).map(function(j) {
+      return '<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:#14241F"><span>' + escapeHTML(j.date) + ' · ' + j.n + ' ticket' + (j.n > 1 ? 's' : '') + '</span><span>' + fmt(j.ttc) + '</span></div>';
+    }).join('') + '</div>';
+}
+
 function renderCptFactures() {
   const list = el('cpt-ent-content');
   if (!list) return;
@@ -522,6 +543,7 @@ function renderCptFactures() {
       '<span style="font-size:15px;font-weight:800;color:#55702E">' + fmt(caTotal) + ' MAD</span>' +
     '</div>' +
     '<div style="padding:6px 16px;background:#EEF3E4;font-size:10px;color:#55702E;border-bottom:1px solid #DDE3DA">dont ' + fmt(caPaye) + ' MAD encaisse(s)</div>' +
+    blocCaisseCpt() +
     creerFiltreMoisCpt('moisFactures', CPT.currentFactures, 'date_emission') +
     creerFiltreRechercheCpt('rechercheClient', CPT.filtres.rechercheClient, 'Rechercher un client...', 'renderCptFactures') +
     creerFiltreStatutCpt('statutFacture', ['envoyee','attente','payee','retard','annulee'], { envoyee:'Envoyee', attente:'En attente', payee:'Payee', retard:'En retard', annulee:'Annulee' }, 'renderCptFactures') +

@@ -106,6 +106,8 @@
       + '<div id="caisse-bloc-especes"><label style="font-size:12px;font-weight:600">Montant reçu (MAD)</label>'
       + '<input id="caisse-recu" type="number" step="0.01" inputmode="decimal" style="width:100%;padding:12px;border:1.5px solid #DDE3DA;border-radius:10px;font-size:18px;margin:4px 0 6px;box-sizing:border-box;font-family:inherit">'
       + '<div style="font-size:14px;font-weight:700;color:#1B5E4B;margin-bottom:10px">À rendre : <span id="caisse-rendu">0,00</span> MAD</div></div>'
+      + '<input id="caisse-client" list="caisse-clients-liste" maxlength="120" autocomplete="off" placeholder="Client (facultatif)" style="width:100%;padding:11px;border:1.5px solid #DDE3DA;border-radius:10px;font-size:14px;margin-bottom:10px;box-sizing:border-box;font-family:inherit">'
+      + '<datalist id="caisse-clients-liste">' + (STATE.clients || []).slice(0, 300).map(function (c) { return '<option value="' + e(c.nom) + '">'; }).join('') + '</datalist>'
       + '<button type="button" id="caisse-valider" style="width:100%;padding:14px;border:none;border-radius:12px;background:#1B5E4B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">✓ Valider la vente</button>'
       + '<button type="button" id="caisse-annuler" style="width:100%;padding:12px;border:none;background:none;color:#8E9C95;font-size:13px;cursor:pointer;font-family:inherit">Annuler</button></div>';
     document.body.appendChild(ov);
@@ -138,13 +140,16 @@
       if (recu < t.ttc) { showToast('Le montant reçu est inférieur au total', 'error'); btn.disabled = false; btn.textContent = '✓ Valider la vente'; return; }
       rendu = r2(recu - t.ttc);
     }
+    var clientNom = String((ov.querySelector('#caisse-client') || {}).value || '').trim().slice(0, 120);
     var lignes = panier.map(function (l) { return { produit_id: l.id, nom: l.nom, qte: l.qte, pu_ttc: l.pu_ttc, tva: l.tva, unite: l.unite }; });
     var vente = null;
     try {
       for (var essai = 0; essai < 4 && !vente; essai++) {
         var numero = await numeroSuivant(essai);
         try {
-          var r = await sb.post('ventes_caisse', { user_id: sb.user.id, numero: numero, lignes: lignes, total_ht: t.ht, total_tva: t.tva, total_ttc: t.ttc, mode_paiement: paiement, montant_recu: recu, rendu: rendu });
+          var corps = { user_id: sb.user.id, numero: numero, lignes: lignes, total_ht: t.ht, total_tva: t.tva, total_ttc: t.ttc, mode_paiement: paiement, montant_recu: recu, rendu: rendu };
+          if (clientNom) corps.client_nom = clientNom; // colonne ajoutée par le SQL 063
+          var r = await sb.post('ventes_caisse', corps);
           vente = (r && r[0]) || { numero: numero, created_at: new Date().toISOString() };
         } catch (x) { if (!/duplicate|unique|23505/i.test(String(x && x.message || x)) || essai === 3) throw x; }
       }
@@ -158,9 +163,9 @@
       if (p && p.stock != null && typeof enregistrerSortieStock === 'function') { try { await enregistrerSortieStock(p.id, lignes[i].qte, 'Vente caisse', vente.numero); } catch (y) {} }
     }
     ov.remove();
-    var snapshot = { vente: vente, lignes: lignes, t: t, mode: paiement, recu: recu, rendu: rendu };
-    (STATE.ventesCaisse = STATE.ventesCaisse || []).unshift({ id: vente.id, numero: vente.numero, lignes: lignes, total_ht: t.ht, total_tva: t.tva, total_ttc: t.ttc, mode_paiement: paiement, created_at: vente.created_at || new Date().toISOString() });
-    panier = []; dessiner(); grille(); chargerJour();
+    var snapshot = { vente: vente, lignes: lignes, t: t, mode: paiement, recu: recu, rendu: rendu, client: clientNom };
+    (STATE.ventesCaisse = STATE.ventesCaisse || []).unshift({ id: vente.id, numero: vente.numero, lignes: lignes, total_ht: t.ht, total_tva: t.tva, total_ttc: t.ttc, mode_paiement: paiement, client_nom: clientNom || null, facture_ref: null, created_at: vente.created_at || new Date().toISOString() });
+    panier = []; dessiner(); grille(); chargerJour(); listeTickets();
     afficherTicket(snapshot);
   }
 
@@ -173,6 +178,7 @@
       + (pf.tel ? '<div style="text-align:center">Tél : ' + e(pf.tel) + '</div>' : '')
       + (pf.ice ? '<div style="text-align:center">ICE : ' + e(pf.ice) + '</div>' : '')
       + '<div style="border-top:1px dashed #000;margin:6px 0"></div>'
+      + (s.client ? '<div>Client : ' + e(s.client) + '</div>' : '')
       + '<div>Ticket ' + e(s.vente.numero) + '</div><div>' + e(d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })) + '</div>'
       + '<div style="border-top:1px dashed #000;margin:6px 0"></div>';
     s.lignes.forEach(function (l) {
@@ -194,15 +200,86 @@
     ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,31,26,.8);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
     ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:16px;max-width:360px;width:100%"><div style="text-align:center;font-weight:800;color:#1B5E4B;margin-bottom:8px">✅ Vente enregistrée</div>'
       + '<div id="caisse-ticket-contenu" style="background:#FAFAF7;border:1px solid #EAE4DA;border-radius:8px;padding:10px;overflow:auto">' + htmlTicket(s) + '</div>'
-      + '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" id="caisse-imprimer" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid #1B5E4B;background:#fff;color:#1B5E4B;font-weight:700;cursor:pointer;font-family:inherit">🖨️ Imprimer</button>'
+      + '<button type="button" id="caisse-facturer" style="width:100%;margin-top:10px;padding:11px;border-radius:10px;border:none;background:#E7F2EC;color:#1B5E4B;font-weight:700;cursor:pointer;font-family:inherit">🧾 Transformer en facture</button>'
+      + '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" id="caisse-imprimer" style="flex:1;padding:12px;border-radius:10px;border:1.5px solid #1B5E4B;background:#fff;color:#1B5E4B;font-weight:700;cursor:pointer;font-family:inherit">🖨️ Imprimer</button>'
       + '<button type="button" id="caisse-nouvelle" style="flex:1;padding:12px;border-radius:10px;border:none;background:#1B5E4B;color:#fff;font-weight:700;cursor:pointer;font-family:inherit">Nouvelle vente</button></div></div>';
     document.body.appendChild(ov);
     ov.querySelector('#caisse-nouvelle').onclick = function () { ov.remove(); var c = el('caisse-recherche'); if (c) c.focus(); };
+    ov.querySelector('#caisse-facturer').onclick = function () { ov.remove(); convertirEnFacture(s.vente.id); };
     ov.querySelector('#caisse-imprimer').onclick = function () {
       var w = window.open('', '_blank', 'width=360,height=600'); if (!w) { showToast('Autorisez les fenêtres pour imprimer', 'error'); return; }
       w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Ticket</title><style>@page{margin:4mm}body{margin:0}</style></head><body>' + htmlTicket(s) + '</body></html>');
       w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 300);
     };
+  }
+
+
+  // ── Liste des tickets du jour + transformation en facture ──
+  function jourLocal(iso) { var d = new Date(iso); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function listeTickets() {
+    var z = el('caisse-tickets'); if (!z) return;
+    var auj = jourLocal(new Date().toISOString());
+    var l = (STATE.ventesCaisse || []).filter(function (v) { return jourLocal(v.created_at) === auj; });
+    if (!l.length) { z.innerHTML = '<div style="font-size:12px;color:#8E9C95">Aucune vente aujourd\'hui.</div>'; return; }
+    z.innerHTML = l.map(function (v) {
+      var h = new Date(v.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return '<div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #DDE3DA;border-radius:10px;padding:9px 10px;margin-bottom:6px">'
+        + '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">' + e(v.numero) + ' <span style="font-weight:400;color:#8E9C95">· ' + e(h) + '</span></div>'
+        + (v.client_nom ? '<div style="font-size:11px;color:#6B7A72">' + e(v.client_nom) + '</div>' : '') + '</div>'
+        + '<div style="font-size:13px;font-weight:800">' + fmt(v.total_ttc) + '</div>'
+        + (v.facture_ref ? '<span style="font-size:11px;color:#1B5E4B;font-weight:700">🧾 ' + e(v.facture_ref) + '</span>'
+          : '<button type="button" data-tf="' + e(v.id) + '" style="padding:7px 10px;border:none;border-radius:8px;background:#E7F2EC;color:#1B5E4B;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">→ Facture</button>') + '</div>';
+    }).join('');
+    z.querySelectorAll('[data-tf]').forEach(function (b) { b.onclick = function () { convertirEnFacture(b.getAttribute('data-tf')); }; });
+  }
+
+  var enCours = false;
+  async function convertirEnFacture(id) {
+    if (enCours) return;
+    var v = (STATE.ventesCaisse || []).filter(function (x) { return String(x.id) === String(id); })[0];
+    if (!v) { showToast('Ticket introuvable', 'error'); return; }
+    if (v.facture_ref) { showToast('Ce ticket est déjà transformé en facture (' + v.facture_ref + ')'); return; }
+    if (!estProprietaire()) return;
+    var pe = STATE.profil || {};
+    if (!/^\d{15}$/.test(String(pe.ice || '').trim()) || !String(pe.adresse || '').trim()) {
+      if (typeof demanderIdentiteEmetteur === 'function') demanderIdentiteEmetteur(function () { convertirEnFacture(id); });
+      return;
+    }
+    var client = v.client_nom || window.prompt('Nom du client pour la facture :', '');
+    client = String(client || '').trim().slice(0, 120);
+    if (!client) { showToast('Il faut un nom de client pour faire une facture', 'error'); return; }
+    enCours = true;
+    try {
+      // 1) on réserve le client sur le ticket (échoue ici, avant toute facture, si la base n'est pas à jour)
+      await sb.patch('ventes_caisse', 'id=eq.' + encodeURIComponent(v.id), { client_nom: client });
+      // 2) la facture : prix HT recalculés depuis les prix TTC du ticket, déjà payée
+      var lignes = (v.lignes || []).map(function (l) {
+        var t = Number(l.tva) >= 0 ? Number(l.tva) : 20;
+        return { desc: l.nom, qte: Number(l.qte) || 0, pu: Math.round(Number(l.pu_ttc) / (1 + t / 100) * 10000) / 10000, unite: l.unite || 'u', produit_id: l.produit_id || null, tva: t };
+      });
+      var tot = calculerTotauxLignes(lignes);
+      var ref = getRef('FAC', STATE.factures);
+      var connu = (STATE.clients || []).filter(function (c) { return c.nom === client; })[0];
+      var mode = { especes: 'especes', carte: 'carte' }[v.mode_paiement] || 'virement';
+      var jour = jourLocal(v.created_at);
+      var r = await sb.post('factures', {
+        user_id: uid(), cree_par: sb.user.id, ref: ref, client: client, chantier: '', date_emission: jour, echeance: null, paiement: mode,
+        note: 'Vente de caisse ' + v.numero, bc_id: null, statut: 'payee', ht: tot.ht, tva: tot.tva, ttc: tot.ttc,
+        lignes: lignes, devise: 'MAD', montant_recu: tot.ttc, destinataire_id: (connu && connu.reference_id) || null
+      });
+      if (!r || !r[0]) throw new Error('facture');
+      STATE.factures.unshift(r[0]);
+      try { autoAddClient(client); } catch (y) {}
+      // 3) le ticket pointe vers la facture : il n'est plus compté deux fois
+      try { await sb.patch('ventes_caisse', 'id=eq.' + encodeURIComponent(v.id), { facture_ref: r[0].ref || ref }); }
+      catch (y) { showToast('Facture créée, mais le ticket n\'a pas pu être marqué : prévenez le support pour éviter un double compte', 'error'); }
+      v.client_nom = client; v.facture_ref = r[0].ref || ref;
+      try { logAudit('facture', r[0].id, 'creation', (r[0].ref || ref) + ' — depuis ticket ' + v.numero + ' — ' + client); } catch (y) {}
+      showToast('✅ Facture ' + (r[0].ref || ref) + ' créée depuis le ticket ' + v.numero, 'success');
+    } catch (x) {
+      showToast('Facture non créée. Vérifiez que la mise à jour de la base (063) a été faite.', 'error');
+    }
+    enCours = false; listeTickets();
   }
 
   async function chargerJour() {
@@ -220,8 +297,8 @@
   window.initCaisse = function () {
     var ecran = el('screen-caisse'); if (!ecran) return;
     if (!estProprietaire()) { el('caisse-contenu').innerHTML = '<div style="padding:24px;text-align:center;color:#5B6B64">La caisse est réservée au propriétaire du compte pour le moment.</div>'; return; }
-    grille(); dessiner(); chargerJour();
+    grille(); dessiner(); chargerJour(); listeTickets();
     setTimeout(function () { var c = el('caisse-recherche'); if (c) c.focus(); }, 150);
   };
-  window.CAISSE = { recherche: recherche, scanner: scanner, vider: vider, encaisser: ouvrirEncaissement };
+  window.CAISSE = { facturer: convertirEnFacture, recherche: recherche, scanner: scanner, vider: vider, encaisser: ouvrirEncaissement };
 })();
