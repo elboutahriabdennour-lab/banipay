@@ -12,6 +12,15 @@ var ECRANS_VERROUILLES = {
   'marche': 'Le marché', 'nouvelle-annonce': 'Le marché', 'mes-annonces': 'Le marché',
   'releves': 'Les relevés bancaires', 'rapprochement-releve': 'Les relevés bancaires', 'rapprochement': 'Le rapprochement bancaire',
   'employes': 'Le registre du personnel', 'nouvel-employe': 'Le registre du personnel',
+  // Recentrage (16/11) : Tafir ouvre d'abord la facturation + l'accès comptable. Tout le reste attend d'être finalisé.
+  'caisse': 'La caisse', 'rapport-stock': 'La gestion de stock',
+  'stats': 'Les statistiques', 'rapports': 'Les rapports', 'tva': 'La TVA', 'connexions': 'Les connexions',
+  'position-financiere': 'La trésorerie', 'abonnements': 'Les factures récurrentes', 'nouvel-abonnement': 'Les factures récurrentes', 'detail-abonnement': 'Les factures récurrentes',
+  'contrats': 'Les contrats', 'nouveau-contrat': 'Les contrats', 'carnet-chantier': 'Le carnet de chantier', 'archive': 'L’archive de documents',
+  'hub-achats': 'Les achats', 'achats': 'Les achats', 'nouvelle-achat': 'Les achats',
+  'fournisseurs': 'Les fournisseurs', 'fournisseur-form': 'Les fournisseurs', 'fournisseur-detail': 'Les fournisseurs', 'demande-devis-fournisseur': 'Les fournisseurs',
+  'demandes-devis': 'Les demandes de devis', 'devis-recus': 'Les devis reçus', 'bc-recus': 'Les bons de commande', 'factures-recues': 'Les factures reçues',
+  'bon-commande': 'Les bons de commande', 'bons-commande-list': 'Les bons de commande', 'bon-livraison': 'Les bons de livraison', 'bons-livraison-list': 'Les bons de livraison',
 };
 
 // Compatibilité avec l'ancien lancement « facturation seule » : plus utilisé, tout est autorisé.
@@ -50,7 +59,7 @@ function afficherVerrou(name, nomLibre) {
 }
 
 // ── Cadenas sur tous les raccourcis qui mènent à un module verrouillé ──────────────────────────
-var VERROUS_PAR_ID = {};
+var VERROUS_PAR_ID = { 'valeur-stock-card': 'La gestion de stock' };
 
 function _cibles(oc) {
   var re = /goScreen\(\s*['"]([a-z0-9-]+)['"]/g, m, c = [];

@@ -20,21 +20,21 @@ var TAFIR_MODULES = [
   { id: 'clients', groupe: 'Gestion', libelle: 'Clients', icone: 'users', ecran: 'clients' },
   { id: 'produits', groupe: 'Gestion', libelle: 'Produits', icone: 'package', ecran: 'produits' },
   { id: 'creances', groupe: 'Facturation', libelle: 'Créances clients', icone: 'banknote', ecran: 'creances' },
-  { id: 'caisse', groupe: 'Gestion', libelle: 'Caisse', icone: 'banknote', ecran: 'caisse' },
-  { id: 'stats', groupe: 'Gestion', libelle: 'Statistiques', icone: 'chart-column', ecran: 'stats' },
-  { id: 'rapports', groupe: 'Gestion', libelle: 'Rapports', icone: 'clipboard-list', ecran: 'rapports' },
-  { id: 'tva', groupe: 'Gestion', libelle: 'TVA', icone: 'calculator', ecran: 'tva' },
-  { id: 'connexions', groupe: 'Gestion', libelle: 'Connexions', icone: 'link', ecran: 'connexions' },
+  { id: 'caisse', groupe: 'Bientôt disponible', libelle: 'Caisse', icone: 'banknote', ecran: 'caisse' },
+  { id: 'stats', groupe: 'Bientôt disponible', libelle: 'Statistiques', icone: 'chart-column', ecran: 'stats' },
+  { id: 'rapports', groupe: 'Bientôt disponible', libelle: 'Rapports', icone: 'clipboard-list', ecran: 'rapports' },
+  { id: 'tva', groupe: 'Bientôt disponible', libelle: 'TVA', icone: 'calculator', ecran: 'tva' },
+  { id: 'connexions', groupe: 'Bientôt disponible', libelle: 'Connexions', icone: 'link', ecran: 'connexions' },
   { id: 'hub-ventes', groupe: 'Ventes et achats', libelle: 'Ventes', icone: 'banknote', action: function () { renderHubVentes(); goScreen('hub-ventes', null); } },
-  { id: 'achats', groupe: 'Ventes et achats', libelle: 'Achats', icone: 'shopping-cart', action: function () { loadAchats(); renderHubAchats(); goScreen('hub-achats', null); } },
-  { id: 'fournisseurs', groupe: 'Ventes et achats', libelle: 'Fournisseurs', icone: 'users', action: function () { loadFournisseurs(); goScreen('fournisseurs', null); } },
+  { id: 'achats', groupe: 'Bientôt disponible', verrou: 'hub-achats', libelle: 'Achats', icone: 'shopping-cart', action: function () { loadAchats(); renderHubAchats(); goScreen('hub-achats', null); } },
+  { id: 'fournisseurs', groupe: 'Bientôt disponible', verrou: 'fournisseurs', libelle: 'Fournisseurs', icone: 'users', action: function () { loadFournisseurs(); goScreen('fournisseurs', null); } },
   { id: 'releves', groupe: 'Bientôt disponible', libelle: 'Relevés bancaires', icone: 'banknote', ecran: 'releves' },
-  { id: 'tresorerie', groupe: 'Gestion', libelle: 'Trésorerie', icone: 'chart-column', ecran: 'position-financiere' },
-  { id: 'abonnements', groupe: 'Facturation', libelle: 'Factures récurrentes', icone: 'file-stack', ecran: 'abonnements' },
-  { id: 'contrats', groupe: 'Gestion', libelle: 'Contrats', icone: 'file-pen', ecran: 'contrats' },
-  { id: 'stock', groupe: 'Gestion', libelle: 'Stock', icone: 'package', ecran: 'rapport-stock' },
+  { id: 'tresorerie', groupe: 'Bientôt disponible', libelle: 'Trésorerie', icone: 'chart-column', ecran: 'position-financiere' },
+  { id: 'abonnements', groupe: 'Bientôt disponible', libelle: 'Factures récurrentes', icone: 'file-stack', ecran: 'abonnements' },
+  { id: 'contrats', groupe: 'Bientôt disponible', libelle: 'Contrats', icone: 'file-pen', ecran: 'contrats' },
+  { id: 'stock', groupe: 'Bientôt disponible', libelle: 'Stock', icone: 'package', ecran: 'rapport-stock' },
   { id: 'employes', groupe: 'Bientôt disponible', libelle: 'Personnel', icone: 'users', ecran: 'employes' },
-  { id: 'chantier', groupe: 'Gestion', libelle: 'Carnet de chantier', icone: 'clipboard-list', ecran: 'carnet-chantier' },
+  { id: 'chantier', groupe: 'Bientôt disponible', libelle: 'Carnet de chantier', icone: 'clipboard-list', ecran: 'carnet-chantier' },
   { id: 'messagerie', groupe: 'Bientôt disponible', libelle: 'Messagerie', icone: 'message-circle', ecran: 'messages' },
   { id: 'annuaire', groupe: 'Bientôt disponible', libelle: 'Annuaire', icone: 'users', ecran: 'annuaire' },
   { id: 'marche', groupe: 'Bientôt disponible', libelle: 'Marché', icone: 'shopping-cart', ecran: 'marche' },
@@ -58,7 +58,7 @@ function _mlAller(id) {
   if (id === 'deco') { doLogout(); return; }
   var m = TAFIR_MODULES.filter(function (x) { return x.id === id; })[0];
   if (!m) return;
-  if (m.ecran && typeof ecranVerrouille === 'function' && ecranVerrouille(m.ecran)) { afficherVerrou(m.ecran); return; }
+  var cible = m.ecran || m.verrou; if (cible && typeof ecranVerrouille === 'function' && ecranVerrouille(cible)) { afficherVerrou(cible); return; }
   if (typeof m.action === 'function') m.action(); else if (m.ecran) goScreen(m.ecran, null);
 }
 function ouvrirMenuLateral(event) {
@@ -73,7 +73,7 @@ function ouvrirMenuLateral(event) {
   var h = '';
   groupes.forEach(function (g) {
     h += '<div class="ml-titre"></div>';
-    g[1].forEach(function (m) { var lock = m.ecran && typeof ecranVerrouille === 'function' && ecranVerrouille(m.ecran); h += '<button class="ml-it' + (lock ? ' ml-verrou' : '') + '" data-id="' + m.id + '"><i class="ic ic-' + (m.icone || 'package') + ' ml-ico"></i><span></span>' + (lock ? '<b class="tf-cadenas" aria-hidden="true">🔒</b>' : '') + '</button>'; });
+    g[1].forEach(function (m) { var lock = (m.ecran || m.verrou) && typeof ecranVerrouille === 'function' && ecranVerrouille(m.ecran || m.verrou); h += '<button class="ml-it' + (lock ? ' ml-verrou' : '') + '" data-id="' + m.id + '"><i class="ic ic-' + (m.icone || 'package') + ' ml-ico"></i><span></span>' + (lock ? '<b class="tf-cadenas" aria-hidden="true">🔒</b>' : '') + '</button>'; });
   });
   var o = document.createElement('div');
   o.id = 'ml-overlay';
