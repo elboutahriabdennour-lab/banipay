@@ -284,6 +284,11 @@ async function ouvrirEntreprise(entrepriseId) {
     });
     if (rp.ok) CPT.currentPaiements = (await rp.json()) || [];
   } catch(ePaie) {}
+  CPT.currentAvoirs = [];
+  try {
+    const ra = await sb.get('avoirs', 'user_id=eq.' + encodeURIComponent(entrepriseId) + '&select=*&limit=2000');
+    if (Array.isArray(ra)) CPT.currentAvoirs = ra;
+  } catch(eAv) {}
   CPT.currentCaisse = [];
   try {
     const rc = await sb.get('ventes_caisse', 'user_id=eq.' + encodeURIComponent(entrepriseId) + '&select=id,numero,lignes,total_ht,total_tva,total_ttc,mode_paiement,created_at,facture_ref&order=created_at.desc&limit=5000');
@@ -938,7 +943,7 @@ function renderCptTVA() {
         '<button onclick="declarerTVAMois()" style="flex:1;padding:12px;background:#6E8F4E;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✅ Declarer TVA du mois</button>' +
         '<button onclick="exportCptTVA()" style="flex:1;padding:12px;background:#7C5CA6;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export CSV</button>' +
       '</div>' +
-    '<button onclick="typeof exporterEcrituresComptables===\'function\' && exporterEcrituresComptables(CPT.currentFactures, CPT.currentAchats, CPT.currentPaiements, CPT.currentProfil)" style="width:100%;margin-top:8px;padding:12px;background:#0F1F1A;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (plan comptable marocain)</button>' +
+    '<button onclick="typeof exporterEcrituresComptables===\'function\' && exporterEcrituresComptables(CPT.currentFactures, CPT.currentAchats, CPT.currentPaiements, CPT.currentProfil, {caisse: CPT.currentCaisse || [], avoirs: CPT.currentAvoirs || []})" style="width:100%;margin-top:8px;padding:12px;background:#0F1F1A;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📤 Export comptable (plan comptable marocain)</button>' +
   '</div>';
 }
 

@@ -14,7 +14,7 @@
 //      messages ou en envoyer de faux).
 //   2. Installer l'app ntfy (Android/iOS) ou aller sur ntfy.sh dans un
 //      navigateur, et s'abonner à ce même nom de sujet.
-const NTFY_TOPIC = 'zelto-alertes-CHANGEZ-MOI-abc123';
+const NTFY_TOPIC = 'tafir-alertes-d3674b6f141abe11';
 
 // Évite d'envoyer 50 fois la même erreur si elle se répète en boucle —
 // une seule notification par erreur identique toutes les 10 minutes.

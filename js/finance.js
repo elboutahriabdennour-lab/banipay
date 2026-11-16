@@ -182,7 +182,8 @@ function _chargerSheetJS() {
   return _sheetjsChargement;
 }
 
-async function exporterEcrituresComptables(factures, achats, paiements, profil) {
+// ctx (facultatif) : fourni par l'espace comptable avec { caisse, avoirs } de l'ENTREPRISE consultée. Sans ctx : données du compte connecté.
+async function exporterEcrituresComptables(factures, achats, paiements, profil, ctx) {
   const raison = (profil && profil.raison) || 'Entreprise';
   const headers = ['Date', 'Journal', 'N° Compte', 'Libellé Compte', 'Libellé Écriture', 'Référence Pièce', 'Débit', 'Crédit'];
 
@@ -238,7 +239,7 @@ async function exporterEcrituresComptables(factures, achats, paiements, profil) 
   // une facture annulée restait comptabilisée comme si elle avait
   // vraiment été vendue.
   const lignesAvoirs = [];
-  (STATE.avoirs || []).forEach(function(av) {
+  ((ctx && ctx.avoirs) || (ctx ? [] : (STATE.avoirs || []))).forEach(function(av) {
     if (!av.date_emission) return;
     const ht = Number(av.ht) || 0;
     const tva = Number(av.tva) || 0;
@@ -250,7 +251,7 @@ async function exporterEcrituresComptables(factures, achats, paiements, profil) 
   });
 
   if (typeof caisseJours === 'function') {
-    caisseJours().forEach(function(j) {
+    caisseJours(null, null, ctx ? (ctx.caisse || []) : null).forEach(function(j) {
       const lib = 'Ventes caisse du ' + j.date + ' (' + j.n + ' ticket' + (j.n > 1 ? 's' : '') + ')', ref = 'CAISSE-' + j.date.replace(/-/g, '');
       if (j.especes > 0) lignesVentes.push([j.date, 'VE', COMPTES_CGNC.caisse, 'Caisses', lib, ref, j.especes.toFixed(2), '']);
       if (j.autre > 0) lignesVentes.push([j.date, 'VE', COMPTES_CGNC.banque, 'Banques', lib, ref, j.autre.toFixed(2), '']);
