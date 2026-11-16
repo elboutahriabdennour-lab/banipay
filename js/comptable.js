@@ -2152,7 +2152,7 @@ function attacherControlsToViewer(factureId) {
   const ctrl = (CPT.currentControles || []).find(function(c) { return String(c.facture_id) === String(factureId); }) || {};
   const bar = document.createElement('div');
   bar.id = 'pdf-cpt-controls';
-  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#fff;border-top:1px solid #DDE3DA;padding:12px 16px;display:flex;gap:10px;align-items:center;box-shadow:0 -4px 20px rgba(0,0,0,0.1)';
+  bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#fff;border-top:1px solid #DDE3DA;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;box-shadow:0 -4px 20px rgba(0,0,0,0.1),0 200px 0 #fff';
   // FIX (grand audit - correctif 1): les 2 boutons n'avaient jamais leur
   // etat initial (data-lettre/data-tva) - toggleLettrageRapide()/
   // toggleTVARapide() lisent justement cet attribut pour savoir s'il faut

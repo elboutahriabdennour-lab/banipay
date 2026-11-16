@@ -1266,7 +1266,7 @@ ${p.tel||''}`
     ov.id = 'pdf-fullscreen';
     ov.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#F5F6F1;display:flex;flex-direction:column';
     var barre = document.createElement('div');
-    barre.style.cssText = 'background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0';
+    barre.style.cssText = 'background:linear-gradient(135deg,#0F1F1A,#1B5E4B);padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;display:flex;align-items:center;gap:8px;flex-shrink:0';
     var btnStyle = 'background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
     barre.innerHTML =
       '<button type="button" class="pdfv-retour" style="' + btnStyle + '" aria-label="Retour">← Retour</button>' +
