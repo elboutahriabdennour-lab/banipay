@@ -64,6 +64,7 @@ async function loadComptableApp() {
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token } }).then(function(r) { return r.json(); }).catch(function(){ return []; });
 
     let toutesFactures = [];
+    CPT.erreursFactures = [];
     for (const eid of ids) {
       try {
         const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_factures_entreprise', {
@@ -71,8 +72,19 @@ async function loadComptableApp() {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
           body: JSON.stringify({ p_entreprise_id: eid })
         });
-        if (r.ok) { toutesFactures = toutesFactures.concat((await r.json()) || []); }
-      } catch(eRpc) {}
+        let liste = null;
+        if (r.ok) { liste = (await r.json()) || []; }
+        // Repli : si la fonction du serveur échoue ou ne renvoie rien, on lit directement
+        // les factures de l'entreprise (autorisé par la règle d'accès « comptable invité »).
+        if (!r.ok || !liste || !liste.length) {
+          try {
+            const direct = await sb.get('factures', 'user_id=eq.' + encodeURIComponent(eid) + '&select=*&order=date_emission.desc&limit=5000');
+            if (Array.isArray(direct) && direct.length) { liste = direct; (CPT.reperes = CPT.reperes || []).push('repli:' + eid); }
+          } catch (eDir) { CPT.erreursFactures = (CPT.erreursFactures || []).concat([eid + ' direct ' + (eDir && eDir.message || eDir)]); }
+        }
+        if (!r.ok) { CPT.erreursFactures = (CPT.erreursFactures || []).concat([eid + ' rpc ' + r.status]); }
+        toutesFactures = toutesFactures.concat(liste || []);
+      } catch(eRpc) { CPT.erreursFactures = (CPT.erreursFactures || []).concat([eid + ' rpc ' + (eRpc && eRpc.message || eRpc)]); }
     }
     let tousControles = [];
     for (const eid of ids) {
@@ -214,7 +226,10 @@ function renderListeEntreprises(filtre) {
       : '<div class="empty"><div class="empty-ico">🏢</div><div class="empty-title">Aucune entreprise</div><div>Invitez vos clients a vous donner acces</div></div>';
     return;
   }
-  list.innerHTML = ents.map(function(inv) {
+  const _avert = (CPT.erreursFactures && CPT.erreursFactures.length)
+    ? '<div style="background:#FFF4E5;border:1px solid #E8B96A;color:#7A4B00;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px">⚠️ Certaines factures n\'ont pas pu être chargées. Rechargez la page ; si le problème reste, contactez le support Tafir (code : ' + escapeHTML(CPT.erreursFactures.join(' | ').slice(0, 160)) + ').</div>'
+    : '';
+  list.innerHTML = _avert + ents.map(function(inv) {
     const p = inv.profil || {};
     const f = inv._factures || [];
     const a = inv._achats || [];
