@@ -87,6 +87,7 @@
   <div class="quick-actions">
     <div class="qa-item" onclick="if(typeof verifierAccesFeature!=='function'||verifierAccesFeature('stock','Gestion de stock avancée')){window._retourRapportStock='dashboard';goScreen('rapport-stock',null);}"><div class="qa-ico" style="background:#EAE4DA">🗃️</div><div class="qa-lbl">Stock<span id="verrou-stock-dashboard"></span></div></div>
     <div class="qa-item" onclick="goScreen('produits',null)"><div class="qa-ico" style="background:#F7EFDC">📦</div><div class="qa-lbl">Catalogue</div></div>
+    <div class="qa-item" onclick="goScreen('creances',null)"><div class="qa-ico" style="background:#F5E4E1">💳</div><div class="qa-lbl">Créances</div></div>
     <div class="qa-item" onclick="goScreen('caisse',null)"><div class="qa-ico" style="background:#E7F2EC">🛒</div><div class="qa-lbl">Caisse</div></div>
     <div class="qa-item" onclick="goScreen('clients',null)"><div class="qa-ico" style="background:#EDE6F0">👥</div><div class="qa-lbl">Clients</div></div>
     <div class="qa-item" onclick="goScreen('tva',null)"><div class="qa-ico" style="background:#EEF3E4">🧮</div><div class="qa-lbl">TVA</div></div>
@@ -3308,6 +3309,7 @@
   <div class="nav-item nav-desk" id="nav-produits" onclick="goScreen('produits',null)"><i class="ic ic-package nav-ico"></i><div class="nav-lbl">Produits</div></div>
   <div class="nav-item nav-desk" id="nav-avoirs" onclick="goScreen('avoir-list',null)"><i class="ic ic-undo-2 nav-ico"></i><div class="nav-lbl">Avoirs</div></div>
   <div class="nav-item nav-desk" id="nav-brouillons" onclick="goScreen('brouillons',null)"><i class="ic ic-file-stack nav-ico"></i><div class="nav-lbl">Brouillons</div></div>
+  <div class="nav-item nav-desk" id="nav-creances" onclick="goScreen('creances',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Créances</div></div>
   <div class="nav-item nav-desk" id="nav-paiements" onclick="goScreen('historique-paiements',null)"><i class="ic ic-banknote nav-ico"></i><div class="nav-lbl">Paiements</div></div>
   <div class="nav-item nav-desk" id="nav-stats" onclick="goScreen('stats',null)"><i class="ic ic-chart-column nav-ico"></i><div class="nav-lbl">Statistiques</div></div>
   <div class="nav-item nav-desk" id="nav-rapports" onclick="goScreen('rapports',null)"><i class="ic ic-clipboard-list nav-ico"></i><div class="nav-lbl">Rapports</div></div>

@@ -90,6 +90,7 @@ function marquerVerrous() {
   Object.keys(VERROUS_PAR_ID).forEach(function (id) {
     var x = document.getElementById(id); if (x) _poserCadenas(x, VERROUS_PAR_ID[id]);
   });
+  try { ordonnerAccueil(); ordonnerMenuBureau(); } catch (x) { console.warn('ordonner:', x); }
 }
 
 // Clic sur un élément verrouillé : on bloque avant que son action ne s'exécute.
@@ -99,6 +100,56 @@ document.addEventListener('click', function (ev) {
   ev.preventDefault(); ev.stopImmediatePropagation();
   afficherVerrou(null, t.getAttribute('data-verrou-nom'));
 }, true);
+
+
+// ── Réorganisation automatique : ce qui est ouvert d'abord, ce qui est verrouillé regroupé à part ─────
+// S'adapte tout seul : si un module est rouvert (ligne retirée de ECRANS_VERROUILLES), sa tuile revient dans « Outils ».
+function ordonnerAccueil() {
+  var d = document.getElementById('screen-dashboard'); if (!d) return;
+  var tuiles = Array.prototype.slice.call(d.querySelectorAll('.quick-actions .qa-item'));
+  if (!tuiles.length) return;
+  var ouv = document.getElementById('qa-ouverts'), bie = document.getElementById('qa-bientot-grille');
+  if (!ouv) {
+    var premier = d.querySelector('.groupe-label'); if (!premier) return;
+    var bloc = document.createElement('div'); bloc.id = 'qa-bloc';
+    bloc.innerHTML = '<div class="groupe-label">Outils</div><div class="quick-actions" id="qa-ouverts"></div>'
+      + '<div style="padding:4px 20px 6px;text-align:center"><span id="qa-bientot-btn" style="font-size:12px;color:#5B6B64;font-weight:600;cursor:pointer;padding:8px 16px;border-radius:20px;background:#EEF0EA;display:inline-block"></span></div>'
+      + '<div class="quick-actions" id="qa-bientot-grille" style="display:none"></div>';
+    premier.parentNode.insertBefore(bloc, premier);
+    ouv = bloc.querySelector('#qa-ouverts'); bie = bloc.querySelector('#qa-bientot-grille');
+    var btn = bloc.querySelector('#qa-bientot-btn');
+    btn.onclick = function () { var v = bie.style.display === 'none'; bie.style.display = v ? 'grid' : 'none'; majBtn(); };
+  }
+  function majBtn() {
+    var btn = document.getElementById('qa-bientot-btn'); if (!btn) return;
+    var n = bie.children.length; btn.style.display = n ? 'inline-block' : 'none';
+    btn.textContent = (bie.style.display === 'none' ? '🔒 Bientôt disponible (' + n + ')  ▼' : '🔒 Bientôt disponible  ▲');
+  }
+  tuiles.forEach(function (t) {
+    var cible = t.classList.contains('tf-verrou') ? bie : ouv;
+    if (t.parentNode !== cible) cible.appendChild(t);
+  });
+  // anciens groupes devenus vides : on les masque
+  Array.prototype.slice.call(d.querySelectorAll('.quick-actions')).forEach(function (q) {
+    if (q === ouv || q === bie) return;
+    var vide = !q.querySelector('.qa-item'), lab = q.previousElementSibling;
+    q.style.display = vide ? 'none' : ''; 
+    if (lab && lab.classList && lab.classList.contains('groupe-label')) lab.style.display = vide ? 'none' : '';
+  });
+  var plus = document.getElementById('lbl-plus-outils'); if (plus && plus.parentNode && plus.parentNode.parentNode) plus.parentNode.parentNode.style.display = 'none';
+  majBtn();
+}
+function ordonnerMenuBureau() {
+  var sep = Array.prototype.slice.call(document.querySelectorAll('.nav-sep')).filter(function (s) { return /Bientôt disponible/.test(s.textContent); })[0];
+  if (!sep || !sep.parentNode) return;
+  var parent = sep.parentNode, fixes = { 'nav-parametres': 1, 'nav-deconnexion': 1, 'nav-toggle': 1, 'nav-admin': 1, 'nav-abonnements-offres': 1 };
+  var items = Array.prototype.slice.call(parent.querySelectorAll('.nav-item.nav-desk')).filter(function (i) { return !fixes[i.id]; });
+  var verr = items.filter(function (i) { return i.classList.contains('tf-verrou'); });
+  var ouv = items.filter(function (i) { return !i.classList.contains('tf-verrou'); });
+  var ref = sep;
+  verr.forEach(function (i) { if (i.previousElementSibling !== ref) parent.insertBefore(i, ref.nextElementSibling === i ? i : ref.nextElementSibling); ref = i; });
+  ouv.forEach(function (i) { var apres = i.compareDocumentPosition(sep) & Node.DOCUMENT_POSITION_FOLLOWING; if (!apres) parent.insertBefore(i, sep); });
+}
 
 function appliquerMode() {
   document.body.setAttribute('data-mode', 'complet');
