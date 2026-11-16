@@ -28,7 +28,7 @@ function connexionGoogle() {
   window._googleEnCours = true;
   var bg = document.querySelector('#btn-google button');
   if (bg) { bg.disabled = true; bg.style.opacity = '.7'; var sp = bg.querySelector('span'); if (sp) sp.textContent = 'Connexion à Google…'; }
-  window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(window.location.origin + window.location.pathname);
+  window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=google&prompt=select_account&redirect_to=' + encodeURIComponent(window.location.origin + window.location.pathname);
 }
 
 
