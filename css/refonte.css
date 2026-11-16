@@ -409,6 +409,9 @@ body[data-mode="complet"] #menu-compte .mc-complet{display:block}
 @media (max-width:999px){
   html{background:#fff}
   .bottom-nav{background:#fff}
+  /* Espace cabinet : même correction que la barre du bas de l'entreprise (iPhone, appli installée) */
+  #cpt-tabs{background:#fff}
+  #cpt-tabs::after{content:"";position:absolute;left:0;right:0;top:100%;height:160px;background:#fff}
 }
 
 /* ── Statistiques : vue d'ensemble utile ── */
