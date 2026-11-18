@@ -40,5 +40,11 @@
       "destination": "/",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/comptables",
+      "destination": "/comptables.html"
+    }
   ]
 }
