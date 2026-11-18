@@ -669,6 +669,9 @@ async function analyserReleve(releveId, skipNavigation) {
     return true;
   }
 
+  // Photo ou PDF = lecture automatique (OCR) : module payant. Excel, CSV, OFX... restent ouverts.
+  const _mimeReleve = ((releve.data || '').match(/^data:([^;]+);base64,/) || [])[1] || '';
+  if ((/^image\//.test(_mimeReleve) || _mimeReleve === 'application/pdf') && typeof verifierAccesFeature === 'function' && !verifierAccesFeature('ocr_releves', 'Lecture des relevés bancaires (OCR)')) return;
   showToast('🔍 Lecture du relevé en cours...');
   // NOUVEAU (retour utilisateur) : charge les règles de rapprochement
   // apprises avant de lancer le matching — sans ça, une règle enregistrée

@@ -16,6 +16,32 @@ STATE.toutesOffres = STATE.toutesOffres || [];
 STATE.limiteClients = STATE.limiteClients || null; // null = illimité ou pas encore chargé
 STATE.limiteProduits = STATE.limiteProduits || null;
 STATE.nomForfaitActuel = STATE.nomForfaitActuel || null;
+STATE.statutOffre = STATE.statutOffre || null; // { mode, acces_complet, jours_restants, clients_actifs, seuil } ; null = inconnu
+// Statut d'accès (essai 3 mois entreprise, règle cabinet 6 mois / 20 clients). Voir SQL 069.
+// null ou mode 'lancement' = tout ouvert (par précaution si la RPC est absente ou en erreur).
+async function chargerStatutOffre() {
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mon_statut_offre', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + sb.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    STATE.statutOffre = r.ok ? await r.json() : null;
+  } catch(e) { STATE.statutOffre = null; }
+  return STATE.statutOffre;
+}
+// Phrase d'information pour l'utilisateur (vide en mode lancement).
+function texteStatutOffre() {
+  const s = STATE.statutOffre;
+  if (!s || s.mode === 'lancement') return '';
+  const j = s.jours_restants;
+  const jours = j > 1 ? j + ' jours' : j + ' jour';
+  if (s.mode === 'essai') return '🎁 Tous les modules sont ouverts encore ' + jours + '. Ensuite, l\'offre Gratuit garde vos devis et factures ; les modules avancés demandent un forfait.';
+  if (s.mode === 'cabinet_essai') return '🎁 Votre espace entreprise est ouvert encore ' + jours + '. Ensuite, il reste ouvert à partir de ' + s.seuil + ' clients actifs sur Tafir (vous en avez ' + s.clients_actifs + '). L\'accès comptable reste gratuit.';
+  if (s.mode === 'cabinet_ok') return '✅ Votre espace entreprise reste ouvert : ' + s.clients_actifs + ' clients actifs sur Tafir. L\'accès comptable reste gratuit.';
+  if (s.mode === 'cabinet_payant') return 'ℹ️ Pour garder tous les modules de votre espace entreprise, il faut ' + s.seuil + ' clients actifs sur Tafir (vous en avez ' + s.clients_actifs + '). Sinon, un forfait est nécessaire pour les modules avancés. L\'accès comptable reste gratuit.';
+  return '';
+}
 async function chargerMesFeatures() {
   try {
     const resp = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_mes_features', {
@@ -50,6 +76,7 @@ async function chargerMesFeatures() {
     const dataO = respO.ok ? ((await respO.json()) || []) : [];
     STATE.nomForfaitActuel = dataO[0]?.offres?.nom || null;
   } catch(e) { STATE.nomForfaitActuel = null; }
+  await chargerStatutOffre();
   afficherBadgeForfait();
   if (typeof appliquerVerrousVisuels === 'function') appliquerVerrousVisuels();
 }
@@ -59,6 +86,11 @@ async function chargerMesFeatures() {
 function afficherBadgeForfait() {
   const badge = el('badge-forfait-actuel');
   if (badge) badge.textContent = STATE.nomForfaitActuel ? '📦 Forfait ' + STATE.nomForfaitActuel : '';
+  const s = STATE.statutOffre;
+  if (s && (s.mode === 'essai' || s.mode === 'cabinet_essai') && s.jours_restants <= 14 && !window._rappelEssaiVu) {
+    window._rappelEssaiVu = true;
+    if (typeof showToast === 'function') showToast(texteStatutOffre());
+  }
 }
 // Vrai/faux — l'entreprise a-t-elle accès à cette fonctionnalité ?
 // C'est LE bon outil pour une fonctionnalité SUR-MESURE construite pour

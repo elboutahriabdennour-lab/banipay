@@ -1,24 +1,27 @@
 // ZELTO — acces-total.js
-// MODE LANCEMENT : toutes les fonctions sont accessibles à tous les comptes,
-// sans verrou de forfait (Stock, RH, relances, OCR, multi-utilisateurs...)
-// et sans limite de clients / produits côté application.
-//
-// Pour revenir aux forfaits payants plus tard : mettre ACCES_TOTAL à false
-// (ou retirer la ligne <script src="js/acces-total.js"> dans app.html).
+// MODE LANCEMENT : tant que la date de début des règles n'est pas fixée côté base
+// (réglage 'debut_regles', voir SQL 069), toutes les fonctions sont accessibles à tous.
+// Dès que la date est fixée, ce fichier s'efface : ce sont les règles du serveur qui s'appliquent
+// (essai 3 mois entreprise, 6 mois / 20 clients cabinet, offres et cadenas).
+// Par précaution, si le statut n'a pas pu être lu, tout reste ouvert.
 // À charger APRÈS js/offres.js.
 
 (function () {
-  var ACCES_TOTAL = true;
-  if (!ACCES_TOTAL) return;
-
-  window.aAccesFeature = function () { return true; };
-  window.verifierAccesFeature = function () { return true; };
-  if (typeof window.verifierLimiteClients === 'function') window.verifierLimiteClients = function () { return true; };
-  if (typeof window.verifierLimiteProduits === 'function') window.verifierLimiteProduits = function () { return true; };
-  // Plus aucun cadenas "🔒 Pro" à afficher
-  window.htmlBadgeVerrou = function () { return ''; };
-  window.appliquerVerrousVisuels = function () {
-    document.querySelectorAll('[data-verrou], .badge-verrou, .verrou-badge').forEach(function (n) { n.remove(); });
+  function ouvertParLancement() {
+    var s = window.STATE && STATE.statutOffre;
+    return !s || s.mode === 'lancement';
+  }
+  var _aAcces = window.aAccesFeature;
+  window.aAccesFeature = function (code) {
+    return ouvertParLancement() ? true : _aAcces(code);
+  };
+  var _verifLimClients = window.verifierLimiteClients;
+  window.verifierLimiteClients = function () {
+    return ouvertParLancement() ? true : _verifLimClients.apply(this, arguments);
+  };
+  var _verifLimProduits = window.verifierLimiteProduits;
+  window.verifierLimiteProduits = function () {
+    return ouvertParLancement() ? true : _verifLimProduits.apply(this, arguments);
   };
   window.ZELTO_ACCES_TOTAL = true;
 })();

@@ -9,6 +9,8 @@ async function loadComptableApp() {
   if (!uid || !email) return;
   const diag = [];
   diag.push('Compte comptable : ' + email);
+  // Statut d'accès (essai 6 mois / 20 clients) : sert au bandeau d'information de la liste des entreprises.
+  if (typeof chargerStatutOffre === 'function') { try { await chargerStatutOffre(); } catch (e) {} }
   // AJOUT (accès limité collaborateur) : si je suis un collaborateur
   // d'un autre cabinet (pas titulaire), je dois voir LE PORTEFEUILLE DU
   // TITULAIRE, pas un portefeuille vide sous mon propre email — d'où le
@@ -226,9 +228,12 @@ function renderListeEntreprises(filtre) {
       : '<div class="empty"><div class="empty-ico">🏢</div><div class="empty-title">Aucune entreprise</div><div>Invitez vos clients a vous donner acces</div></div>';
     return;
   }
-  const _avert = (CPT.erreursFactures && CPT.erreursFactures.length)
-    ? '<div style="background:#FFF4E5;border:1px solid #E8B96A;color:#7A4B00;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px">⚠️ Certaines factures n\'ont pas pu être chargées. Rechargez la page ; si le problème reste, contactez le support Tafir (code : ' + escapeHTML(CPT.erreursFactures.join(' | ').slice(0, 160)) + ').</div>'
+  const _infoOffre = (typeof texteStatutOffre === 'function' && texteStatutOffre())
+    ? '<div style="background:#EAF3EE;border:1px solid #BFD8C9;color:#1B5E4B;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px">' + escapeHTML(texteStatutOffre()) + '</div>'
     : '';
+  const _avert = _infoOffre + ((CPT.erreursFactures && CPT.erreursFactures.length)
+    ? '<div style="background:#FFF4E5;border:1px solid #E8B96A;color:#7A4B00;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px">⚠️ Certaines factures n\'ont pas pu être chargées. Rechargez la page ; si le problème reste, contactez le support Tafir (code : ' + escapeHTML(CPT.erreursFactures.join(' | ').slice(0, 160)) + ').</div>'
+    : '');
   list.innerHTML = _avert + ents.map(function(inv) {
     const p = inv.profil || {};
     const f = inv._factures || [];

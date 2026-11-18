@@ -48,6 +48,7 @@ function _dicteeInitLangue() {
 }
 var _dicteeVeutArreter = false, _dicteeFatal = false, _dicteeFinal = '', _dicteeDebut = 0;
 function dicterFacture() {
+  if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('dictee_facture', 'Dictée de facture (IA)')) return;
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   var zone = document.getElementById('dictee-texte');
   if (!SR) { _dicteeNote('Le micro n’est pas disponible ici. Utilisez le micro de votre clavier, ou écrivez la phrase.', true); if (zone) zone.focus(); return; }
@@ -91,6 +92,7 @@ function dicterFacture() {
 }
 
 async function remplirFactureParIA() {
+  if (typeof verifierAccesFeature === 'function' && !verifierAccesFeature('dictee_facture', 'Dictée de facture (IA)')) return;
   var zone = document.getElementById('dictee-texte');
   var texte = zone ? zone.value.trim() : '';
   if (texte.length < 5) { _dicteeNote('Dictez ou écrivez d’abord une phrase.', true); return; }
