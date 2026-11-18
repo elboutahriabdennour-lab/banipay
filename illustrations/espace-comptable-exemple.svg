@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="t d">
+<title id="t">Illustration d espace comptable avec des données fictives</title>
+<desc id="d">Trois entreprises clientes fictives avec leur taux de lettrage et de TVA vérifiée, et le détail d'une facture avec ses cases à cocher et une note.</desc>
+<style>.f{font-family:Inter,Arial,Helvetica,sans-serif}</style>
+<rect width="640" height="420" rx="20" fill="#F5F6F1"/>
+<rect width="640" height="52" rx="20" fill="#1B5E4B"/><rect y="30" width="640" height="22" fill="#1B5E4B"/>
+<text x="24" y="33" class="f" font-size="16" font-weight="700" fill="#fff">Espace comptable</text>
+<text x="616" y="33" text-anchor="end" class="f" font-size="12" fill="#C8E85A">Illustration, données fictives</text>
+<g class="f" font-size="13">
+<text x="24" y="86" font-weight="700" fill="#0F1F1A" font-size="14">Vos entreprises clientes</text>
+<!-- rows -->
+<g transform="translate(24,100)">
+<rect width="592" height="62" rx="12" fill="#fff" stroke="#DDE3DA"/>
+<text x="16" y="26" font-weight="700" fill="#0F1F1A">Atlas Menuiserie (exemple)</text><text x="16" y="46" fill="#5B6B64" font-size="12">12 factures ce mois</text>
+<text x="330" y="22" fill="#5B6B64" font-size="11">Lettrage 83 %</text><rect x="330" y="28" width="110" height="8" rx="4" fill="#E4E9E2"/><rect x="330" y="28" width="91" height="8" rx="4" fill="#1B5E4B"/>
+<text x="470" y="22" fill="#5B6B64" font-size="11">TVA vérifiée 75 %</text><rect x="470" y="28" width="110" height="8" rx="4" fill="#E4E9E2"/><rect x="470" y="28" width="82" height="8" rx="4" fill="#7C5CA6"/>
+</g>
+<g transform="translate(24,172)">
+<rect width="592" height="62" rx="12" fill="#fff" stroke="#DDE3DA"/>
+<text x="16" y="26" font-weight="700" fill="#0F1F1A">Café Oasis (exemple)</text><text x="16" y="46" fill="#5B6B64" font-size="12">7 factures ce mois</text>
+<text x="330" y="22" fill="#5B6B64" font-size="11">Lettrage 100 %</text><rect x="330" y="28" width="110" height="8" rx="4" fill="#E4E9E2"/><rect x="330" y="28" width="110" height="8" rx="4" fill="#1B5E4B"/>
+<text x="470" y="22" fill="#5B6B64" font-size="11">TVA vérifiée 100 %</text><rect x="470" y="28" width="110" height="8" rx="4" fill="#E4E9E2"/><rect x="470" y="28" width="110" height="8" rx="4" fill="#7C5CA6"/>
+</g>
+<g transform="translate(24,244)">
+<rect width="592" height="62" rx="12" fill="#fff" stroke="#DDE3DA"/>
+<text x="16" y="26" font-weight="700" fill="#0F1F1A">Studio Nour (exemple)</text><text x="16" y="46" fill="#5B6B64" font-size="12">4 factures ce mois</text>
+<text x="330" y="22" fill="#5B6B64" font-size="11">Lettrage 50 %</text><rect x="330" y="28" width="110" height="8" rx="4" fill="#E4E9E2"/><rect x="330" y="28" width="55" height="8" rx="4" fill="#1B5E4B"/>
+<text x="470" y="22" fill="#5B6B64" font-size="11">TVA vérifiée 25 %</text><rect x="470" y="28" width="110" height="8" rx="4" fill="#E4E9E2"/><rect x="470" y="28" width="28" height="8" rx="4" fill="#7C5CA6"/>
+</g>
+<!-- detail -->
+<g transform="translate(24,320)">
+<rect width="592" height="82" rx="12" fill="#fff" stroke="#DDE3DA"/>
+<text x="16" y="26" font-weight="700" fill="#0F1F1A">Facture n° 2026-014</text>
+<rect x="16" y="38" width="16" height="16" rx="4" fill="#1B5E4B"/><path d="M19 46 l4 4 l7 -8" stroke="#fff" stroke-width="2.4" fill="none"/>
+<text x="40" y="51" fill="#0F1F1A">Lettrée</text>
+<rect x="110" y="38" width="16" height="16" rx="4" fill="#7C5CA6"/><path d="M113 46 l4 4 l7 -8" stroke="#fff" stroke-width="2.4" fill="none"/>
+<text x="134" y="51" fill="#0F1F1A">TVA vérifiée</text>
+<rect x="260" y="34" width="316" height="34" rx="8" fill="#FFF8E1" stroke="#F0D98A"/>
+<text x="272" y="55" fill="#5B4A10" font-size="12">Note : justificatif à demander au client</text>
+</g>
+</g>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 340" role="img" aria-labelledby="t d">
+<title id="t">Schéma : le client facture, invite son comptable, le comptable voit les factures</title>
+<desc id="d">Un téléphone avec une facture, une flèche d'invitation par e-mail, puis un ordinateur où le comptable consulte les factures en lecture seule.</desc>
+<defs><style>
+.f{font-family:Inter,Arial,Helvetica,sans-serif}
+</style></defs>
+<rect width="960" height="340" rx="24" fill="#EAF3EE"/>
+<!-- phone -->
+<g transform="translate(70,40)">
+<rect width="150" height="260" rx="24" fill="#0F1F1A"/>
+<rect x="10" y="22" width="130" height="216" rx="12" fill="#fff"/>
+<rect x="22" y="38" width="70" height="10" rx="5" fill="#1B5E4B"/>
+<rect x="22" y="58" width="106" height="8" rx="4" fill="#DDE3DA"/>
+<rect x="22" y="76" width="106" height="8" rx="4" fill="#DDE3DA"/>
+<rect x="22" y="94" width="80" height="8" rx="4" fill="#DDE3DA"/>
+<rect x="22" y="130" width="106" height="1.5" fill="#DDE3DA"/>
+<text x="22" y="156" class="f" font-size="11" fill="#5B6B64">Total</text>
+<text x="128" y="156" text-anchor="end" class="f" font-size="13" font-weight="700" fill="#0F1F1A">1 200 MAD</text>
+<rect x="22" y="182" width="106" height="30" rx="15" fill="#C8E85A"/>
+<text x="75" y="202" text-anchor="middle" class="f" font-size="12" font-weight="700" fill="#0F1F1A">Facture émise</text>
+</g>
+<text x="145" y="330" text-anchor="middle" class="f" font-size="15" font-weight="700" fill="#1B5E4B">Votre client facture</text>
+<!-- arrow 1 + mail -->
+<g transform="translate(300,120)">
+<rect width="90" height="62" rx="10" fill="#fff" stroke="#1B5E4B" stroke-width="3"/>
+<path d="M6 10 L45 38 L84 10" fill="none" stroke="#1B5E4B" stroke-width="3" stroke-linejoin="round"/>
+</g>
+<path d="M240 150 H292" stroke="#1B5E4B" stroke-width="4" stroke-linecap="round" marker-end="url(#a)"/>
+<path d="M402 150 H452" stroke="#1B5E4B" stroke-width="4" stroke-linecap="round"/>
+<path d="M440 138 L456 150 L440 162" fill="none" stroke="#1B5E4B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="345" y="214" text-anchor="middle" class="f" font-size="15" font-weight="700" fill="#1B5E4B">Il vous invite</text>
+<text x="345" y="234" text-anchor="middle" class="f" font-size="13" fill="#5B6B64">par e-mail</text>
+<!-- laptop -->
+<g transform="translate(490,60)">
+<rect x="0" y="0" width="400" height="220" rx="14" fill="#0F1F1A"/>
+<rect x="10" y="10" width="380" height="200" rx="8" fill="#fff"/>
+<rect x="10" y="10" width="380" height="34" rx="8" fill="#1B5E4B"/>
+<text x="24" y="33" class="f" font-size="13" font-weight="700" fill="#fff">Espace comptable</text>
+<g class="f" font-size="12">
+<rect x="24" y="58" width="352" height="40" rx="8" fill="#F5F6F1"/>
+<text x="36" y="83" fill="#0F1F1A" font-weight="600">Facture n° 2026-014</text>
+<rect x="258" y="68" width="106" height="20" rx="10" fill="#E3F2C2"/><text x="311" y="82" text-anchor="middle" fill="#2F5A12" font-size="11" font-weight="700">Lecture seule</text>
+<rect x="24" y="106" width="352" height="40" rx="8" fill="#F5F6F1"/>
+<text x="36" y="131" fill="#0F1F1A" font-weight="600">Facture n° 2026-015</text>
+<text x="364" y="131" text-anchor="end" fill="#5B6B64">800 MAD</text>
+<rect x="24" y="154" width="352" height="40" rx="8" fill="#F5F6F1"/>
+<text x="36" y="179" fill="#0F1F1A" font-weight="600">Facture n° 2026-016</text>
+<text x="364" y="179" text-anchor="end" fill="#5B6B64">2 450 MAD</text>
+</g>
+<rect x="-30" y="226" width="460" height="14" rx="7" fill="#C9D3CD"/>
+</g>
+<text x="690" y="330" text-anchor="middle" class="f" font-size="15" font-weight="700" fill="#1B5E4B">Vous voyez ses factures</text>
+</svg>
