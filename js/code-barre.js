@@ -33,6 +33,45 @@
         || null;
   }
 
+
+  // Caméra : mise au point et exposition automatiques en continu, toucher pour refaire la mise au point,
+  // boutons lampe et zoom quand le téléphone les permet. Sans effet (et sans erreur) si non pris en charge.
+  function ameliorerCamera(stream, video, ov) {
+    var track = stream && stream.getVideoTracks && stream.getVideoTracks()[0]; if (!track) return;
+    var caps = {}; try { caps = track.getCapabilities ? track.getCapabilities() : {}; } catch (x) {}
+    function appliquer(adv) { try { return track.applyConstraints({ advanced: [adv] }).catch(function () {}); } catch (x) {} }
+    function has(arr, v) { return arr && arr.indexOf && arr.indexOf(v) >= 0; }
+    if (has(caps.focusMode, 'continuous')) appliquer({ focusMode: 'continuous' });
+    if (has(caps.exposureMode, 'continuous')) appliquer({ exposureMode: 'continuous' });
+    if (has(caps.whiteBalanceMode, 'continuous')) appliquer({ whiteBalanceMode: 'continuous' });
+    // Toucher l'image : refait la mise au point à cet endroit
+    var cadre = video.parentNode;
+    cadre.addEventListener('click', function (ev) {
+      var r = cadre.getBoundingClientRect(), pt = { x: (ev.clientX - r.left) / r.width, y: (ev.clientY - r.top) / r.height };
+      if (has(caps.focusMode, 'single-shot') || has(caps.focusMode, 'continuous')) {
+        appliquer({ focusMode: has(caps.focusMode, 'single-shot') ? 'single-shot' : 'continuous', pointsOfInterest: [pt] });
+        setTimeout(function () { if (has(caps.focusMode, 'continuous')) appliquer({ focusMode: 'continuous' }); }, 1500);
+      }
+    });
+    // Barre de boutons : lampe + zoom
+    var barre = document.createElement('div');
+    barre.style.cssText = 'position:absolute;right:8px;bottom:8px;display:flex;gap:6px';
+    function bouton(txt, titre, fn) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.title = titre;
+      b.style.cssText = 'background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:999px;min-width:40px;height:40px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit';
+      b.onclick = function (ev) { ev.stopPropagation(); fn(b); }; barre.appendChild(b); return b;
+    }
+    if (caps.torch) { var on = false; bouton('🔦', 'Lampe', function (b) { on = !on; appliquer({ torch: on }); b.style.background = on ? 'rgba(226,190,60,.9)' : 'rgba(0,0,0,.55)'; }); }
+    if (caps.zoom && caps.zoom.max > caps.zoom.min) {
+      var z = caps.zoom.min, pas = (caps.zoom.max - caps.zoom.min) / 4;
+      bouton('🔍+', 'Zoom +', function () { z = Math.min(caps.zoom.max, z + pas); appliquer({ zoom: z }); });
+      bouton('🔍−', 'Zoom −', function () { z = Math.max(caps.zoom.min, z - pas); appliquer({ zoom: z }); });
+    }
+    if (barre.children.length) cadre.appendChild(barre);
+    // Petit rappel d'usage
+    var et = ov.querySelector('#cb-etat'); if (et && et.textContent.indexOf('Placez') === 0) et.textContent = 'Placez le code-barres devant la caméra. Touchez l’image pour faire la mise au point.';
+  }
+
   // Ouvre l'écran de scan. surCode(code) est appelé une fois ; on ferme ensuite.
   function scanner(titre, surCode) {
     var ancien = document.getElementById('cb-scan'); if (ancien) ancien.remove();
@@ -82,9 +121,9 @@
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { etat('Caméra indisponible ici : utilisez le champ ci-dessous ou un lecteur.'); return; }
 
     if ('BarcodeDetector' in window) {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }).then(function (s) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }).then(function (s) {
         if (arret) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
-        flux = s; video.srcObject = s; video.play().catch(function () {});
+        flux = s; video.srcObject = s; video.play().catch(function () {}); ameliorerCamera(s, video, ov);
         var det;
         try { det = new BarcodeDetector({ formats: FORMATS }); } catch (x) { det = new BarcodeDetector(); }
         (function tour() {
@@ -99,7 +138,8 @@
         var hints = new Map();
         hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.ITF, Z.BarcodeFormat.QR_CODE]);
         lecteur = new Z.BrowserMultiFormatReader(hints, 300);
-        lecteur.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' } }, audio: false }, video, function (res) {
+        var essais = 0; (function att() { if (arret) return; var st = video.srcObject; if (st && st.getVideoTracks && st.getVideoTracks().length) { flux = flux || st; ameliorerCamera(st, video, ov); } else if (essais++ < 20) setTimeout(att, 300); })();
+        lecteur.decodeFromConstraints({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }, video, function (res) {
           if (res && res.getText) { var f = ''; try { f = Z.BarcodeFormat[res.getBarcodeFormat()] || ''; } catch (x) {} trouve(res.getText(), f); }
         }).catch(function () { etat('Caméra refusée : utilisez le champ ci-dessous ou un lecteur.'); });
       }).catch(function () { etat('Scan caméra indisponible : utilisez le champ ci-dessous ou un lecteur.'); });
