@@ -38,7 +38,7 @@
     var ancien = document.getElementById('cb-scan'); if (ancien) ancien.remove();
     var ov = document.createElement('div');
     ov.id = 'cb-scan';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,31,26,.96);display:flex;flex-direction:column;align-items:center;padding:16px;overflow:auto;font-family:inherit';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,31,26,.96);display:flex;flex-direction:column;align-items:center;box-sizing:border-box;width:100%;max-width:100vw;padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px));overflow-x:hidden;overflow-y:auto;font-family:inherit';
     ov.innerHTML =
       '<div style="width:100%;max-width:440px">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><div style="flex:1;color:#fff;font-size:15px;font-weight:700">' + e(titre || 'Scanner un code-barres') + '</div>'
@@ -175,7 +175,7 @@
     chargerJsBarcode().then(function (JB) {
       var ancien = document.getElementById('cb-etiquette'); if (ancien) ancien.remove();
       var ov = document.createElement('div'); ov.id = 'cb-etiquette';
-      ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,31,26,.85);display:flex;align-items:center;justify-content:center;padding:14px;overflow:auto';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,31,26,.85);display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%;max-width:100vw;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px));overflow-x:hidden;overflow-y:auto';
       ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:16px;max-width:360px;width:100%;text-align:center">'
         + '<div style="font-weight:800;color:#1B5E4B;margin-bottom:8px">🏷️ Étiquette</div>'
         + '<div id="cb-etq" style="background:#fff;border:1px solid #EAE4DA;border-radius:8px;padding:10px">'
