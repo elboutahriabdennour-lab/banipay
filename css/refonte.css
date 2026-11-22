@@ -591,3 +591,6 @@ html,body{overflow-x:hidden;max-width:100vw}
 .modal-overlay,#sheet-nouveau{box-sizing:border-box;width:100%;max-width:100vw}
 .modal-overlay::after,#sheet-nouveau::after{content:"";position:absolute;left:0;right:0;top:100%;height:160px;background:inherit;pointer-events:none}
 .modal{padding-bottom:calc(20px + var(--safe-b))}
+/* Champs côte à côte et dates : jamais plus larges que leur colonne (iPhone SE) */
+.f-row>*{min-width:0}
+input[type=date],input[type=time],input[type=datetime-local],select.f-inp{min-width:0;max-width:100%;box-sizing:border-box}
