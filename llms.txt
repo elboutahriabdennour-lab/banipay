@@ -18,6 +18,10 @@ Site : https://tafir.fr
 - [Ressources : tous les guides](https://tafir.fr/ressources/) : liste des guides de facturation pour le Maroc
 - [Facture proforma au Maroc](https://tafir.fr/ressources/facture-proforma-maroc.html) : rôle, mentions, numérotation
 - [Bon de livraison et bon de commande au Maroc](https://tafir.fr/ressources/bon-de-livraison-bon-de-commande-maroc.html) : rôle, mentions, lien avec la facture
+- [Questions fréquentes sur Tafir](https://tafir.fr/faq.html) : ce qu'est Tafir (et ce qu'il n'est pas), pour qui, comment ça marche
+- [Devis au Maroc](https://tafir.fr/ressources/devis-maroc-mentions-modele.html) : mentions à indiquer, validité, passage à la facture
+- [Avoir au Maroc](https://tafir.fr/ressources/avoir-facture-maroc.html) : corriger une facture sans casser la numérotation
+- [Relancer une facture impayée](https://tafir.fr/ressources/relancer-facture-impayee-maroc.html) : méthode en 3 étapes
 - [Présentation de Tafir](https://tafir.fr/presentation.html) : ce que fait Tafir, étape par étape
 - [Facturation électronique au Maroc](https://tafir.fr/actualites/facturation-electronique-maroc.html) : calendrier annoncé, ce qui est confirmé ou non, sources
 - [À propos](https://tafir.fr/a-propos.html) : mission et limites
